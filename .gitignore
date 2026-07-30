@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Temporal artifacts — gitignored wholesale
+_scratch/
+
+# Local Claude Code state (machine-specific paths, agent memory)
+.claude/settings.local.json
+.claude/agent-memory/
+.claude/scheduled_tasks.lock
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Node (for tooling / plugin packaging later)
+node_modules/
+npm-debug.log*
