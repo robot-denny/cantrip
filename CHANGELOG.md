@@ -43,6 +43,12 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   model, and view, plus the data-type-to-field-kind mapping.
 - **`scripts/check-preserved.py`** — whitespace- and emphasis-normalized preservation checking, so
   hard-wrapped output stops producing false "content lost" flags.
+- **`/implement-step` spell** — dispatches one plan step to a fresh context with just Context, Key
+  Decisions, and that step, then relays a structured DONE/BLOCKED report.
+- **`/code-review` spell** — three reviewers in parallel, merged into one de-duplicated report with
+  an ordered action plan; applies nothing without approval.
+- **`/commit-message` spell** — proposes a message explaining why, following the project's own
+  commit convention inferred from history rather than an imposed one.
 
 ### Changed
 
@@ -50,6 +56,10 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   `skills/core/reference/` — which lets the contract gate enforce invocation posture by path.
 - Templates moved from a root directory into the `workflow` skill, so they install with the
   spine that describes them instead of needing a separate placement step.
+- The quality reviewer is named `code-reviewer`, not after any technology, so a stack pack adds
+  rules to it rather than shipping a second quality reviewer.
+- All three reviewers share one severity scale (Blocker/Major/Minor/Nit) so merged findings sort
+  into a single ranking, with higher-severity-wins on disagreement.
 - Contract gained the **one slot, one point of authority** rule: a slot is referenced where it
   is owned, and other files defer to that owner rather than repeating it. Toolkit-internal paths
   are not slots.

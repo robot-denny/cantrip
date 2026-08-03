@@ -10,6 +10,13 @@ flags during increment 2.2 before the method was fixed.
 This normalizes whitespace on both sides before matching, and ignores markdown emphasis
 markers so a probe written as plain prose still matches bolded output.
 
+Choosing probes: this tool checks *verbatim* survival, so probe with **semantic anchors**
+you intend to keep word-for-word — distinctive terms, literal values, rule names, exact
+severity labels, output-format keys. Do not probe with whole sentences copied from the
+source, because de-projecting legitimately rewords prose ("not just what" becoming "not
+merely what"), and a LOST flag on a rewording is noise that trains you to ignore the tool.
+A LOST result means "go read the file and decide", never "content was dropped".
+
 Usage:
     scripts/check-preserved.py <file> <probe> [<probe> ...]
     scripts/check-preserved.py <file> --from-file <probes.txt>
