@@ -27,6 +27,15 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   completeness, loose files).
 - **`/spec` spell** — first extracted spellbook entry: turns a short idea into a saved spec with
   acceptance criteria, draft BDD scenarios, a working branch, and a work-type classification.
+- **`/plan` spell** — turns a spec into a phased, TDD-first plan of independently-executable
+  steps, each with a paste-ready prompt, and a final step that records durable behavior per the
+  work type.
+- **`umbraco-17-planning` pack skill** — first L1 content: live-schema inspection via MCP,
+  backoffice-extension skill routing, the Umbraco layer vocabulary, and typical step order.
+- **ADR 0003** — how L0 reaches an L1 pack: packs contribute model-invoked reference skills with
+  trigger-engineered descriptions, and L0 asks for a *kind* of guidance rather than naming any
+  technology.
+- Gate check 8 — no technology names in L0 core, enforcing ADR 0003.
 
 ### Changed
 

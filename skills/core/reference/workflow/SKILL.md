@@ -28,8 +28,8 @@ a hard rule, not a stylistic preference.
 
 ## Out-of-flow changes — the `/retrofit` path
 
-Not every change goes through the layers above, and that is fine. Small front-end or
-backoffice tweaks and AI-assistant edits often land directly, verified by eye.
+Not every change goes through the layers above, and that is fine. Small front-end or admin-UI
+tweaks and AI-assistant edits often land directly, verified by eye.
 
 The standing rule: **any change that skipped the flow → run `/retrofit` before committing it**
 (or before pushing, if it is already committed). `/retrofit` reconciles what you did against

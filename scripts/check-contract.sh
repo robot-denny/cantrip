@@ -202,6 +202,27 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 8. No technology names in L0 core (ADR 0003)
+# ---------------------------------------------------------------------------
+# L1 packs name their technology freely; core must not. Core asks for a *kind* of
+# guidance and lets skill discovery route it to whichever pack can answer.
+begin "no technology names in L0 core"
+TECH_PATTERN='umbraco|\.uda\b|razor|cshtml|\bvue\b|dotnet|\bnpm\b|\bnpx\b|playwright|backoffice|modelsbuilder|app_plugins|mcp__|xunit|\bvite\b|tailwind|\bc#'
+if [[ -d skills/core ]]; then
+  hits=$(find skills/core -name '*.md' -type f -print0 2>/dev/null | xargs -0 grep -inE "$TECH_PATTERN" 2>/dev/null)
+  if [[ -n "$hits" ]]; then
+    report_fail "$CURRENT" \
+      "L0 must ask for a KIND of guidance, not name a technology (ADR 0003)." \
+      "Move the fact to a stack pack under skills/<pack>/, or generalize the wording." \
+      "" "$hits"
+  else
+    report_pass "$CURRENT"
+  fi
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n'
 if [[ $FAILURES -eq 0 ]]; then
   printf '\033[32m%s checks passed.\033[0m\n' "$CHECKS_RUN"
