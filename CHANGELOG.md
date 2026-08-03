@@ -80,6 +80,12 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   update silently overwrites local modifications and reports success. Verified empirically.
 - **`.githooks/pre-commit`** — runs the contract gate before every commit. Enable with
   `git config core.hooksPath .githooks`.
+- **`scripts/check-install.sh`** — consumer-facing install verification. Distinguishes wired,
+  degraded, and broken, names the fix for each, and exits non-zero only when genuinely broken.
+- **`_features/install-verification.md`** — the repo's first behavioral doc, produced by casting the
+  toolkit's own chain on itself.
+- **`tests/`** — the repo's first test harness: a dependency-free runner, ten generated fixtures
+  covering all three install layouts, and `make-fixtures.sh` to regenerate them.
 - The technology-name check accepts scoped inline exemptions
   (`<!-- contract-allow: <pattern> — <reason> -->`) for dual-use patterns like the toolkit's own
   installer.

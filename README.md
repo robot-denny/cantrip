@@ -33,6 +33,16 @@ is a quirk of the installer, not a broken install — you can ignore or delete i
 > `npx skills` uploads skill file contents as telemetry by default. Prefix with
 > `DISABLE_TELEMETRY=1` if that matters to you.
 
+### Check the install
+
+```bash
+scripts/check-install.sh          # or --verbose to list what is wired
+```
+
+Reports what is wired, what is degraded but working, and what is broken — with the fix for each. It
+exits non-zero **only** when something is genuinely broken, so it is safe in a pipeline: a core-only
+install with no configuration and no linked agents is a working install and passes.
+
 ### One extra step for parallel review
 
 The three reviewer agents install as assets of the `reviewer-discipline` skill, but registering them
