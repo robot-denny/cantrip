@@ -23,8 +23,12 @@ Add a stack pack if one fits your project:
 npx skills add robot-denny/cantrip/skills/umbraco-17 --all
 ```
 
-Skills land in `.claude/skills/`, and `skills-lock.json` records the source and a content hash for
-each one. Packs are opt-in: the core install brings no stack-specific content at all.
+Skills land in `.agents/skills/` with `.claude/skills/` symlinked to them, and `skills-lock.json`
+records the source and a content hash for each. Packs are opt-in: the core install brings no
+stack-specific content at all.
+
+The installer also creates a top-level `agent/` directory holding a partial copy of the skills. That
+is a quirk of the installer, not a broken install — you can ignore or delete it.
 
 > `npx skills` uploads skill file contents as telemetry by default. Prefix with
 > `DISABLE_TELEMETRY=1` if that matters to you.
@@ -36,8 +40,12 @@ as dispatchable subagents is something the installer cannot do. Link them once:
 
 ```bash
 mkdir -p .claude/agents
-ln -s ../skills/reviewer-discipline/agents/*.md .claude/agents/
+for f in .claude/skills/reviewer-discipline/agents/*.md; do
+  n=$(basename "$f"); ln -s "../skills/reviewer-discipline/agents/$n" ".claude/agents/$n"
+done
 ```
+
+This is purely additive — any agents your project already has are untouched.
 
 Until you do, `/code-review` and `/retrofit` run the three review passes inline instead of in
 parallel. Everything works either way — you are trading concurrency, not capability.

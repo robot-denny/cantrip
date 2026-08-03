@@ -76,6 +76,13 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - **ADR 0004** — install layout corrections from verifying the CLI, superseding two claims in
   ADR 0002.
 - README now carries the install instructions and the spell catalog.
+- **`/update-toolkit` spell** — wraps the installer's update behind a git guard, because the bare
+  update silently overwrites local modifications and reports success. Verified empirically.
+- **`.githooks/pre-commit`** — runs the contract gate before every commit. Enable with
+  `git config core.hooksPath .githooks`.
+- The technology-name check accepts scoped inline exemptions
+  (`<!-- contract-allow: <pattern> — <reason> -->`) for dual-use patterns like the toolkit's own
+  installer.
 
 ### Changed
 

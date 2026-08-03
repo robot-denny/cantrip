@@ -7,8 +7,8 @@
 
 ADR 0002 settled the packaging shape on two assumptions carried from the direction doc's
 2026-07-30 CLI evaluation, and flagged one of them for verification at this increment. Verifying
-against `skills@1.5.21` (vercel-labs) showed **both** were wrong, and turned up one capability
-nobody had recorded.
+against `skills@1.5.21` (vercel-labs) found the first **flatly wrong** and the second **conditional
+on how you invoke the installer** — and turned up one capability nobody had recorded.
 
 Verification ran with `DISABLE_TELEMETRY=1` throughout, since the same evaluation found the CLI
 uploads skill file contents by default.
@@ -27,21 +27,23 @@ targets a different product's concept.
 So the three reviewers at repo-root `agents/` were **not installable at all**, and would simply have
 been absent after any install.
 
-### The install layout has no `.agents/` tree
+### The install layout depends on how you invoke it
 
 The doc recorded that the CLI "normalizes to canonical `.agents/skills/` + `.claude/skills/` symlink
-(our exact convention)". It does not. A real install produces:
+(our exact convention)". That is true for some invocations and false for others:
 
-```
-.claude/skills/<name>/     # real directory, copied — not a symlink
-skills-lock.json
-```
+| Invocation | Result |
+|---|---|
+| `--all` (implies `--agent '*'`) | Canonical: `.agents/skills/<name>/` holds real files, `.claude/skills/<name>` symlinks to it |
+| `--agent claude-code` (a single agent) | Files **copied** into `.claude/skills/<name>/`; **no `.agents/` tree at all** |
 
-No `.agents/` directory is created. The install summary *mentions* an `.agents/skills/` path, which
-is what made the original reading plausible, but nothing lands there.
+So the doc's claim held for the multi-agent case, and an earlier draft of this ADR over-corrected it
+after testing only the single-agent case. Both behaviors are real; neither is the whole story.
 
-This mattered more than it looks: ADR 0001's "canonical paths" refinement had three spells reading
-`.agents/skills/workflow/templates/spec.md`, **a path that does not exist after installation.**
+**This makes the path problem worse, not better.** ADR 0001's "canonical paths" refinement had three
+spells reading `.agents/skills/workflow/templates/spec.md` — a path that exists under one invocation
+and not the other. A hardcoded install path is not merely version-fragile; it is fragile against how
+the *user* chose to install.
 
 ## What was right, and what was new
 
@@ -67,9 +69,9 @@ install-scoping mechanism too.
 **1. Reference toolkit assets by skill and asset name, never by install path.**
 
 A spell needing a template says "the `templates/spec.md` asset of the `workflow` skill", not any
-absolute path. Install layout varies by agent tool and by CLI version — as this increment proves —
-so any hardcoded path is a latent break. An agent with the skill installed can locate its own skill
-directory.
+absolute path. Install layout varies by agent tool, by CLI version, **and by install flags** — as this
+increment proves — so any hardcoded path is a latent break. An agent with the skill installed can
+locate its own skill directory.
 
 This supersedes ADR 0001's "canonical paths" corollary, which was right to reject relative paths and
 wrong about what to replace them with.
@@ -103,7 +105,17 @@ would have to be kept in sync with the real one for no gain.
 - Root `agents/` disappears; the gate's technology-name check follows the files into `skills/core/`.
 - Packs are opt-in by construction, so the public core-only baseline is real rather than a
   convention someone has to remember.
-- **The direction doc's CLI evaluation should be treated as dated.** Two of its four recorded layout
-  and flag findings did not survive contact with `1.5.21`, four days later. Its behavioral findings —
-  that `update` clobbers local edits, that telemetry uploads content — still need their own
-  verification at increment 3.2 rather than being trusted.
+- **Documented commands must be layout-independent too.** The first draft of the README's
+  agent-linking command was wrong twice over: it hardcoded `.agents/`, which does not exist under a
+  single-agent install, and its glob resolved from the shell's directory while the symlink target must
+  be relative to the link's own directory. The working form globs through `.claude/skills/`, which
+  exists under *both* layouts, and builds each target relative to `.claude/agents/`. Verified in both
+  a greenfield repo and an existing project.
+- **A cosmetic CLI wart consumers will see:** the install also creates a top-level `agent/skills/`
+  directory containing a partial subset of the skills. Harmless, unexplained, and not ours to fix —
+  worth a line in install docs so nobody assumes a broken install.
+- **The direction doc's CLI evaluation should be treated as dated, and so should any single test of
+  mine.** Two of its four recorded layout and flag findings did not survive contact with `1.5.21` four
+  days later — and my own first correction was itself wrong for having tested one invocation. The
+  behavioral findings were verified separately at 3.2: `update` does silently clobber local edits, and
+  that one holds exactly.
