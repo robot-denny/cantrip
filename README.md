@@ -57,6 +57,12 @@ Verbs are spells, cast with `/<name>`. They are invisible to the model and run o
 | `/commit-message` | Proposes a message that explains *why*, following your project's own convention. |
 | `/retrofit` | The easy button for a change that skipped the flow — reconciles intent against the diff, then proposes the missing tests and docs. |
 
+One maintenance spell sits outside the workflow chain:
+
+| Spell | What it does |
+|---|---|
+| `/update-toolkit` | Updates the installed toolkit behind a git guard, because the bare installer silently overwrites local modifications. |
+
 Nouns are references, which the model reaches for on its own: `workflow` (the spine and work-type
 classification), `bdd-principles`, `reviewer-discipline`, `memory-discipline`.
 

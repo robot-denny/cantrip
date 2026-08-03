@@ -215,7 +215,24 @@ L0_DIRS=()
 [[ -d skills/core ]] && L0_DIRS+=(skills/core)
 [[ -d agents ]] && L0_DIRS+=(agents)
 if [[ ${#L0_DIRS[@]} -gt 0 ]]; then
-  hits=$(find "${L0_DIRS[@]}" -name '*.md' -type f -print0 2>/dev/null | xargs -0 grep -inE "$TECH_PATTERN" 2>/dev/null)
+  # A file may exempt specific patterns with an auditable inline declaration:
+  #   <!-- contract-allow: npx — reason the exemption is legitimate -->
+  # Needed because a few patterns are dual-use: `npx` is a project build command when a
+  # spell hardcodes one (what this check is for), but it is also the toolkit's OWN
+  # installer, which /update-toolkit must name. The reason travels with the exemption so
+  # a reviewer can judge it, and the exemption is scoped to the one file that declares it.
+  hits=$(
+    while IFS= read -r f; do
+      [[ -z "$f" ]] && continue
+      allowed=$(grep -oE '<!--[[:space:]]*contract-allow:[[:space:]]*[^ ]+' "$f" 2>/dev/null \
+        | sed -e 's/.*contract-allow:[[:space:]]*//' | paste -sd'|' -)
+      if [[ -n "$allowed" ]]; then
+        grep -inE "$TECH_PATTERN" "$f" 2>/dev/null | grep -viE "$allowed" | sed "s|^|$f:|"
+      else
+        grep -inE "$TECH_PATTERN" "$f" 2>/dev/null | sed "s|^|$f:|"
+      fi
+    done < <(find "${L0_DIRS[@]}" -name '*.md' -type f -print 2>/dev/null)
+  )
   if [[ -n "$hits" ]]; then
     report_fail "$CURRENT" \
       "L0 must ask for a KIND of guidance, not name a technology (ADR 0003)." \

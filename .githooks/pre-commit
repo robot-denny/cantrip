@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+#
+# Contract gate. Blocks a commit that violates the layer contract or leaks
+# client-identifying information into a public repo.
+#
+# Enable once per clone:  git config core.hooksPath .githooks
+# Bypass (deliberately):  git commit --no-verify
+#
+# This exists because invoking the gate by hand is easy to get subtly wrong -- piping
+# its output to `tail` makes a shell `&&` chain read tail's exit status instead of the
+# gate's, so a failing gate silently permits the commit. That happened. A hook cannot
+# be defeated by accident.
+
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+if [[ ! -x scripts/check-contract.sh ]]; then
+  echo "pre-commit: scripts/check-contract.sh missing or not executable" >&2
+  exit 1
+fi
+
+if ! scripts/check-contract.sh; then
+  cat >&2 <<'MSG'
+
+pre-commit: contract gate failed -- commit blocked.
+
+Fix the findings above, or bypass deliberately with:
+  git commit --no-verify
+MSG
+  exit 1
+fi
