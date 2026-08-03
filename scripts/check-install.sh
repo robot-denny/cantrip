@@ -175,13 +175,25 @@ slot_state() {          # slot_state <file> <heading>
     END {exit(found?0:1)}' "$f" && echo filled || echo empty
 }
 
+# Core slots, read by the core skills. Pack slots are surveyed only when the pack that
+# reads them is installed -- a core-only install must not be told to fill a slot no
+# installed unit reads. (Found by cross-checking this list against the slots actually
+# declared in the skills: `## Models` was being surveyed unconditionally while
+# `## Umbraco` was not surveyed at all.)
 SLOTS=(
   "paths.md|Workspace" "paths.md|Code layout" "paths.md|Generated output"
-  "stack.md|Build" "stack.md|Tests" "stack.md|Models"
+  "stack.md|Build" "stack.md|Tests"
   "conventions.md|Branch naming" "conventions.md|Commit format" "conventions.md|Commit trailers"
   "conventions.md|Implementation rules" "conventions.md|Memory"
   "conventions.md|Planning gotchas" "conventions.md|Unit of work"
 )
+# Pack slot -> the installed skill that makes it relevant.
+PACK_SLOTS=( "stack.md|Models|umbraco-17-planning" "paths.md|Umbraco|umbraco-17-planning" )
+for entry in "${PACK_SLOTS[@]}"; do
+  IFS='|' read -r pf ph pskill <<<"$entry"
+  [[ -r "$SKILLS_DIR/$pskill/SKILL.md" ]] && SLOTS+=("$pf|$ph")
+done
+
 slots_filled=0; slots_empty=0; slot_lines=()
 for entry in "${SLOTS[@]}"; do
   f="${entry%%|*}"; h="${entry##*|}"

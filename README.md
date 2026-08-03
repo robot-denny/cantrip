@@ -33,6 +33,18 @@ is a quirk of the installer, not a broken install — you can ignore or delete i
 > `npx skills` uploads skill file contents as telemetry by default. Prefix with
 > `DISABLE_TELEMETRY=1` if that matters to you.
 
+### If your project already has commands with these names
+
+**A skill shadows a same-named command.** There is no namespace and no error — install
+`/spec` and an existing `.claude/commands/spec.md` becomes present but unreachable. It is not a
+fallback you can still get to.
+
+This matters most for a project already running its own version of this workflow. **Install on a
+branch first.** Shadowing is then contained: switching back to your default branch restores your
+commands intact, and you can compare the two side by side before committing to either.
+
+Commands whose names the toolkit does not use are unaffected.
+
 ### Check the install
 
 ```bash

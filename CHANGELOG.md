@@ -90,6 +90,11 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   (`<!-- contract-allow: <pattern> — <reason> -->`) for dual-use patterns like the toolkit's own
   installer.
 
+- README documents that installing **shadows** same-named commands, and recommends installing on a
+  branch to contain it.
+- `memory-discipline` distinguishes the two memory systems a project usually has, notes that backups
+  must cover both, and warns that renaming an agent orphans its memory silently.
+
 ### Changed
 
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and
