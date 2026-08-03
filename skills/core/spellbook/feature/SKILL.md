@@ -1,0 +1,277 @@
+---
+name: feature
+description: Generate or update a living behavioral doc — BDD Given/When/Then scenarios describing what a capability does right now, grouped under business rules, mapped to tests in a coverage table. Works from specs, plans, and tests, or from code alone when a capability was never documented. Records durable behavior at the end of the spec → plan → implement chain.
+disable-model-invocation: true
+argument-hint: "[spec path | capability-name | update <slug> | a code entity with no upstream artifacts]"
+allowed-tools: Read, Write, Glob, Grep
+---
+
+You are generating (or updating) a **living behavioral specification** — a BDD-style doc
+describing what a capability does *right now*, using Given/When/Then scenarios. This is the
+single source of truth for current system behavior, used by QA for regression testing and by
+developers for onboarding.
+
+Artifact locations follow the layout in the `workflow` skill — consult it rather than assuming
+paths.
+
+User input: $ARGUMENTS
+
+## What this does
+
+Creates or updates a feature doc that:
+
+- Describes current behavior using BDD scenarios (Given/When/Then)
+- Groups scenarios under `Rule:` headings — the business rule each cluster proves
+- Maps scenarios to test files in a coverage table
+- Uses business language, not technical jargon
+- Is **one file per logical capability**, named by area of the system, even when the capability
+  spans multiple specs or plans
+
+## Guard — feature docs are for capabilities, not work
+
+Before creating any new file, apply the work-type classification from the *Work types* table in
+the `workflow` skill. Feature docs hold **evergreen capability behavior only.**
+
+- If the slug names a **change to an existing capability** (a migration, upgrade, refactor, "add
+  X to existing Y") — for instance it starts with `migrate-` / `upgrade-` / `extract-` / `bump-`,
+  or its draft Rules read as *transitions* ("goes from red to…", "after the change ships…",
+  "compiles on the stable stack") rather than standing behavior — **do not create a new file.**
+  Find the existing capability doc it changes (grep the feature docs by area) and update *that*,
+  folding in the evergreen behavior. Point-in-time acceptance criteria stay in the shipped spec.
+- If the slug names a **fix, infra, CI, or cleanup** effort (`fix-`, `triage-`, a dependency bump
+  with no behavior change) — **do not create a feature doc at all.** Durable residue belongs in a
+  runbook under `docs/` and/or a section in the project's guidance file.
+- Only a genuinely **new capability** earns a new feature doc.
+
+If the argument points at a change or fix slug, **stop** and tell the user which existing
+capability doc (or runbook) should receive the content instead, rather than creating a
+transition-style feature doc.
+
+Only proceed past this guard when the work is a genuine new capability, or an update adding
+standing behavior to an existing capability's doc. Architecture and migration criteria — "the
+service is unit-testable", "the build is zero-warning", "the package leaves no trace" — are
+point-in-time. They never become Rules in a capability doc.
+
+**From-code mode also runs this Guard.** A code entity is usually a genuine capability — a type
+or component that renders standing behavior — so it normally earns a doc. But if the code exists
+only to serve a fix or infra concern, or is a change to an existing capability, fold it per the
+rules above instead of drafting a cold-start doc.
+
+## Before you start
+
+1. Consult the `bdd-principles` skill for scenario-writing guidance — especially **Example
+   Mapping** (Rules → Scenarios), **Specification by Example** (concrete values, not
+   abstractions), and **Ubiquitous Language** (business terms like "content editor", "visitor",
+   "page" — not "document type", "controller", "API endpoint").
+2. Read `.agents/skills/workflow/templates/feature.md` to understand the output format.
+
+## Step 1 — Parse the argument
+
+Resolve `$ARGUMENTS` in this **precedence order**, stopping at the first branch that matches. The
+richer artifact-driven path always wins when artifacts exist — from-code is strictly the fallback
+for the zero-artifact cold-start case. A code entity that *does* have a spec takes the
+artifact-driven path, not the thinner code-only one.
+
+1. **`update` directive** (starts with `update`) → **update mode.** Update the existing feature
+   doc named after it.
+
+2. **Artifact-driven** — the argument is a spec path, or a token resolving to an existing feature
+   doc or a locatable spec, plan, or **behavioral** test. A behavioral test asserts observable
+   Given/When/Then behavior that would populate the coverage table; a pure visual-regression
+   baseline does **not** count, so a component whose only test is a screenshot comparison remains
+   a from-code cold-start target.
+
+   - **Spec path**: read the spec's `**Work type**:` line first. For `new-capability`, create a
+     new doc (extract the slug from the filename). For `change-to <existing>`, update that
+     existing capability's doc instead of creating a new file. For `fix-infra`, create no doc —
+     apply the Guard. If the spec has no work-type line, classify it yourself per the Guard.
+   - **Capability name** (no path separators): look for an existing doc by that name. If found,
+     update it. Otherwise look for a locatable spec, plan, or behavioral test. If any exist, apply
+     the Guard before creating — only create when the work is a new capability.
+
+   Follow **Steps 2–7** below.
+
+3. **From-code (fallback)** — only if nothing above resolves *and* the token resolves to code,
+   with **no** upstream spec, plan, behavioral test, or existing feature doc. The presence of only
+   a visual-regression baseline does not disqualify this mode. Reverse-engineer a draft from the
+   implementation using **From-code mode** below in place of Steps 2–6, then finish with **Step 7
+   — Report**.
+
+## From-code mode (cold start — no upstream artifacts)
+
+Reverse-engineers a **draft** doc when a capability exists in code but has no spec, plan, tests,
+or doc to work from. The output is the same template shape as every other mode — it just
+self-identifies as reverse-engineered and not-yet-verified, because code is the only source.
+
+Run the **Guard** first. This mode still classifies the work and only proceeds for a genuine
+capability.
+
+This is also the path for adopting the toolkit on an existing codebase: it backfills behavioral
+documentation for capabilities that predate any spec.
+
+### F1 — Read the code sources
+
+Resolve the argument to the thing being documented, then read its implementation from up to three
+sources, in this order of authority:
+
+1. **The schema definition** — whatever declares the capability's shape and its author-editable
+   fields. Read it for the human-readable name, the field labels and identifiers, which fields are
+   required, any per-field help text, and anything inherited from a shared composition.
+2. **The typed model** — if the project has a generated or hand-written model exposing those
+   fields as typed properties, **use the property types as the primary signal** for what each
+   field is. A strongly-typed property is more reliable and more repo-native than reverse-mapping
+   a schema-level editor identifier.
+3. **The view or template** — whatever renders it. Read it for **conditional branches** —
+   `if`/`else`, null and empty checks, collection-emptiness guards, toggle guards — and write one
+   scenario per branch, with the true and the false path each becoming an outcome.
+
+If a stack pack or project skill offers guidance on where these three live for this technology,
+and how to map schema-level field types to readable labels, consult it. Without such guidance,
+locate the sources by finding the closest documented analogue and following its structure.
+
+**Slot:** `.agents/config/paths.md` → `## Code layout`
+**If empty:** search for the schema, model, and view by the capability's name or identifier. If
+any of the three cannot be found, proceed with what resolved and record the gap per F4 — do not
+guess at the missing source's contents.
+
+If nothing resolves for the token, say so and ask the user to confirm the name rather than
+guessing.
+
+### F2 — Derive Rules from each field
+
+One `### Rule:` per meaningful field or behavior cluster — **not** one Rule per field blindly.
+Derive the scenario shape from the field's kind:
+
+| Field kind | Scenarios to write |
+|---|---|
+| **Required** | "renders when set" **and** "fails validation when missing" |
+| **Optional text or rich text** | "renders when set" **and** "renders nothing when blank" |
+| **Boolean / toggle** | "shows X when enabled" **and** "hides X when disabled" |
+| **Media or asset reference** | "renders the asset when set" **and** "no asset or a placeholder when blank" |
+| **Collection of child items** | "renders children when present" **and** "renders no container when empty" |
+| **Reference to other content** | "renders the link when set" **and** "renders nothing when unset" |
+| **Every conditional branch found in the view** | one scenario per side of the branch |
+
+Write scenarios in Given/When/Then with concrete values and business language, exactly as Step 4
+describes — no CSS classes, file paths, or field identifiers inside the scenarios themselves.
+
+### F3 — Flag what code can't prove
+
+Where the exact observable proof — the precise element, text, or selector a test would assert —
+**cannot** be derived from the sources alone, do **not** invent it. Append this line to that
+scenario:
+
+`> needs human input: exact element/selector — confirm what proves this outcome.`
+
+Also flag any field whose kind stayed unrecognized, and note if no view was found, since scenarios
+may then be incomplete.
+
+### F4 — Provenance and coverage
+
+Emit the standard template, with these from-code specifics:
+
+- **Draft banner**, immediately under the `# Feature:` heading: `> **Draft** — Reverse-engineered
+  from code; these scenarios have not been verified against a running implementation or any test.
+  Refine and verify before relying on them.` This is the from-code counterpart to the banner
+  `/spec` adds; a later `/feature update` removes it once verified.
+- **Source line** → `derived from implementation ({today's date}) — no originating spec;
+  reverse-engineered from code.`
+- **Last verified** → today's date. The draft banner, not this field, carries the unverified
+  signal.
+- **Increments** → a single placeholder: `- [ ] (no shipped increments recorded —
+  reverse-engineered baseline)`.
+- **Test Coverage** → every row starts **Not covered.** From-code mode drafts behavior only;
+  tests don't exist yet.
+- **Edge Cases** → pull genuinely boundary or unusual scenarios (missing content, invalid input,
+  empty collections) out of Behaviors into here, using the same `Rule:` and scenario shape.
+- **Revision Notes** → `{today's date}: Initial draft reverse-engineered from {name} — not yet
+  human-verified.`
+- If reading the model or view surfaced a genuine bug or dead code — a field nothing reads, a
+  mismatched identifier — and not merely a documentation gap, add a short `## Open Issues` section
+  of numbered prose bullets before Behaviors. Omit it entirely otherwise.
+
+Save the doc with a slug derived from the capability's identifier in kebab-case. Then go to **Step
+7 — Report**, pointing the `Next:` line at spells that actually exist in this project.
+
+## Step 2 — Locate all related artifacts
+
+Search for everything related to this capability:
+
+1. **Spec(s)** — the increment's spec, and any sub-specs
+2. **Plan(s)** — there may be several for one capability
+3. **Test files** — matching the capability's name or slug
+4. **Source files** — the views, styles, scripts, or code implementing it; use the plan's file
+   summary if one exists
+
+Read everything located.
+
+## Step 3 — Resolve behavioral truth
+
+When sources disagree about behavior — which happens as capabilities evolve — use this precedence:
+
+1. **Test assertions** are the strongest signal. They describe what the code actually does.
+2. **Plan descriptions** are second. They reflect the most recent intent.
+3. **Spec descriptions** are third. They reflect the original intent.
+
+Note any conflict in the output summary. The doc should reflect **reality** (test behavior), not
+**aspiration** (spec or plan).
+
+## Step 4 — Derive Rules and write scenarios
+
+For each distinct behavior:
+
+1. **Identify the Rule** — the business rule or acceptance criterion, framed from the user's
+   perspective. Good: "Only visible pages appear in section navigation." Bad: "Pages with a
+   hide-flag are filtered by a LINQ Where clause."
+2. **Write scenarios** under that Rule in Given/When/Then:
+   - **Concrete values**: "Given a page with 3 visible siblings", not "Given a page with siblings"
+   - **Business language**: "content editor", "visitor", "page" — not internal type names
+   - One scenario per distinct behavior or example
+   - Edge cases get their own Rule section under Edge Cases
+3. **No implementation details** — no CSS classes, file paths, endpoints, or code patterns. Those
+   live in plans.
+
+## Step 5 — Build the test coverage table
+
+For each scenario, find the corresponding test if one exists:
+
+| Scenario | Test File | Status |
+|----------|-----------|--------|
+| Scenario name | `path/to/test:L42` | Covered |
+| Scenario name | — | Not covered |
+
+Match by **behavioral intent, not exact wording.** A scenario about "mobile toggle collapses
+navigation" maps to a test named "click toggle hides nav list" even though the wording differs.
+
+## Step 6 — Assemble and save
+
+Use the template structure:
+
+- **Summary** — 2–3 sentences, user perspective, business language
+- **Source** — path to the originating spec
+- **Last verified** — today's date
+- **Behaviors** — Rule-grouped scenarios
+- **Edge Cases** — Rule-grouped edge-case scenarios
+- **Test Coverage** — the table from Step 5
+- **Revision Notes** — "Initial feature doc from spec + implementation" for a new doc, or a
+  description of what changed for an update
+
+For a **new** doc, save it under the capability's slug. For an **update**, overwrite the existing
+file and add a revision note dated today.
+
+If the doc carries a "Draft" banner from `/spec` or from from-code mode, **remove it** — this is
+the verified version.
+
+## Step 7 — Report
+
+Print a short summary:
+
+```
+Feature doc: <path>
+Scenarios: {count}
+Test coverage: {covered}/{total} scenarios covered
+Conflicts resolved: {list any behavioral conflicts and how they were resolved, or "None"}
+Next: /code-review before merge
+```
+
+Do not print the full doc to chat unless the user asks. The doc lives in the file.

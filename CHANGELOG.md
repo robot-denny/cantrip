@@ -36,6 +36,13 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   trigger-engineered descriptions, and L0 asks for a *kind* of guidance rather than naming any
   technology.
 - Gate check 8 — no technology names in L0 core, enforcing ADR 0003.
+- **`/feature` spell** — reconciled from both source versions into one command with an implicit
+  from-code mode, so a capability that exists in code but was never documented can be backfilled.
+  This is what makes adopting the toolkit on an existing project work.
+- **`umbraco-17-feature-backfill` pack skill** — where Umbraco keeps the schema artifact, generated
+  model, and view, plus the data-type-to-field-kind mapping.
+- **`scripts/check-preserved.py`** — whitespace- and emphasis-normalized preservation checking, so
+  hard-wrapped output stops producing false "content lost" flags.
 
 ### Changed
 
