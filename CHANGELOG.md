@@ -11,5 +11,24 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 ### Added
 
-- Repository scaffold: layer directories (`skills/core`, `skills/umbraco-17`, `agents`,
-  `templates`), ADR log, changelog, and contributor guidance.
+- Repository scaffold: layer directories, ADR log, changelog, and contributor guidance.
+- **The layer contract** ([docs/contract.md](docs/contract.md), ADR 0001): four L2 slot files,
+  the `**Slot:**` / `**If empty:**` reference pattern, graceful degradation as a hard
+  requirement, and the rule that editing a vendored file is a divergence rather than a
+  workflow.
+- **Packaging shape** (ADR 0002): every installable unit is a skill directory, with non-skill
+  assets shipping inside one. Reviewer agents stay at repo-root `agents/`.
+- **`workflow` reference skill** — the workflow spine and work-types classification, extracted
+  from the host projects' `CLAUDE.md` so the toolkit owns its own spine. Carries the spec and
+  feature templates as assets.
+- **`bdd-principles` reference skill** — BDD guidance, with a trigger-engineered description.
+- **`scripts/check-contract.sh`** — seven automated contract checks (client-identifier scrub,
+  absolute paths, hostnames, slot/fallback pairing, invocation posture, frontmatter
+  completeness, loose files).
+
+### Changed
+
+- Skills organized by invocation taxonomy — `skills/core/spellbook/` and
+  `skills/core/reference/` — which lets the contract gate enforce invocation posture by path.
+- Templates moved from a root directory into the `workflow` skill, so they install with the
+  spine that describes them instead of needing a separate placement step.

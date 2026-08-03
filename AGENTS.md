@@ -20,6 +20,21 @@ real client projects, so:
 
 When extracting from a source repo, scrub as you write, not in a later pass.
 
+### Naming the source repos
+
+This applies to *every* committed file, including ADRs, changelog entries, rationale notes, and
+commit messages — not just shipped skills. Those documents legitimately need to discuss where
+something came from, so use neutral aliases:
+
+| Source | Refer to it as |
+|---|---|
+| The client project | **"the client project"** — never by name, and never by its assembly, host, or department names |
+| The Umbraco 17 demo project | **"the demo project"** — safe to name directly; it is not client work |
+
+When the distinction does not matter, "the source repos" is better than either. Run
+`scripts/check-contract.sh` before committing; check 1 is repo-wide precisely because these
+documents are where the name tends to slip through.
+
 ## Layer contract
 
 - `skills/core/` (L0) and `skills/umbraco-17/` (L1) must contain **no project facts**.
