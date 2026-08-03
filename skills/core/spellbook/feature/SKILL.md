@@ -130,9 +130,12 @@ and how to map schema-level field types to readable labels, consult it. Without 
 locate the sources by finding the closest documented analogue and following its structure.
 
 **Slot:** `.agents/config/paths.md` → `## Code layout`
-**If empty:** search for the schema, model, and view by the capability's name or identifier. If
-any of the three cannot be found, proceed with what resolved and record the gap per F4 — do not
-guess at the missing source's contents.
+**If empty:** infer the layout by finding the closest existing analogue to what you are looking
+for and following its structure; if nothing analogous exists, say so in your output rather than
+inventing a convention.
+
+Where any of the three sources cannot be found, proceed with what resolved and record the gap per
+F3 — never guess at a missing source's contents.
 
 If nothing resolves for the token, say so and ask the user to confirm the name rather than
 guessing.

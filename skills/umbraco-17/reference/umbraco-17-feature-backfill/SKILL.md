@@ -35,8 +35,11 @@ reliable and more repo-native than reverse-mapping a `umb://data-type/...` UDI.
 Fall back to the UDI table below only when the model is absent or the C# type is ambiguous.
 
 **Slot:** `.agents/config/stack.md` → `## Models`
-**If empty:** check whether `*.generated.cs` files are committed. If they are absent, models are
-generated at runtime and unavailable to read — rely on the `.uda` plus the UDI table instead.
+**If empty:** check whether `*.generated.cs` model files are committed to the repo. If they are,
+the project regenerates them manually; if they are absent, models are generated at build or run
+time and cannot be read from source.
+
+Where models cannot be read from source, rely on the `.uda` plus the UDI table below.
 
 ### 3. The Razor view
 
@@ -48,9 +51,10 @@ Read it for **conditional branches** — `if`/`else`, null and empty checks,
 `@if (Model.X.Any())`, toggle guards — and write one scenario per branch found.
 
 **Slot:** `.agents/config/paths.md` → `## Umbraco`
-**If empty:** locate the Deploy revision directory by searching for `*.uda` files, and the views by
-searching for `*.cshtml` matching the alias. If the project has no committed `.uda` files, it is
-not using Deploy — read schema from the running instance via MCP instead.
+**If empty:** locate each by search — the Deploy revision directory by its `*.uda` files,
+views by their `*.cshtml` files, and the extension root by its `umbraco-package.json`. If no
+`*.uda` files exist, the project is not using Deploy — read schema from the running instance
+via MCP instead.
 
 ## Data-type UDI → readable field type
 

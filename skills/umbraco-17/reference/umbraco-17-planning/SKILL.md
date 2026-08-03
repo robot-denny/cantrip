@@ -30,9 +30,10 @@ implementers don't need to look them up again.
 The `.uda` files remain the committed source of truth for property structure.
 
 **Slot:** `.agents/config/paths.md` → `## Umbraco`
-**If empty:** locate the Deploy revision directory by searching for `*.uda` files, and the
-backoffice extension root by searching for `umbraco-package.json`; if neither exists, treat the
-project as having no committed schema yet and say so in Key Decisions.
+**If empty:** locate each by search — the Deploy revision directory by its `*.uda` files,
+views by their `*.cshtml` files, and the extension root by its `umbraco-package.json`. If no
+`*.uda` files exist, the project is not using Deploy — read schema from the running instance
+via MCP instead.
 
 ## Route backoffice extension work to its authoritative skill
 
@@ -84,6 +85,9 @@ patterns instead.
 extension registration → component → context and state → tests → record behavior.
 
 **Slot:** `.agents/config/stack.md` → `## Models`
-**If empty:** check whether generated models are committed to the repo. If they are, the project
-regenerates them manually and a regeneration step belongs after any schema change; if they are
-absent, models are generated at build time and no step is needed.
+**If empty:** check whether `*.generated.cs` model files are committed to the repo. If they are,
+the project regenerates them manually; if they are absent, models are generated at build or run
+time and cannot be read from source.
+
+When models are committed, a regeneration step belongs in the plan after any schema change; when
+they are not, no such step is needed.

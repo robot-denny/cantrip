@@ -229,6 +229,47 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 9. The same slot always gets the same fallback (docs/contract.md)
+# ---------------------------------------------------------------------------
+# A slot may legitimately have several independent consumers -- /plan and /retrofit both
+# need the build command, and retrofit has no plan to inherit it from. What must never
+# happen is two files declaring DIFFERENT fallbacks for one slot, because the behaviors
+# then diverge silently whenever that slot is empty. That is the drift the rule exists to
+# prevent, and it is worse than plain duplication.
+begin "one slot, one fallback"
+if [[ ${#SHIPPED_DIRS[@]} -gt 0 ]]; then
+  # Emit "<slot>\t<fallback>" per pairing, then look for slots with >1 distinct fallback.
+  inconsistent=$(
+    while IFS= read -r f; do
+      [[ -z "$f" ]] && continue
+      while IFS=: read -r lineno _; do
+        [[ -z "$lineno" ]] && continue
+        slot=$(sed -n "${lineno}p" "$f" \
+          | sed -e 's/.*\*\*Slot:\*\*[[:space:]]*//' -e 's/[[:space:]]*$//')
+        # The fallback may wrap, so join the window and cut at the next blank line.
+        fb=$(sed -n "$((lineno + 1)),$((lineno + 6))p" "$f" \
+          | sed -n '/\*\*If empty:\*\*/,/^[[:space:]]*$/p' \
+          | tr '\n' ' ' \
+          | sed -e 's/.*\*\*If empty:\*\*[[:space:]]*//' -e 's/[[:space:]]\{1,\}/ /g' -e 's/[[:space:]]*$//')
+        [[ -n "$slot" && -n "$fb" ]] && printf '%s\t%s\n' "$slot" "$fb"
+      done < <(grep -n '\*\*Slot:\*\*' "$f" 2>/dev/null)
+    done < <(shipped_md_files) \
+      | sort -u \
+      | awk -F'\t' '{c[$1]++; ex[$1]=ex[$1]"\n        - "$2} END {for (s in c) if (c[s]>1) printf "%s has %d different fallbacks:%s\n", s, c[s], ex[s]}'
+  )
+  if [[ -n "$inconsistent" ]]; then
+    report_fail "$CURRENT" \
+      "Two files give the same slot different fallbacks — behavior diverges when it is empty." \
+      "Make the fallback wording identical (docs/contract.md → one slot, one point of authority)." \
+      "" "$inconsistent"
+  else
+    report_pass "$CURRENT"
+  fi
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n'
 if [[ $FAILURES -eq 0 ]]; then
   printf '\033[32m%s checks passed.\033[0m\n' "$CHECKS_RUN"

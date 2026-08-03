@@ -51,9 +51,9 @@ Before planning, read enough of the codebase to answer:
   kind of thing being built.
 
   **Slot:** `.agents/config/paths.md` → `## Code layout`
-  **If empty:** infer the layout by finding the closest existing analogue to what is being built
-  and following its structure; if nothing analogous exists, say so in the plan's Key Decisions
-  rather than inventing a convention.
+  **If empty:** infer the layout by finding the closest existing analogue to what you are looking
+  for and following its structure; if nothing analogous exists, say so in your output rather than
+  inventing a convention.
 
 - Are there existing types, components, or configurations that can be reused instead of created?
 - What is the right test file location and naming convention here?
@@ -129,9 +129,11 @@ Write the plan in the format below. Do not skip sections.
 Where the format calls for a build, test, or run command, use the project's real commands.
 
 **Slot:** `.agents/config/stack.md` → `## Build`
-**If empty:** infer from the repo root (solution files, `package.json` scripts, `Makefile`) and
-state in Key Decisions which command you assumed; if genuinely ambiguous, ask rather than
-guessing.
+**If empty:** infer the build and test commands from the repo root and state which you used; if
+genuinely ambiguous, ask rather than guessing.
+
+Record any command you had to infer in the plan's Key Decisions, so the next increment doesn't
+re-derive it.
 
 ````markdown
 # Plan: {feature_title}

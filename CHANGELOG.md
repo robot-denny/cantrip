@@ -53,6 +53,11 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   skeletons carrying their own checklists and deferring shared behavior to two new references.
 - **`reviewer-discipline` reference skill** — the diff-only scope rule, the single severity scale,
   the evidence standard, and the report structure every reviewer shares.
+- **`/retrofit` spell** — reconciles an out-of-flow change against its actual diff, reviews it,
+  surfaces edge cases, and proposes the tests and docs the flow would have produced, applying only
+  what is confirmed.
+- Gate check 9 — the same slot always gets the same fallback, so behavior cannot diverge silently
+  when a slot is empty.
 - **`memory-discipline` reference skill** — the MEMORY.md index and topic-file layout, the entry
   format, and the three entry types, including the false-positive suppressions that keep a reviewer
   calibrated.
@@ -69,6 +74,8 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   into a single ranking, with higher-severity-wins on disagreement. The sources carried four
   different scales across files meant to merge into one report.
 - Gate check 8 also covers `agents/`, which ship as core and are equally technology-agnostic.
+- The one-slot rule now governs the *fact*, not the reference: several spells may read one slot, but
+  they must give it identical fallbacks.
 - Contract gained the **one slot, one point of authority** rule: a slot is referenced where it
   is owned, and other files defer to that owner rather than repeating it. Toolkit-internal paths
   are not slots.

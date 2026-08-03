@@ -90,8 +90,19 @@ do **not** each re-declare that slot; they say "artifact locations follow the la
 
 The reason is drift. Eight spells each carrying their own copy of the same slot reference is
 eight places to update and eight chances for the fallbacks to disagree — which is precisely how
-the two source repos ended up with the same command in two different states. A spell should
-carry a slot reference only for a fact no other toolkit file already owns.
+the two source repos ended up with the same command in two different states.
+
+**The rule governs the fact, not the reference.** Some slots genuinely have several independent
+consumers: `/plan` and `/retrofit` both need the build command, and neither can inherit it from the
+other because retrofit operates on an arbitrary change with no plan to read. That is fine. What must
+never happen is **two files declaring different fallbacks for the same slot** — that is the drift the
+rule exists to prevent, and it is worse than duplication because the two behaviors diverge silently
+when a slot is empty.
+
+So: prefer deferring to an owner when one exists and the fact can reach you through an artifact —
+`/implement-step` gets the build command from the plan that recorded it. When you genuinely need a
+slot no artifact carries to you, reference it directly, and **keep the fallback wording identical to
+every other reference to that same slot.**
 
 Corollary: **toolkit-internal paths are not slots.** A spell reading
 `.agents/skills/workflow/templates/spec.md` is naming something the toolkit itself controls and
