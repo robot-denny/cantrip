@@ -1,7 +1,12 @@
 # 0002. Packaging and install shape
 
-**Status:** Accepted
+**Status:** Accepted — two claims superseded by [ADR 0004](0004-install-layout-corrections.md)
 **Date:** 2026-08-03
+
+> **Superseded in part.** Verifying the CLI at increment 3.1 disproved two assumptions this ADR
+> rested on: `--agent` selects a target agent *tool* rather than installing agent definitions, and the
+> install produces no `.agents/` tree. The central decision — non-skill assets ship inside a skill
+> directory — was verified and stands. See ADR 0004 for what changed and why.
 
 ## Context
 

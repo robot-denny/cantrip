@@ -63,7 +63,7 @@ rules above instead of drafting a cold-start doc.
    Mapping** (Rules → Scenarios), **Specification by Example** (concrete values, not
    abstractions), and **Ubiquitous Language** (business terms like "content editor", "visitor",
    "page" — not "document type", "controller", "API endpoint").
-2. Read `.agents/skills/workflow/templates/feature.md` to understand the output format.
+2. Read the `templates/feature.md` asset in the `workflow` skill to understand the output format.
 
 ## Step 1 — Parse the argument
 

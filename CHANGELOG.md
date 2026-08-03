@@ -60,9 +60,22 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   what is confirmed.
 - Gate check 9 — the same slot always gets the same fallback, so behavior cannot diverge silently
   when a slot is empty.
+- Toolkit assets are referenced by skill and asset name rather than install path, which varies by
+  agent tool and CLI version.
+- The reviewer agents moved from repo-root `agents/` into the `reviewer-discipline` skill, so they
+  install and are hash-tracked. Registering them as subagents is one documented command; until then
+  review runs inline instead of in parallel.
+- Dropped the planned `toolkit-lock.json` — the CLI's own `skills-lock.json` already records source,
+  path, and content hash per skill.
 - **`memory-discipline` reference skill** — the MEMORY.md index and topic-file layout, the entry
   format, and the three entry types, including the false-positive suppressions that keep a reviewer
   calibrated.
+
+- **Install path** — `npx skills add robot-denny/cantrip/skills/core --all` for the core toolkit, or
+  a `skills/<pack>` subpath for a stack pack. Packs are opt-in by construction.
+- **ADR 0004** — install layout corrections from verifying the CLI, superseding two claims in
+  ADR 0002.
+- README now carries the install instructions and the spell catalog.
 
 ### Changed
 

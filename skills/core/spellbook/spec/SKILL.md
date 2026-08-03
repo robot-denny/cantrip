@@ -69,8 +69,8 @@ per-increment branch, skip this step and say so in the final summary.
 ## Step 4. Draft the spec content
 
 Create a markdown spec document that planning can use directly, saved in the increment's
-working directory under the `feature_slug`. Read `.agents/skills/workflow/templates/spec.md`
-and use its exact structure. **Do not add technical implementation details such as code
+working directory under the `feature_slug`. Use the exact structure of the `templates/spec.md`
+asset in the `workflow` skill. **Do not add technical implementation details such as code
 examples.**
 
 After writing the Acceptance Criteria section, use the **Example Mapping** technique to derive
@@ -121,8 +121,8 @@ feature docs with a change or fix masquerading as a capability. In both cases th
 scenarios still live in the spec from Step 4 — nothing is lost.
 
 If (and only if) the work type is `new-capability`, create a draft feature doc named by the
-**capability or area, not the work**, using the structure in
-`.agents/skills/workflow/templates/feature.md`. Populate it with:
+**capability or area, not the work**, using the structure of the `templates/feature.md` asset in
+the `workflow` skill. Populate it with:
 
 - The feature summary from the spec
 - The draft scenarios from the spec's "Scenarios (Draft)" section

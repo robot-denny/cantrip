@@ -3,63 +3,108 @@
 An agentic spellbook for cross-functional teams.
 
 A *cantrip* is a minor spell cast at will, without preparation — and a Scots word for a
-small charm. That is the invocation model here: user-cast spells, deliberate and
-repeatable.
+small charm. That is the invocation model here: user-cast spells, deliberate and repeatable.
 
-Cantrip packages a spec → plan → implement → review workflow as portable Claude Code
-skills, agents, and templates, so the same discipline can be installed into many projects
-instead of hand-ported between them.
+Cantrip packages a spec → plan → implement → review workflow as portable skills, so the same
+discipline can be installed into many projects instead of hand-ported between them. It works on a
+new project or an existing one.
 
-> **Status: scaffold.** The repo structure is in place; content extraction has not
-> started. Nothing here is installable yet.
+## Install
+
+Core only — works on any project, no stack assumptions:
+
+```bash
+npx skills add robot-denny/cantrip/skills/core --all
+```
+
+Add a stack pack if one fits your project:
+
+```bash
+npx skills add robot-denny/cantrip/skills/umbraco-17 --all
+```
+
+Skills land in `.claude/skills/`, and `skills-lock.json` records the source and a content hash for
+each one. Packs are opt-in: the core install brings no stack-specific content at all.
+
+> `npx skills` uploads skill file contents as telemetry by default. Prefix with
+> `DISABLE_TELEMETRY=1` if that matters to you.
+
+### One extra step for parallel review
+
+The three reviewer agents install as assets of the `reviewer-discipline` skill, but registering them
+as dispatchable subagents is something the installer cannot do. Link them once:
+
+```bash
+mkdir -p .claude/agents
+ln -s ../skills/reviewer-discipline/agents/*.md .claude/agents/
+```
+
+Until you do, `/code-review` and `/retrofit` run the three review passes inline instead of in
+parallel. Everything works either way — you are trading concurrency, not capability.
+
+## The spellbook
+
+Verbs are spells, cast with `/<name>`. They are invisible to the model and run only when you ask.
+
+| Spell | What it does |
+|---|---|
+| `/explore` | Interview-driven discovery *before* a decision. Widens the option space instead of narrowing it. |
+| `/spec` | Turns an idea into a spec with acceptance criteria, draft BDD scenarios, and a work-type classification. |
+| `/plan` | Turns a spec into TDD-first steps, each runnable in a fresh context, each with a paste-ready prompt. |
+| `/implement-step` | Runs one plan step in an isolated context, then reports back. |
+| `/feature` | Writes or updates a living behavioral doc. Also backfills one from code alone. |
+| `/code-review` | Three reviewers in parallel, merged into one report with an ordered action plan. |
+| `/commit-message` | Proposes a message that explains *why*, following your project's own convention. |
+| `/retrofit` | The easy button for a change that skipped the flow — reconciles intent against the diff, then proposes the missing tests and docs. |
+
+Nouns are references, which the model reaches for on its own: `workflow` (the spine and work-type
+classification), `bdd-principles`, `reviewer-discipline`, `memory-discipline`.
+
+**Spells chain by suggestion, never invocation.** Every spell ends with a `Next:` line; none of them
+calls another. That is what keeps this a toolbox rather than a funnel.
+
+```
+explore → spec → plan → implement-step → feature → code-review → commit-message
+                                              ↑
+                        retrofit (out-of-flow entry) ┘
+```
 
 ## How it is layered
 
 | Layer | Contents | Owned by |
 |---|---|---|
-| **L0 Core** | Workflow spine, spellbook skeletons, references, templates, agent skeletons | this repo |
+| **L0 Core** | Workflow spine, spellbook, references, templates, reviewer agents | this repo |
 | **L1 Stack pack** | Tech-specific spells, rules, and starter facts. First pack: `umbraco-17` | this repo |
-| **L2 Project** | Stack facts, project skills, reviewer rules, agent memory — filled config slots | the consuming project |
+| **L2 Project** | Stack facts, project skills, reviewer rules, agent memory | the consuming project |
 
-L0 and L1 files never contain project facts. They read L2 slots and degrade gracefully
-when a slot is empty. Projects vendor their copy; an update flow reconciles it with
-upstream.
+**L0 and L1 files contain no fact about any specific project.** They read L2 *slots* and degrade
+gracefully when a slot is empty — so a fresh install works before you have configured anything, and
+every spell either does real work or asks for the one fact it is missing.
 
-## Invocation postures
+Configure by filling slots in `.agents/config/` — `paths.md`, `stack.md`, `conventions.md`, and
+`reviewer-rules/`. Nothing is required to start.
 
-| Posture | Mechanism | Contents |
-|---|---|---|
-| **Spell** (user-cast only) | `disable-model-invocation: true`, cast via `/<name>` | The orchestration chain: side-effectful, deliberate |
-| **Reference** (model-invoked) | Trigger-engineered description, loaded at session start | Discipline and knowledge the agent reaches for |
-| **Worker** (subagent) | Own context, preloads skills | The reviewers |
+Editing a vendored file is possible but is a **divergence**, not a workflow: tailoring belongs in
+L2. If tailoring needs a core edit, that is a missing slot — please report it as one.
 
-Conventions: **verbs are spells, nouns are reference** (`/spec`, `/plan` vs
-`bdd-principles`, `design-system`). Spells **chain by suggestion, never invocation** —
-every spell ends with a `Next:` line. That is what keeps this a toolbox rather than a
-funnel.
+See [docs/contract.md](docs/contract.md) for the full contract.
 
 ## Layout
 
 ```
-skills/core/         # L0 — spellbook + reference skills
-skills/umbraco-17/   # L1 — first stack pack
-agents/              # reviewer skeletons
-templates/           # spec / plan / feature templates
-docs/                # durable human reference
-adr/                 # toolkit decision records
-CHANGELOG.md
+skills/core/spellbook/     # the spells
+skills/core/reference/     # model-invoked references, and the reviewer agents
+skills/umbraco-17/         # first stack pack
+docs/                      # durable reference
+adr/                       # toolkit decision records
+scripts/                   # contract gate and extraction checks
 ```
-
-## Spell catalog
-
-To be filled as spells land. Planned core set (6–8): `spec`, `plan`, `implement-step`,
-`feature`, `retrofit`, `explore`, `code-review`, `commit-message`.
 
 ## Contributing
 
-This repo is public from day one and draws on real client projects. Content harvested
-from client work must be scrubbed of client-identifying information **before** it is
-committed — there is no private staging period. See [AGENTS.md](AGENTS.md).
+This repo is public and draws on real client projects. Content harvested from client work is
+scrubbed of client-identifying information **before** it is committed — see [AGENTS.md](AGENTS.md).
+`scripts/check-contract.sh` enforces that plus the layer contract, and runs before every commit.
 
-Toolkit decisions are recorded as ADRs in [adr/](adr/); user-visible changes go in
+Decisions are recorded as ADRs in [adr/](adr/); user-visible changes go in
 [CHANGELOG.md](CHANGELOG.md).
