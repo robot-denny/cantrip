@@ -30,8 +30,14 @@ from pathlib import Path
 
 
 def normalize(text: str) -> str:
-    """Collapse whitespace and strip markdown emphasis, so wrapping and bolding don't matter."""
+    """Fold the differences that rewording introduces but meaning doesn't depend on.
+
+    Strips markdown emphasis, collapses whitespace (extracted files hard-wrap), and treats
+    hyphens as spaces so "thread pool" matches "thread-pool" — compound hyphenation shifts
+    freely during editing and is never the thing a probe is actually testing.
+    """
     text = re.sub(r"[*_`]", "", text)
+    text = re.sub(r"[-‐-―]", " ", text)
     return re.sub(r"\s+", " ", text).strip().lower()
 
 

@@ -208,8 +208,14 @@ fi
 # guidance and lets skill discovery route it to whichever pack can answer.
 begin "no technology names in L0 core"
 TECH_PATTERN='umbraco|\.uda\b|razor|cshtml|\bvue\b|dotnet|\bnpm\b|\bnpx\b|playwright|backoffice|modelsbuilder|app_plugins|mcp__|xunit|\bvite\b|tailwind|\bc#'
-if [[ -d skills/core ]]; then
-  hits=$(find skills/core -name '*.md' -type f -print0 2>/dev/null | xargs -0 grep -inE "$TECH_PATTERN" 2>/dev/null)
+# Agents ship as core too (ADR 0002 puts them at repo-root agents/), so they are L0 and
+# must be technology-agnostic exactly like skills/core. A pack adds rules to a reviewer
+# via its L2 reviewer-rules slot; it never names its technology in the agent itself.
+L0_DIRS=()
+[[ -d skills/core ]] && L0_DIRS+=(skills/core)
+[[ -d agents ]] && L0_DIRS+=(agents)
+if [[ ${#L0_DIRS[@]} -gt 0 ]]; then
+  hits=$(find "${L0_DIRS[@]}" -name '*.md' -type f -print0 2>/dev/null | xargs -0 grep -inE "$TECH_PATTERN" 2>/dev/null)
   if [[ -n "$hits" ]]; then
     report_fail "$CURRENT" \
       "L0 must ask for a KIND of guidance, not name a technology (ADR 0003)." \

@@ -49,6 +49,13 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   an ordered action plan; applies nothing without approval.
 - **`/commit-message` spell** — proposes a message explaining why, following the project's own
   commit convention inferred from history rather than an imposed one.
+- **Three reviewer agents** — `accessibility-reviewer`, `code-reviewer`, `perf-reviewer`, as domain
+  skeletons carrying their own checklists and deferring shared behavior to two new references.
+- **`reviewer-discipline` reference skill** — the diff-only scope rule, the single severity scale,
+  the evidence standard, and the report structure every reviewer shares.
+- **`memory-discipline` reference skill** — the MEMORY.md index and topic-file layout, the entry
+  format, and the three entry types, including the false-positive suppressions that keep a reviewer
+  calibrated.
 
 ### Changed
 
@@ -59,7 +66,9 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - The quality reviewer is named `code-reviewer`, not after any technology, so a stack pack adds
   rules to it rather than shipping a second quality reviewer.
 - All three reviewers share one severity scale (Blocker/Major/Minor/Nit) so merged findings sort
-  into a single ranking, with higher-severity-wins on disagreement.
+  into a single ranking, with higher-severity-wins on disagreement. The sources carried four
+  different scales across files meant to merge into one report.
+- Gate check 8 also covers `agents/`, which ship as core and are equally technology-agnostic.
 - Contract gained the **one slot, one point of authority** rule: a slot is referenced where it
   is owned, and other files defer to that owner rather than repeating it. Toolkit-internal paths
   are not slots.
