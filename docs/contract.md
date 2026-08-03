@@ -78,6 +78,25 @@ Rules:
 The pattern is proven: `/check-uda`'s existing git-only fallback is exactly this shape, and
 it is why that spell already works in repos without the full environment.
 
+### One slot, one point of authority
+
+A slot is referenced where it is *owned*, and every other file defers to that owner rather
+than repeating the reference.
+
+The workspace layout is the worked example. The `workflow` skill owns it — it carries the
+`paths.md` slot reference and the default layout as its fallback. Spells that write artifacts
+do **not** each re-declare that slot; they say "artifact locations follow the layout in the
+`workflow` skill" and read it.
+
+The reason is drift. Eight spells each carrying their own copy of the same slot reference is
+eight places to update and eight chances for the fallbacks to disagree — which is precisely how
+the two source repos ended up with the same command in two different states. A spell should
+carry a slot reference only for a fact no other toolkit file already owns.
+
+Corollary: **toolkit-internal paths are not slots.** A spell reading
+`.agents/skills/workflow/templates/spec.md` is naming something the toolkit itself controls and
+installs, not a project fact. Name those paths directly; save slots for facts the project owns.
+
 ## Graceful degradation is a hard requirement
 
 Every L0 and L1 file must produce useful behavior with **all slots empty**. That is the

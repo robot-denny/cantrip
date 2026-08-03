@@ -25,6 +25,8 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - **`scripts/check-contract.sh`** — seven automated contract checks (client-identifier scrub,
   absolute paths, hostnames, slot/fallback pairing, invocation posture, frontmatter
   completeness, loose files).
+- **`/spec` spell** — first extracted spellbook entry: turns a short idea into a saved spec with
+  acceptance criteria, draft BDD scenarios, a working branch, and a work-type classification.
 
 ### Changed
 
@@ -32,3 +34,6 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   `skills/core/reference/` — which lets the contract gate enforce invocation posture by path.
 - Templates moved from a root directory into the `workflow` skill, so they install with the
   spine that describes them instead of needing a separate placement step.
+- Contract gained the **one slot, one point of authority** rule: a slot is referenced where it
+  is owned, and other files defer to that owner rather than repeating it. Toolkit-internal paths
+  are not slots.
