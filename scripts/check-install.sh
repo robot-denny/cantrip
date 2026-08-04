@@ -1,0 +1,260 @@
+#!/usr/bin/env bash
+#
+# check-install.sh — verify an installed toolkit is actually wired up.
+#
+# The installer reports that files were written, which is not the same claim as "the
+# toolkit is usable here". Three things can be silently wrong after a successful install:
+# a partial install, a skill whose bundled assets are missing, and unregistered reviewer
+# agents that quietly degrade review. None of them announce themselves.
+#
+# Outcomes are three classes, not two:
+#   wired     — present and readable
+#   degraded  — working, but not at full strength (fixable, exits 0)
+#   broken    — something a spell will fail on (exits non-zero)
+#
+# That distinction is why this is safe in a pipeline: a core-only install with no
+# configuration and no linked agents is a WORKING install and exits 0.
+#
+# Usage:  scripts/check-install.sh [--verbose]
+# Exit:   0 = wired or degraded, 1 = broken
+
+set -uo pipefail
+
+VERBOSE=0
+[[ "${1:-}" == "--verbose" ]] && VERBOSE=1
+
+# Read everything through .claude/skills/. It is the only path that exists under all
+# three install layouts -- canonical (.agents/skills + symlinks), copied (real files in
+# .claude/skills), and source-symlinked (self-hosting). See ADR 0004.
+SKILLS_DIR=".claude/skills"
+AGENTS_DIR=".claude/agents"
+CONFIG_DIR=".agents/config"
+
+# The toolkit's own roster. Embedded rather than derived: this script ships with the
+# toolkit and versions with it, so it cannot drift from what it describes -- and a
+# hand-vendored install has no lockfile to derive from. Units outside this list belong to
+# the project and are none of our business.
+ROSTER=(
+  bdd-principles memory-discipline reviewer-discipline workflow
+  code-review commit-message explore feature implement-step plan retrofit spec
+  update-toolkit
+)
+
+# Assets each skill must be able to read. A skill whose SKILL.md is present but whose
+# assets are gone is broken in a way a directory listing hides.
+assets_for() {
+  case "$1" in
+    workflow)            echo "templates/spec.md templates/feature.md" ;;
+    reviewer-discipline) echo "agents/accessibility-reviewer.md agents/code-reviewer.md agents/perf-reviewer.md" ;;
+    *)                   echo "" ;;
+  esac
+}
+
+REVIEWERS=(accessibility-reviewer code-reviewer perf-reviewer)
+
+WIRED=0
+DEGRADED=()
+BROKEN=()
+WIRED_NAMES=()
+
+in_roster() {
+  local n
+  for n in "${ROSTER[@]}"; do [[ "$n" == "$1" ]] && return 0; done
+  return 1
+}
+
+# ---------------------------------------------------------------------------
+# 1. Skills: present, readable, and whole
+# ---------------------------------------------------------------------------
+if [[ ! -d $SKILLS_DIR ]]; then
+  BROKEN+=("no $SKILLS_DIR directory — nothing is installed. Install with: npx skills add robot-denny/cantrip/skills/core --all")
+else
+  while IFS= read -r entry; do
+    [[ -z "$entry" ]] && continue
+    name=$(basename "$entry")
+    in_roster "$name" || continue          # a project's own skills are not our concern
+
+    skill_file="$entry/SKILL.md"
+
+    # -r follows symlinks, so a dangling link fails here rather than looking present.
+    if [[ ! -r $skill_file ]]; then
+      if [[ -L $entry && ! -e $entry ]]; then
+        BROKEN+=("$name — symlink points at nothing. Reinstall: npx skills add robot-denny/cantrip/skills/core --skill $name")
+      else
+        BROKEN+=("$name — SKILL.md is missing or unreadable. Reinstall: npx skills add robot-denny/cantrip/skills/core --skill $name")
+      fi
+      continue
+    fi
+
+    problem=""
+    grep -q '^name:[[:space:]]*[^[:space:]]' "$skill_file" || problem="frontmatter has no name"
+    grep -q '^description:[[:space:]]*[^[:space:]]' "$skill_file" || problem="frontmatter has no description"
+
+    for asset in $(assets_for "$name"); do
+      [[ -r "$entry/$asset" ]] || problem="cannot read asset $asset"
+    done
+
+    if [[ -n "$problem" ]]; then
+      BROKEN+=("$name — $problem. Reinstall: npx skills add robot-denny/cantrip/skills/core --skill $name")
+    else
+      WIRED=$((WIRED + 1)); WIRED_NAMES+=("$name")
+    fi
+  done < <(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 2>/dev/null | sort)
+fi
+
+# ---------------------------------------------------------------------------
+# 2. Roster coverage — informational, never a failure
+# ---------------------------------------------------------------------------
+# A selective install is legitimate (`--skill a,b`), so an absent skill is not broken.
+# But reporting nothing about it would mean "verified present" was only ever checking the
+# units that happened to be there. FR1 asks which resolve AND which are missing.
+ABSENT=()
+for n in "${ROSTER[@]}"; do
+  [[ -r "$SKILLS_DIR/$n/SKILL.md" ]] || ABSENT+=("$n")
+done
+
+# ---------------------------------------------------------------------------
+# 3. Lockfile cross-check (only when a lockfile exists)
+# ---------------------------------------------------------------------------
+# A hand-vendored install has no lockfile. That is legitimate, so its absence is not a
+# finding -- it just means we cannot detect a skill that never arrived.
+if [[ -f skills-lock.json ]]; then
+  while IFS= read -r locked; do
+    [[ -z "$locked" ]] && continue
+    in_roster "$locked" || continue
+    if [[ ! -r "$SKILLS_DIR/$locked/SKILL.md" ]]; then
+      BROKEN+=("$locked — listed in skills-lock.json but missing from $SKILLS_DIR. Reinstall: npx skills add robot-denny/cantrip/skills/core --skill $locked")
+    fi
+  # Deliberately a shallow regex parse rather than a jq dependency: skill names are the
+  # only keys whose value is an object in this lockfile shape, so matching `"name": {` and
+  # dropping the two container keys is sufficient and keeps the script dependency-free.
+  done < <(grep -oE '"[a-z0-9-]+":[[:space:]]*\{' skills-lock.json 2>/dev/null \
+             | sed -e 's/"//g' -e 's/:.*//' | grep -vE '^(skills|version)$')
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Reviewer agents — degraded, not broken, when unregistered
+# ---------------------------------------------------------------------------
+# Unregistered reviewers mean /code-review and /retrofit run their passes inline instead
+# of in parallel. That is a working toolkit, so it must not affect the exit code.
+LINK_FIX='mkdir -p .claude/agents && for f in .claude/skills/reviewer-discipline/agents/*.md; do n=$(basename "$f"); ln -s "../skills/reviewer-discipline/agents/$n" ".claude/agents/$n"; done'
+
+registered=0
+unreadable=()
+for r in "${REVIEWERS[@]}"; do
+  target="$AGENTS_DIR/$r.md"
+  if [[ -r $target ]]; then
+    registered=$((registered + 1))
+  elif [[ -e $target || -L $target ]]; then
+    unreadable+=("$r")
+  fi
+done
+
+if [[ ${#unreadable[@]} -gt 0 ]]; then
+  BROKEN+=("reviewer agents present but unreadable (${unreadable[*]}) — a broken link reads as configured while failing every dispatch. Re-link with: $LINK_FIX")
+elif [[ $registered -eq 0 ]]; then
+  DEGRADED+=("reviewer agents are not registered — review still runs, but inline instead of in parallel. Register with: $LINK_FIX")
+elif [[ $registered -lt ${#REVIEWERS[@]} ]]; then
+  DEGRADED+=("only $registered of ${#REVIEWERS[@]} reviewer agents are registered — review will be partial. Re-link with: $LINK_FIX")
+fi
+
+# ---------------------------------------------------------------------------
+# 5. Slot survey — every slot may legitimately be empty
+# ---------------------------------------------------------------------------
+# Reported for visibility, never for pass/fail. The toolkit is designed to work with all
+# slots empty; the point is to show what it currently knows about this project, so an
+# unexpectedly empty slot becomes visible instead of silently degrading a spell.
+slot_state() {          # slot_state <file> <heading>
+  local f="$CONFIG_DIR/$1" h="$2"
+  [[ -f $f ]] || { echo empty; return; }
+  # Filled means the heading exists AND has non-blank content before the next heading.
+  awk -v h="$h" '
+    $0 ~ "^## *" h "$" {inside=1; next}
+    inside && /^## / {exit}
+    inside && NF {found=1; exit}
+    END {exit(found?0:1)}' "$f" && echo filled || echo empty
+}
+
+# Core slots, read by the core skills. Pack slots are surveyed only when the pack that
+# reads them is installed -- a core-only install must not be told to fill a slot no
+# installed unit reads. (Found by cross-checking this list against the slots actually
+# declared in the skills: `## Models` was being surveyed unconditionally while
+# `## Umbraco` was not surveyed at all.)
+SLOTS=(
+  "paths.md|Workspace" "paths.md|Code layout" "paths.md|Generated output"
+  "stack.md|Build" "stack.md|Tests"
+  "conventions.md|Branch naming" "conventions.md|Commit format" "conventions.md|Commit trailers"
+  "conventions.md|Implementation rules" "conventions.md|Memory"
+  "conventions.md|Planning gotchas" "conventions.md|Unit of work"
+)
+# Pack slot -> the installed skill that makes it relevant.
+PACK_SLOTS=( "stack.md|Models|umbraco-17-planning" "paths.md|Umbraco|umbraco-17-planning" )
+for entry in "${PACK_SLOTS[@]}"; do
+  IFS='|' read -r pf ph pskill <<<"$entry"
+  [[ -r "$SKILLS_DIR/$pskill/SKILL.md" ]] && SLOTS+=("$pf|$ph")
+done
+
+slots_filled=0; slots_empty=0; slot_lines=()
+for entry in "${SLOTS[@]}"; do
+  f="${entry%%|*}"; h="${entry##*|}"
+  st=$(slot_state "$f" "$h")
+  [[ $st == filled ]] && slots_filled=$((slots_filled + 1)) || slots_empty=$((slots_empty + 1))
+  slot_lines+=("$(printf '  %-9s %-22s %s' "$st" "$h" "$f")")
+done
+
+reviewer_rules=0
+if [[ -d "$CONFIG_DIR/reviewer-rules" ]]; then
+  reviewer_rules=$(find "$CONFIG_DIR/reviewer-rules" -name '*.md' -type f 2>/dev/null | wc -l | tr -d ' ')
+fi
+
+# ---------------------------------------------------------------------------
+# Report
+# ---------------------------------------------------------------------------
+printf 'Toolkit install\n'
+printf '  installed: %d of %d toolkit skill(s)\n' "$WIRED" "${#ROSTER[@]}"
+printf '  degraded:  %d\n' "${#DEGRADED[@]}"
+printf '  broken:    %d\n' "${#BROKEN[@]}"
+
+if [[ ${#ABSENT[@]} -gt 0 ]]; then
+  printf '  not installed: %d — a selective install is fine; re-run the install command to add them\n' "${#ABSENT[@]}"
+  if [[ $VERBOSE -eq 1 ]]; then
+    for n in "${ABSENT[@]}"; do printf '    - %s\n' "$n"; done
+  fi
+fi
+
+if [[ $VERBOSE -eq 1 && $WIRED -gt 0 ]]; then
+  printf '\nInstalled and whole:\n'
+  for n in "${WIRED_NAMES[@]}"; do printf '  - %s\n' "$n"; done
+fi
+
+if [[ ${#BROKEN[@]} -gt 0 ]]; then
+  printf '\n\033[31mBroken\033[0m — a spell will fail on these:\n'
+  for b in "${BROKEN[@]}"; do printf '  - %s\n' "$b"; done
+fi
+
+if [[ ${#DEGRADED[@]} -gt 0 ]]; then
+  printf '\n\033[33mDegraded\033[0m — working, but not at full strength:\n'
+  for d in "${DEGRADED[@]}"; do printf '  - %s\n' "$d"; done
+fi
+
+printf '\nProject configuration (L2 slots): %d filled, %d empty' "$slots_filled" "$slots_empty"
+[[ $reviewer_rules -gt 0 ]] && printf ', %d reviewer-rule file(s)' "$reviewer_rules"
+printf '\n'
+if [[ $slots_filled -eq 0 ]]; then
+  printf '  Every slot is empty. This is a working configuration — the toolkit infers what it\n'
+  printf '  needs and asks when it cannot. Fill slots in %s to make it project-specific.\n' "$CONFIG_DIR"
+elif [[ $VERBOSE -eq 1 ]]; then
+  for l in "${slot_lines[@]}"; do printf '%s\n' "$l"; done
+fi
+
+printf '\n'
+if [[ ${#BROKEN[@]} -gt 0 ]]; then
+  printf '\033[31mInstall is broken.\033[0m Fix the items above, then re-run.\n'
+  exit 1
+fi
+if [[ ${#DEGRADED[@]} -gt 0 ]]; then
+  printf '\033[33mInstall works, with %d thing(s) worth fixing.\033[0m\n' "${#DEGRADED[@]}"
+  exit 0
+fi
+printf '\033[32mNo problems found.\033[0m\n'
+exit 0

@@ -111,6 +111,16 @@ would have to be kept in sync with the real one for no gain.
   be relative to the link's own directory. The working form globs through `.claude/skills/`, which
   exists under *both* layouts, and builds each target relative to `.claude/agents/`. Verified in both
   a greenfield repo and an existing project.
+- **Installing shadows same-named commands, with no error and no namespace.** Reported from the
+  canary consumer and confirmed against the Claude Code docs: a skill takes precedence over a
+  command of the same name. So installing core into a project that already runs its own version of
+  this workflow makes those commands *present but unreachable* — not a live fallback.
+
+  This corrects an assumption in the sequencing plan, which treated an additive install as genuine
+  coexistence. It is additive on disk and **substitutive in resolution**. The consequence is that
+  installing on a branch is not merely tidy, it is the containment mechanism: switching back to the
+  default branch restores the original commands intact. Documented in the README, since that is
+  where a consumer meets it.
 - **A cosmetic CLI wart consumers will see:** the install also creates a top-level `agent/skills/`
   directory containing a partial subset of the skills. Harmless, unexplained, and not ours to fix —
   worth a line in install docs so nobody assumes a broken install.

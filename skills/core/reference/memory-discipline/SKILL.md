@@ -9,6 +9,25 @@ Persistent memory is what turns a competent reviewer into one that knows *this* 
 is almost entirely in **calibration** — learning what to stop flagging is worth as much as learning
 what to flag, because a reviewer that repeats a wrong finding every session gets ignored entirely.
 
+## Two memory systems — know which one you are writing to
+
+A project usually has **two**, and this skill governs only the first:
+
+1. **Per-agent project memory** — the reviewers' own directories, inside the repo. Committed and
+   shared with the team, so it is subject to the repo's rules, including any prohibition on
+   client-identifying content. **This is what the discipline below applies to.**
+2. **Cross-session project memory** — a per-project store outside the repo entirely, not managed by
+   this toolkit and not covered by its layout or entry format.
+
+Two consequences worth stating, because both are easy to get wrong:
+
+- **Backups must cover both.** A backup scoped to the repo silently misses the second, which lives
+  outside it and often has no version history at all.
+- **Renaming an agent orphans its memory.** Per-agent memory is keyed by directory name. If an
+  agent is renamed — during a migration, say — its directory must be renamed to match, or the
+  memory stays on disk, unread, while review appears to work normally. That silent-degradation mode
+  is worse than an error.
+
 ## Layout
 
 ```

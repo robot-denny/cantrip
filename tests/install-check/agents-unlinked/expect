@@ -1,0 +1,4 @@
+exit: 0
+contains: not registered
+contains: ln -s
+contains: worth fixing

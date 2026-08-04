@@ -33,6 +33,28 @@ is a quirk of the installer, not a broken install — you can ignore or delete i
 > `npx skills` uploads skill file contents as telemetry by default. Prefix with
 > `DISABLE_TELEMETRY=1` if that matters to you.
 
+### If your project already has commands with these names
+
+**A skill shadows a same-named command.** There is no namespace and no error — install
+`/spec` and an existing `.claude/commands/spec.md` becomes present but unreachable. It is not a
+fallback you can still get to.
+
+This matters most for a project already running its own version of this workflow. **Install on a
+branch first.** Shadowing is then contained: switching back to your default branch restores your
+commands intact, and you can compare the two side by side before committing to either.
+
+Commands whose names the toolkit does not use are unaffected.
+
+### Check the install
+
+```bash
+scripts/check-install.sh          # or --verbose to list what is wired
+```
+
+Reports what is wired, what is degraded but working, and what is broken — with the fix for each. It
+exits non-zero **only** when something is genuinely broken, so it is safe in a pipeline: a core-only
+install with no configuration and no linked agents is a working install and passes.
+
 ### One extra step for parallel review
 
 The three reviewer agents install as assets of the `reviewer-discipline` skill, but registering them
