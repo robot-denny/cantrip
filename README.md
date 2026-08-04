@@ -185,6 +185,28 @@ See [docs/contract.md](docs/contract.md) for the full contract.
 
 ## Layout
 
+What your project looks like once the toolkit is installed and `/setup` has run:
+
+```
+your-project/
+├── .agents/config/        ◀ L2 — the only part you edit (slots)
+├── .claude/skills/          the installed spells and references
+├── ROADMAP.md               Now / Next / Later                    ── evergreen
+├── _features/<area>.md      one file per capability                ── evergreen
+├── _work/<slug>/            discovery.md · spec.md · plan.md        ── temporal
+│                            plus notes/ and assets/
+│   └── shipped/<slug>/      archived as one unit
+├── docs/                    runbooks and guides, docs/audits/      ── evergreen
+├── _scratch/                git-ignored wholesale                  ── throwaway
+└── skills-lock.json         source + content hash per skill
+```
+
+**Grouped by lifecycle, not by type** — how long a file stays true decides where it sits. That is why
+`_features/` is root-prominent and specs sit a level down: capability docs are the cross-functional
+artifact, while a spec mid-flight is developer-facing.
+
+And this repository itself:
+
 ```
 skills/core/spellbook/     # the spells
 skills/core/reference/     # model-invoked references, and the reviewer agents
@@ -193,6 +215,9 @@ docs/                      # durable reference
 adr/                       # toolkit decision records
 scripts/                   # contract gate and extraction checks
 ```
+
+Full annotated trees, which spell writes which artifact, and the layers as directories:
+**[docs/layout.md](docs/layout.md)**.
 
 ## Acknowledgements
 
