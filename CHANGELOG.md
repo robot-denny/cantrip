@@ -82,6 +82,10 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   review runs inline instead of in parallel.
 - Dropped the planned `toolkit-lock.json` — the CLI's own `skills-lock.json` already records source,
   path, and content hash per skill.
+- **`design-system-authoring` reference skill** — how to write a project's own design-system skill: find
+  the mechanism that fails silently and lead with it, write pointer-first so it cannot go stale, derive a
+  checkable conformance list from real review findings, and engineer the description to catch casual
+  requests. Ships the method and a template; the design system itself stays L2.
 - **`memory-discipline` reference skill** — the MEMORY.md index and topic-file layout, the entry
   format, and the three entry types, including the false-positive suppressions that keep a reviewer
   calibrated.
