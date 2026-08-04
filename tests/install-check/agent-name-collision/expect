@@ -1,0 +1,5 @@
+exit: 0
+contains: name collision
+contains: NOT the toolkit
+contains: Do NOT force-link
+not_contains: 2 of 3 toolkit reviewer agents are registered

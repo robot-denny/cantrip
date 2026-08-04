@@ -151,4 +151,18 @@ mkdir -p "$C/.claude/skills"
 skill "$C/.claude/skills/spec" spec
 expect "$C" "exit: 0" "contains: not installed" "contains: selective install is fine"
 
+# A project with its OWN agents under the toolkit's names. Found in the wild: the check
+# counted them as registered, and the naive fix would have clobbered them.
+C="$CASES/agent-name-collision";      build_copied "$C"
+for a in accessibility-reviewer perf-reviewer; do
+  rm -f "$C/.claude/agents/$a.md"
+  printf -- '---\nname: %s\ndescription: The PROJECT OWN reviewer, heavily tailored, must not be overwritten.\n---\nProject-specific rules.\n' "$a" > "$C/.claude/agents/$a.md"
+done
+expect "$C" "exit: 0" "contains: name collision" "contains: NOT the toolkit" "contains: Do NOT force-link" "not_contains: 2 of 3 toolkit reviewer agents are registered"
+
+# A pack installed alongside core must be visible and verified, not silently ignored.
+C="$CASES/pack-installed";            build_copied "$C"
+for s in umbraco-17-planning umbraco-17-feature-backfill; do skill "$C/.claude/skills/$s" "$s"; done
+expect "$C" "exit: 0" "contains: pack:" "contains: umbraco-17-planning"
+
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

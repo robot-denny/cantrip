@@ -34,11 +34,15 @@ CONFIG_DIR=".agents/config"
 # toolkit and versions with it, so it cannot drift from what it describes -- and a
 # hand-vendored install has no lockfile to derive from. Units outside this list belong to
 # the project and are none of our business.
-ROSTER=(
+ROSTER_CORE=(
   bdd-principles memory-discipline reviewer-discipline workflow
   code-review commit-message explore feature implement-step plan retrofit spec
   update-toolkit
 )
+# Pack units are the toolkit's too, so they must be verified and visible. But core-only is
+# the documented baseline, so an ABSENT pack is never reported as missing.
+ROSTER_PACK=( umbraco-17-planning umbraco-17-feature-backfill )
+ROSTER=( "${ROSTER_CORE[@]}" "${ROSTER_PACK[@]}" )
 
 # Assets each skill must be able to read. A skill whose SKILL.md is present but whose
 # assets are gone is broken in a way a directory listing hides.
@@ -102,6 +106,16 @@ else
   done < <(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 2>/dev/null | sort)
 fi
 
+core_wired=0; pack_wired=0; PACK_NAMES=()
+for n in "${WIRED_NAMES[@]:-}"; do
+  [[ -z "$n" ]] && continue
+  if printf '%s\n' "${ROSTER_PACK[@]}" | grep -qx "$n"; then
+    pack_wired=$((pack_wired + 1)); PACK_NAMES+=("$n")
+  else
+    core_wired=$((core_wired + 1))
+  fi
+done
+
 # ---------------------------------------------------------------------------
 # 2. Roster coverage — informational, never a failure
 # ---------------------------------------------------------------------------
@@ -109,7 +123,7 @@ fi
 # But reporting nothing about it would mean "verified present" was only ever checking the
 # units that happened to be there. FR1 asks which resolve AND which are missing.
 ABSENT=()
-for n in "${ROSTER[@]}"; do
+for n in "${ROSTER_CORE[@]}"; do
   [[ -r "$SKILLS_DIR/$n/SKILL.md" ]] || ABSENT+=("$n")
 done
 
@@ -139,23 +153,41 @@ fi
 # of in parallel. That is a working toolkit, so it must not affect the exit code.
 LINK_FIX='mkdir -p .claude/agents && for f in .claude/skills/reviewer-discipline/agents/*.md; do n=$(basename "$f"); ln -s "../skills/reviewer-discipline/agents/$n" ".claude/agents/$n"; done'
 
+# A name match is NOT a registration. A project may have its own agent under the same name
+# -- verified in the wild: a consumer had its own accessibility-reviewer and perf-reviewer,
+# and this check counted them as ours. Worse, the naive "re-link" fix would have clobbered
+# 11KB of project-tailored reviewers with our generic skeletons. So compare content against
+# the installed copy: that recognizes both a symlink and an honest file copy, and recognizes
+# a same-named foreign agent as the distinct situation it is.
 registered=0
 unreadable=()
+collided=()
 for r in "${REVIEWERS[@]}"; do
   target="$AGENTS_DIR/$r.md"
-  if [[ -r $target ]]; then
-    registered=$((registered + 1))
-  elif [[ -e $target || -L $target ]]; then
-    unreadable+=("$r")
+  ours="$SKILLS_DIR/reviewer-discipline/agents/$r.md"
+  if [[ ! -e $target && ! -L $target ]]; then
+    continue                                     # simply not registered
+  elif [[ ! -r $target ]]; then
+    unreadable+=("$r")                           # present but unreadable -- broken link
+  elif [[ -r $ours ]] && cmp -s "$target" "$ours"; then
+    registered=$((registered + 1))               # genuinely ours
+  else
+    collided+=("$r")                             # someone else's agent under our name
   fi
 done
 
 if [[ ${#unreadable[@]} -gt 0 ]]; then
   BROKEN+=("reviewer agents present but unreadable (${unreadable[*]}) — a broken link reads as configured while failing every dispatch. Re-link with: $LINK_FIX")
-elif [[ $registered -eq 0 ]]; then
+fi
+
+if [[ ${#collided[@]} -gt 0 ]]; then
+  DEGRADED+=("name collision on ${#collided[@]} reviewer agent(s) (${collided[*]}) — your project already has agents under these names and they are NOT the toolkit's. Nothing is broken and nothing was overwritten. Decide per agent: keep yours (the toolkit's stays unregistered), or adopt the toolkit's under a different filename so both remain available. Do NOT force-link over them — that would replace your tailored agents with generic skeletons.")
+fi
+
+if [[ $registered -eq 0 && ${#collided[@]} -eq 0 ]]; then
   DEGRADED+=("reviewer agents are not registered — review still runs, but inline instead of in parallel. Register with: $LINK_FIX")
-elif [[ $registered -lt ${#REVIEWERS[@]} ]]; then
-  DEGRADED+=("only $registered of ${#REVIEWERS[@]} reviewer agents are registered — review will be partial. Re-link with: $LINK_FIX")
+elif [[ $registered -gt 0 && $((registered + ${#collided[@]})) -lt ${#REVIEWERS[@]} ]]; then
+  DEGRADED+=("only $registered of ${#REVIEWERS[@]} toolkit reviewer agents are registered — review will be partial. Link the rest with: $LINK_FIX")
 fi
 
 # ---------------------------------------------------------------------------
@@ -211,7 +243,8 @@ fi
 # Report
 # ---------------------------------------------------------------------------
 printf 'Toolkit install\n'
-printf '  installed: %d of %d toolkit skill(s)\n' "$WIRED" "${#ROSTER[@]}"
+printf '  installed: %d of %d core skill(s)\n' "$core_wired" "${#ROSTER_CORE[@]}"
+[[ $pack_wired -gt 0 ]] && printf '  pack:      %d skill(s) — %s\n' "$pack_wired" "${PACK_NAMES[*]}"
 printf '  degraded:  %d\n' "${#DEGRADED[@]}"
 printf '  broken:    %d\n' "${#BROKEN[@]}"
 
