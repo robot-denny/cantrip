@@ -242,7 +242,13 @@ fi
 # ---------------------------------------------------------------------------
 # Report
 # ---------------------------------------------------------------------------
+# Identify which copy of this script ran. A self-hash needs no maintenance and cannot
+# drift from the file it describes -- two different values prove two different scripts.
+# Added because a consumer reported "same result as last time" after a fix had landed,
+# and there was no way to tell a stale run from a stale copy from stale scrollback.
+_self_hash=$(shasum -a 256 "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-8)
 printf 'Toolkit install\n'
+printf '  checker:   %s (%s)\n' "${_self_hash:-unknown}" "${BASH_SOURCE[0]}"
 printf '  installed: %d of %d core skill(s)\n' "$core_wired" "${#ROSTER_CORE[@]}"
 [[ $pack_wired -gt 0 ]] && printf '  pack:      %d skill(s) — %s\n' "$pack_wired" "${PACK_NAMES[*]}"
 printf '  degraded:  %d\n' "${#DEGRADED[@]}"
