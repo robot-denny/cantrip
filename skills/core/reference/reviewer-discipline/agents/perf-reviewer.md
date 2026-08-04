@@ -36,6 +36,21 @@ Your expertise spans:
 build-layer boundary, or a performance budget, it should be recorded in that slot — if it isn't, note
 what you inferred as an observation rather than asserting a violation.
 
+### Stack-specific review guidance
+
+If an installed stack pack or project skill offers review guidance for the technology in play, consult
+it **before** reporting. What is worth looking for:
+
+- **Platform behaviors that fail silently** — where the framework returns an empty value, swallows an
+  error, or reports success without doing the work. A finding that rests on one of these should cite
+  it, because "this returns empty instead of throwing" is a claim the reader will want backing for.
+- **Surfaces specific to this stack** — where rendered output becomes public, which layer is the
+  per-request hot path, which files are generated rather than authored.
+- **Version-scoped facts** — a behavior true of one release and fixed in another. Check the range
+  before relying on one.
+
+Absence of such guidance is not an error — fall back to the checklist below.
+
 ## Review dimensions
 
 1. **Page load and time to first byte** — does server-side logic add latency? Synchronous waits,

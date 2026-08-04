@@ -46,6 +46,11 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   Management API, with alias and agent lookup rather than hardcoded values.
 - **`/block` pack spell** — test-first Umbraco block creation. Discovers the project's view location
   and model binding by exemplar rather than asserting one architecture.
+- **`umbraco-17-starter-facts` pack skill** — 41 verified Umbraco 17 platform facts across four topic
+  files, each carrying `Type`, `Applies`, `Verified`, and a how-to-apply line. Selected for *silent
+  failure*: every one describes something that neither throws nor logs.
+- **`umbraco-17-review-rules` pack skill** — what to check in an Umbraco diff, deferring the underlying
+  facts to `umbraco-17-starter-facts` rather than duplicating them.
 - **`architecture-audit` pack skill** — seven-pillar architectural assessment with lifecycle-aware
   scoring, moved essentially unchanged since it was authored portable. Its report destination now
   follows the `workflow` skill's layout and the durable-or-temporal disposition rule.
@@ -104,6 +109,12 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   branch to contain it.
 - `memory-discipline` distinguishes the two memory systems a project usually has, notes that backups
   must cover both, and warns that renaming an agent orphans its memory silently.
+
+- The three reviewer agents now ask for stack-pack review guidance, applying the ADR 0003 pattern that
+  had been carried to spells but not to agents.
+- Gate check 1 broadened well beyond client names to assembly names, component names, block aliases,
+  project config values, branch slugs, and test-artifact filenames — each of which identifies a source
+  project as surely as its name. Both scrub checks now share one auditable exemption mechanism.
 
 ### Changed
 

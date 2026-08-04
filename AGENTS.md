@@ -20,6 +20,8 @@ real client projects, so:
 
 When extracting from a source repo, scrub as you write, not in a later pass.
 
+<!-- contract-allow: department — this table states the rule and must name what it forbids -->
+
 ### Naming the source repos
 
 This applies to *every* committed file, including ADRs, changelog entries, rationale notes, and

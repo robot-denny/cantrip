@@ -66,12 +66,46 @@ skill_files() {
   [[ -d skills ]] && find skills -name 'SKILL.md' -type f -print 2>/dev/null
 }
 
+# A file may exempt specific patterns with an auditable inline declaration:
+#   <!-- contract-allow: <pattern> — reason -->
+# Honored by both scrub checks (1 and 8). Needed because the documents that DEFINE these
+# rules necessarily quote the terms they forbid -- AGENTS.md's naming table and the
+# contract's own checklist both matched on the first exhaustive sweep.
+allowed_patterns_for() {
+  grep -oE '<!--[[:space:]]*contract-allow:[[:space:]]*[^ ]+' "$1" 2>/dev/null \
+    | sed -e 's/.*contract-allow:[[:space:]]*//' | paste -sd'|' -
+}
+
+# Grep a file for a pattern, minus anything it has exempted.
+grep_unexempted() {   # grep_unexempted <file> <pattern>
+  local f="$1" pat="$2" allowed
+  allowed=$(allowed_patterns_for "$f")
+  if [[ -n "$allowed" ]]; then
+    grep -inE "$pat" "$f" 2>/dev/null | grep -viE "$allowed" | sed "s|^|$f:|"
+  else
+    grep -inE "$pat" "$f" 2>/dev/null | sed "s|^|$f:|"
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # 1. Client-identifying information — repo-wide, the hard gate
 # ---------------------------------------------------------------------------
+# Broadened at Checkpoint F. Client and agency names were never sufficient: harvested
+# content also carries assembly names, component names, block aliases, project config
+# values, branch slugs, and test-artifact filenames -- each of which identifies the
+# source project as surely as its name.
 begin "no client-identifying information (repo-wide)"
 CLIENT_PATTERN='kittitas|wearediagram|diagram-et|CCASyndication|robotregime|scm\.umbraco\.io'
-hits=$(repo_md_files | xargs grep -inE "$CLIENT_PATTERN" 2>/dev/null)
+CLIENT_PATTERN+='|UmbracoProject|HelloWorld|Kittitas\.(Web|Features)'
+CLIENT_PATTERN+='|SearchSummary|HeaderSearch|HeaderViewModel|ViewModelFactory|ServicesAggregate'
+CLIENT_PATTERN+='|GuideToc|NotFoundContentFinder|SitemapRewriteMiddleware'
+CLIENT_PATTERN+='|pillarSection|showcaseHero|categoryPaletteEntry|imageCarouselSlide'
+CLIENT_PATTERN+='|contentSectionRow|iconLinkRow|guideSection'
+CLIENT_PATTERN+='|UmbAI_Search|openai-embeddings|text-embedding-3-small'
+CLIENT_PATTERN+='|claude/(feature|fix)/|migrate-ai-search|remove-seotoolkit|fix-e2e-dev-only'
+CLIENT_PATTERN+='|ai-search-editor-content|blockParity|_umbracoApi'
+CLIENT_PATTERN+='|\bcounty\b|\bdepartment\b'
+hits=$(while IFS= read -r f; do [[ -n "$f" ]] && grep_unexempted "$f" "$CLIENT_PATTERN"; done < <(repo_md_files))
 if [[ -n "$hits" ]]; then
   report_fail "$CURRENT" \
     "Client-identifying terms found. This repo is public with no staging period —" \
@@ -223,14 +257,7 @@ if [[ ${#L0_DIRS[@]} -gt 0 ]]; then
   # a reviewer can judge it, and the exemption is scoped to the one file that declares it.
   hits=$(
     while IFS= read -r f; do
-      [[ -z "$f" ]] && continue
-      allowed=$(grep -oE '<!--[[:space:]]*contract-allow:[[:space:]]*[^ ]+' "$f" 2>/dev/null \
-        | sed -e 's/.*contract-allow:[[:space:]]*//' | paste -sd'|' -)
-      if [[ -n "$allowed" ]]; then
-        grep -inE "$TECH_PATTERN" "$f" 2>/dev/null | grep -viE "$allowed" | sed "s|^|$f:|"
-      else
-        grep -inE "$TECH_PATTERN" "$f" 2>/dev/null | sed "s|^|$f:|"
-      fi
+      [[ -n "$f" ]] && grep_unexempted "$f" "$TECH_PATTERN"
     done < <(find "${L0_DIRS[@]}" -name '*.md' -type f -print 2>/dev/null)
   )
   if [[ -n "$hits" ]]; then
