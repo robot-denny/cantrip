@@ -190,3 +190,14 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - Contract gained the **one slot, one point of authority** rule: a slot is referenced where it
   is owned, and other files defer to that owner rather than repeating it. Toolkit-internal paths
   are not slots.
+
+### Fixed
+
+- **The documented core skill count was two short.** The README advertised 13 skills in both install
+  shapes; a core install has installed 15 since `design-system-authoring` and `/setup` were extracted.
+  Nothing about the install changes — the number describing it was stale.
+- **`/setup` and `design-system-authoring` were not self-hosted**, so the two newest core skills could
+  not be cast in the repository that authors them — including the spell whose whole job is configuring
+  a fresh install. **Gate check 11** now fails on a core skill with no `.claude/skills/` symlink, and on
+  any dangling one, because adding a skill takes three unlinked steps and steps 2 and 3 were both missed
+  twice running. Scoped to core: a pack must not be linked, since this repo is not an Umbraco project.

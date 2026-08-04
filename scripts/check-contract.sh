@@ -9,7 +9,9 @@
 # Exit:   0 = clean, 1 = one or more violations
 #
 # Checks 1 is repo-wide, because "public from day one, no private staging period" applies
-# to every file here, not just shipped skills. Checks 2-6 apply to shipped units only.
+# to every file here, not just shipped skills. Checks 2-10 apply to shipped units only.
+# Check 11 is the exception in the other direction: it inspects this repo's own self-hosting,
+# which ships nowhere but is how every authored skill gets exercised before release.
 
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
@@ -389,6 +391,55 @@ if [[ -n "$exemplar_errs" ]]; then
     "An exemplar-first instruction needs an answer for a greenfield project (ADR 0006)." \
     "Offer a named external reference, seed thin and mark it to grow, or say the step does not apply." \
     "" "$exemplar_errs"
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
+# 11. Self-hosting covers every core skill (this repo only)
+# ---------------------------------------------------------------------------
+# The only check here about THIS repo rather than shipped content, and it earns its place
+# the same way check 10 did: a principle with no forcing function gets applied when the
+# author happens to remember. Adding a core skill takes three unlinked steps -- write it,
+# link it into .claude/skills/, correct the README count -- and steps 2 and 3 were both
+# missed twice in a row. /setup and design-system-authoring landed uncastable, so the repo
+# dogfooding the toolkit could not run the spell that configures it.
+#
+# Scoped to skills/core deliberately. A pack must NOT be linked: this repo is not an
+# Umbraco project, and linking the pack would put stack spells in a toolkit's own spellbook.
+#
+# Only symlinks pointing back into skills/core are ours. A consumer's own skills sit in the
+# same directory and are none of this check's business -- the same name-match-is-not-ours
+# distinction check-install.sh makes about reviewer agents.
+begin "self-hosting covers every core skill"
+if [[ -d .claude/skills && -d skills/core ]]; then
+  core_names=$(find skills/core -name 'SKILL.md' -type f -print 2>/dev/null \
+    | sed -e 's|/SKILL\.md$||' -e 's|.*/||' | sort -u)
+
+  linked_names=""
+  broken_links=""
+  for entry in .claude/skills/*; do
+    [[ -L "$entry" ]] || continue
+    target=$(readlink "$entry")
+    [[ -e "$entry" ]] || broken_links+="$(basename "$entry") -> $target"$'\n'
+    [[ "$target" == *skills/core/* ]] && linked_names+="$(basename "$entry")"$'\n'
+  done
+  linked_names=$(printf '%s' "$linked_names" | sort -u)
+
+  unlinked=$(comm -23 <(printf '%s\n' "$core_names") <(printf '%s\n' "$linked_names") | grep -v '^$')
+
+  if [[ -n "$unlinked" || -n "$broken_links" ]]; then
+    details=""
+    [[ -n "$unlinked" ]] && details+="not linked into .claude/skills/:"$'\n'"$(printf '%s\n' "$unlinked" | sed 's/^/  - /')"$'\n'
+    [[ -n "$broken_links" ]] && details+="dangling symlink:"$'\n'"$(printf '%s' "$broken_links" | sed 's/^/  - /')"
+    report_fail "$CURRENT" \
+      "A core skill this repo cannot cast on itself is untested by the work that authors it." \
+      "Link it: ln -s ../../skills/core/<spellbook|reference>/<name> .claude/skills/<name>" \
+      "Then check the skill count in README.md still matches." \
+      "" "$details"
+  else
+    report_pass "$CURRENT"
+  fi
 else
   report_pass "$CURRENT"
 fi

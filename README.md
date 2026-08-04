@@ -33,7 +33,7 @@ detect**. Verified, that means it writes to four places: `.agents/skills/` (real
 has a bare `skills/` directory, it writes into that too**, alongside whatever is already there.
 Nothing is overwritten, but a project with its own `skills/` folder gets it populated.
 
-If you only use Claude Code, this is cleaner — same 13 skills, assets and agents included, one write
+If you only use Claude Code, this is cleaner — same 15 skills, assets and agents included, one write
 location, and an existing `skills/` folder left alone:
 
 ```bash
@@ -42,7 +42,7 @@ npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -
 
 | | `--all` | `--skill '*' --agent claude-code` |
 |---|---|---|
-| Skills installed | 13 | 13 |
+| Skills installed | 15 | 15 |
 | Bundled assets and agents | ✓ | ✓ |
 | Writes to | `.agents/`, `.claude/`, `agent/`, `skills/` | `.claude/` only |
 | Canonical `.agents/` tree | ✓ | ✗ (files copied into `.claude/skills/`) |
