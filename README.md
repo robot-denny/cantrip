@@ -23,12 +23,35 @@ Add a stack pack if one fits your project:
 npx skills add robot-denny/cantrip/skills/umbraco-17 --all
 ```
 
-Skills land in `.agents/skills/` with `.claude/skills/` symlinked to them, and `skills-lock.json`
-records the source and a content hash for each. Packs are opt-in: the core install brings no
-stack-specific content at all.
+Packs are opt-in: the core install brings no stack-specific content at all.
 
-The installer also creates a top-level `agent/` directory holding a partial copy of the skills. That
-is a quirk of the installer, not a broken install — you can ignore or delete it.
+### Pick your install shape
+
+`--all` is shorthand for `--skill '*' --agent '*'` — every skill, to **every agent tool it can
+detect**. Verified, that means it writes to four places: `.agents/skills/` (real files),
+`.claude/skills/` (symlinks to them), a top-level `agent/` directory, and — **if your project already
+has a bare `skills/` directory, it writes into that too**, alongside whatever is already there.
+Nothing is overwritten, but a project with its own `skills/` folder gets it populated.
+
+If you only use Claude Code, this is cleaner — same 13 skills, assets and agents included, one write
+location, and an existing `skills/` folder left alone:
+
+```bash
+npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -y
+```
+
+| | `--all` | `--skill '*' --agent claude-code` |
+|---|---|---|
+| Skills installed | 13 | 13 |
+| Bundled assets and agents | ✓ | ✓ |
+| Writes to | `.agents/`, `.claude/`, `agent/`, `skills/` | `.claude/` only |
+| Canonical `.agents/` tree | ✓ | ✗ (files copied into `.claude/skills/`) |
+| Other agent tools supported | ✓ | ✗ |
+
+Either way `skills-lock.json` records the source and a content hash per skill. If your project already
+has one, the installer **merges** into it rather than replacing it — existing entries are preserved.
+
+Note that `--all` overrides a preceding `--skill`, so `--skill workflow --all` installs everything.
 
 > `npx skills` uploads skill file contents as telemetry by default. Prefix with
 > `DISABLE_TELEMETRY=1` if that matters to you.
