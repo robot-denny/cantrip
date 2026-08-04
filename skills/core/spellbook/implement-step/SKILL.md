@@ -42,6 +42,15 @@ Also extract:
 If the step number doesn't exist, abort with a message listing the step numbers you did find, and
 stop.
 
+**If the located step is a spell-cast rather than implementation work** — its content is "run
+`/feature update …`" or similar — **do not dispatch a worker.** Dispatching one would have a code worker
+execute a spell, which is the wrong mechanism. Say so and hand it back:
+
+> Step N is a spell-cast, not implementation work. Cast it directly: `/<spell> <args>`.
+
+A well-formed plan leaves the behavior-recording step unnumbered for exactly this reason, but older
+plans number it.
+
 ## Step 3 — Sanity-check the working tree
 
 Run `git status --short`. If the tree is dirty, surface this before dispatching:
@@ -78,6 +87,12 @@ present, "Validation"}
 - **Follow TDD if the step says "Test first"**: write the failing test, run it to confirm RED,
   then implement, then run again to confirm GREEN. Don't skip the RED check.
 - **Run every command listed under "Validation"** at the end. Report each one's result.
+- **For any validation you cannot mechanically verify, produce evidence — never attest.** A step whose
+  check is "verify by eye" or "confirm it looks right" cannot be judged from here: you have no eyes, and
+  "looks good" is an unverifiable claim that reads exactly like a real result. Instead **attach an
+  artifact the orchestrator can judge** — capture a screenshot, save rendered output, print the actual
+  values. If producing evidence needs a fixture that does not exist, create one, capture, then clean it
+  up. Say plainly which validations are evidenced and which you could not evidence.
 - **Do not commit.** Leave changes as they are — the user will review, then run `/code-review` and
   `/commit-message`.
 - **Stay inside the step's scope.** Do not refactor surrounding code, do not drive-by fix

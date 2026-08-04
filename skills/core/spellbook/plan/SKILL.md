@@ -202,10 +202,14 @@ names, property aliases, endpoints, attribute names.]
 
 ---
 
-### Step {final} — Record the durable behavior *(branch on work type)*
+### Final — Record the durable behavior *(a spell you cast, not an implement-step)*
 
-Pick the variant matching the plan header's **Work type**. Author the step for that one variant
-only.
+**Do not number this as an implementation step.** It is cast directly — `/feature update <the Feature doc
+name>` — after the implement-step loop finishes. Numbering it would invite `/implement-step <plan> N`,
+which dispatches a code worker to run a spell: the wrong mechanism, and it blurs the chain's own
+boundary between building and recording.
+
+Pick the variant matching the plan header's **Work type**. Author it for that one variant only.
 
 **If `new-capability`:**
 

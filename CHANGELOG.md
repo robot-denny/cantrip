@@ -138,6 +138,15 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - `/feature`, `/block`, `umbraco-17-planning`, and `design-system-authoring` now handle the greenfield
   case explicitly rather than assuming an exemplar, a doc, or an established mechanism exists.
 
+- `/code-review` takes a **scope** — `uncommitted` (default) or `branch`, the latter covering committed,
+  uncommitted, and untracked work against the upstream base, for increments built commit-per-step.
+- `/code-review` **discovers** registered reviewers and maps them to roles rather than assuming canonical
+  names, preferring a project's tailored reviewer, and reports which roles ran inline.
+- `/implement-step` requires **evidence rather than attestation** for any validation it cannot
+  mechanically verify, and declines to dispatch a step that is a spell-cast.
+- `/plan` authors manual checkpoints as artifacts to produce, and leaves the behavior-recording step
+  unnumbered so it is cast rather than dispatched.
+
 ### Changed
 
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and

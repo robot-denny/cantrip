@@ -241,6 +241,7 @@ SLOTS=(
   "conventions.md|Branch naming" "conventions.md|Commit format" "conventions.md|Commit trailers"
   "conventions.md|Implementation rules" "conventions.md|Memory"
   "conventions.md|Planning gotchas" "conventions.md|Unit of work"
+  "reviewer-rules|Reviewer names"
 )
 # Pack slot -> the installed skill that makes it relevant.
 PACK_SLOTS=(
