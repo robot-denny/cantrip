@@ -53,6 +53,23 @@ combined action plan loses its ordering.
 - **Quantify impact** where you can: "adds a round-trip per item", "blocks screen-reader users from
   submitting", not "may be slow".
 
+## Removals deserve a second look
+
+A diff that **deletes** something warrants a check an addition does not: **does any test assert the
+deleted thing exists?**
+
+Removal is asymmetric. New code cannot break a test that was never written, but a removed symbol, style
+rule, class, or file breaks every test asserting its presence — and those tests are typically nowhere
+near the code they guard, so a locally-scoped test run misses them entirely.
+
+When a diff removes something, say so and name what should be searched. This is cheap to check and it
+catches a specific, recurring failure: a change that is green locally and red in CI, where the developer
+ran the suite covering the code they touched rather than the suite referencing what they deleted.
+
+Worth noting the corollary, which is a finding in its own right: **a test asserting the mere presence of
+a style rule or a string is fragile by construction.** If you meet one, the removal may be correct and
+the test may be the defect. Report both readings rather than assuming the deletion was wrong.
+
 ## Reporting balance
 
 - **Do not over-report.** Never flag what you cannot confirm from the diff alone. Where something is

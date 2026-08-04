@@ -173,6 +173,15 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   branches, and unreachable defaults — defects that surface because reading schema, model, and view
   together compares what each layer claims against what the others do.
 
+- `/setup` **verifies** a detected build or test command by running it and reading its output, not its
+  exit code — a test invocation that discovers zero tests exits 0 and is otherwise indistinguishable from
+  a passing suite. Unverifiable commands are recorded as unverified.
+- `/implement-step`'s "do not commit" is now explicitly the default rather than absolute: an explicit step
+  instruction wins, and the worker reports that it committed.
+- `/implement-step` and `reviewer-discipline` both handle **removal**, which is not symmetric with
+  addition — a deleted symbol, rule, or file breaks tests asserting its presence, and those tests live
+  nowhere near the code they guard.
+
 ### Changed
 
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and

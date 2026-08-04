@@ -59,6 +59,27 @@ immediately.
 
 **Prefer the CI or hook command over the one in a README.** A README drifts; a hook is executed.
 
+### Verify a detected command actually does the work — do not trust its exit code
+
+**A command that succeeds is not necessarily the right command.** The failure that proves this: a test
+invocation run from the wrong directory discovered **zero tests and exited 0**. Inference cannot catch
+that — it looks exactly like a passing suite, and every later step trusts it.
+
+So before recording a build or test command, **run it and read the output, not the status**:
+
+- A test command must report a **non-zero test count**. Zero tests passing is not passing.
+- A build command must actually compile the thing you care about. A build scoped to one project can
+  succeed while the code under discussion is in another.
+- Where the project has a solution, workspace, or root manifest, **prefer invoking from the root** over
+  changing into a subdirectory — a narrowed scope is the usual cause of a command that works and covers
+  nothing.
+
+If a command cannot be verified — nothing installed, no network — **record it and say it is unverified**,
+rather than recording it as though it were confirmed.
+
+This is the one place in setup where doing more than detecting is worth it. Every downstream spell
+inherits these commands, so a silently-empty one propagates into every plan and every review.
+
 ## Step 2 — Mine what is already written down
 
 **This is where the leverage is.** The remaining slots are the high-value ones, and they are **not
