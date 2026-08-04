@@ -39,6 +39,9 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - **`/feature` spell** — reconciled from both source versions into one command with an implicit
   from-code mode, so a capability that exists in code but was never documented can be backfilled.
   This is what makes adopting the toolkit on an existing project work.
+- **`/check-uda` pack spell** — Umbraco Deploy schema conflict and drift analysis: git-side conflicts,
+  Live-side drift via the Deploy Management API, block palette drift, and a risk-rated report. Ships
+  its Cloud remediation runbook as a `references/` asset.
 - **`umbraco-17-feature-backfill` pack skill** — where Umbraco keeps the schema artifact, generated
   model, and view, plus the data-type-to-field-kind mapping.
 - **`scripts/check-preserved.py`** — whitespace- and emphasis-normalized preservation checking, so
