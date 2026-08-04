@@ -42,6 +42,10 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - **`/check-uda` pack spell** — Umbraco Deploy schema conflict and drift analysis: git-side conflicts,
   Live-side drift via the Deploy Management API, block palette drift, and a risk-rated report. Ships
   its Cloud remediation runbook as a `references/` asset.
+- **`/umbraco-edit` pack spell** — edit document properties or invoke a configured AI agent via the
+  Management API, with alias and agent lookup rather than hardcoded values.
+- **`/block` pack spell** — test-first Umbraco block creation. Discovers the project's view location
+  and model binding by exemplar rather than asserting one architecture.
 - **`umbraco-17-feature-backfill` pack skill** — where Umbraco keeps the schema artifact, generated
   model, and view, plus the data-type-to-field-kind mapping.
 - **`scripts/check-preserved.py`** — whitespace- and emphasis-normalized preservation checking, so

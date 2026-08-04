@@ -220,7 +220,11 @@ SLOTS=(
   "conventions.md|Planning gotchas" "conventions.md|Unit of work"
 )
 # Pack slot -> the installed skill that makes it relevant.
-PACK_SLOTS=( "stack.md|Models|umbraco-17-planning" "paths.md|Umbraco|umbraco-17-planning" )
+PACK_SLOTS=(
+  "stack.md|Models|umbraco-17-planning"
+  "paths.md|Umbraco|umbraco-17-planning"
+  "stack.md|Local URL|umbraco-edit"
+)
 for entry in "${PACK_SLOTS[@]}"; do
   IFS='|' read -r pf ph pskill <<<"$entry"
   [[ -r "$SKILLS_DIR/$pskill/SKILL.md" ]] && SLOTS+=("$pf|$ph")
