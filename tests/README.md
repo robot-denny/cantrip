@@ -46,3 +46,18 @@ Three cases encode decisions that are easy to implement backwards:
   layer contract is built around, so it must never read as a failure.
 - **`dangling-symlink`** asserts broken. A directory listing looks fine while every read fails, which
   is why the check reads assets rather than listing them.
+
+## Why 46 fixture `SKILL.md` files do not pollute an install
+
+Fixtures contain real `SKILL.md` files, because the check under test looks for exactly those. That
+raises a fair question: does installing this repo hand a consumer 46 junk skills?
+
+Verified against `skills@1.5.21`: no. A full-repo listing finds 15 — the 13 core skills plus the 2
+pack skills — and ignores everything under `tests/`.
+
+Two reasons not to rely on that alone. It is **empirical, not guaranteed**: a change to the
+installer's discovery could surface them. And the documented install command is subpath-scoped
+(`skills add <repo>/skills/core`), which can never reach `tests/` regardless of discovery behavior.
+
+So the defense is the subpath, and the observed behavior is a bonus. If a future fixture needs to
+live somewhere other than `tests/`, re-verify with `skills add <repo> --list` before committing it.
