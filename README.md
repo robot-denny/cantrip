@@ -194,6 +194,20 @@ adr/                       # toolkit decision records
 scripts/                   # contract gate and extraction checks
 ```
 
+## Acknowledgements
+
+Two units here are adaptations of skills published by **[Matt Pocock](https://github.com/mattpocock/skills)** (MIT):
+
+| This toolkit | Adapted from |
+|---|---|
+| `tdd-principles` | the `tdd` skill — what a good test asserts, tautological tests, vertical slicing |
+| `/explore` | the `grill-me` skill — one question at a time, walking the decision tree branch by branch, looking before asking |
+
+Both were re-expressed and extended rather than copied, and what was deliberately *not* carried over is
+recorded with the reasoning in [ADR 0013](adr/0013-attribution-for-adapted-external-work.md). Credit is
+given here because it is owed as courtesy and because a borrowed rule is easier to re-check when you know
+it was borrowed.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Install it, vendor it, edit your copy, ship it in client work.

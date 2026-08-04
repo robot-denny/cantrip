@@ -171,6 +171,31 @@ This hardens from principle to requirement because the underlying `skills update
 verified to silently clobber local modifications — no warning, no merge, no hash check
 against local state. A local edit is not just untracked; it is *fragile*.
 
+## Attribution — two different things wearing one shape
+
+**Our own authorship never goes in a shipped skill.** A skill saying "this is how we do it" is a project
+fact in L0, whoever "we" are; attribution belongs in `LICENSE`, `README.md`, or an ADR. Check 1b enforces
+this.
+
+**A third party's license notice is not the same thing**, and the same rule would point the wrong way for
+it. A notice is a condition of redistribution, not a claim about who works how — and a license that
+requires it requires it to travel **with the copy**. That matters here because **installs are
+subpath-scoped to `skills/`**: `LICENSE`, `README.md`, and `adr/` never reach a consuming project, so the
+three homes named above are exactly the three a consumer never sees.
+
+Which applies depends on what was taken, per [ADR 0013](../adr/0013-attribution-for-adapted-external-work.md):
+
+- **Influence** — ideas, structure, terminology, no expression copied. Nothing owed; credit in the README
+  and an ADR. Both current adaptations sit here.
+- **Adaptation** — expression copied or closely adapted. The notice must ship inside `skills/`, and check
+  1b needs an exemption rather than a blanket prohibition. No such borrow exists yet; the mechanism is
+  deliberately unbuilt until one does.
+- **Share-alike** — terms would reach the whole distribution. Decline, or accept knowingly.
+
+**Record a lineage in the same commit that creates it.** `/explore` did, in the project it was written in
+— and extraction to this repo dropped the commit message, so a real provenance was invisible here within a
+month. A borrow nobody wrote down is indistinguishable from original work by the time anyone asks.
+
 ## Checklist
 
 Before any L0/L1 file is considered done:

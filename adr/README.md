@@ -28,6 +28,9 @@ buried.
   sets it does not own, declares them machine-readably so `/setup` can report enablement, and documents
   them in the README. Also settles what the pack absorbs versus points at: durability is ours, library
   idiom is theirs.
+- **0013 — attribution for adapted external work.** Courtesy credit in the README for the two units
+  adapted from published skills, a three-tier rule for when a license notice must ship rather than merely
+  be recorded, and the register itself. The one rule here with no automated gate, which it says so.
 
 ## Backfilled
 

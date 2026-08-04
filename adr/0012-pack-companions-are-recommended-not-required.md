@@ -95,9 +95,10 @@ already built the thinner way.
 ## Provenance
 
 The positioning question was raised by the user after auditing the pack for undeclared dependencies; the
-three findings above are theirs. The reference structure of the sibling `tdd-principles` skill — added in
-the same change — borrows from Matt Pocock's public `engineering/tdd` skill, which is rung 2 of ADR 0006's
-ladder (*borrow from a named external reference*) applied to authoring the toolkit rather than to using
-it. What was **not** borrowed is recorded there: its `seam` vocabulary, which collides with two existing
-meanings in this repo, and its prohibition on splitting a test from its implementation, which `/plan`
-permits deliberately for context-window reasons.
+three findings above are theirs.
+
+The sibling `tdd-principles` skill, added in the same change, is an adaptation of an externally published
+skill — recorded in [ADR 0013](0013-attribution-for-adapted-external-work.md) along with what was
+deliberately not carried over. Worth noting the shape: reaching for a named external reference is **rung 2
+of [ADR 0006](0006-no-unguarded-preconditions.md)'s ladder**, and the ladder was written to govern how a
+spell reasons about a project. It turns out to describe how the toolkit should be built as well.
