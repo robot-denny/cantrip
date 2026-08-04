@@ -112,9 +112,19 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 - The three reviewer agents now ask for stack-pack review guidance, applying the ADR 0003 pattern that
   had been carried to spells but not to agents.
+- `/plan` Step 1 now resolves a **bare slug** against the workspace layout — previously it fell through
+  to the description branch and re-derived a slug, producing a plan divorced from its spec.
+- `/spec` asks before creating a workspace directory beside an established one, and before nesting a
+  branch inside another working branch.
 - Gate check 1 broadened well beyond client names to assembly names, component names, block aliases,
   project config values, branch slugs, and test-artifact filenames — each of which identifies a source
   project as surely as its name. Both scrub checks now share one auditable exemption mechanism.
+
+- **ADR 0005** — work-type classification must not depend on documentation coverage. Adds a naming
+  tell, area-level naming for undocumented areas, and a bias toward amending over creating.
+- Specs now carry a **`Feature doc:`** field naming the capability doc by area, threaded through
+  `/plan` and `/feature`, since that name routinely differs from the increment slug.
+- `check-install.sh` detects redundant install copies from `--all` and prints the safe cleanup command.
 
 ### Changed
 

@@ -63,10 +63,25 @@ rather than guessing.**
 Before writing any content, switch to a new branch using `branch_name`. If that name is already
 taken, append a version number — `<branch_name>-01`.
 
+**Do not nest a working branch inside another working branch.** If the current branch is not the
+project's default, you are probably already on a branch created for this work — or for a trial or
+experiment that should stay put. Say what you see and ask, rather than branching from a branch:
+
+> Currently on `<branch>`, which is not the default. Create `<branch_name>` from here, or stay on this
+> branch?
+
 If the project's conventions indicate that work happens on the current branch rather than a
 per-increment branch, skip this step and say so in the final summary.
 
 ## Step 4. Draft the spec content
+
+**Before writing, check the workspace you are about to write into.** If the layout resolves to a
+directory that does not exist yet *and* a differently-named workspace directory already exists beside
+it, stop and ask — creating a second workspace convention alongside an established one fragments the
+project's history:
+
+> This project already has `<existing>`. The layout would create `<new>`. Use the existing directory,
+> or establish the new one?
 
 Create a markdown spec document that planning can use directly, saved in the increment's
 working directory under the `feature_slug`. Use the exact structure of the `templates/spec.md`
@@ -109,8 +124,19 @@ exactly one of these three literal values:
 stable stack" — rather than *standing behavior* ("a visitor can search from /search"), it is
 **not** a `new-capability`. Pick `change-to` or `fix-infra`.
 
-Recording this line is what lets `/plan` and `/feature` honor the classification without
-re-deciding it.
+**Also record a `**Feature doc**:` line naming the capability doc this work belongs to** — the area,
+not the increment. Per the `workflow` skill's naming tell, that name is routinely *different* from
+`feature_slug`: an increment called `placeholder-graphics-imageless-cards` may well belong to a
+capability doc called `article-card`.
+
+- For `new-capability` where the area is undocumented, this is the area-level doc you are about to
+  create.
+- For `change-to`, it is the existing doc being amended.
+- For `fix-infra`, write `none`.
+
+Recording both lines is what lets `/plan` and `/feature` honor the classification without re-deciding
+it — and the `Feature doc` line specifically is what stops the final step targeting a doc named after
+the increment instead of the area.
 
 ## Step 6. Create the draft feature doc skeleton *(only for `new-capability`)*
 
@@ -120,9 +146,9 @@ re-deciding it.
 feature docs with a change or fix masquerading as a capability. In both cases the draft
 scenarios still live in the spec from Step 4 — nothing is lost.
 
-If (and only if) the work type is `new-capability`, create a draft feature doc named by the
-**capability or area, not the work**, using the structure of the `templates/feature.md` asset in
-the `workflow` skill. Populate it with:
+If (and only if) the work type is `new-capability`, create the draft feature doc **at the name recorded
+on the `**Feature doc**:` line** — the capability or area, never the increment — using the structure of
+the `templates/feature.md` asset in the `workflow` skill. Populate it with:
 
 - The feature summary from the spec
 - The draft scenarios from the spec's "Scenarios (Draft)" section
@@ -146,7 +172,7 @@ For `new-capability`:
 Branch: <branch_name>
 Spec file: <path to the saved spec>
 Work type: new-capability
-Feature doc (draft): <path to the draft feature doc>
+Feature doc (draft): <path to the draft feature doc — named by area>
 Title: <feature_title>
 Next: /plan <feature_slug>
 ```

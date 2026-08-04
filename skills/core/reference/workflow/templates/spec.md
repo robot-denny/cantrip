@@ -8,7 +8,12 @@ branch: <branch-name>
 design reference (if any): <link or component name>
 
 **Work type**: <new-capability | change-to <existing-slug> | fix-infra>
+**Feature doc**: <the capability doc this belongs to, named by AREA — or `none` for fix-infra>
 <!--
+  Feature doc is named by area, not by this increment. An increment called
+  `placeholder-graphics-imageless-cards` may belong to a doc called `article-card`. See the
+  `workflow` skill → "The naming tell". /plan and /feature target this name, not the slug.
+
   Decides which durable artifact this work earns. See the `workflow` skill → "Work types".
   - new-capability     → a new feature doc is created, named by capability, not by work
   - change-to <slug>   → no new file; observable behavior folds into that capability's doc

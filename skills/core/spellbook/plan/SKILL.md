@@ -30,18 +30,28 @@ use.
 
 ## Step 1 — Resolve the input
 
-Determine whether `$ARGUMENTS` is a path to an existing spec or a plain description:
+Resolve `$ARGUMENTS` in this order, stopping at the first that matches:
 
-- **If it looks like a file path** (contains `/` or ends in `.md`): read the file and use its
-  contents as the spec. Extract `feature_title` and `feature_slug` from the path.
-- **If it is a description**: treat it as the full spec. Derive `feature_slug` (lowercase,
-  kebab-case, max 40 chars) and `feature_title` (Title Case) from it.
+1. **A path** (contains `/` or ends in `.md`): read the file and use its contents as the spec. Extract
+   `feature_title` and `feature_slug` from the path.
+2. **A bare slug** — a single kebab-case token with no spaces. This is what `/spec` hands off, so it is
+   the common case. **Resolve it against the workspace layout to find the existing spec** and read
+   that; do not treat it as a description. If no spec resolves for the slug, say so and stop rather
+   than silently inventing one — a slug that does not resolve usually means a typo or a spec that was
+   never saved.
+3. **A description** — free text with spaces. Treat it as the full spec, and derive `feature_slug`
+   (lowercase, kebab-case, max 40 chars) and `feature_title` (Title Case) from it.
 
 Also capture the **work type** — read the `**Work type**:` line from the spec
 (`new-capability` / `change-to <existing-slug>` / `fix-infra`). If the spec has none, classify it
 now using the *Work types* table in the `workflow` skill (the *tell*: transition-style acceptance
 criteria are not `new-capability`). Carry the value into the plan header and let it drive the
 final behavior-recording step (Step 4, rule 5).
+
+Also read the spec's `**Feature doc**:` line and carry it through unchanged. **It names the capability
+doc by area and is routinely different from `feature_slug`** — deriving the doc name from the slug
+instead would point the final step at a doc named after the increment. If the spec has no such line,
+determine it now using the `workflow` skill's naming tell.
 
 ## Step 2 — Understand the codebase context
 
@@ -112,8 +122,9 @@ Order the layers into implementation steps following these rules:
 4. **Each step must be independently completable** — a clear start state (what was done before)
    and end state (what passes or exists after).
 5. **Record the behavior as the final step — branch on work type:**
-   - **`new-capability`** → `/feature update <slug>` (or `/feature <spec path>` if no draft doc
-     exists yet) to verify the capability's living doc against the actual implementation.
+   - **`new-capability`** → `/feature update <the Feature doc name>` (or `/feature <spec path>` if no
+     draft doc exists yet) to verify the capability's living doc against the actual implementation.
+     **Use the recorded doc name, not the increment slug.**
    - **`change-to <existing-slug>`** → `/feature update <existing-slug>`. Fold in **only** the
      user- or operator-observable behavior changes. **Do not create a new feature doc.**
      Architecture and migration acceptance criteria — "the service is unit-testable", "the build
@@ -142,6 +153,8 @@ re-derive it.
 **Branch**: {current branch}
 **Work type**: {new-capability | change-to <existing-slug> | fix-infra}  — copy verbatim from the
 spec's `**Work type**:` line; this decides how the final step records behavior (see Step 4)
+**Feature doc**: {the capability doc by area, or none} — copied from the spec; the final step targets
+this, not the increment slug
 
 ## Context
 
@@ -196,8 +209,8 @@ only.
 
 **If `new-capability`:**
 
-> **Prompt**: Run `/feature update {feature_slug}` to verify the living behavioral doc reflects
-> the actual implementation. Review each scenario against the code and test results. Update any
+> **Prompt**: Run `/feature update {the Feature doc name from the plan header}` to verify the living
+> behavioral doc reflects the actual implementation. Review each scenario against the code and test results. Update any
 > scenario where the implementation diverged from the draft. Fill in the test coverage table with
 > real test paths and line numbers, or mark target tests pending if no harness exists yet. Remove
 > the "Draft" banner. Commit the verified doc.

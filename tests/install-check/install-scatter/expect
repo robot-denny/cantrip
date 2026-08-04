@@ -1,0 +1,4 @@
+exit: 0
+contains: redundant install copies
+contains: git clean
+not_contains: my-own-thing

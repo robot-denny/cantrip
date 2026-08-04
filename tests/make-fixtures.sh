@@ -165,4 +165,12 @@ C="$CASES/pack-installed";            build_copied "$C"
 for s in umbraco-17-planning umbraco-17-feature-backfill; do skill "$C/.claude/skills/$s" "$s"; done
 expect "$C" "exit: 0" "contains: pack:" "contains: umbraco-17-planning"
 
+# Install scatter: --all wrote to every detected target, including a project's own skills/ dir.
+C="$CASES/install-scatter";           build_copied "$C"
+mkdir -p "$C/agent/skills/workflow" "$C/skills/my-own-thing"
+skill "$C/agent/skills/workflow" workflow
+skill "$C/skills/workflow" workflow
+printf -- '---\nname: my-own-thing\ndescription: the project own skill, must not be implicated\n---\n' > "$C/skills/my-own-thing/SKILL.md"
+expect "$C" "exit: 0" "contains: redundant install copies" "contains: git clean" "not_contains: my-own-thing"
+
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

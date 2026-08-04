@@ -66,6 +66,47 @@ editor can pick a theme per page" — then it is a change or fix masquerading as
 Do not create the file. Fold the observable behavior into the affected capability's doc, or
 route it to a runbook, and say which and why.
 
+### The naming tell — amend or create
+
+A second tell, for whether work earns a *new* doc or a Rule inside an existing one:
+
+> **If the doc name you would create reads as a behavior rather than an area a stakeholder would
+> name, it belongs inside the area's doc.**
+
+`article-card-placeholders` is a behavior. `article-card` is an area. The first is a Rule in the
+second's doc, not a file of its own.
+
+This is the same test as the transition tell, applied to the document's name rather than to its Rules —
+and it catches the case the transition tell misses, because a behavior-named doc can be full of
+perfectly good standing-behavior Rules and still be the wrong file.
+
+### When the area has no doc yet
+
+**A classification must never depend on whether documentation already exists.** The nature of the change
+decides it; doc debt does not.
+
+So when work is a genuine `new-capability` but the nearest area is **undocumented**, name the new doc at
+**area level**, not at the level of the increment:
+
+- ✅ `article-card` — the area, thin for now
+- ❌ `article-card-placeholders` — the increment that happened to be first
+
+Naming at area level makes the `new-capability` path converge on the same artifact `change-to` would
+have produced. The classification stops being a fork with two outcomes and becomes one outcome with two
+entry points. The debt then shows up honestly, as an area doc covering only what this increment
+established — flag it for `/feature`'s from-code mode to backfill the rest.
+
+**A thin doc is visible debt with a known remedy. A misnamed doc is invisible debt that pollutes the
+catalog permanently.**
+
+### Splitting a doc is editorial, not classification
+
+Deciding that one capability doc has grown unwieldy and should become several is a **readability
+judgment made deliberately**, not an output of classifying an increment.
+
+**The classifier biases toward amend.** When in doubt between appending a Rule and creating a file,
+append — splitting later is cheap and reversible, while un-polluting a capability catalog is neither.
+
 ### The key judgment
 
 When a `change-to` ships, only its **user- or operator-observable** behavior folds into the
@@ -115,6 +156,10 @@ that as part of closing the loop.
 
 - One file per **capability**, named for an area of the system — never named after a piece of
   work (a migration, a refactor, a fix). See *Work types* above for what earns one.
+- **The doc's name is independent of the increment's slug.** An increment called
+  `placeholder-graphics-imageless-cards` can perfectly well amend a doc called `article-card`. Because
+  they differ routinely, the spec records an explicit `feature-doc:` field naming the doc, which `/plan`
+  and `/feature` carry through rather than deriving from the slug.
 - Given/When/Then scenarios grouped under `Rule:` headings, in business language.
 - **The source of truth for what the system does right now** — used for QA regression testing
   and developer onboarding.

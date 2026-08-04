@@ -191,6 +191,29 @@ elif [[ $registered -gt 0 && $((registered + ${#collided[@]})) -lt ${#REVIEWERS[
 fi
 
 # ---------------------------------------------------------------------------
+# 4b. Redundant install copies (install scatter)
+# ---------------------------------------------------------------------------
+# `--all` implies `--agent '*'`, so the installer writes to every target it can detect --
+# including a top-level `agent/` directory and, if the project already has a bare `skills/`
+# directory, into that as well. Nothing breaks, but the project ends up carrying several
+# copies that update will touch unevenly. Reported because a consumer hit this and the
+# checker said nothing; only toolkit-roster names are considered, so a project's own
+# `skills/` contents are never implicated.
+SCATTER=()
+if [[ -d agent/skills ]]; then
+  n=$(find agent/skills -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  [[ "$n" -gt 0 ]] && SCATTER+=("agent/skills/ ($n copies)")
+fi
+if [[ -d skills ]]; then
+  n=0
+  for r in "${ROSTER[@]}"; do [[ -e "skills/$r" ]] && n=$((n + 1)); done
+  [[ "$n" -gt 0 ]] && SCATTER+=("skills/ ($n toolkit copies alongside the project's own)")
+fi
+if [[ ${#SCATTER[@]} -gt 0 ]]; then
+  DEGRADED+=("redundant install copies in ${SCATTER[*]} — the installer wrote to every agent target it could detect. Nothing is broken, but updates will touch these unevenly. Remove with: git clean -nd agent skills   (preview first; it removes only untracked files, so your own content is safe)")
+fi
+
+# ---------------------------------------------------------------------------
 # 5. Slot survey — every slot may legitimately be empty
 # ---------------------------------------------------------------------------
 # Reported for visibility, never for pass/fail. The toolkit is designed to work with all

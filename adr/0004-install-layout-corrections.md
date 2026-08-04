@@ -121,9 +121,19 @@ would have to be kept in sync with the real one for no gain.
   installing on a branch is not merely tidy, it is the containment mechanism: switching back to the
   default branch restores the original commands intact. Documented in the README, since that is
   where a consumer meets it.
-- **A cosmetic CLI wart consumers will see:** the install also creates a top-level `agent/skills/`
-  directory containing a partial subset of the skills. Harmless, unexplained, and not ours to fix —
-  worth a line in install docs so nobody assumes a broken install.
+- **`--all` scatters copies across every target it can detect**, which is more than the two documented
+  above. Verified: `.agents/skills/` (real), `.claude/skills/` (symlinks), a top-level `agent/skills/`,
+  **and — if the project already has a bare `skills/` directory — a full redundant copy inside it,
+  alongside the project's own contents.** This last one was missing from the first draft of this ADR and
+  only bites repos that already use a top-level `skills/`, which is why it went unnoticed until a
+  consumer hit it.
+
+  Nothing is overwritten and nothing breaks, but the project carries copies that `update` touches
+  unevenly. Cleanup is `git clean -fd agent skills` — **not** `rm -rf skills/`, which would destroy
+  tracked project content. `check-install.sh` now detects the scatter and prints the safe command,
+  considering only toolkit-roster names so a project's own skills are never implicated.
+
+  The single-target install (`--skill '*' --agent claude-code`) avoids it entirely; see the README.
 - **The direction doc's CLI evaluation should be treated as dated, and so should any single test of
   mine.** Two of its four recorded layout and flag findings did not survive contact with `1.5.21` four
   days later — and my own first correction was itself wrong for having tested one invocation. The
