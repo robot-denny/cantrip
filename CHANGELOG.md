@@ -257,3 +257,12 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - **Contract check 4 over-matched.** It searched for `**Slot:**` unanchored, so prose *about* the mechanism
   was read as a declaration and demanded a fallback for a slot it never referenced. Now anchored to line
   start with indentation allowed, verified still to catch an indented declaration missing its fallback.
+- **`/explore` wrote a document `/spec` had never heard of.** The discovery doc carries a section
+  addressed to `/spec` by name, and `/explore` ends by pointing there — but `/spec` built from whatever
+  you retyped and re-derived its own slug, so the discovery was either sitting unread beside the new spec
+  or orphaned in a second increment directory. It also could not run at all immediately after `/explore`:
+  the discovery doc lands untracked, and `/spec` aborts on any untracked file, so the suggested next step
+  failed on a clean-tree guard before reaching the part that ignored the file. `/spec` now reads an
+  existing increment's `discovery.md` when given its slug and carries the framing, options, and open
+  questions forward; `/explore` says to commit the doc first and why. Fifth instance of one mechanism
+  present in a spell and absent from its sibling.

@@ -83,7 +83,7 @@ archived together — so they live together, and archiving is one move. Every sp
 
 ```
 /explore  ─▶ _work/<slug>/discovery.md       opens the increment's working directory
-/spec     ─▶ _work/<slug>/spec.md            from your description
+/spec     ─▶ _work/<slug>/spec.md            reads discovery.md when given its slug
 /plan     ─▶ _work/<slug>/plan.md            reads spec.md
 /implement-step ─▶ your codebase             reads plan.md, one step per cast
 /feature  ─▶ _features/<area>.md             reads spec.md — or reads code alone (from-code mode)

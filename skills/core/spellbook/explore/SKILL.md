@@ -178,8 +178,17 @@ direction or open choice — and end with:
 
 ```
 Discovery: <path to the discovery doc>
-Next: /spec <slug>   (or paste the recap above into /spec)
+Next: commit the discovery doc, then /spec <slug>
 ```
+
+**Say to commit it, not just to run `/spec`.** This spell does not create a branch, so the discovery doc
+lands untracked on the current branch — and `/spec` aborts on an untracked file before it does anything
+else. Committing it is also the right shape rather than a workaround: discovery precedes the working
+branch that `/spec` creates, so it belongs on the base branch.
+
+Pass the **slug**, not a re-description. `/spec` looks for an existing increment by that name and reads
+this document — its framing, its options, and its open questions — instead of asking again. Re-describing
+the work creates a second increment directory and leaves this one orphaned.
 
 This discovery doc is the artifact bridging discovery into the spec → plan → implement chain. If the
 work later grows past a single increment, it can also seed a PRD under `docs/`.
