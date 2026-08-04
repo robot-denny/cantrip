@@ -164,6 +164,11 @@ release builds while working locally.
 structural requirement evident (a directory that must match a build glob, a registry a new file must
 be added to), note it in Key Decisions and suggest recording it in the slot.
 
+Scope: **constraints a plan must satisfy** — a directory that must match a build glob, a verification
+step only a particular command surfaces, a package-version rule a validator enforces. **Not operational
+topology** — which environment deploys where, how promotion works, who restarts what. That is runbook
+material for `docs/`, and folding it in here turns one slot into a catch-all a planner reads past.
+
 ## Step 7 — Run the test again (expect GREEN)
 
 All assertions must pass. If any fail, diagnose and fix before calling this done — do not adjust the

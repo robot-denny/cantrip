@@ -95,6 +95,11 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - **ADR 0004** — install layout corrections from verifying the CLI, superseding two claims in
   ADR 0002.
 - README now carries the install instructions and the spell catalog.
+- **`/setup` spell** — configures the toolkit for a project in three tiers: detect what the repository
+  answers, **mine what its guidance files already say**, then ask only for the residue. Places the
+  workspace scaffold without overwriting an existing convention, preserves the project's own agents and
+  skills, discovers a pack's slots from the pack rather than naming them, and reports what it left empty
+  and why.
 - **`/update-toolkit` spell** — wraps the installer's update behind a git guard, because the bare
   update silently overwrites local modifications and reports success. Verified empirically.
 - **`.githooks/pre-commit`** — runs the contract gate before every commit. Enable with

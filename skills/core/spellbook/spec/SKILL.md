@@ -55,6 +55,10 @@ From `$ARGUMENTS`, extract:
    **If empty:** infer the prefix convention from existing branches (`git branch -a`) and use
    `<prefix>/feature/<feature_slug>`; if no convention is visible, use `feature/<feature_slug>`.
 
+   This heading covers branch *conventions* broadly — naming, and **which remote branches are pushed
+   to**. A repo with several remotes may have one that must never be pushed to; that belongs here, not
+   in a slot of its own.
+
 If you cannot infer a sensible `feature_title` and `feature_slug`, **ask the user to clarify
 rather than guessing.**
 
