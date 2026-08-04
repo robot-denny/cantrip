@@ -9,6 +9,18 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 ## [Unreleased]
 
+### Public readiness
+
+- **MIT license** — the repository had none, which meant public-with-all-rights-reserved: readable but
+  not legally installable, contradicting its own install instructions.
+- **Five backfilled ADRs** (0001, 0008–0011) covering decisions settled before this repository existed —
+  the three-layer split, vendored-copy distribution, the skills-CLI role split, skills-rather-than-commands
+  with posture in frontmatter, and the lifecycle-based file layout. The reasoning now lives with the code
+  instead of in a document consumers never see.
+- **ADR 0007** — repository ownership stays as-is, with the costs of a later move recorded.
+- The spell census is stated explicitly: **eight workflow spells**, held deliberately, plus `/setup` and
+  `/update-toolkit` counted separately as configuration and maintenance rather than workflow stages.
+
 ### Added
 
 - Repository scaffold: layer directories, ADR log, changelog, and contributor guidance.

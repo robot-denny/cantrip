@@ -110,11 +110,17 @@ Verbs are spells, cast with `/<name>`. They are invisible to the model and run o
 | `/commit-message` | Proposes a message that explains *why*, following your project's own convention. |
 | `/retrofit` | The easy button for a change that skipped the flow — reconciles intent against the diff, then proposes the missing tests and docs. |
 
-One maintenance spell sits outside the workflow chain:
+**Eight workflow spells, and that is deliberate.** The count is held at eight so the spellbook stays
+learnable; a ninth workflow stage would mean merging two or adding a router. Two further spells sit
+outside the chain and are counted separately, because they are not stages of doing work:
 
 | Spell | What it does |
 |---|---|
+| `/setup` | Configures the toolkit for a project — detects what the repo answers, mines what its guidance files already say, asks only for the rest. Run once after installing. |
 | `/update-toolkit` | Updates the installed toolkit behind a git guard, because the bare installer silently overwrites local modifications. |
+
+A stack pack adds its own spells on top — the `umbraco-17` pack adds three. A project only ever sees core
+plus the packs it installed.
 
 Nouns are references, which the model reaches for on its own: `workflow` (the spine and work-type
 classification), `bdd-principles`, `reviewer-discipline`, `memory-discipline`.
@@ -158,6 +164,10 @@ docs/                      # durable reference
 adr/                       # toolkit decision records
 scripts/                   # contract gate and extraction checks
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE). Install it, vendor it, edit your copy, ship it in client work.
 
 ## Contributing
 

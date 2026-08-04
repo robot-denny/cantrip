@@ -18,6 +18,10 @@ whole feature.
 `/spec <slug>` → `/plan <slug>` → `/implement-step <slug> N` (per step) → `/feature update
 <slug>` → `/code-review`
 
+`/explore` sits upstream of `/spec` for work where the approach is not yet decided; `/retrofit` is the
+entry point for a change that skipped the chain entirely. `/setup` and `/update-toolkit` are not stages —
+they configure and maintain the toolkit itself.
+
 `/implement-step` runs one step at a time against a fresh context so the main thread stays
 clean across a long plan — either dispatched to a subagent or by pasting the step's prompt
 into a new session, whichever suits the setup.
