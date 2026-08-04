@@ -73,6 +73,11 @@ Scenario: {Edge case name}
 |----------|-----------|--------|
 | {scenario name} | `{test file}:L42` | Covered |
 | {scenario name} | — | Not covered |
+| {scenario name} | — | Not covered (code-derived) |
+
+<!-- Covered: a test asserts it. Not covered: specified, untested. Not covered (code-derived):
+     inferred from reading the code, never specified and never tested — the weakest claim here.
+     Keeping the third distinct is what lets a reader tell verified behavior from inferred. -->
 
 ---
 

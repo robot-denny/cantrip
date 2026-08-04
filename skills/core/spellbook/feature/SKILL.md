@@ -102,7 +102,20 @@ artifact-driven path, not the thinner code-only one.
    implementation using **From-code mode** below in place of Steps 2–6, then finish with **Step 7
    — Report**.
 
-## From-code mode (cold start — no upstream artifacts)
+## From-code: a mode, and also a technique
+
+**Two uses, and the second is the one that makes brownfield adoption work.**
+
+- **As a mode** (branch 3 above) — the cold start: a capability exists in code with no spec, plan,
+  tests, or doc at all. The whole doc is reverse-engineered.
+- **As a technique, inside update mode** — an existing doc **under-describes** what the code actually
+  does. This is the ordinary condition of a real codebase: one increment documented its own change and
+  left the rest of the capability undocumented. Apply F1–F4 to the *undocumented parts* while leaving
+  the verified parts alone.
+
+The second use is the brownfield backfill path, and it is a **tool for onboarding an existing project**
+rather than a fallback for when nothing else works. Reach for it whenever a doc covers less than the
+code does.
 
 Reverse-engineers a **draft** doc when a capability exists in code but has no spec, plan, tests,
 or doc to work from. The output is the same template shape as every other mode — it just
@@ -188,8 +201,8 @@ Emit the standard template, with these from-code specifics:
   signal.
 - **Increments** → a single placeholder: `- [ ] (no shipped increments recorded —
   reverse-engineered baseline)`.
-- **Test Coverage** → every row starts **Not covered.** From-code mode drafts behavior only;
-  tests don't exist yet.
+- **Test Coverage** → every row starts **Not covered (code-derived)**, not plain `Not covered`. The
+  distinction is load-bearing: these rules were inferred from code, never specified and never tested.
 - **Edge Cases** → pull genuinely boundary or unusual scenarios (missing content, invalid input,
   empty collections) out of Behaviors into here, using the same `Rule:` and scenario shape.
 - **Revision Notes** → `{today's date}: Initial draft reverse-engineered from {name} — not yet
@@ -212,6 +225,14 @@ Search for everything related to this capability:
    summary if one exists
 
 Read everything located.
+
+**Then compare the doc against the code, not just against the artifacts.** If the code does more than
+the doc describes — fields with no Rule, conditional branches with no scenario — **apply the from-code
+technique (F1–F4) to the undocumented parts.** Leave the verified parts as they are; you are filling
+gaps, not rewriting.
+
+That comparison is the whole brownfield backfill path, and skipping it is how a doc stays permanently
+partial: each increment documents its own change and nothing ever documents what was already there.
 
 ## Step 3 — Resolve behavioral truth
 
@@ -247,6 +268,15 @@ For each scenario, find the corresponding test if one exists:
 |----------|-----------|--------|
 | Scenario name | `path/to/test:L42` | Covered |
 | Scenario name | — | Not covered |
+| Scenario name | — | Not covered (code-derived) |
+
+**Three states, and the third matters.** `Covered` means a test asserts it. `Not covered` means it was
+specified and no test asserts it. **`Not covered (code-derived)`** means the rule is *your reading of the
+code* — never specified and never tested, and therefore the weakest claim in the document.
+
+Keeping that distinct is what makes a backfilled doc honest. A reader can then tell verified behavior
+from inferred behavior at a glance, instead of a partially-backfilled doc presenting both with equal
+confidence.
 
 Match by **behavioral intent, not exact wording.** A scenario about "mobile toggle collapses
 navigation" maps to a test named "click toggle hides nav list" even though the wording differs.

@@ -147,6 +147,15 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - `/plan` authors manual checkpoints as artifacts to produce, and leaves the behavior-recording step
   unnumbered so it is cast rather than dispatched.
 
+- `/feature`'s from-code path is now **a technique as well as a mode** — update mode compares the doc
+  against the code, not only against the artifacts, and backfills whatever the code does that the doc
+  does not describe. This is the brownfield adoption path.
+- `/feature` gained a third coverage state, **`Not covered (code-derived)`**, so a backfilled doc
+  distinguishes verified behavior from inferred behavior instead of presenting both with equal confidence.
+- `/feature`'s `Open Issues` hook now names dead styling, comments contradicting code, unreachable
+  branches, and unreachable defaults — defects that surface because reading schema, model, and view
+  together compares what each layer claims against what the others do.
+
 ### Changed
 
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and
