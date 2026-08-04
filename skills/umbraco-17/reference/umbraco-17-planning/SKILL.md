@@ -67,7 +67,7 @@ patterns instead.
 | Layer | Governing constraint |
 |---|---|
 | **Schema** | `.uda` files are the source of truth. Author via the backoffice or Management API, not by hand-editing. **Schema leads** — nothing downstream compiles against types that don't exist. |
-| **Slice (block or page type)** | A view model plus its Razor view, and for page types a controller. Follow the closest existing analogue in the project rather than a generic MVC split. |
+| **Slice (block or page type)** | A view model plus its Razor view, and for page types a controller. Follow the closest existing analogue in the project rather than a generic MVC split. If the project has no analogue yet, say so in Key Decisions and establish the shape deliberately rather than assuming one — the first slice sets the convention. |
 | **Client-side components** | Built and bundled separately. Prefer a plain component; reach for a framework runtime only when reactivity justifies the cost. |
 | **Backoffice extension** | Loaded by the backoffice host via a package manifest — see the routing table above. |
 | **Tests** | Browser and Management API level. Deploy schema is environment-coupled, so prefer API lookups over hardcoded identifiers. |

@@ -122,7 +122,21 @@ these are common and valid:
 their `*.cshtml` files, and the extension root by its `umbraco-package.json`. If no `*.uda` files
 exist, the project is not using Deploy — read schema from the running instance via MCP instead.
 
-So: **find the closest existing block and follow it exactly.** Copy its view-model directive, its
+**If the project has no blocks yet** — a greenfield build — there is nothing to copy, and inventing a
+convention here would set one by accident that every later block inherits. Instead, in order:
+
+1. **Ask whether another codebase should be the reference.** A sibling project or a starter the team
+   already trusts is a far better source than invention. If one is named, read it and say which
+   conventions you took from it, so they are adopted deliberately rather than absorbed.
+2. **Otherwise establish the convention explicitly and minimally**, and say plainly that you are
+   establishing rather than following it — which view location, which model binding, which settings
+   shape, and why. Record it in the increment's Key Decisions and propose it for
+   `.agents/config/paths.md`, so the *second* block has an exemplar and this ambiguity happens once.
+
+Do not quietly pick a shape. **The first block in a project defines its conventions whether or not
+anyone decided to.**
+
+Otherwise: **find the closest existing block and follow it exactly.** Copy its view-model directive, its
 naming, its folder placement, its settings handling, and its styling approach. The existing blocks are
 the specification; this spell is not.
 

@@ -38,6 +38,11 @@ the `workflow` skill. Feature docs hold **evergreen capability behavior only.**
   "compiles on the stable stack") rather than standing behavior — **do not create a new file.**
   Find the existing capability doc it changes (grep the feature docs by area) and update *that*,
   folding in the evergreen behavior. Point-in-time acceptance criteria stay in the shipped spec.
+
+  **If no doc exists for that area yet**, do not fall back to creating one named after this work.
+  Create the doc **at area level** and populate it with only what this increment establishes — thin, and
+  flagged for from-code backfill. See the `workflow` skill's naming tell; the classification must not
+  depend on whether documentation already exists.
 - If the slug names a **fix, infra, CI, or cleanup** effort (`fix-`, `triage-`, a dependency bump
   with no behavior change) — **do not create a feature doc at all.** Durable residue belongs in a
   runbook under `docs/` and/or a section in the project's guidance file.

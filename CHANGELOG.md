@@ -130,6 +130,14 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   `/plan` and `/feature`, since that name routinely differs from the increment slug.
 - `check-install.sh` detects redundant install copies from `--all` and prints the safe cleanup command.
 
+- **ADR 0006** — no instruction may assume its precondition exists, with a five-rung response ladder
+  (infer, borrow from a named reference, seed thin and mark it to grow, proceed and say so, ask) and a
+  hard prohibition on fabricating a convention.
+- Gate check 10 — an exemplar-dependent instruction must handle having no exemplar, the forcing function
+  the principle needs.
+- `/feature`, `/block`, `umbraco-17-planning`, and `design-system-authoring` now handle the greenfield
+  case explicitly rather than assuming an exemplar, a doc, or an established mechanism exists.
+
 ### Changed
 
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and

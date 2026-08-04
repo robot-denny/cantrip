@@ -74,6 +74,10 @@ particulars.**
 
 The single most effective instruction is *copy the closest existing thing*.
 
+**If the project has no components to copy yet, this step has no answer** — skip ahead to *When there is
+no design system yet* below before writing anything. Inventing exemplars here is how a greenfield project
+acquires conventions nobody chose.
+
 Have the skill direct the agent to find two or three existing components nearest in layout and purpose
 to what is being built, and to copy their structure, their wiring of the load-bearing mechanism, and
 their class vocabulary. **Matching a sibling is faster and more correct than composing from
@@ -129,6 +133,37 @@ Write it long. This is one of the few places where length is the feature.
 End with how to *see* the result. If the project has a living style guide, name it. If theming or modes
 can be switched, say that switching them and confirming the UI responds **is the real test** — the one
 that catches the silent failure from Step 1, which no amount of reading the diff will.
+
+## When there is no design system yet
+
+Everything above assumes an established system to conform to. On a greenfield project there is no
+load-bearing mechanism to find and no exemplar to copy — Steps 1 and 3 have nothing to work with.
+
+**The wrong answer is to write the skill anyway.** A skill full of unfilled placeholders, or worse one
+whose conventions you invented while writing it, becomes the project's real design system by accident —
+and it will be followed precisely because it is written down.
+
+In order of preference:
+
+1. **Borrow from a named reference.** If the team has a sibling project, a starter, or published design
+   documentation they intend to follow, that is the source. **Ask for it; never assume one exists.** Read
+   it, then write the skill pointing at *this* project's eventual locations while noting which
+   conventions were adopted from where — so they are adopted deliberately rather than absorbed silently.
+
+2. **Seed it thin and let it accrete.** Write only the sections you can fill honestly — usually the
+   description, the conformance framing, and a note that conventions are not yet established. Leave the
+   mechanism and checklist sections explicitly empty, marked as pending rather than as done. Then let the
+   *first few components* establish the conventions, and fold them back in once there is something real
+   to point at. **A skill that says "no conventions established yet" is useful; one that invents them is
+   actively harmful.**
+
+3. **Wait.** If neither applies, say so plainly: this skill does not apply until the project has
+   components to conform to, and the right time to write it is after two or three exist. That is a valid
+   outcome, not a failure — recommending it beats generating a document nobody can trust.
+
+**What must not happen:** deriving conventions from your own preferences and presenting them as the
+project's. That is the failure this whole skill exists to prevent, and it is easiest to commit at the
+moment the project has nothing to contradict you.
 
 ## Assembling it
 

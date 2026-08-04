@@ -108,6 +108,45 @@ Corollary: **toolkit-internal paths are not slots.** A spell reading
 `.agents/skills/workflow/templates/spec.md` is naming something the toolkit itself controls and
 installs, not a project fact. Name those paths directly; save slots for facts the project owns.
 
+## No unguarded preconditions
+
+The slot mechanism above handles one kind of absence: a project fact the toolkit reads. But **any**
+instruction can depend on something existing — a document, an exemplar, a test harness, a git history, an
+established mechanism — and the same discipline applies.
+
+**No instruction may assume its precondition exists.** When it might not, say what to do instead, choosing
+the highest rung that applies:
+
+| Rung | Response |
+|---|---|
+| 1 | **Infer from the project** — something comparable exists to read |
+| 2 | **Borrow from a named external reference** — another codebase, published docs, a sibling project. Ask for it; never assume one exists, and never silently import outside conventions as though they were the project's |
+| 3 | **Seed thin, marked to grow** — create the artifact minimally now and let it accrete through use |
+| 4 | **Proceed without, and say so** — name what was skipped |
+| 5 | **Ask** — one specific question, when proceeding wrongly would be costly |
+
+**Never fabricate.** Never invent a convention, layout, or mechanism and present it as the project's own.
+A stated gap is recoverable; an invented convention gets followed, copied, and quietly becomes real.
+
+### Rung 3 is the one worth reaching for
+
+"Seed thin, accrete through use" runs through the toolkit already: an undocumented area gets a thin
+area-level feature doc flagged for backfill (ADR 0005); starter facts ship as claims to verify and become
+earned facts once confirmed; a project with no test harness gets a proposed location recorded as a new
+convention. **Where a precondition is missing but creatable, create it thin and make the thinness
+visible.** Visible debt with a known remedy beats both a hard failure and a confident invention.
+
+### Why this needed to be written down
+
+Every *slot* fallback in the toolkit was already guarded for absence, and almost no *non-slot*
+instruction was. Not through carelessness — slots have a forcing function. Check 4 refuses a `**Slot:**`
+without an `**If empty:**`, so writing one *made* the author consider absence. Nothing asked the same
+question of "copy the closest existing component", so it went unasked.
+
+Gate check 10 now supplies a forcing function for exemplar-dependent instructions specifically, since
+that is the pattern that slipped twice. The general principle still depends on authoring discipline —
+which is why it is stated here rather than left implicit in the slot rules.
+
 ## Graceful degradation is a hard requirement
 
 Every L0 and L1 file must produce useful behavior with **all slots empty**. That is the

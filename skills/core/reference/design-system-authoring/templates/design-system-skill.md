@@ -21,6 +21,12 @@ whichever load-bearing mechanism Step 1 identified. New UI must slot into all of
 behaves exactly like what exists. There is one right look here, it is already in the codebase, and the
 job is to find it and match it.
 
+<!-- If the project has no established design system yet, do NOT fill these sections with invented
+     conventions. Either point at a named external reference, or leave the mechanism and checklist
+     sections explicitly marked "not yet established" and fold real conventions in once the first few
+     components exist. See design-system-authoring → "When there is no design system yet". A skill that
+     admits it has no conventions is useful; one that invents them is followed. -->
+
 ## The one thing you must not break: <mechanism>
 
 <Name the load-bearing mechanism. Explain what it does in one or two sentences — what it lets someone
@@ -41,7 +47,9 @@ Work pointer-first: **the codebase is the source of truth, not this skill.** The
 `<where>` and in the existing components, and they evolve — so read them fresh each time rather than
 trusting a remembered snapshot.
 
-1. **Find the closest existing exemplar.** Before writing anything, read two or three existing
+1. **Find the closest existing exemplar.** *(If there is nothing to copy yet, do not fill this in —
+   see the note above; a project with no components has no exemplars and this step does not apply.)*
+   Before writing anything, read two or three existing
    components nearest in layout and purpose to what you are building — `<name 3–5 representative
    ones>`. Copy their structure, their wiring of <the mechanism>, and their class vocabulary. Matching
    a sibling is faster and more correct than composing from first principles.

@@ -314,6 +314,52 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 10. Exemplar-dependent instructions carry an absence clause (ADR 0006)
+# ---------------------------------------------------------------------------
+# "No instruction may assume its precondition exists." The general principle needs
+# authoring discipline, but ONE pattern slipped twice and is greppable: telling the agent
+# to copy or follow the closest existing thing, with no case for there being none.
+#
+# This exists because of an asymmetry the Checkpoint-F-era audit found: every SLOT
+# fallback was guarded for absence, because check 4 refuses a **Slot:** without an
+# **If empty:** and so forced the question. Nothing forced it for exemplar instructions,
+# and three of four were unguarded. A principle without a forcing function gets applied
+# when the author happens to remember.
+begin "exemplar instructions handle having no exemplar"
+EXEMPLAR_PAT='closest existing|existing exemplar|copy the closest|follow it exactly'
+ABSENCE_PAT='if (none|no |nothing|there is no|the project has no)|when (none|no )|no doc exists|not yet established|nothing analogous|has no '
+# Proximity matters. A first version asked only whether the file contained an absence
+# clause ANYWHERE -- which every skill carrying a slot does, so it passed trivially and
+# failed its own negative test silently. Require the clause near the instruction it
+# guards, the same way check 4 requires a fallback beside its slot.
+WINDOW=18
+exemplar_errs=""
+while IFS= read -r f; do
+  [[ -z "$f" ]] && continue
+  # Frontmatter is excluded: a description is a trigger string, not an instruction, so
+  # requiring a caveat inside one would cost triggering accuracy for no benefit.
+  fm_end=$(grep -n '^---$' "$f" 2>/dev/null | sed -n '2s/:.*//p')
+  [[ -z "$fm_end" ]] && fm_end=0
+  while IFS= read -r lineno; do
+    [[ -z "$lineno" ]] && continue
+    (( lineno <= fm_end )) && continue
+    lo=1
+    (( lineno > WINDOW )) && lo=$(( lineno - WINDOW ))
+    if ! sed -n "${lo},$((lineno + WINDOW))p" "$f" | grep -qiE "$ABSENCE_PAT"; then
+      exemplar_errs+="$f:$lineno: exemplar instruction with no absence clause within $WINDOW lines"$'\n'
+    fi
+  done < <(grep -niE "$EXEMPLAR_PAT" "$f" 2>/dev/null | cut -d: -f1 | sort -un)
+done < <(shipped_md_files)
+if [[ -n "$exemplar_errs" ]]; then
+  report_fail "$CURRENT" \
+    "An exemplar-first instruction needs an answer for a greenfield project (ADR 0006)." \
+    "Offer a named external reference, seed thin and mark it to grow, or say the step does not apply." \
+    "" "$exemplar_errs"
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n'
 if [[ $FAILURES -eq 0 ]]; then
   printf '\033[32m%s checks passed.\033[0m\n' "$CHECKS_RUN"
