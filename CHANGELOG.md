@@ -182,6 +182,31 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   addition — a deleted symbol, rule, or file breaks tests asserting its presence, and those tests live
   nowhere near the code they guard.
 
+- **`tdd-principles` reference skill** — the missing home for test *design*. TDD sequencing was already
+  enforced in three spells, but nothing said what a test should assert, so a test could be written first,
+  go red, go green, and still be fragile by construction. Covers observable behavior over implementation
+  artifacts, the presence-assertion anti-pattern, expected values from an independent source, one behavior
+  per cycle, what stands in for RED→GREEN when a project has no harness, and evidence over attestation.
+  Brings a core install to **16 skills**. Adapted from an externally published skill — see
+  [ADR 0013](adr/0013-attribution-for-adapted-external-work.md).
+- **Pack companions are declarable** ([ADR 0012](adr/0012-pack-companions-are-recommended-not-required.md)).
+  A pack may route work to external skill sets it does not own, and now says so: a `**Companion:**` line
+  in the same self-describing style as `**Slot:**`, which `/setup` reads and reports on without core ever
+  naming the technology. **Recommended, never required** — the pack plans without them. `/setup` also
+  reports *where* a companion is enabled from, because an entry in your own user settings works for you
+  and silently does not for a teammate cloning the repo.
+- **`umbraco-cms-backoffice-testing-skills` is named** in the pack's routing and the README. It was
+  enabled in practice and cited in no file, which mattered because `/plan` is TDD-first and that is the
+  skill set covering extension test setup.
+- **Acknowledgements in the README**, plus [ADR 0013](adr/0013-attribution-for-adapted-external-work.md):
+  credit for the two units adapted from published skills, and a three-tier rule for when a license notice
+  must ship with a skill rather than merely be recorded. The contract now separates our own authorship —
+  which never belongs in a shipped skill — from a third party's notice, which may be required to travel
+  with the copy.
+- **Gate checks 12 and 13.** 12 fails when a declared companion is absent from the README, stripping
+  fenced code blocks first, because a name shown in a config example is demonstrated rather than
+  documented. 13 compares `check-install.sh`'s hardcoded roster against `skills/core`.
+
 ### Changed
 
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and
@@ -200,6 +225,18 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   is owned, and other files defer to that owner rather than repeating it. Toolkit-internal paths
   are not slots.
 
+- **`/plan`, `/implement-step`, `/retrofit`, and `reviewer-discipline` now point at `tdd-principles`**
+  for what a test asserts, each keeping its own framing — `/plan` still owns ordering, the review skill
+  still owns the review-time reading.
+- **`/plan` gained a breadth constraint on test steps.** Splitting a test from its implementation across
+  two steps stays allowed, because a step has to fit a fresh context; batching several behaviors into one
+  test-writing step does not, because that tests imagined rather than observed behavior.
+- **`bdd-principles` said TDD "tests implementation"** — which, read literally, licenses the exact
+  anti-pattern the new reference forbids, and would have had the two references contradicting each other.
+  Now "tests units of behavior at the code level", with the ambiguity named explicitly.
+- **The pack's absence clause names the remedy**, not just the absence. A note saying which skill set
+  would improve the plan is actionable; one recording that something was unavailable is a shrug.
+
 ### Fixed
 
 - **The documented core skill count was two short.** The README advertised 13 skills in both install
@@ -210,3 +247,13 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   a fresh install. **Gate check 11** now fails on a core skill with no `.claude/skills/` symlink, and on
   any dangling one, because adding a skill takes three unlinked steps and steps 2 and 3 were both missed
   twice running. Scoped to core: a pack must not be linked, since this repo is not an Umbraco project.
+- **The consumer-facing install checker verified a different set of skills than the toolkit ships.**
+  `check-install.sh`'s roster was a hardcoded 13 that omitted `/setup` and `design-system-authoring`, so a
+  project could install core, receive no `/setup` at all, and be told *"13 of 13 — no problems found."*
+  Shipped that way since those skills were extracted. The roster is now 16, and **check 13** compares it
+  against `skills/core`. This is check 11's missing sibling: 11 guards the self-hosting symlinks, 13 guards
+  the install roster, and both lists are maintained by hand — check 11's own note names the two skills that
+  were still absent here, so the gate that catches this shape had the shape.
+- **Contract check 4 over-matched.** It searched for `**Slot:**` unanchored, so prose *about* the mechanism
+  was read as a declaration and demanded a fallback for a slot it never referenced. Now anchored to line
+  start with indentation allowed, verified still to catch an indented declaration missing its fallback.
