@@ -20,6 +20,11 @@ buried.
 - Never rewrite history — supersede instead. Mark the old record `Superseded by NNNN` and
   link both ways.
 
+## Decided
+
+- **0007 — repository ownership.** Stays under a personal account for now. The costs of a later move are
+  recorded there, including why they grow with adoption and become payable by consumers rather than by us.
+
 ## Backlog
 
 The pre-repo direction doc locked in several decisions that still need to be recorded
