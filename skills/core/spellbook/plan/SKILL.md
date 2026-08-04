@@ -114,9 +114,15 @@ Order the layers into implementation steps following these rules:
 2. **Tests written before the implementation they cover** — each step that introduces testable
    behavior writes the test first (expect RED), then implements (expect GREEN). Keep
    test-writing and implementation in the **same step** when they are tightly coupled; split them
-   when the implementation is large enough to warrant its own step. If the project has no test
+   when the implementation is large enough to warrant its own step — but **never batch several
+   behaviors into a single test-writing step**, which tests imagined behavior rather than observed
+   behavior and commits to a structure before anything has exercised it. If the project has no test
    harness yet, treat a build plus a concrete manual check as the RED→GREEN signal and still
    author the target test file so it is ready when a harness lands.
+
+   Follow the `tdd-principles` skill for **what** each test should assert. Correct ordering does not
+   produce a correct assertion, and a step whose test couples to an implementation artifact passes
+   review here and fails later for reasons that look unrelated.
 3. **Manual verification checkpoints** — any step that changes visible behavior should end with a
    concrete check the developer can perform before moving on.
 4. **Each step must be independently completable** — a clear start state (what was done before)
@@ -265,6 +271,7 @@ Check that:
 - Every step has a paste-ready prompt carrying enough context to act on without reading the rest
   of the plan
 - TDD steps write the test, or define the manual check, *before* implementation
+- No step writes tests for more than one behavior before that behavior is implemented
 - No step depends on a result not established in a prior step
 - Manual verification points exist wherever a visible-behavior check is natural
 - The file summary lists every file to be created or modified

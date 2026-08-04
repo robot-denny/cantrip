@@ -225,6 +225,10 @@ refactors.
 - Write the approved test files and doc edits.
 - If tests were added for behavior that already exists, run them and report GREEN. If a test encodes
   a fix the developer also approved, follow RED → fix → GREEN.
+- **A test written after the code still has to fail first.** Break the behavior or assert a wrong value,
+  watch it go red, then restore. A test that has never failed proves only that it runs — and a test
+  written against existing code is the easiest place to write one that cannot fail. See the
+  `tdd-principles` skill, which also covers why a rule read out of code is not a tested rule.
 - Run the automated gates the change touches and report each result.
 
   **Slot:** `.agents/config/stack.md` → `## Build`

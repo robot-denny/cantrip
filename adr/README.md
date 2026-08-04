@@ -24,6 +24,10 @@ buried.
 
 - **0007 — repository ownership.** Stays under a personal account for now. The costs of a later move are
   recorded there, including why they grow with adoption and become payable by consumers rather than by us.
+- **0012 — pack companions are recommended, never required.** A pack may route work to external skill
+  sets it does not own, declares them machine-readably so `/setup` can report enablement, and documents
+  them in the README. Also settles what the pack absorbs versus points at: durability is ours, library
+  idiom is theirs.
 
 ## Backfilled
 

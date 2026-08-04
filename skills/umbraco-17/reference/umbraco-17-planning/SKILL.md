@@ -55,12 +55,41 @@ training data may not cover accurately.
 | Entity actions | `umbraco-cms-backoffice-skills:umbraco-entity-actions` |
 | Block editor custom view | `umbraco-cms-backoffice-skills:umbraco-block-editor-custom-view` |
 
+**Testing an extension routes to a second skill set**, `umbraco-cms-backoffice-testing-skills`, which
+covers end-to-end and integration setup for backoffice extensions. Consult it when a plan's Test-first
+steps target an extension rather than server-side code — it ships from the same marketplace as the
+skills above and is separately enabled, so one being present does not mean both are.
+
 **Skip these skills for:** Management API or content CRUD, C#/Razor/.NET patterns, or any task
 where the pattern is already clearly visible in the codebase.
 
-These skills install as a Claude Code plugin marketplace and are enabled per-project. If they
-are not available, note it in Key Decisions and plan from the codebase's existing extension
-patterns instead.
+### If these skills are not available
+
+They ship as Claude Code plugins, enabled per project, and are **recommended companions rather than
+requirements** — this pack plans without them. But do not let the absence pass silently:
+
+- **Plan from the codebase's existing extension patterns instead**, and name the closest analogue you
+  used, so a reviewer can see what the plan was modelled on.
+- **Record it in Key Decisions naming what is missing and how to fix it** — not merely that a skill was
+  unavailable. Something like *"planned the dashboard from the existing `<name>` extension because
+  `umbraco-cms-backoffice-skills` is not enabled; enabling it would give authoritative registry and
+  manifest guidance."* A note that says what would improve the plan is actionable; one that only records
+  an absence reads as a shrug.
+- **If the project has no existing extension of that type either**, say so explicitly and treat the
+  plan's extension steps as unvalidated. That is the case where the absence actually costs something: no
+  authoritative guidance *and* no local precedent means the manifest and registry details are being
+  inferred, and inferred registry wiring fails at runtime rather than at build.
+
+### Declared companions
+
+**Companion:** `umbraco-cms-backoffice-skills` — authoritative guidance for the backoffice extension
+types in the routing table above
+**Companion:** `umbraco-cms-backoffice-testing-skills` — end-to-end and integration test setup for those
+extensions
+
+`/setup` reads these declarations to report which are enabled, the same self-describing mechanism it uses
+to find `**Slot:**` declarations. **A pack declares its own companions; core never names them** — which is
+what keeps core technology-agnostic while still making an external dependency visible at install time.
 
 ## The layer vocabulary an Umbraco feature spans
 

@@ -171,3 +171,22 @@ routine operating on the whole document.
 **Type:** pattern
 **Applies:** umbraco >=17 <18
 **Verified:** 17.3 (2026-07)
+
+---
+
+## Clean up stale fixtures at setup, not only at teardown
+
+A test run that fails partway leaves its fixture content in place. The next run creates a document with
+the same name, Umbraco appends a numeric suffix to the colliding slug, and every URL assertion in the
+run fails against a path nobody wrote.
+
+**Why:** The failure surfaces one run *after* the run that caused it, and it presents as a URL bug rather
+than as leftover state — so the natural response is to hardcode the suffixed slug, which passes until the
+fixture is cleaned and then fails permanently.
+
+**How to apply:** Delete by name at the start of setup as well as in teardown, and treat "not found" as
+success rather than an error. Flag a fixture routine that cleans up only in teardown: teardown does not
+run when the process dies.
+**Type:** pattern
+**Applies:** umbraco >=17 <18
+**Verified:** 17.3 (2026-07)

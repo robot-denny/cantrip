@@ -280,7 +280,7 @@ Scenario Passes ───────┴─────────────�
 **TDD** (Test-Driven Development):
 
 - Developer-focused
-- Tests implementation
+- Tests units of behavior at the code level
 - Red-Green-Refactor cycle
 - Unit tests guide design
 
@@ -295,6 +295,12 @@ Scenario Passes ───────┴─────────────�
 
 - BDD: What should we build? (outside-in)
 - TDD: How should we build it? (inside-out)
+
+For how to write the TDD test itself — what it should assert, and what makes it survive refactoring —
+see the `tdd-principles` skill. One clarification worth making explicit, because the contrast above
+invites the opposite reading: **"at the code level" does not mean coupled to the implementation.** A good
+unit test still asserts observable behavior through a public interface; testing *how* the code works
+rather than *what* it does is the central TDD anti-pattern, not the definition of TDD.
 
 ## Key Principles
 

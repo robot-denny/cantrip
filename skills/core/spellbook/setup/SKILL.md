@@ -40,6 +40,36 @@ Read `skills-lock.json` if present, and list the installed skills. Two things fo
 Run `scripts/check-install.sh` if it is available and report anything broken before configuring; there
 is no point configuring a broken install.
 
+### Report each pack's declared companions
+
+A stack pack may **recommend** external skill sets it routes specialized work to — authoritative
+documentation it deliberately does not duplicate rather than copy and let go stale. These are
+**companions, not requirements**: the pack plans without them and says so when it does.
+
+But nothing about installing a pack reveals that it has any, and the person configuring the project is
+the one who can act on it. So **collect every `**Companion:**` declaration from the installed packs'
+skills** — the same self-describing mechanism as `**Slot:**`, which is what lets you do this without
+knowing the pack's technology or its companions' names.
+
+For each, report whether it is enabled and **where from**:
+
+| Enabled in | Report it as |
+|---|---|
+| the project's agent-tool settings, committed | wired for the whole team |
+| the user's own settings only | **wired for you alone** |
+| neither | not enabled, and name what the pack does instead in its absence |
+
+**The middle row is the one worth spending words on.** Both locations work identically for whoever runs
+setup, so a companion enabled only in user settings looks correct from the inside while being absent for
+everyone else — a teammate cloning the repo gets quietly thinner guidance and no signal that anything is
+missing. Say that moving the entry into the project's committed settings is what fixes it.
+
+**Do not enable a companion yourself.** Report and recommend. Enabling third-party plugins in a project's
+committed settings is the user's decision, not a side effect of configuring the toolkit.
+
+If a pack declares no companions, say nothing — this section produces output only when there is something
+to report.
+
 ## Step 1 — Detect what the repository already answers
 
 These are readable without asking. **Fill them, then show the user what you filled for confirmation** —
@@ -179,6 +209,8 @@ Toolkit setup
   Left empty:     N        <- each with a reason
   Scaffold:       <created | already present | using the project's existing layout>
   Preserved:      <the project's own agents and skills, untouched>
+  Companions:     N of M enabled   <- omit this line entirely if no pack declares any
+                  <name>: <team-wide | you only, not committed | not enabled>
 
 Facts noted but not slot material:
   <fact> -> belongs in <the guidance file | docs/>

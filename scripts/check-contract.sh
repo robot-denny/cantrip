@@ -8,10 +8,15 @@
 # Usage:  scripts/check-contract.sh [--verbose]
 # Exit:   0 = clean, 1 = one or more violations
 #
-# Checks 1 is repo-wide, because "public from day one, no private staging period" applies
+# Check 1 is repo-wide, because "public from day one, no private staging period" applies
 # to every file here, not just shipped skills. Checks 2-10 apply to shipped units only.
-# Check 11 is the exception in the other direction: it inspects this repo's own self-hosting,
-# which ships nowhere but is how every authored skill gets exercised before release.
+# Check 12 spans both: it pairs a declaration inside a shipped pack against the README.
+#
+# Checks 11 and 13 are the exceptions in the other direction — they inspect this repo rather
+# than what it ships. Both guard a hardcoded list that has to be kept in step with
+# skills/core by hand: 11 the self-hosting symlinks, 13 the install checker's roster. Each
+# was added after that list had already drifted, and each drifted in the same silent way,
+# reporting success for a skill that was not there.
 
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
@@ -191,7 +196,11 @@ while IFS= read -r f; do
     if ! grep -q '\*\*If empty:\*\*' <<<"$window"; then
       unpaired+="$f:$lineno: **Slot:** with no **If empty:** within 3 lines"$'\n'
     fi
-  done < <(grep -n '\*\*Slot:\*\*' "$f" 2>/dev/null)
+  # Anchored to line start (leading indent allowed -- a declaration inside a bullet is
+  # indented). Unanchored, this also matched prose *about* the mechanism: a file explaining
+  # that /setup discovers `**Slot:**` declarations was read as making one, and was asked for
+  # a fallback to a slot it never referenced.
+  done < <(grep -n '^[[:space:]]*\*\*Slot:\*\*' "$f" 2>/dev/null)
 done < <(shipped_md_files)
 if [[ -n "$unpaired" ]]; then
   report_fail "$CURRENT" \
@@ -332,7 +341,7 @@ if [[ ${#SHIPPED_DIRS[@]} -gt 0 ]]; then
           | tr '\n' ' ' \
           | sed -e 's/.*\*\*If empty:\*\*[[:space:]]*//' -e 's/[[:space:]]\{1,\}/ /g' -e 's/[[:space:]]*$//')
         [[ -n "$slot" && -n "$fb" ]] && printf '%s\t%s\n' "$slot" "$fb"
-      done < <(grep -n '\*\*Slot:\*\*' "$f" 2>/dev/null)
+      done < <(grep -n '^[[:space:]]*\*\*Slot:\*\*' "$f" 2>/dev/null)
     done < <(shipped_md_files) \
       | sort -u \
       | awk -F'\t' '{c[$1]++; ex[$1]=ex[$1]"\n        - "$2} END {for (s in c) if (c[s]>1) printf "%s has %d different fallbacks:%s\n", s, c[s], ex[s]}'
@@ -436,6 +445,92 @@ if [[ -d .claude/skills && -d skills/core ]]; then
       "A core skill this repo cannot cast on itself is untested by the work that authors it." \
       "Link it: ln -s ../../skills/core/<spellbook|reference>/<name> .claude/skills/<name>" \
       "Then check the skill count in README.md still matches." \
+      "" "$details"
+  else
+    report_pass "$CURRENT"
+  fi
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
+# 12. A declared companion is documented where a consumer will see it
+# ---------------------------------------------------------------------------
+# A pack may recommend external skill sets it routes work to (ADR 0012). Those are
+# companions, not requirements -- but an undeclared external dependency is how a consumer
+# installs a pack, casts a spell, and gets thinner guidance with no way to know why.
+#
+# The gap this closes was found in exactly that state: the pack had routed extension work
+# to a marketplace since Phase 5 and named it in two skill files, while the README -- the
+# only file a consumer reads before installing -- mentioned no marketplace at all. Both
+# halves were individually reasonable, which is why nothing caught it.
+#
+# So the rule is: if a pack declares a companion, the README names it. The declaration is
+# the machine-readable half (/setup reads it to report enablement); the README is the human
+# half. This check is the only thing that keeps them in sync.
+begin "declared companions are documented in the README"
+companions=$(grep -rhoE '^\*\*Companion:\*\* +`[^`]+`' skills/ 2>/dev/null \
+  | sed -e 's/^\*\*Companion:\*\* *//' -e 's/`//g' | sort -u)
+
+if [[ -z "$companions" ]]; then
+  report_pass "$CURRENT"
+elif [[ ! -f README.md ]]; then
+  report_fail "$CURRENT" \
+    "A companion is declared but there is no README to document it in." \
+    "Create README.md and name each declared companion." "" "" "$companions"
+else
+  # Fenced code blocks are stripped first. A companion named only inside a config snippet
+  # is not documented -- it is demonstrated, which is a different thing and leaves a
+  # consumer no way to learn the dependency exists or that it is optional. Found by
+  # negative-testing this check: deleting the prose row left the JSON example, and a plain
+  # substring match over the whole file still reported the companion as documented.
+  readme_prose=$(awk '/^[[:space:]]*```/{fence=!fence; next} !fence' README.md)
+  undocumented=""
+  while IFS= read -r c; do
+    [[ -z "$c" ]] && continue
+    grep -qF -- "$c" <<<"$readme_prose" || undocumented+="  - $c"$'\n'
+  done <<< "$companions"
+
+  if [[ -n "$undocumented" ]]; then
+    report_fail "$CURRENT" \
+      "A consumer reads the README before installing; an external dependency absent from it is invisible until guidance is already thinner." \
+      "Name each companion in README.md, and say it is recommended rather than required." \
+      "Keep the pack's **Companion:** declaration as the machine-readable half -- /setup reads it." \
+      "" "declared but not in README.md:"$'\n'"$undocumented"
+  else
+    report_pass "$CURRENT"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 13. The install checker's roster matches the core skills that exist (this repo only)
+# ---------------------------------------------------------------------------
+# check-install.sh runs in a consumer project, where skills/core/ is absent, so its roster
+# of expected skills has to be hardcoded. That makes drift invisible in the one place it
+# matters most: a roster missing a skill reports a clean install while that skill is not
+# there at all.
+#
+# It had already drifted by three when this check was written -- setup,
+# design-system-authoring, and tdd-principles -- so a consumer could install core, get no
+# /setup, and be told "no problems found". Check 11 catches the same drift for self-hosting;
+# this is its missing sibling, which is exactly the recurring shape it was written to stop.
+begin "install checker roster matches skills/core"
+if [[ -f scripts/check-install.sh && -d skills/core ]]; then
+  roster=$(awk '/^ROSTER_CORE=\(/{f=1;next} f&&/^\)/{exit} f' scripts/check-install.sh \
+    | tr ' ' '\n' | sed '/^$/d' | sort -u)
+  actual=$(find skills/core -name 'SKILL.md' -type f -print 2>/dev/null \
+    | sed -e 's|/SKILL\.md$||' -e 's|.*/||' | sort -u)
+
+  missing=$(comm -13 <(printf '%s\n' "$roster") <(printf '%s\n' "$actual") | grep -v '^$')
+  stale=$(comm -23 <(printf '%s\n' "$roster") <(printf '%s\n' "$actual") | grep -v '^$')
+
+  if [[ -n "$missing" || -n "$stale" ]]; then
+    details=""
+    [[ -n "$missing" ]] && details+="in skills/core but not in ROSTER_CORE (a consumer missing these is told nothing):"$'\n'"$(printf '%s\n' "$missing" | sed 's/^/  - /')"$'\n'
+    [[ -n "$stale" ]] && details+="in ROSTER_CORE but no longer in skills/core:"$'\n'"$(printf '%s\n' "$stale" | sed 's/^/  - /')"
+    report_fail "$CURRENT" \
+      "The consumer-facing install checker verifies a different set of skills than the toolkit ships." \
+      "Update ROSTER_CORE in scripts/check-install.sh to match skills/core." \
       "" "$details"
   else
     report_pass "$CURRENT"

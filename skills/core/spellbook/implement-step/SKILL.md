@@ -86,6 +86,10 @@ present, "Validation"}
 
 - **Follow TDD if the step says "Test first"**: write the failing test, run it to confirm RED,
   then implement, then run again to confirm GREEN. Don't skip the RED check.
+- **Follow the `tdd-principles` skill for what the test asserts.** Assert observable behavior through
+  the interface a user of the code would use — never that something merely *exists*, and never an
+  expected value computed the same way the implementation computes it. Correct RED→GREEN ordering does
+  not make an assertion correct, and this step is where that gets decided.
 - **Run every command listed under "Validation"** at the end. Report each one's result.
 - **For any validation you cannot mechanically verify, produce evidence — never attest.** A step whose
   check is "verify by eye" or "confirm it looks right" cannot be judged from here: you have no eyes, and

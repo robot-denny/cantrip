@@ -70,6 +70,10 @@ Worth noting the corollary, which is a finding in its own right: **a test assert
 a style rule or a string is fragile by construction.** If you meet one, the removal may be correct and
 the test may be the defect. Report both readings rather than assuming the deletion was wrong.
 
+The `tdd-principles` skill states the authoring rule this corollary is the review-time face of, and is
+the reference to cite when raising it — a presence assertion also passes while the thing it names is
+present and broken, which is the half a review can otherwise miss.
+
 ## Reporting balance
 
 - **Do not over-report.** Never flag what you cannot confirm from the diff alone. Where something is

@@ -25,6 +25,34 @@ npx skills add robot-denny/cantrip/skills/umbraco-17 --all
 
 Packs are opt-in: the core install brings no stack-specific content at all.
 
+### Recommended companions for the `umbraco-17` pack
+
+The pack **routes** backoffice-extension and testing work to two external skill sets rather than
+duplicating what they already document. They are **recommended, not required** — the pack works without
+them, and says so in a plan's Key Decisions when it planned without them — but its extension and test
+guidance is thinner in their absence.
+
+| Skill set | What the pack routes to it |
+|---|---|
+| `umbraco-cms-backoffice-skills` | Dashboards, property editors, workspaces, trees, the context API, entry points, entity actions, block editor views |
+| `umbraco-cms-backoffice-testing-skills` | End-to-end and integration test setup for backoffice extensions |
+
+Both come from one Claude Code plugin marketplace, `umbraco/Umbraco-CMS-Backoffice-Skills`, added with
+`/plugin` rather than with `npx skills`. Enabled, they appear in settings as:
+
+```json
+"enabledPlugins": {
+  "umbraco-cms-backoffice-skills@umbraco-backoffice-marketplace": true,
+  "umbraco-cms-backoffice-testing-skills@umbraco-backoffice-marketplace": true
+}
+```
+
+**Enable them in the project's `.claude/settings.json`, not only in your user settings.** Both locations
+work for you; only the committed project one works for your teammates. A user-level enablement is the
+classic works-on-my-machine gap — your plans get the extension guidance and theirs quietly do not.
+
+`/setup` reports which of the two are enabled and where they were enabled from.
+
 ### Pick your install shape
 
 `--all` is shorthand for `--skill '*' --agent '*'` — every skill, to **every agent tool it can
@@ -33,7 +61,7 @@ detect**. Verified, that means it writes to four places: `.agents/skills/` (real
 has a bare `skills/` directory, it writes into that too**, alongside whatever is already there.
 Nothing is overwritten, but a project with its own `skills/` folder gets it populated.
 
-If you only use Claude Code, this is cleaner — same 15 skills, assets and agents included, one write
+If you only use Claude Code, this is cleaner — same 16 skills, assets and agents included, one write
 location, and an existing `skills/` folder left alone:
 
 ```bash
@@ -42,7 +70,7 @@ npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -
 
 | | `--all` | `--skill '*' --agent claude-code` |
 |---|---|---|
-| Skills installed | 15 | 15 |
+| Skills installed | 16 | 16 |
 | Bundled assets and agents | ✓ | ✓ |
 | Writes to | `.agents/`, `.claude/`, `agent/`, `skills/` | `.claude/` only |
 | Canonical `.agents/` tree | ✓ | ✗ (files copied into `.claude/skills/`) |
@@ -123,7 +151,8 @@ A stack pack adds its own spells on top — the `umbraco-17` pack adds three. A 
 plus the packs it installed.
 
 Nouns are references, which the model reaches for on its own: `workflow` (the spine and work-type
-classification), `bdd-principles`, `reviewer-discipline`, `memory-discipline`.
+classification), `bdd-principles` (what behavior to specify), `tdd-principles` (what a test should
+assert), `reviewer-discipline`, `memory-discipline`, and `design-system-authoring`.
 
 **Spells chain by suggestion, never invocation.** Every spell ends with a `Next:` line; none of them
 calls another. That is what keeps this a toolbox rather than a funnel.

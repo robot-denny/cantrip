@@ -34,9 +34,16 @@ CONFIG_DIR=".agents/config"
 # toolkit and versions with it, so it cannot drift from what it describes -- and a
 # hand-vendored install has no lockfile to derive from. Units outside this list belong to
 # the project and are none of our business.
+# Hardcoded because this script runs in a CONSUMER project, where skills/core/ does not
+# exist to derive from. That makes it a list that can silently fall behind the toolkit --
+# and did: setup and design-system-authoring were absent here long after they shipped, so
+# this script reported "13 of 13, no problems found" for an install with no /setup in it.
+# Contract check 13 now compares this roster against skills/core in the toolkit repo, which
+# is the only place the comparison is possible.
 ROSTER_CORE=(
-  bdd-principles memory-discipline reviewer-discipline workflow
-  code-review commit-message explore feature implement-step plan retrofit spec
+  bdd-principles design-system-authoring memory-discipline reviewer-discipline
+  tdd-principles workflow
+  code-review commit-message explore feature implement-step plan retrofit setup spec
   update-toolkit
 )
 # Pack units are the toolkit's too, so they must be verified and visible. But core-only is
