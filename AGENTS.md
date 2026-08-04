@@ -34,8 +34,17 @@ something came from, so use neutral aliases:
 | The Umbraco 17 demo project | **"the demo project"** — safe to name directly; it is not client work |
 
 When the distinction does not matter, "the source repos" is better than either. Run
-`scripts/check-contract.sh` before committing; check 1 is repo-wide precisely because these
-documents are where the name tends to slip through.
+`scripts/check-contract.sh` before committing; check 1 covers every publishable file precisely because
+these documents are where the name tends to slip through.
+
+### Naming the authoring org
+
+**Different rule, different reason.** The org that authored this toolkit is credited in `LICENSE`, and
+may be named in the README or a decision record — that is attribution, and it is intentional.
+
+But it must **never appear inside a shipped skill.** "This is how <org> does it" is a project fact in an
+L0 file, which the layer contract forbids regardless of whose project it is. A skill describes what must
+be true; it does not describe one organization's way of working. Check 1b enforces exactly that split.
 
 ## Layer contract
 

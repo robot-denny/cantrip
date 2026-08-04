@@ -51,8 +51,23 @@ begin() {
 }
 
 # Collect files, honoring prunes. Prints nothing if none exist yet.
+# Everything a leak could hide in -- not only markdown. A client name in a script, a
+# lockfile, or an eval fixture is the same leak; only the extension differs.
+#
+# Scoped to what could actually be PUBLISHED: tracked files plus untracked-but-not-ignored
+# ones. A git-ignored file cannot leak, and scanning it produces noise about something
+# unpublishable -- which is how this scan first reported the git-ignored local settings
+# file that legitimately names a source repo path.
 repo_md_files() {
-  find . \( "${PRUNE[@]}" \) -prune -o -name '*.md' -type f -print 2>/dev/null
+  if git rev-parse --git-dir >/dev/null 2>&1; then
+    { git ls-files; git ls-files --others --exclude-standard; } 2>/dev/null \
+      | grep -E '\.(md|json|sh|py|txt)$|(^|/)LICENSE$' \
+      | grep -vE '^scripts/check-contract\.sh$'
+  else
+    find . \( "${PRUNE[@]}" \) -prune -o -type f \
+      \( -name '*.md' -o -name '*.json' -o -name '*.sh' -o -name '*.py' -o -name '*.txt' -o -name 'LICENSE' \) \
+      -print 2>/dev/null
+  fi
 }
 
 shipped_md_files() {
@@ -95,7 +110,7 @@ grep_unexempted() {   # grep_unexempted <file> <pattern>
 # values, branch slugs, and test-artifact filenames -- each of which identifies the
 # source project as surely as its name.
 begin "no client-identifying information (repo-wide)"
-CLIENT_PATTERN='kittitas|wearediagram|diagram-et|CCASyndication|robotregime|scm\.umbraco\.io'
+CLIENT_PATTERN='kittitas|CCASyndication|robotregime|scm\.umbraco\.io'
 CLIENT_PATTERN+='|UmbracoProject|HelloWorld|Kittitas\.(Web|Features)'
 CLIENT_PATTERN+='|SearchSummary|HeaderSearch|HeaderViewModel|ViewModelFactory|ServicesAggregate'
 CLIENT_PATTERN+='|GuideToc|NotFoundContentFinder|SitemapRewriteMiddleware'
@@ -110,6 +125,25 @@ if [[ -n "$hits" ]]; then
   report_fail "$CURRENT" \
     "Client-identifying terms found. This repo is public with no staging period —" \
     "scrub before committing (see AGENTS.md)." \
+    "" "$hits"
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
+# 1b. The authoring org may be attributed, but never inside a shipped skill
+# ---------------------------------------------------------------------------
+# A different rule from check 1, because it protects something different. The org is the
+# AUTHOR -- naming it in a license, a README, or a decision record is intentional. Naming
+# it inside a shipped skill is a project fact in L0: "this is how <org> does it" is exactly
+# what the layer contract forbids, whoever the org is.
+begin "authoring org is attributed, not embedded in skills"
+AGENCY_PATTERN='wearediagram|diagram-et|\bdiagram\b'
+hits=$(while IFS= read -r f; do [[ -n "$f" ]] && grep_unexempted "$f" "$AGENCY_PATTERN"; done < <(shipped_md_files))
+if [[ -n "$hits" ]]; then
+  report_fail "$CURRENT" \
+    "The authoring org is named inside a shipped skill. Attribution belongs in LICENSE," \
+    "README, or an ADR — a skill stating how one org works is a project fact in L0." \
     "" "$hits"
 else
   report_pass "$CURRENT"

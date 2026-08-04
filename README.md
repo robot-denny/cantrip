@@ -169,6 +169,9 @@ scripts/                   # contract gate and extraction checks
 
 MIT — see [LICENSE](LICENSE). Install it, vendor it, edit your copy, ship it in client work.
 
+Copyright is held by Diagram; the repository is personally administered. The MIT grant is the same either
+way — see [ADR 0007](adr/0007-repository-ownership.md) if you are curious why they differ.
+
 ## Contributing
 
 This repo is public and draws on real client projects. Content harvested from client work is

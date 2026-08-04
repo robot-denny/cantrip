@@ -1,4 +1,4 @@
-# 0007. The repository stays under a personal account for now
+# 0007. Repository ownership and copyright are deliberately separate
 
 **Status:** Accepted
 **Date:** 2026-08-04
@@ -20,7 +20,16 @@ to the real agency org, or create a neutral one.
 
 ## Decision
 
-**Keep `robot-denny/cantrip`.**
+**Repository owner: the personal account. Copyright holder: the agency.**
+
+These are answers to different questions and there is no reason they must match. The repository is where
+the code lives and who administers it; copyright is who owns the work. The work was done as agency work,
+so the agency holds copyright — while the repository stays personally owned for the reasons below.
+
+The MIT license makes the split unproblematic: it grants everyone the rights that matter regardless of
+who holds them, so a consumer never needs to reason about the distinction.
+
+### On the repository staying where it is
 
 There is no technical reason to move. The install path works, the canary's committed lockfile records
 this owner accurately, and a personal namespace is a perfectly ordinary home for a public toolkit.
@@ -53,6 +62,13 @@ consumer so their lockfiles record the new owner rather than relying on a redire
 
 ## Consequences
 
+- **`LICENSE` names the agency; the repository does not.** Anyone auditing provenance sees agency
+  copyright under personal administration, which is accurate rather than confusing.
+- **The scrub rule had to distinguish two things it was conflating.** The agency's name was in the same
+  pattern as client names, so attribution was blocked alongside the thing that genuinely must never
+  appear. They are different rules: a **client** must never be named anywhere, while the **authoring
+  org** belongs in a license, a README, or a decision record — and must *not* appear inside a shipped
+  skill, because "this is how <org> does it" is a project fact in L0 whoever the org is. Now two checks.
 - No work now; the canary stays accurate.
 - The README, ADRs, and rationale notes continue naming this owner correctly.
 - Revisit **before** any public announcement rather than after. That is the last cheap moment.
