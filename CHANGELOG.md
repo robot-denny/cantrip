@@ -46,6 +46,9 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   Management API, with alias and agent lookup rather than hardcoded values.
 - **`/block` pack spell** — test-first Umbraco block creation. Discovers the project's view location
   and model binding by exemplar rather than asserting one architecture.
+- **`architecture-audit` pack skill** — seven-pillar architectural assessment with lifecycle-aware
+  scoring, moved essentially unchanged since it was authored portable. Its report destination now
+  follows the `workflow` skill's layout and the durable-or-temporal disposition rule.
 - **`umbraco-17-feature-backfill` pack skill** — where Umbraco keeps the schema artifact, generated
   model, and view, plus the data-type-to-field-kind mapping.
 - **`scripts/check-preserved.py`** — whitespace- and emphasis-normalized preservation checking, so
