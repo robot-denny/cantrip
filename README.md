@@ -62,7 +62,7 @@ has a bare `skills/` directory, it writes into that too**, alongside whatever is
 Nothing is overwritten, but a project with its own `skills/` folder gets it populated.
 
 If you only use Claude Code, this is cleaner — same 16 skills, assets and agents included, one write
-location, and an existing `skills/` folder left alone:
+location, an existing `skills/` folder left alone, and **no symlinks anywhere**:
 
 ```bash
 npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -y
@@ -75,6 +75,18 @@ npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -
 | Writes to | `.agents/`, `.claude/`, `agent/`, `skills/` | `.claude/` only |
 | Canonical `.agents/` tree | ✓ | ✗ (files copied into `.claude/skills/`) |
 | Other agent tools supported | ✓ | ✗ |
+| Creates symlinks | ✓ `.claude/skills/` → `.agents/skills/` | ✗ real files only |
+
+**On Windows, prefer the single-agent shape** — the last row is why, not the tool count. Symlinks exist
+in the `--all` layout precisely *because* it serves several tools from one canonical tree, and Git for
+Windows only materializes symlinks when `core.symlinks=true`, which its installer disables unless the
+account can create them (Developer Mode, or an elevated shell). Where it is off you get a small text
+file containing the target path instead of a link, so `.claude/skills/plan` looks present and contains
+no `SKILL.md` — the spell silently does not exist. The single-agent shape writes real files and has
+nothing to materialize.
+
+If you want several tools on Windows, run the installer once per tool with a single `--agent` each.
+That trades the shared canonical tree for one independent copy per tool, and needs no symlink support.
 
 Either way `skills-lock.json` records the source and a content hash per skill. If your project already
 has one, the installer **merges** into it rather than replacing it — existing entries are preserved.
@@ -119,6 +131,15 @@ done
 ```
 
 This is purely additive — any agents your project already has are untouched.
+
+On Windows, copy instead — `check-install.sh` compares content rather than looking for a link, so a
+copy registers exactly the same. The tradeoff is that copies do not follow `/update-toolkit`, so
+re-copy after an update.
+
+```powershell
+New-Item -ItemType Directory -Force .claude\agents
+Copy-Item .claude\skills\reviewer-discipline\agents\*.md .claude\agents\
+```
 
 Until you do, `/code-review` and `/retrofit` run the three review passes inline instead of in
 parallel. Everything works either way — you are trading concurrency, not capability.

@@ -34,9 +34,36 @@ Check the current git branch, and **abort this entire process** if there are any
 unstaged, or untracked files in the working directory. Tell the user to commit or stash their
 changes before proceeding, and **do not go any further.**
 
+**If the only untracked file is a `discovery.md` from a just-run `/explore`, name that specifically**
+and recommend committing it: discovery precedes the branch this spell creates, so it belongs on the
+base branch. A generic "commit or stash your changes" reads as a defect when the file was produced by
+the spell the user was just told to run — which is exactly the sequence `/explore` ends by suggesting.
+
 ## Step 2. Parse the arguments
 
-From `$ARGUMENTS`, extract:
+### First — is this continuing a discovery?
+
+`/explore` writes a `discovery.md` into an increment's working directory and ends by pointing here with
+that increment's slug. **Look for it before treating `$ARGUMENTS` as a fresh description.**
+
+If `$ARGUMENTS` names an existing increment whose directory holds a `discovery.md`, read it, and take
+these from it rather than re-deriving:
+
+- **`feature_slug`** — the existing directory name. Deriving a fresh slug from the same words creates a
+  **second** increment directory beside the first and orphans the discovery, while looking entirely
+  normal.
+- **`feature_title`** — the discovery's title.
+- **The problem framing, the options considered, and the open questions** — the discovery has a section
+  addressed to this spell. Carry those forward instead of asking again. Re-litigating discovery inside
+  the spec is the specific waste this artifact exists to prevent.
+
+**Say which discovery you picked up**, so a wrong match is visible immediately rather than after a spec
+has been written against it.
+
+If `$ARGUMENTS` names no such increment, continue below and treat it as a fresh description. That is the
+common case — `/explore` is optional, and most increments start here.
+
+### Then, from `$ARGUMENTS`, extract:
 
 1. **`feature_title`** — a short, human-readable title in Title Case.
    Example: "Card Component for Dashboard Stats".

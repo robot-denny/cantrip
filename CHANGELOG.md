@@ -257,3 +257,27 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - **Contract check 4 over-matched.** It searched for `**Slot:**` unanchored, so prose *about* the mechanism
   was read as a declaration and demanded a fallback for a slot it never referenced. Now anchored to line
   start with indentation allowed, verified still to catch an indented declaration missing its fallback.
+- **`/explore` wrote a document `/spec` had never heard of.** The discovery doc carries a section
+  addressed to `/spec` by name, and `/explore` ends by pointing there — but `/spec` built from whatever
+  you retyped and re-derived its own slug, so the discovery was either sitting unread beside the new spec
+  or orphaned in a second increment directory. It also could not run at all immediately after `/explore`:
+  the discovery doc lands untracked, and `/spec` aborts on any untracked file, so the suggested next step
+  failed on a clean-tree guard before reaching the part that ignored the file. `/spec` now reads an
+  existing increment's `discovery.md` when given its slug and carries the framing, options, and open
+  questions forward; `/explore` says to commit the doc first and why. Fifth instance of one mechanism
+  present in a spell and absent from its sibling.
+- **Every shipped script broke on a Windows checkout.** The repo had no `.gitattributes`, and Git for
+  Windows defaults `core.autocrlf=true` — so the ten `.sh` files, `check-preserved.py`, and
+  `.githooks/pre-commit` all checked out with CRLF, and bash fails on the trailing carriage return with
+  `$'\r': command not found`. Because the hook runs the contract gate, a Windows contributor's *first
+  commit* failed with an error that reads like a corrupt repo. In a consuming project the same thing hit
+  the pack's four `architecture-audit` scripts, which that skill calls as mandatory steps rather than
+  optional ones. Now pinned to `eol=lf`; `core.autocrlf` is per-machine and could never have fixed this
+  for anyone but the person who set it.
+- **The install-shape guidance buried the property that matters on Windows.** The single-agent shape was
+  presented as merely "cleaner if you only use Claude Code" when its load-bearing difference is that it
+  creates **no symlinks** — and symlinks are exactly what a Windows checkout without `core.symlinks=true`
+  turns into path-shaped text files, leaving a skill directory that looks present and contains no
+  `SKILL.md`. The table now states it, the multi-tool case is named as the one needing setup, and the
+  reviewer-agent step carries a copy-based alternative — which `check-install.sh` already accepted, since
+  it compares content rather than looking for a link.

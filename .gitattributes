@@ -1,0 +1,14 @@
+# Shell and Python scripts must check out with LF endings on every platform.
+#
+# Git for Windows defaults core.autocrlf=true, which rewrites these to CRLF on checkout.
+# bash then fails on the trailing carriage return with `$'\r': command not found`, and
+# because .githooks/pre-commit runs the contract gate, a Windows contributor's very first
+# commit breaks with an error that reads like a corrupt repo rather than a line-ending
+# setting. The pack's audit scripts fail the same way in a consuming project.
+#
+# core.autocrlf is per-machine and cannot be committed; this can.
+*.sh        text eol=lf
+*.py        text eol=lf
+
+# Extensionless executables, matched by name since no glob covers them.
+.githooks/* text eol=lf
