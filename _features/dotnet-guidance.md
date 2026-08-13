@@ -21,7 +21,7 @@ Newest planned items first. When an item ships, flip the checkbox and point it a
 increment.
 
 - [ ] .NET pack, plus the detection line it enables (`_work/dotnet-pack/plan.md`)
-- [ ] **Prerequisite, tracked elsewhere**: three language-agnostic review failure modes move into core.
+- [x] **Prerequisite, landed 2026-08-13**: two language-agnostic review failure modes moved into core
       Split out by dependency direction — the pack's wording follows them, and they help every project in
       every language with no pack installed. Their behavior belongs to a core review capability doc, not
       this one

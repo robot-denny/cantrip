@@ -28,7 +28,7 @@ review — and makes three supporting changes it depends on:
 ### Depends on a separate increment, which must land first
 
 The pack's review guidance is written as *the C# expression of a defect core already names*. Core naming
-those defects is **not** part of this increment: three language-agnostic failure modes — a rethrow that
+those defects is **not** part of this increment: two language-agnostic failure modes — a rethrow that
 discards the original error, a log call that interpolates values instead of passing them as fields, and
 long-running work with no way to cancel it — are split out, because they improve review for every project
 in every language whether or not this pack is ever installed.
@@ -58,7 +58,7 @@ README and changelog are the only mechanism by which an existing project learns 
   project has recorded, then the pack's default, then the dominant style of the surrounding file.
 - **FR4** — Contested style items are named in **one** place as the project's to answer, and the pack
   asserts no answer for any of them.
-- **FR5** — *Moved.* "A project with no pack installed still catches the three generalized failure modes,
+- **FR5** — *Moved.* "A project with no pack installed still catches the generalized failure modes,
   in any language" is now the prerequisite increment's requirement, not this one's. Numbering is left
   intact rather than closed up, so a reference to FR6 or FR7 elsewhere still resolves.
 - **FR6** — Configuring the toolkit proposes a project's style answers from what the repository already
@@ -284,7 +284,7 @@ Scenario: The changelog separates the addition from the change
 ## Open Questions
 
 - ~~**Does this increment want splitting?**~~ **Settled 2026-08-13: yes, by dependency direction.** The
-  three generalized failure modes became their own increment because they have standalone value — they
+  generalized failure modes became their own increment because they have standalone value — they
   improve review in any language with no pack installed — and because the pack's wording follows them. The
   detection line stayed here, because it can only be exercised by a pack that declares one. See *Depends
   on a separate increment* above.

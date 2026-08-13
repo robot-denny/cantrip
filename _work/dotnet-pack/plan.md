@@ -5,26 +5,49 @@
 **Work type**: new-capability
 **Feature doc**: dotnet-guidance
 
-## ⛔ Blocked — do not start Step 2 until reconciled
+## Prerequisite landed — what the pack must reference
 
-**Read this before pasting any step prompt.** This plan was written against a prerequisite that has
-since been scoped down, and the steps below have not yet been corrected.
+The blocker that stood here is cleared. `review-failure-modes` merged as PR #2 and is archived at
+`_work/shipped/review-failure-modes/`. Its outcome differs from what this plan assumed, in three ways
+that change how the pack units are written.
 
-- The prerequisite increment is `review-failure-modes` (branch of the same name). It must land first.
-- **It carries two failure modes, not three.** Cancellation of long-running work is *already* owned by
-  the performance reviewer — it was never absent from core, only from the quality reviewer. It is not
-  moving, and this plan's references to "three" are wrong.
-- Still open there, and it affects how this plan should refer to core: whether the two checks live in
-  `code-reviewer`'s own focus areas or in the shared `reviewer-discipline` contract.
+**Two failure modes moved into core, not three.** Cancellation was already owned by the performance
+reviewer, so it never moved. Wherever this plan or the spec says "three", read two.
 
-**What is *not* affected**, so it does not need re-litigating: this pack's own cancellation content and
-eval cases are fine. All three reviewers consult stack-pack guidance, so `dotnet-review-rules` can carry
-the C# idiom for cancellation and the performance reviewer will pick it up. The resolution order, the slot
-mechanics, both validated descriptions, and Steps 1 and 3–6 stand as written.
+**Where they landed, since the pack must name the C# form without restating the reason:**
 
-Reconcile this plan against `_work/review-failure-modes/plan.md` once that exists — it will state where
-the two checks landed and in what wording, which is what the pack has to reference. Reconciling before
-then means guessing twice.
+| What | Where |
+|---|---|
+| An error passed onward with its origin no longer recorded anywhere | `agents/code-reviewer.md` §2 |
+| A log call that folds its values into the message text | `agents/code-reviewer.md` §2 |
+| Cancellation ownership, and the merged-report reasoning | `reviewer-discipline/SKILL.md` → *Where two domains abut* |
+
+That answers the open question this note flagged: the two checks are domain findings and sit in the
+agent; the ownership fact is about the boundary between reviewers and sits in the shared contract. The
+pack references the agent's entries.
+
+**Both core entries carry an exemption clause, and the pack must not contradict them.** The lost-origin
+entry exempts a deliberately sanitized external response so long as the origin survives internally. The
+log entry exempts a message carrying no values, and routes a value that should not be logged at all to
+the sensitive-data rule, where the fix is removal rather than relocation. A pack entry that tells a
+reviewer to move a credential into a named field would contradict core.
+
+**Cancellation is scoped to outbound and I/O-bound work.** The boundary statement was narrowed during
+review because the performance checklist only operationalizes cancellation for outbound and stream cases,
+and a wider grant created a gap. The pack's own cancellation content still stands — all three reviewers
+consult stack-pack guidance, so `dotnet-review-rules` supplies the C# idiom and the performance reviewer
+picks it up.
+
+**Two gaps are recorded and unowned** in `_work/shipped/review-failure-modes/spec.md`: the allocation
+cost of building an interpolated log message, and cancellation on local long-running work. The pack
+should not quietly claim either — each earns its own evidence.
+
+**Unaffected, so do not re-litigate**: the resolution order, the slot mechanics, both validated
+descriptions, and Steps 1 and 3–6.
+
+**One thing Step 1 now inherits.** `scripts/check-contract.sh` gained a `.diff` scan fix in the merged
+work, in both the git and non-git file lists. Step 1 edits the same file — build on that rather than
+reverting it, and if the pack commits eval fixtures as `.diff`, they are now scanned.
 
 ---
 
