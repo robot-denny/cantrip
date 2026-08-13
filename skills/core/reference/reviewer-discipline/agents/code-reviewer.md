@@ -52,6 +52,17 @@ considered compromised and rotated — not merely removed.
 - Unvalidated or unsanitized user input from forms, query strings, route params, or API parameters
 - Missing null and undefined checks before property access
 - Swallowed exceptions and empty catch blocks
+- An error passed onward with its origin no longer recorded anywhere — replaced by a new error that
+  does not carry the original, or the same error sent on in a way that loses track of where it began.
+  **The failure still reaches the caller, which is what separates this from a swallowed error**: what
+  is gone is the original point of failure, so whoever debugs it later lands on the handler with no
+  trail back. Sanitizing what an external caller is shown is not this finding, as long as the origin
+  survives internally
+- A log call that folds its values into the message text instead of passing them alongside it as
+  named fields. Every occurrence becomes a distinct message string, so nobody can filter, group, or
+  count on the values afterwards. **A message carrying no values has nothing to separate out and is
+  not this finding**; a value that should not be logged at all is section 1's finding, where the fix
+  is removal rather than relocation
 - Missing error boundaries in async code — unhandled rejections, absent try/catch
 - Responses consumed without checking status codes, on either side of a call
 

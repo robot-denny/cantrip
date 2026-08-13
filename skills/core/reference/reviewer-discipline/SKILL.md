@@ -44,6 +44,40 @@ Blocker is a committed secret or a crash path.
 "Critical" or "High" cannot be merged cleanly with one that emits "Blocker" and "Major", and the
 combined action plan loses its ordering.
 
+### Where two domains abut
+
+Mapping a domain onto the scale settles severity. It does not settle the cases where two domains
+genuinely touch, and there **one reviewer owns the rule and the others stay silent — in a merged
+report.**
+
+Cancellation and timeouts on long-running **outbound and I/O-bound** work belong to the **performance
+reviewer**: whether such an operation can be abandoned, and whether the wait on it is bounded, are its
+findings. The quality reviewer does not also raise them. It still raises what is its own on that same
+call — a failure it swallows, an async path with no error boundary — because those are different
+defects that happen to share a line, and two defects on one line are two findings.
+
+The reason is the merge. Three reviews become one ranked list, so a rule held in two reviewers
+reaches the reader twice: same line, same fix, two rows, an inflated count, and one defect occupying
+two slots in the ranking. Neither reviewer can see this, because each raised exactly one finding —
+the duplication exists only in the merged report, which is why the boundary is recorded here rather
+than in either checklist.
+
+**A reviewer running alone raises what it would otherwise leave to another.** Silence is only safe
+while something else covers the rule; in a single-reviewer pass nothing does, and a finding withheld
+is indistinguishable from a finding absent — which is the reason the Clean section exists at all. So
+the deferral is a property of the merge, not a permanent narrowing of anyone's domain.
+
+Distinct from the "Reporting balance" rule against repeating one issue across many files: that governs
+a single reviewer repeating itself, this governs two reviewers repeating each other.
+
+**One boundary is recorded here, not all of them.** Others are live and unassigned — the clearest is
+the quality reviewer's synchronous-blocking-call entry against the performance reviewer's
+async-correctness dimension. Leaving them open is deliberate rather than an oversight: each wants
+evidence that the duplication actually reaches a reader, the way this one has it. Two cautions when
+you do assign one. Check that a rule you are about to add is not already another's — and check that
+the reviewer you assign it to genuinely covers it, because a grant wider than the checklist behind it
+creates a gap where both reviewers believe the other has it.
+
 ## Evidence standard
 
 - **Be precise.** Every finding cites a file path and a line or range. Where the diff lacks line

@@ -1,0 +1,21 @@
+diff --git a/src/fulfilment/dispatch-queue.ts b/src/fulfilment/dispatch-queue.ts
+index 4c1a9e2..b7d3f80 100644
+--- a/src/fulfilment/dispatch-queue.ts
++++ b/src/fulfilment/dispatch-queue.ts
+@@ -21,6 +21,15 @@ export class DispatchQueue {
+     return this.pending.length;
+   }
+
++  async attemptDispatch(orderNumber: string, retryCount: number): Promise<boolean> {
++    const dispatch = await this.gateway.send(orderNumber);
++    if (dispatch.accepted) {
++      return true;
++    }
++
++    this.log.warn(`Dispatch rejected for order ${orderNumber}, retry ${retryCount}`);
++    return false;
++  }
++
+   flush(): void {
+     this.pending = [];
+   }
