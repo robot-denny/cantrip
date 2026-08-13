@@ -5,6 +5,29 @@
 **Work type**: new-capability
 **Feature doc**: dotnet-guidance
 
+## ⛔ Blocked — do not start Step 2 until reconciled
+
+**Read this before pasting any step prompt.** This plan was written against a prerequisite that has
+since been scoped down, and the steps below have not yet been corrected.
+
+- The prerequisite increment is `review-failure-modes` (branch of the same name). It must land first.
+- **It carries two failure modes, not three.** Cancellation of long-running work is *already* owned by
+  the performance reviewer — it was never absent from core, only from the quality reviewer. It is not
+  moving, and this plan's references to "three" are wrong.
+- Still open there, and it affects how this plan should refer to core: whether the two checks live in
+  `code-reviewer`'s own focus areas or in the shared `reviewer-discipline` contract.
+
+**What is *not* affected**, so it does not need re-litigating: this pack's own cancellation content and
+eval cases are fine. All three reviewers consult stack-pack guidance, so `dotnet-review-rules` can carry
+the C# idiom for cancellation and the performance reviewer will pick it up. The resolution order, the slot
+mechanics, both validated descriptions, and Steps 1 and 3–6 stand as written.
+
+Reconcile this plan against `_work/review-failure-modes/plan.md` once that exists — it will state where
+the two checks landed and in what wording, which is what the pack has to reference. Reconciling before
+then means guessing twice.
+
+---
+
 ## Context
 
 The toolkit ships no per-file .NET guidance. This increment adds an opt-in L1 pack of two reference
