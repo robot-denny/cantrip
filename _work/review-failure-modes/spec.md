@@ -184,6 +184,21 @@ Scenario: A catch block that logs and discards yields one finding
 - **Does the perf reviewer need a matching statement?** FR3 says the quality reviewer defers. Whether the
   performance reviewer should also assert ownership, so the pair is legible from either side, is a small
   call with a real cost in duplication.
+- **The allocation cost of interpolated logging has no owner — found during review, deliberately not fixed
+  here.** The log entry states only the queryability cost, on the reasoning that cost belongs to the
+  performance reviewer. The reasoning is sound and the premise turned out to be false: `perf-reviewer.md`
+  mentions logging nowhere, and its "string building in loops" phrase is scoped to iteration, so it does
+  not reach a single hot-path call or a call at a level that is disabled and discards the result. Verified
+  by grep — the only matches for "log" in that file are "logic" and "technology".
+
+  Left unfixed on purpose. It is a third failure mode, absent from this spec's acceptance criteria, and it
+  belongs to a different reviewer's domain — so it earns its own written-down RED rather than riding in on
+  this increment's evidence. Adding a performance entry without proving it would be the assert-without-
+  evidence this increment has twice avoided.
+
+  **Carry it forward**: it belongs in the capability doc's parking lot when `/feature update code-review`
+  runs, and the suggested wording is in the perf reviewer's own (gitignored) agent memory at
+  `.claude/agent-memory/perf-reviewer/reviewer_domain_split_logging.md`.
 
 ## Testing Guidelines
 
