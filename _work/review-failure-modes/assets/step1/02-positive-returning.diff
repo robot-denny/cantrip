@@ -1,0 +1,21 @@
+diff --git a/internal/subscribers/store.go b/internal/subscribers/store.go
+index 7c2a5e1..b41d9f0 100644
+--- a/internal/subscribers/store.go
++++ b/internal/subscribers/store.go
+@@ -21,6 +21,16 @@ func (s *Store) Count(ctx context.Context) (int, error) {
+ 	return n, nil
+ }
+
++func (s *Store) ActiveFor(ctx context.Context, listID string) ([]Subscriber, error) {
++	rows, err := s.db.QueryContext(ctx, activeForList, listID)
++	if err != nil {
++		return nil, errors.New("could not load subscribers for list " + listID)
++	}
++	defer rows.Close()
++
++	return scanSubscribers(rows)
++}
++
+ func (s *Store) Deactivate(ctx context.Context, id string) error {
+ 	_, err := s.db.ExecContext(ctx, deactivate, id)
+ 	return err

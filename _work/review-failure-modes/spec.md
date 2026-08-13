@@ -222,6 +222,39 @@ Scenario: A catch block that logs and discards yields one finding
   **Worth noting as a pattern, not just two incidents**: both gaps arose the same way — a reviewer deferred
   on sound domain reasoning, and the receiving reviewer turned out not to cover what it was handed. The
   ownership statement now carries a caution about exactly this, which is the durable half of the lesson.
+- **The contract gate's file filter is an allow-list, so it has holes by construction — one was found and
+  closed here.** Check 1 is the client-identifying-information scrub, described in the script as the
+  repo-wide hard gate. Its filter listed `md|json|sh|py|txt|LICENSE`, so the eight `.diff` fixtures this
+  increment commits — the repo's first — were **entirely unscanned while the gate reported success.** The
+  script's own comment states the opposite intent: "everything a leak could hide in… only the extension
+  differs."
+
+  Fixed in both places the list appears, since only the second runs outside a git checkout, and verified by
+  planting a client name in a `.diff` and confirming the gate fails naming the file and line, then removing
+  it and confirming green.
+
+  **What is left open is the shape, not this instance.** An allow-list will keep having holes — the next
+  `.yml`, `.lock`, `.patch`, or `.sql` fixture reproduces it exactly. Whether the filter should invert to
+  scanning everything text-like, with a deny-list for binaries and vendored trees, is a real structural
+  decision with real risk, and it is not a one-line change. Worth taking deliberately.
+- **Committing captured evidence sets a precedent with no convention behind it.** This increment is the
+  first to commit its manual-check artifacts, at 140K across 21 files under `_work/<slug>/assets/`. For
+  scale: `skills/` — the entire installed product — is 444K, and every prior increment's `_work` directory
+  is 8K–44K of prose only. So this is 4–20× any predecessor.
+
+  The cost is repo growth and audit burden, not install weight: `_work/` sits outside the subpath `npx
+  skills add` reaches, so it never lands in a consuming project.
+
+  Review proposed trimming the paired before-and-after transcripts, whose Clean sections restate every
+  unaffected focus area and are near-identical between the two — roughly a third of the bundle. **Not
+  done, deliberately, and the reasoning is the part worth keeping**: the *before* capture is the
+  load-bearing half of a manual check, since a check that never failed proves only that it runs; and
+  editing a captured transcript stops it being a capture, turning evidence into a summary someone wrote.
+  At 140K the absolute cost is small.
+
+  What is actually needed is a **stated convention** for which evidence earns a commit and which stays
+  throwaway — a decision, not a one-off trim of this bundle. Until there is one, every increment will
+  re-decide it.
 
 ## Testing Guidelines
 
