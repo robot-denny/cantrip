@@ -1,6 +1,6 @@
 # Plan: Language-Agnostic Review Failure Modes
 
-**Spec**: `_work/review-failure-modes/spec.md`
+**Spec**: `_work/shipped/review-failure-modes/spec.md`
 **Branch**: review-failure-modes
 **Work type**: change-to code-review
 **Feature doc**: code-review
@@ -67,7 +67,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — The lost-origin check
 
-> **Prompt**: Implement Step 1 of `_work/review-failure-modes/plan.md`. Add one bullet to the "Input
+> **Prompt**: Implement Step 1 of `_work/shipped/review-failure-modes/plan.md`. Add one bullet to the "Input
 > validation and error handling" focus area (section 2) of
 > `skills/core/reference/reviewer-discipline/agents/code-reviewer.md`, covering an error rethrown or
 > replaced in a way that discards its original origin. State the failure and what it costs a reader
@@ -106,7 +106,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 2 — The interpolated-log check
 
-> **Prompt**: Implement Step 2 of `_work/review-failure-modes/plan.md`. Add one bullet to the "Input
+> **Prompt**: Implement Step 2 of `_work/shipped/review-failure-modes/plan.md`. Add one bullet to the "Input
 > validation and error handling" focus area (section 2) of
 > `skills/core/reference/reviewer-discipline/agents/code-reviewer.md`, covering a log call that builds its
 > message as one interpolated string instead of passing its values as separate fields. Say what is lost —
@@ -140,7 +140,7 @@ performance reviewer owns cost; adding it here would repeat the mistake this inc
 
 ### Step 3 — Write down who owns cancellation
 
-> **Prompt**: Implement Step 3 of `_work/review-failure-modes/plan.md`. In
+> **Prompt**: Implement Step 3 of `_work/shipped/review-failure-modes/plan.md`. In
 > `skills/core/reference/reviewer-discipline/SKILL.md`, add a short statement near the existing sentence
 > that maps each reviewer to its domain, recording that cancellation and timeout concerns on long-running
 > work belong to the performance reviewer, and that the quality reviewer defers rather than reporting them

@@ -6,7 +6,7 @@ governs scope, severity, evidence, and where their domains touch. The report nam
 costs, and what to do about it, with each defect appearing exactly once no matter how many reviewers could
 have claimed it.
 
-**Source**: `_work/review-failure-modes/spec.md`
+**Source**: `_work/shipped/review-failure-modes/spec.md`
 **Last verified**: 2026-08-13
 
 > **Thin by design.** This doc records only what the `review-failure-modes` increment established. The
@@ -25,7 +25,7 @@ Newest planned items first. When an item ships, flip the checkbox and point it a
 increment.
 
 - [x] 2026-08-13 — Two language-agnostic review failure modes, plus the domain boundary that keeps a
-      shared rule from being reported twice (`_work/review-failure-modes/spec.md`)
+      shared rule from being reported twice (`_work/shipped/review-failure-modes/spec.md`)
 - [ ] **Backfill**: everything the capability did before this increment. See the note above — the
       from-code technique against `reviewer-discipline/SKILL.md` and the three agent files is the path
 - [ ] Parking lot: the allocation cost of building an interpolated log message has no owner. The quality
@@ -167,17 +167,17 @@ committed alongside the increment, so each claim below is checkable rather than 
 
 | Scenario | Evidence | Status |
 |----------|-----------|--------|
-| A handler that replaces an error and drops the original is reported | `_work/review-failure-modes/assets/step1/` | Not covered — manual check recorded |
-| The same rule applies where errors are returned rather than thrown | `_work/review-failure-modes/assets/step1/` | Not covered — manual check recorded |
-| A replacement that carries the original draws no finding | `_work/review-failure-modes/assets/step1/` | Not covered — manual check recorded |
-| A sanitized response to an external caller draws no finding | `_work/review-failure-modes/assets/step1/40-post-review-reverify.md` | Not covered — manual check recorded |
-| An interpolated message is reported, naming what can no longer be answered | `_work/review-failure-modes/assets/step2/` | Not covered — manual check recorded |
-| A message carrying no values draws no finding | `_work/review-failure-modes/assets/step2/` | Not covered — manual check recorded |
+| A handler that replaces an error and drops the original is reported | `_work/shipped/review-failure-modes/assets/step1/` | Not covered — manual check recorded |
+| The same rule applies where errors are returned rather than thrown | `_work/shipped/review-failure-modes/assets/step1/` | Not covered — manual check recorded |
+| A replacement that carries the original draws no finding | `_work/shipped/review-failure-modes/assets/step1/` | Not covered — manual check recorded |
+| A sanitized response to an external caller draws no finding | `_work/shipped/review-failure-modes/assets/step1/40-post-review-reverify.md` | Not covered — manual check recorded |
+| An interpolated message is reported, naming what can no longer be answered | `_work/shipped/review-failure-modes/assets/step2/` | Not covered — manual check recorded |
+| A message carrying no values draws no finding | `_work/shipped/review-failure-modes/assets/step2/` | Not covered — manual check recorded |
 | A value that should not be logged at all is a different finding | — | Not covered |
-| An uncancellable outbound call is reported once | `_work/review-failure-modes/assets/step3/` | Not covered — manual check recorded |
+| An uncancellable outbound call is reported once | `_work/shipped/review-failure-modes/assets/step3/` | Not covered — manual check recorded |
 | A reviewer working alone raises what it would otherwise leave to another | — | Not covered |
-| Two different defects on one line are two findings | `_work/review-failure-modes/assets/step3/` | Not covered — manual check recorded |
-| A swallowed failure is not also reported as a lost origin | `_work/review-failure-modes/assets/step1/` | Not covered — manual check recorded |
+| Two different defects on one line are two findings | `_work/shipped/review-failure-modes/assets/step3/` | Not covered — manual check recorded |
+| A swallowed failure is not also reported as a lost origin | `_work/shipped/review-failure-modes/assets/step1/` | Not covered — manual check recorded |
 | An error both replaced without its origin and logged as a built-up message | — | Not covered |
 
 <!-- Covered: a test asserts it. Not covered: specified, untested. Not covered (code-derived):
@@ -194,7 +194,7 @@ describes behavior the boundary statement introduced and which no run has exerci
 
 ## Revision Notes
 
-- 2026-08-13: Created at area level from `_work/review-failure-modes/spec.md`. Thin by design — records
+- 2026-08-13: Created at area level from `_work/shipped/review-failure-modes/spec.md`. Thin by design — records
   only this increment's behavior, with the rest of the capability flagged for from-code backfill.
 - 2026-08-13: The plan directed that the cancellation-ownership statement not be recorded as a Rule, on
   the grounds that nothing observable changed. Recorded anyway, and the reasoning is worth keeping: a
@@ -203,5 +203,5 @@ describes behavior the boundary statement introduced and which no run has exerci
   what that instruction was guarding against. The point-in-time criteria — that the gate passes, that the
   induced-RED edit was reverted — stay in the shipped spec and appear in no Rule here.
 - 2026-08-13: The manual-check evidence was moved out of a temporary scratch directory into
-  `_work/review-failure-modes/assets/` so the coverage table cites something that survives. It archives
+  `_work/shipped/review-failure-modes/assets/` so the coverage table cites something that survives. It archives
   with the increment bundle.
