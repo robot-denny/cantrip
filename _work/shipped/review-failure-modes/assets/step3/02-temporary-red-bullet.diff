@@ -1,0 +1,14 @@
+diff --git a/skills/core/reference/reviewer-discipline/agents/code-reviewer.md b/skills/core/reference/reviewer-discipline/agents/code-reviewer.md
+index c402a6d..ca8bebf 100644
+--- a/skills/core/reference/reviewer-discipline/agents/code-reviewer.md
++++ b/skills/core/reference/reviewer-discipline/agents/code-reviewer.md
+@@ -63,6 +63,9 @@ considered compromised and rotated — not merely removed.
+   count on the values afterwards. **A message carrying no values has nothing to separate out and is
+   not this finding**; a value that should not be logged at all is section 1's finding, where the fix
+   is removal rather than relocation
++- Long-running work started with no way for the caller to stop it — no cancellation path threaded
++  through to the operation, and no bound on how long the wait can last, so a caller that has already
++  given up keeps waiting and the work keeps running
+ - Missing error boundaries in async code — unhandled rejections, absent try/catch
+ - Responses consumed without checking status codes, on either side of a call
+ 

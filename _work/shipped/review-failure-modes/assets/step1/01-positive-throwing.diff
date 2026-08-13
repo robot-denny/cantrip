@@ -1,0 +1,19 @@
+diff --git a/src/main/java/billing/InvoiceLookup.java b/src/main/java/billing/InvoiceLookup.java
+index 3a1f0c2..9d4e7b8 100644
+--- a/src/main/java/billing/InvoiceLookup.java
++++ b/src/main/java/billing/InvoiceLookup.java
+@@ -12,6 +12,14 @@ public class InvoiceLookup {
+         this.client = client;
+     }
+
++    public Invoice byReference(String reference) {
++        try {
++            return client.fetchInvoice(reference);
++        } catch (TransportFailure failure) {
++            throw new InvoiceUnavailable("Invoice " + reference + " could not be loaded");
++        }
++    }
++
+     public List<Invoice> outstanding() {
+         return client.fetchOutstanding();
+     }

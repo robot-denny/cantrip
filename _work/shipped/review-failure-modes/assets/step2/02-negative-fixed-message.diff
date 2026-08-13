@@ -1,0 +1,16 @@
+diff --git a/app/jobs/cache_warmer.rb b/app/jobs/cache_warmer.rb
+index 9f2b114..e60c7aa 100644
+--- a/app/jobs/cache_warmer.rb
++++ b/app/jobs/cache_warmer.rb
+@@ -8,6 +8,11 @@ class CacheWarmer
+     @pages = pages
+   end
+
++  def warm
++    @log.info("Cache warm started")
++    @cache.replace(@pages.snapshot)
++  end
++
+   def clear
+     @cache.reset
+   end

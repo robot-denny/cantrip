@@ -65,14 +65,22 @@ begin() {
 # ones. A git-ignored file cannot leak, and scanning it produces noise about something
 # unpublishable -- which is how this scan first reported the git-ignored local settings
 # file that legitimately names a source repo path.
+#
+# The extension list is an allow-list, which means it has holes by construction: a file type
+# nobody thought of is silently unscanned, and the symptom is a clean run. `.diff` was such a
+# hole -- the first increment to commit review-evidence fixtures added eight unscanned files
+# and the gate reported success. Two lessons in that. Keep the two lists below in step, since
+# only the second runs outside a git checkout. And when adding a fixture in a new format,
+# check it is scanned before assuming it is.
 repo_md_files() {
   if git rev-parse --git-dir >/dev/null 2>&1; then
     { git ls-files; git ls-files --others --exclude-standard; } 2>/dev/null \
-      | grep -E '\.(md|json|sh|py|txt)$|(^|/)LICENSE$' \
+      | grep -E '\.(md|json|sh|py|txt|diff)$|(^|/)LICENSE$' \
       | grep -vE '^scripts/check-contract\.sh$'
   else
     find . \( "${PRUNE[@]}" \) -prune -o -type f \
-      \( -name '*.md' -o -name '*.json' -o -name '*.sh' -o -name '*.py' -o -name '*.txt' -o -name 'LICENSE' \) \
+      \( -name '*.md' -o -name '*.json' -o -name '*.sh' -o -name '*.py' -o -name '*.txt' \
+         -o -name '*.diff' -o -name 'LICENSE' \) \
       -print 2>/dev/null
   fi
 }

@@ -1,0 +1,54 @@
+diff --git a/src/sync/refresh-catalog.ts b/src/sync/refresh-catalog.ts
+new file mode 100644
+--- /dev/null
++++ b/src/sync/refresh-catalog.ts
+@@ -0,0 +1,28 @@
++import { logger } from "../logging";
++import { parseCatalog, type CatalogEntry } from "./catalog";
++
++export class CatalogUnavailableError extends Error {}
++
++/**
++ * Pulls the supplier's full catalog feed and returns its parsed entries.
++ * The feed is roughly 40 MB and the pull routinely runs for several minutes.
++ */
++export async function refreshCatalog(feedUrl: string): Promise<CatalogEntry[]> {
++  logger.info("Supplier catalog refresh started", { feedUrl });
++
++  const response = await fetch(feedUrl);
++
++  if (!response.ok) {
++    logger.error("Supplier rejected the catalog request", {
++      feedUrl,
++      status: response.status,
++    });
++    throw new CatalogUnavailableError("Supplier rejected the catalog request");
++  }
++
++  const feed = await response.text();
++  const entries = parseCatalog(feed);
++
++  logger.info("Supplier catalog refresh finished", { entryCount: entries.length });
++  return entries;
++}
+diff --git a/src/sync/hourly-sync.ts b/src/sync/hourly-sync.ts
+new file mode 100644
+--- /dev/null
++++ b/src/sync/hourly-sync.ts
+@@ -0,0 +1,16 @@
++import { refreshCatalog } from "./refresh-catalog";
++import { replaceCatalogEntries } from "./catalog-store";
++import { type CatalogEntry } from "./catalog";
++
++/** Invoked by the hourly scheduler. */
++export async function onHourlyTick(feedUrl: string): Promise<void> {
++  let entries: CatalogEntry[] = [];
++
++  try {
++    entries = await refreshCatalog(feedUrl);
++  } catch {
++    entries = [];
++  }
++
++  await replaceCatalogEntries(entries);
++}
