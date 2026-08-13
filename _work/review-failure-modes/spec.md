@@ -199,6 +199,29 @@ Scenario: A catch block that logs and discards yields one finding
   **Carry it forward**: it belongs in the capability doc's parking lot when `/feature update code-review`
   runs, and the suggested wording is in the perf reviewer's own (gitignored) agent memory at
   `.claude/agent-memory/perf-reviewer/reviewer_domain_split_logging.md`.
+- **Cancellation on *local* long-running work is covered by nobody in particular — the second instance of
+  the same pattern.** Review found that the ownership statement, as first written, granted the performance
+  reviewer "cancellation and timeouts on long-running work" while that reviewer's checklist only
+  operationalizes it for outbound and stream cases: dimension 5 pairs cancellation with "streams consumed
+  synchronously", and its recurring heuristic is scoped explicitly to "streams and long-running outbound
+  calls". An in-process loop or batch job with no way to abandon it fell between them — and because the
+  statement silenced the quality reviewer, **the diff was creating that gap rather than inheriting it.**
+
+  Fixed by narrowing the grant to outbound and I/O-bound work, so the quality reviewer is no longer
+  silenced outside what the performance checklist actually covers. The narrower claim is true, which the
+  wider one was not. What remains is a pre-existing thinness rather than a hole this increment opened:
+  neither reviewer names local uncancellable work explicitly, though neither is now forbidden from raising
+  it.
+
+  The alternative — broadening the performance checklist to cover local long-running work — is the better
+  end state and was deliberately not taken here, for the same reason as the logging cost above: it is a new
+  check and it earns its own written-down failing run. Wording is in
+  `.claude/agent-memory/perf-reviewer/reviewer_domain_split_cancellation.md`, cross-linked to the logging
+  entry so one edit to that checklist can close both.
+
+  **Worth noting as a pattern, not just two incidents**: both gaps arose the same way — a reviewer deferred
+  on sound domain reasoning, and the receiving reviewer turned out not to cover what it was handed. The
+  ownership statement now carries a caution about exactly this, which is the durable half of the lesson.
 
 ## Testing Guidelines
 
