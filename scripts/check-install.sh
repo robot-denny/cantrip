@@ -57,6 +57,7 @@ ROSTER_PACK=(
   umbraco-17-planning umbraco-17-feature-backfill umbraco-17-review-rules
   umbraco-17-starter-facts architecture-audit
   block check-uda umbraco-edit
+  dotnet-conventions
 )
 ROSTER=( "${ROSTER_CORE[@]}" "${ROSTER_PACK[@]}" )
 
@@ -264,6 +265,7 @@ PACK_SLOTS=(
   "stack.md|Models|umbraco-17-planning"
   "paths.md|Umbraco|umbraco-17-planning"
   "stack.md|Local URL|umbraco-edit"
+  "conventions.md|.NET style decisions|dotnet-conventions"
 )
 for entry in "${PACK_SLOTS[@]}"; do
   IFS='|' read -r pf ph pskill <<<"$entry"
