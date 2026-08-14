@@ -87,6 +87,20 @@ immediately.
 | `paths.md` → `## Generated output` | `.gitignore`, plus build and report directories |
 | `paths.md` → `## Workspace` | Whether the default layout already exists, or a different convention is in use — see Step 4 |
 
+**A formatter or editor configuration answers for whatever it encodes.** This is not a row above
+because it is not one slot — it applies to any slot recording mechanical style, whichever file holds it:
+indentation, ordering, declaration form. Where such a configuration sets a rule it is **authoritative for
+that rule**, so record what it says rather than asking; where it is silent it says nothing, and the
+remaining tiers apply as normal. An installed pack may narrow this with its own detection recipe naming
+the exact keys and the signals to read when a key is absent — where one exists, follow it, because it
+knows which evidence counts and this general habit does not.
+
+**Say when the configuration overrode something.** If it settles a question the user has already answered
+differently, or contradicts a fact you harvested in Step 2, do not silently prefer the file: report both
+and say which you recorded. A configuration file is authoritative about the rule, not about the user's
+intent, and an answer changed on someone's behalf without their seeing it is the one outcome this spell's
+confirm-a-draft posture exists to avoid.
+
 **Prefer the CI or hook command over the one in a README.** A README drifts; a hook is executed.
 
 ### Verify a detected command actually does the work — do not trust its exit code
@@ -147,6 +161,10 @@ technology facts in a core file and would need editing for every future pack.
 So **read the installed pack's skills and collect their slot declarations.** Every skill states the slots
 it reads in the same `**Slot:**` / `**If empty:**` form used throughout, which makes the pack's
 configuration surface self-describing. Fill what you find by the same three tiers.
+
+A declaration may also carry a third line, `**Detect:**`, naming how the project's own answer can
+be read out of the repository — **follow it and propose what it finds before asking**, since a
+pack states that recipe precisely because core cannot know which evidence counts.
 
 Per Step 0, if the project clearly has facts belonging to a pack that is **not yet installed**, record
 them under the heading that pack will read — even though you cannot know it from here, the user or the

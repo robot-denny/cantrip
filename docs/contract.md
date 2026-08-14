@@ -78,6 +78,64 @@ Rules:
 The pattern is proven: `/check-uda`'s existing git-only fallback is exactly this shape, and
 it is why that spell already works in repos without the full environment.
 
+### The optional detection line
+
+A slot reference may carry a third line, after the fallback:
+
+```markdown
+**Slot:** `.agents/config/conventions.md` → `## <the heading the pack reads>`
+**If empty:** apply the resolution order this file states; do not assert a convention you
+cannot evidence.
+**Detect:** which of the competing forms dominates the files the project already has, and
+which of the relevant keys its formatter configuration already sets.
+```
+
+`**Detect:**` names how the project's own answer can be **read out of the repository** — which
+files to look at, and what pattern in them constitutes an answer. It exists because rule 4 above
+— prefer inference over interrogation — had nowhere to act. `**If empty:**` governs behavior at
+*use* time, when a spell needs the fact and the slot is blank; nothing told the *configuration*
+spell how a slot might be filled without asking for it. A detection line is that instruction, and
+setup honors it before reaching its own asking tier.
+
+**The recipe cannot live in core.** Setup's detection step is an L0 file, and check 8 forbids an
+L0 file from naming a technology — so core cannot say what evidence to count or which
+configuration keys to read, because every such recipe is specific to one technology. That
+asymmetry is the mechanism rather than a limitation of it: **the pack owns the recipe, core owns
+the instruction to honor one.** Core follows a `**Detect:**` line it could not have written, the
+same way it fills a slot heading whose name it must not know.
+
+Rules:
+
+1. **Place it after the fallback, never between the slot and the fallback.** Check 4 requires the
+   `**If empty:**` within three lines of the `**Slot:**`. A detection line inserted above it eats
+   into that window, and one running to three lines — which a recipe naming several signals easily
+   does — pushes the fallback out of it entirely, failing a pairing that is genuinely there.
+2. **Describe evidence, not a conclusion.** A detection line says what to count and where. It
+   never says what to record: what to do when the evidence is thin or contradictory is the
+   fallback's business, and what detection produces is a proposal the user confirms.
+3. **Read the cheapest authoritative signal first, and skip what it already answers.** Where a
+   project's formatter or editor configuration encodes the rule, that single file settles it — so a
+   recipe naming both a configuration key and a corpus signal must put the key first and state that
+   the scan is skipped for anything the key sets. A recipe whose expensive half runs regardless of
+   the cheap half is a recipe that will be rewritten by the first person who waits on it.
+4. **Bound the search.** A recipe that says "across the project's files" is unbounded, and on a large
+   repository that is an open-ended wait during an interactive spell. Say how much evidence is
+   enough — a sample size, a file cap, or a margin at which the answer is already decided. The point
+   of detection is a proposal the user confirms, and a proposal does not need exhaustive proof.
+5. **It is optional, and the gate is silent about it.** Check 4 refuses a slot with no fallback
+   because that is broken at use time. A missing detection line breaks nothing — it means only
+   that nothing is claimed to be readable, which is the honest state for a slot recording a
+   decision no repository reveals. There is nothing to pair it with, so nothing enforces it, and
+   its use rests on authoring discipline.
+
+**Check 9 reads a detection line as part of the fallback.** The one-slot-one-fallback check
+captures from the `**If empty:**` line to the next blank line, so an adjacent `**Detect:**` lands
+inside the text it compares. That is harmless while a slot has one declarer. But a *second* file
+declaring the same slot would have to reproduce the detection wording too, not merely the
+fallback wording, or check 9 reports the slot as carrying two different fallbacks. If that ever
+bites, the fix is the rule the check exists to enforce: one point of authority, with the second
+file deferring rather than re-declaring.
+
 ### One slot, one point of authority
 
 A slot is referenced where it is *owned*, and every other file defers to that owner rather

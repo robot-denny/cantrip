@@ -52,9 +52,11 @@ it as a default to be settled per project.
 **If empty:** apply the resolution order above — `.editorconfig` first, then this file's defaults, then
 the dominant style of the surrounding file. Do not assert a convention you cannot evidence, and do not
 reformat conforming code to a preference nothing in the project states.
-**Detect:** the ratio of `var` to explicit declarations across the project's `.cs` files; whether types
-carry `sealed`; whether static fields carry a prefix; the `csharp_style_*` and `dotnet_naming_*` keys
-already set in `.editorconfig`.
+**Detect:** read `.editorconfig` first — its `csharp_style_*` and `dotnet_naming_*` keys settle whatever
+they set, and nothing below needs checking for those. For what remains unset, sample rather than exhaust:
+across roughly fifty `.cs` files, the ratio of `var` to explicit local declarations, whether types carry
+`sealed`, and whether static fields carry a prefix. A margin past about four to one is already the
+answer; anything closer is genuinely mixed and belongs in the fallback's hands, not asserted.
 
 ## Naming, by code element
 
