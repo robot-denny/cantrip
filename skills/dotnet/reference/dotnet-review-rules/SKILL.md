@@ -102,6 +102,13 @@ the parameter is right there. In a merged report the quality reviewer does not a
 alone it raises what it would otherwise leave to another. Scope the finding to the outbound call you
 can see in the diff.
 
+**A token with no deadline behind it.** Cancellation and a timeout are not the same requirement, and a
+signature carrying a token satisfies only the first: if nothing ever cancels, the call waits as long as
+the far end takes. The C# forms are `HttpClient.Timeout` for a whole-client default, or a
+`CancellationTokenSource` with `CancelAfter` linked to the caller's token where one call needs its own
+deadline — the linked form is what preserves the caller's ability to cancel early while still bounding
+the wait. Severity is the performance reviewer's, as above; this is the idiom its rule points at.
+
 **A response consumed without checking whether the call succeeded.** `await
 response.Content.ReadFromJsonAsync<T>()` with no status check reads the error body as though it were
 the payload, and `ReadFromJsonAsync` returns `null` for an empty body — so the null-forgiving operator
