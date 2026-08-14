@@ -48,7 +48,16 @@ ROSTER_CORE=(
 )
 # Pack units are the toolkit's too, so they must be verified and visible. But core-only is
 # the documented baseline, so an ABSENT pack is never reported as missing.
-ROSTER_PACK=( umbraco-17-planning umbraco-17-feature-backfill )
+# One flat list across every pack, because the roster's only job is to answer "is this unit
+# ours?" -- which pack a unit came from is the installer's business, not this check's.
+# This list drifted to two of the eight units that existed, and an unlisted unit is skipped
+# entirely by in_roster: not verified when installed, not reported when it is not. Contract
+# check 13 now compares it against every SKILL.md outside skills/core.
+ROSTER_PACK=(
+  umbraco-17-planning umbraco-17-feature-backfill umbraco-17-review-rules
+  umbraco-17-starter-facts architecture-audit
+  block check-uda umbraco-edit
+)
 ROSTER=( "${ROSTER_CORE[@]}" "${ROSTER_PACK[@]}" )
 
 # Assets each skill must be able to read. A skill whose SKILL.md is present but whose
