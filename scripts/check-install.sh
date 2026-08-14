@@ -57,7 +57,7 @@ ROSTER_PACK=(
   umbraco-17-planning umbraco-17-feature-backfill umbraco-17-review-rules
   umbraco-17-starter-facts architecture-audit
   block check-uda umbraco-edit
-  dotnet-conventions
+  dotnet-conventions dotnet-review-rules
 )
 ROSTER=( "${ROSTER_CORE[@]}" "${ROSTER_PACK[@]}" )
 

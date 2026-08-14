@@ -1,0 +1,72 @@
+{
+  "skill_name": "dotnet-review-rules",
+  "notes": "Content evals for the dotnet-review-rules skill \u2014 does a review of a C# diff report the defects this unit owns, at a severity from the shared Blocker/Major/Minor/Nit scale? Triggering is already evidenced (_work/dotnet-pack/discovery.md \u00a710) and a skill body cannot change it, so nothing here re-tests triggering. Run by hand, not in CI: a case needs a model run, which is nondeterministic and costs money, and this repo's test harness is deliberately dependency-free bash. This file is a committed definition, not a runner \u2014 the precedent is architecture-audit/evals/evals.json. Each case states the planted defect and the finding expected, so a run can be scored without re-deriving what should have happened. Fixtures are described rather than committed: rebuild them from the fixture field. Cases 1-4 share one diff so the merged report can be checked for a defect claimed twice; case 5 is the negative and needs its own repo, because what it asserts is about that repo's .editorconfig. The severity a case expects is the shared scale's, and where the owning reviewer matters the case names it \u2014 reviewer-discipline assigns cancellation on outbound and I/O-bound work to the performance reviewer, so a quality-side severity for case 3 would be a scoring error rather than a pass. Cases 3 and 6 are the same diff and the same rule with opposite correct behaviour: alone the quality reviewer raises it, merged it defers to the performance reviewer. Case 6 cannot be scored by dispatching one reviewer, so its prompt says so.",
+  "evals": [
+    {
+      "id": 1,
+      "label": "rethrow discards the origin",
+      "planted_defect": "A catch block whose handler logs and then rethrows the caught exception by name \u2014 `throw ex;` \u2014 inside SubscriberSyncService.SyncAsync.",
+      "prompt": "Review this diff for code quality before I merge it.",
+      "expected_output": "A finding against the `throw ex;` line naming the C# form that preserves the origin \u2014 a bare `throw;`, or a new exception carrying the caught one as its inner exception. Severity Major: the failure still reaches the caller, so nothing is swallowed, but the frame that actually failed is gone. The finding cites the file and the line. It must not also argue at length for why a lost origin matters; core's code-reviewer \u00a72 already carries that, and this unit supplies only the C# form. A second finding on the same block \u2014 that a handler whose only actions are log-and-rethrow should not exist \u2014 is correct and expected, since two defects on one line are two findings.",
+      "expected_severity": "Major",
+      "fixture": "src/Services/SubscriberSyncService.cs, added: an async method wrapping an HTTP call in try/catch (HttpRequestException ex) whose body is `_logger.LogError(ex, \"Sync failed\"); throw ex;`",
+      "files": [],
+      "target": "<scratch repo: the shared four-defect diff>"
+    },
+    {
+      "id": 2,
+      "label": "interpolated log message",
+      "planted_defect": "`_logger.LogInformation($\"Synced {payload!.Emails.Count} subscribers for list {listId}\")` \u2014 the values are folded into the message text instead of passed as named placeholder arguments.",
+      "prompt": "Review this diff for code quality before I merge it.",
+      "expected_output": "A finding naming the interpolated string as the defect and the named-placeholder form as the fix \u2014 `LogInformation(\"Synced {SubscriberCount} subscribers for list {ListId}\", payload.Emails.Count, listId)`. Severity Minor to Major depending on how load-bearing the values are for diagnosis; either is a pass, a severity outside the four-level scale is not. The correct fix here is relocation into named fields, because neither value is sensitive. The finding must not claim the allocation cost of building the interpolated string as a defect \u2014 that gap is recorded and deliberately unowned (_work/shipped/review-failure-modes/spec.md), so claiming it is a scoring failure even though the claim is true.",
+      "expected_severity": "Minor\u2013Major",
+      "fixture": "same file: one ILogger call whose message is an interpolated string carrying two values.",
+      "files": [],
+      "target": "<scratch repo: the shared four-defect diff>"
+    },
+    {
+      "id": 3,
+      "label": "missing cancellation path \u2014 reviewer running alone",
+      "planted_defect": "Two public async methods make outbound HTTP calls and neither accepts a CancellationToken; ImportAsync additionally posts once per element with no token to pass on.",
+      "prompt": "Review this diff for code quality before I merge it. Run the quality reviewer only \u2014 no other reviewer is running.",
+      "expected_output": "The missing cancellation path IS raised, with a severity. This is the running-alone case, and reviewer-discipline is explicit that a reviewer running alone raises what it would otherwise leave to another, because a finding withheld is indistinguishable from a finding absent. Staying silent here is a fail. The finding names the C# idiom \u2014 accept a `CancellationToken` on the public async method and pass it to `GetAsync` / `PostAsJsonAsync` \u2014 and is scoped to the outbound calls visible in the diff. A claim about cancelling local long-running work is out of scope and unowned, so making one is a fail even though it would be true.",
+      "expected_severity": "Major",
+      "fixture": "same file: `public async Task<int> SyncAsync(string listId)` and `public async Task ImportAsync(string listId, IReadOnlyList<string> emails)`, both awaiting HttpClient calls, neither taking a token.",
+      "files": [],
+      "target": "<scratch repo: the shared four-defect diff>"
+    },
+    {
+      "id": 4,
+      "label": "unvalidated payload at a boundary",
+      "planted_defect": "A `[HttpPost]` action binds `SubscriberImportRequest` from the request body and passes it straight to a service. The DTO carries no validation attributes, the action checks no model state and no guard, and both properties are permissive defaults.",
+      "prompt": "Review this diff for code quality before I merge it.",
+      "expected_output": "A finding that the bound payload is untrusted input reaching a service unvalidated, citing the action and the DTO. Severity Major, or Blocker where the unbounded `Emails` list means one request drives unbounded outbound work. The fix names *that* validation must happen at the boundary and leaves *which* mechanism to the project \u2014 data annotations, a validation library, or explicit guard clauses are all acceptable, and asserting one of them as required is a fail, because dotnet-conventions lists the mechanism among the decisions the project owns.",
+      "expected_severity": "Major\u2013Blocker",
+      "fixture": "src/Controllers/SubscriberImportController.cs, added: an [ApiController] action `Import([FromBody] SubscriberImportRequest request)` awaiting `_sync.ImportAsync(request.ListId, request.Emails)`, plus the DTO with unannotated `string ListId` and `List<string> Emails`.",
+      "files": [],
+      "target": "<scratch repo: the shared four-defect diff>"
+    },
+    {
+      "id": 5,
+      "label": "negative \u2014 the editor config has already chosen",
+      "planted_defect": "None. Every difference from this unit's defaults is a style the repo's .editorconfig chose: block-scoped namespaces, explicit types over var, and no collection expressions. The code is otherwise correct \u2014 structured logging with named placeholders, a CancellationToken accepted and threaded through, and a translated exception carrying the original as its inner exception.",
+      "prompt": "Review this diff for code quality before I merge it.",
+      "expected_output": "No finding about namespace form, declaration style, or collection expressions. The review reports the diff as clean on the areas this unit actually covers and names them in its Clean section, so a reader can tell checked-and-fine from not-checked. Member ordering and sealing are not this unit's areas \u2014 they are project-owned and named only in dotnet-conventions \u2014 so their absence from the Clean section is correct rather than a gap. Any finding proposing file-scoped namespaces, `var`, or `[\"pending\", \"active\"]` is a fail: rung 1 of the resolution order in dotnet-conventions gives the .editorconfig the answer, and a review unit that only ever adds findings will fight a project's own configuration on every diff.",
+      "expected_severity": "none \u2014 the assertion is the absence of a finding",
+      "fixture": "A separate scratch repo whose root .editorconfig sets, under [*.cs], `csharp_style_namespace_declarations = block_scoped`, `csharp_style_var_for_built_in_types = false`, `csharp_style_var_when_type_is_apparent = false`, `csharp_style_var_elsewhere = false`, and `csharp_style_prefer_collection_expression = false`. The diff adds one service conforming to all five.",
+      "files": [],
+      "target": "<scratch repo: the editor-config-conformant diff>"
+    },
+    {
+      "id": 6,
+      "label": "missing cancellation path \u2014 merged report shows it once",
+      "planted_defect": "Two public async methods make outbound HTTP calls and neither accepts a CancellationToken; ImportAsync additionally posts once per element with no token to pass on.",
+      "prompt": "Review this diff. Run all three reviewers over it \u2014 quality, performance, accessibility \u2014 and merge their findings into one ranked report before scoring. This case cannot be run by dispatching the quality reviewer alone; /code-review is user-cast only, so the merge has to be done deliberately.",
+      "expected_output": "The merged report raises the missing cancellation path exactly once, attributed to the performance reviewer \u2014 reviewer-discipline assigns cancellation on outbound and I/O-bound work to that reviewer, and the quality reviewer stays silent on the rule in a merged report while still supplying the C# idiom. The same finding in two rows is a fail, and so is a quality-side severity for it. Contrast with case 3: the same diff, the same rule, opposite correct behaviour, because the deferral is a property of the merge and not a narrowing of anyone's domain.",
+      "expected_severity": "Major, attributed to the performance reviewer",
+      "fixture": "same file: `public async Task<int> SyncAsync(string listId)` and `public async Task ImportAsync(string listId, IReadOnlyList<string> emails)`, both awaiting HttpClient calls, neither taking a token.",
+      "files": [],
+      "target": "<scratch repo: the shared four-defect diff>"
+    }
+  ]
+}
