@@ -61,9 +61,18 @@ layer. Either is fine; neither being present for a sitewide fragment is not.
 **Configuration read in a hot path.** Values pulled from configuration per request should be bound once
 and injected, not re-read.
 
-**Long-running outbound calls and streams** must not be consumed synchronously, must propagate
-cancellation, and must carry a timeout. Form submission handlers in particular should be async with
-cancellation.
+**Form submission handlers must be async, cancellable, and bounded.** A form handler is where a project
+most often reaches an external system on a visitor's request, and it is the one outbound call whose
+latency a visitor sits and waits through. A third-party endpoint that slows or stops takes the form with
+it, and consumed synchronously it takes a request thread too. Require `async`, a `CancellationToken` on
+the signature and passed to the call, **and a deadline** — a token alone bounds nothing if nothing ever
+cancels it.
+
+The general rule this is an instance of — that long-running outbound calls and streams must not be
+consumed synchronously, must propagate cancellation, and must carry a timeout — belongs to whatever
+review guidance covers the language and framework underneath, where one is installed; stating it here
+as well would put a single defect into the merged report twice. Where none is installed, apply it
+yourself: it holds for every outbound call and stream in the diff, not only the ones behind a form.
 
 **Client-side cost must be justified.** A component that ships a framework runtime to render content
 that is static or already server-rendered is a **Minor** to **Major** finding. Oversized data payloads

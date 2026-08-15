@@ -31,6 +31,11 @@ buried.
 - **0013 — attribution for adapted external work.** Courtesy credit in the README for the two units
   adapted from published skills, a three-tier rule for when a license notice must ship rather than merely
   be recorded, and the register itself. The one rule here with no automated gate, which it says so.
+- **0014 — the `dotnet` pack, and the detection line it needed.** Language and platform guidance is a
+  pack of its own rather than part of the CMS pack, which makes it the first real test of 0003's promise
+  that a new pack costs nothing in core. Also adds an optional `**Detect:**` line to a slot declaration,
+  so a pack can tell `/setup` how to read an answer the repository already holds — the pack owns the
+  recipe, core owns the instruction to honour one.
 
 ## Backfilled
 

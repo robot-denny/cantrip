@@ -20,10 +20,13 @@ npx skills add robot-denny/cantrip/skills/core --all
 Add a stack pack if one fits your project:
 
 ```bash
-npx skills add robot-denny/cantrip/skills/umbraco-17 --all
+npx skills add robot-denny/cantrip/skills/umbraco-17 --all   # Umbraco 17 CMS work
+npx skills add robot-denny/cantrip/skills/dotnet --all       # C# and .NET, CMS or not
 ```
 
-Packs are opt-in: the core install brings no stack-specific content at all.
+Packs are opt-in: the core install brings no stack-specific content at all. They are also
+independent of each other — `dotnet` covers the language and platform, so an Umbraco project
+usually wants both, while a .NET API or worker service wants only the second.
 
 ### Recommended companions for the `umbraco-17` pack
 
@@ -168,12 +171,24 @@ outside the chain and are counted separately, because they are not stages of doi
 | `/setup` | Configures the toolkit for a project — detects what the repo answers, mines what its guidance files already say, asks only for the rest. Run once after installing. |
 | `/update-toolkit` | Updates the installed toolkit behind a git guard, because the bare installer silently overwrites local modifications. |
 
-A stack pack adds its own spells on top — the `umbraco-17` pack adds three. A project only ever sees core
-plus the packs it installed.
+A stack pack adds units of its own on top — spells, references, or both, and a pack is free to add no
+spells at all. The `umbraco-17` pack adds three spells and five references; the `dotnet` pack adds two
+references and nothing to the spellbook. A project only ever sees core plus the packs it installed.
 
 Nouns are references, which the model reaches for on its own: `workflow` (the spine and work-type
 classification), `bdd-principles` (what behavior to specify), `tdd-principles` (what a test should
 assert), `reviewer-discipline`, `memory-discipline`, and `design-system-authoring`.
+
+A pack's references work the same way — nothing invokes them, and their descriptions decide when they
+load. Worth knowing what that costs: a reference's **description** is in context on every request from
+the moment you install it, and only its **body** loads on demand. So an installed reference you never
+trigger is cheap, not free — these two add about 271 tokens, against roughly 2,900 for the whole
+toolkit. The `dotnet` pack is exactly this and only this:
+
+| Reference | When it loads |
+|---|---|
+| `dotnet-conventions` | Writing or changing a `.cs` or `.csproj` file — naming, async and cancellation, structured logging, serialization, nullability, and which style questions the project owns rather than the toolkit |
+| `dotnet-review-rules` | Reviewing a diff that touches C#, on the same Blocker/Major/Minor/Nit scale every reviewer uses |
 
 **Spells chain by suggestion, never invocation.** Every spell ends with a `Next:` line; none of them
 calls another. That is what keeps this a toolbox rather than a funnel.
@@ -189,7 +204,7 @@ explore → spec → plan → implement-step → feature → code-review → com
 | Layer | Contents | Owned by |
 |---|---|---|
 | **L0 Core** | Workflow spine, spellbook, references, templates, reviewer agents | this repo |
-| **L1 Stack pack** | Tech-specific spells, rules, and starter facts. First pack: `umbraco-17` | this repo |
+| **L1 Stack pack** | Tech-specific spells, rules, and starter facts. Two packs: `umbraco-17` and `dotnet` | this repo |
 | **L2 Project** | Stack facts, project skills, reviewer rules, agent memory | the consuming project |
 
 **L0 and L1 files contain no fact about any specific project.** They read L2 *slots* and degrade
@@ -231,7 +246,8 @@ And this repository itself:
 ```
 skills/core/spellbook/     # the spells
 skills/core/reference/     # model-invoked references, and the reviewer agents
-skills/umbraco-17/         # first stack pack
+skills/umbraco-17/         # stack pack — the CMS
+skills/dotnet/             # stack pack — the language and platform
 docs/                      # durable reference
 adr/                       # toolkit decision records
 scripts/                   # contract gate and extraction checks

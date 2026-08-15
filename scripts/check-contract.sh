@@ -511,34 +511,107 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 13. The install checker's roster matches the core skills that exist (this repo only)
+# 13. The install checker's rosters match the skills that exist (this repo only)
 # ---------------------------------------------------------------------------
-# check-install.sh runs in a consumer project, where skills/core/ is absent, so its roster
-# of expected skills has to be hardcoded. That makes drift invisible in the one place it
+# check-install.sh runs in a consumer project, where skills/ is absent, so its rosters of
+# expected skills have to be hardcoded. That makes drift invisible in the one place it
 # matters most: a roster missing a skill reports a clean install while that skill is not
-# there at all.
+# there at all -- an unlisted unit is skipped by the roster filter, so it is neither
+# verified when present nor reported when absent.
 #
-# It had already drifted by three when this check was written -- setup,
+# ROSTER_CORE had already drifted by three when this check was written -- setup,
 # design-system-authoring, and tdd-principles -- so a consumer could install core, get no
 # /setup, and be told "no problems found". Check 11 catches the same drift for self-hosting;
 # this is its missing sibling, which is exactly the recurring shape it was written to stop.
-begin "install checker roster matches skills/core"
-if [[ -f scripts/check-install.sh && -d skills/core ]]; then
-  roster=$(awk '/^ROSTER_CORE=\(/{f=1;next} f&&/^\)/{exit} f' scripts/check-install.sh \
-    | tr ' ' '\n' | sed '/^$/d' | sort -u)
-  actual=$(find skills/core -name 'SKILL.md' -type f -print 2>/dev/null \
-    | sed -e 's|/SKILL\.md$||' -e 's|.*/||' | sort -u)
+#
+# ROSTER_PACK was left uncovered by the first version and drifted the same way, by six of
+# eight units. Covering it costs one comparison and turns "remember to register your unit"
+# into a gate, which is the only form of that instruction that survives.
 
+# Pull one bash array literal out of check-install.sh, one entry per line.
+#
+# Handles the single-line form -- NAME=( a b ) -- as well as the multi-line one. The first
+# version of this check skipped the opening line and so read nothing at all out of a
+# one-line array; pointed at ROSTER_PACK it would have called every listed unit missing,
+# which looks exactly like real drift and would have been "fixed" by duplicating entries.
+#
+# Comments are stripped before anything else, and the order matters. This file's comment
+# style is heavily parenthetical -- "(a consumer missing these is told nothing)" a few lines
+# down is typical -- so an editor adding an aside inside an array body is likely rather than
+# hypothetical, and a `)` in that aside used to end the scan early. The entries after it went
+# unread while the comment's own words were reported as stale roster entries: a failure that
+# points a maintainer at nonsense while the real drift goes unmentioned.
+#
+# Double quotes are stripped so a quoted entry compares as its value. Single quotes are not
+# handled; no roster entry has ever needed either.
+#
+# ONE DECLARATION PER ARRAY. This reads the first match and stops, while bash uses the last,
+# so a second declaration would make the two disagree silently. The caller guards against it
+# rather than this function coping, because the honest response is to fail loudly.
+roster_entries() {   # roster_entries <ARRAY_NAME>
+  awk -v var="$1" '
+    { line = $0; sub(/#.*$/, "", line) }
+    index(line, var "=(") == 1 { inside = 1; sub(/^[A-Za-z_]+=\(/, "", line) }
+    inside {
+      if (index(line, ")")) { sub(/\).*$/, "", line); done = 1 }
+      gsub(/"/, "", line)
+      n = split(line, w, /[[:space:]]+/)
+      for (i = 1; i <= n; i++) if (w[i] != "") print w[i]
+      if (done) exit
+    }
+  ' scripts/check-install.sh | sort -u
+}
+
+# Report drift between one roster and the units that actually exist. Prints nothing when
+# they agree, so the caller can concatenate both rosters' findings into one failure.
+roster_drift() {   # roster_drift <ARRAY_NAME> <where> <actual-names>
+  local var="$1" where="$2" actual="$3" roster missing stale out=""
+  roster=$(roster_entries "$var")
   missing=$(comm -13 <(printf '%s\n' "$roster") <(printf '%s\n' "$actual") | grep -v '^$')
   stale=$(comm -23 <(printf '%s\n' "$roster") <(printf '%s\n' "$actual") | grep -v '^$')
+  [[ -n "$missing" ]] && out+="in $where but not in $var (a consumer missing these is told nothing):"$'\n'"$(printf '%s\n' "$missing" | sed 's/^/  - /')"$'\n'
+  [[ -n "$stale" ]] && out+="in $var but no longer in $where:"$'\n'"$(printf '%s\n' "$stale" | sed 's/^/  - /')"$'\n'
+  printf '%s' "$out"
+}
 
-  if [[ -n "$missing" || -n "$stale" ]]; then
-    details=""
-    [[ -n "$missing" ]] && details+="in skills/core but not in ROSTER_CORE (a consumer missing these is told nothing):"$'\n'"$(printf '%s\n' "$missing" | sed 's/^/  - /')"$'\n'
-    [[ -n "$stale" ]] && details+="in ROSTER_CORE but no longer in skills/core:"$'\n'"$(printf '%s\n' "$stale" | sed 's/^/  - /')"
+begin "install checker rosters match skills/"
+if [[ -f scripts/check-install.sh && -d skills ]]; then
+  core_actual=$(find skills/core -name 'SKILL.md' -type f -print 2>/dev/null \
+    | sed -e 's|/SKILL\.md$||' -e 's|.*/||' | sort -u)
+  # Every shipped unit outside skills/core belongs to some L1 pack, whichever pack that is.
+  # Deriving the set by exclusion rather than naming the packs means a new pack is covered
+  # the day its first unit lands, with no second list to keep in step.
+  pack_actual=$(find skills -name 'SKILL.md' -type f -print 2>/dev/null \
+    | grep -v '^skills/core/' \
+    | sed -e 's|/SKILL\.md$||' -e 's|.*/||' | sort -u)
+
+  details=""
+
+  # A roster declared twice is the one input that makes this check lie rather than complain:
+  # the parser reads the first block, bash runs with the last, and if the first happens to
+  # match reality the gate reports clean while the effective roster is wrong. That is the
+  # precise failure this check exists to prevent, so it is caught before any comparison.
+  for roster_var in ROSTER_CORE ROSTER_PACK; do
+    declared=$(grep -c "^$roster_var=(" scripts/check-install.sh || true)
+    [[ "$declared" -gt 1 ]] && details+="$roster_var is declared $declared times in scripts/check-install.sh — this check reads the first, bash uses the last, so they can disagree silently. Keep one declaration."$'\n'
+  done
+
+  # Each roster's findings are appended with their own trailing newline, and only when there
+  # are any. Command substitution strips trailing newlines whether or not it is quoted, so
+  # appending the two results directly ran the second roster's heading onto the first's last
+  # bullet -- "- tdd-principlesin a pack under skills/...". Adding the newline unconditionally
+  # would be worse: an empty result would still leave `details` non-empty and fail every run.
+  if [[ -d skills/core ]]; then
+    core_drift=$(roster_drift ROSTER_CORE skills/core "$core_actual")
+    [[ -n "$core_drift" ]] && details+="$core_drift"$'\n'
+  fi
+  pack_drift=$(roster_drift ROSTER_PACK "a pack under skills/" "$pack_actual")
+  [[ -n "$pack_drift" ]] && details+="$pack_drift"$'\n'
+
+  if [[ -n "$details" ]]; then
     report_fail "$CURRENT" \
       "The consumer-facing install checker verifies a different set of skills than the toolkit ships." \
-      "Update ROSTER_CORE in scripts/check-install.sh to match skills/core." \
+      "Update ROSTER_CORE / ROSTER_PACK in scripts/check-install.sh to match skills/." \
       "" "$details"
   else
     report_pass "$CURRENT"
