@@ -78,6 +78,19 @@ DEGRADED=()
 BROKEN=()
 WIRED_NAMES=()
 
+# The reinstall hint for a unit, which differs by layer: core ships from one subpath, a pack from
+# its own. ROSTER_PACK is deliberately flat -- which pack a unit came from is the installer's
+# business, not this check's -- so for a pack unit the honest hint names the pack slot rather than
+# guessing a subpath. Telling someone to reinstall a pack unit from skills/core sends them to a
+# command that cannot work, which is worse than telling them less.
+reinstall_hint() {   # reinstall_hint <skill-name>
+  local n
+  for n in "${ROSTER_CORE[@]}"; do
+    [[ "$n" == "$1" ]] && { printf 'npx skills add robot-denny/cantrip/skills/core --skill %s' "$1"; return; }
+  done
+  printf 'reinstall it from the pack that provides it — npx skills add robot-denny/cantrip/skills/<pack> --all'
+}
+
 in_roster() {
   local n
   for n in "${ROSTER[@]}"; do [[ "$n" == "$1" ]] && return 0; done
@@ -100,9 +113,9 @@ else
     # -r follows symlinks, so a dangling link fails here rather than looking present.
     if [[ ! -r $skill_file ]]; then
       if [[ -L $entry && ! -e $entry ]]; then
-        BROKEN+=("$name — symlink points at nothing. Reinstall: npx skills add robot-denny/cantrip/skills/core --skill $name")
+        BROKEN+=("$name — symlink points at nothing. Reinstall: $(reinstall_hint "$name")")
       else
-        BROKEN+=("$name — SKILL.md is missing or unreadable. Reinstall: npx skills add robot-denny/cantrip/skills/core --skill $name")
+        BROKEN+=("$name — SKILL.md is missing or unreadable. Reinstall: $(reinstall_hint "$name")")
       fi
       continue
     fi
@@ -116,7 +129,7 @@ else
     done
 
     if [[ -n "$problem" ]]; then
-      BROKEN+=("$name — $problem. Reinstall: npx skills add robot-denny/cantrip/skills/core --skill $name")
+      BROKEN+=("$name — $problem. Reinstall: $(reinstall_hint "$name")")
     else
       WIRED=$((WIRED + 1)); WIRED_NAMES+=("$name")
     fi
@@ -154,7 +167,7 @@ if [[ -f skills-lock.json ]]; then
     [[ -z "$locked" ]] && continue
     in_roster "$locked" || continue
     if [[ ! -r "$SKILLS_DIR/$locked/SKILL.md" ]]; then
-      BROKEN+=("$locked — listed in skills-lock.json but missing from $SKILLS_DIR. Reinstall: npx skills add robot-denny/cantrip/skills/core --skill $locked")
+      BROKEN+=("$locked — listed in skills-lock.json but missing from $SKILLS_DIR. Reinstall: $(reinstall_hint "$locked")")
     fi
   # Deliberately a shallow regex parse rather than a jq dependency: skill names are the
   # only keys whose value is an object in this lockfile shape, so matching `"name": {` and
