@@ -1,6 +1,6 @@
 # Plan: Install Verification
 
-**Spec**: `_work/install-verification/spec.md`
+**Spec**: `_work/shipped/install-verification/spec.md`
 **Branch**: `feature/install-verification`
 **Work type**: new-capability — copied verbatim from the spec's `**Work type**:` line; this decides how
 the final step records behavior (see Step 4)
@@ -60,7 +60,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — Test harness and fixtures (RED apparatus)
 
-> **Prompt**: Implement Step 1 of `_work/install-verification/plan.md`. Create `tests/run.sh`, a
+> **Prompt**: Implement Step 1 of `_work/shipped/install-verification/plan.md`. Create `tests/run.sh`, a
 > dependency-free bash runner that executes each `tests/install-check/<case>/` fixture and compares
 > `scripts/check-install.sh`'s actual exit code and output against the case's expectations. Create
 > fixture directories for these cases: `canonical-complete`, `source-symlinked-complete`,
@@ -88,7 +88,7 @@ reason — script absent, not fixture malformed. Confirm the distinction by read
 
 ### Step 2 — Skill presence and asset resolution
 
-> **Prompt**: Implement Step 2 of `_work/install-verification/plan.md`. Create
+> **Prompt**: Implement Step 2 of `_work/shipped/install-verification/plan.md`. Create
 > `scripts/check-install.sh`, following the structure of `scripts/check-contract.sh` — numbered checks,
 > `report_*` helpers, a summary line, meaningful exit code. Implement only the skill-and-asset checks
 > for now: enumerate installed toolkit units under `.claude/skills/`, and for each verify `SKILL.md` is
@@ -116,7 +116,7 @@ touch the other four cases yet.
 
 ### Step 3 — Degraded versus broken, and the reviewer agents
 
-> **Prompt**: Implement Step 3 of `_work/install-verification/plan.md`. Add the three-class outcome
+> **Prompt**: Implement Step 3 of `_work/shipped/install-verification/plan.md`. Add the three-class outcome
 > model to `scripts/check-install.sh`: wired, degraded, broken. Reviewer agents that are not registered
 > in `.claude/agents/` are **degraded** — review still runs inline — so they must be reported as
 > working-but-degraded, must name the exact linking command from the README as the fix, and must **not**
@@ -139,7 +139,7 @@ implemented backwards. Confirm it fails on the exit code before implementing, so
 
 ### Step 4 — Slot reporting, pack tolerance, and foreign-unit isolation
 
-> **Prompt**: Implement Step 4 of `_work/install-verification/plan.md`. Add slot reporting to
+> **Prompt**: Implement Step 4 of `_work/shipped/install-verification/plan.md`. Add slot reporting to
 > `scripts/check-install.sh`: for each slot the toolkit reads — the headings under
 > `.agents/config/paths.md`, `stack.md`, `conventions.md`, and the `reviewer-rules/` files — report
 > filled or empty. Treat a missing file and a file lacking that heading identically. State explicitly
@@ -163,7 +163,7 @@ never read as failure. `foreign-units` asserts the report stays silent about a p
 
 ### Step 5 — Report assembly and exit-code discipline
 
-> **Prompt**: Implement Step 5 of `_work/install-verification/plan.md`. Finalize
+> **Prompt**: Implement Step 5 of `_work/shipped/install-verification/plan.md`. Finalize
 > `scripts/check-install.sh`'s output: a summary counting wired, degraded, and broken units, followed by
 > only the degraded and broken findings with their fixes, so a healthy install produces a short report
 > rather than a wall of green. Exit non-zero **only** when something is broken (FR7). Add a

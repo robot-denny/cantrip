@@ -6,7 +6,7 @@ degraded, and which parts of their project the toolkit currently knows about. It
 working install from a degraded one from a broken one, so problems surface before a spell is cast
 rather than during one.
 
-**Source**: `_work/install-verification/spec.md`
+**Source**: `_work/shipped/install-verification/spec.md`
 **Last verified**: 2026-08-03
 
 ---
@@ -17,7 +17,7 @@ The per-feature mini-roadmap: shipped increments, planned increments, and parkin
 Newest planned items first. When an item ships, flip the checkbox and point it at the archived
 increment.
 
-- [x] 2026-08-03 — Install verification check (`_work/install-verification/spec.md`)
+- [x] 2026-08-03 — Install verification check (`_work/shipped/install-verification/spec.md`)
 - [ ] Parking lot: verify slot *content* rather than presence, if presence proves too weak in practice
 
 ---
