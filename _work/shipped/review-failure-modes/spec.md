@@ -52,7 +52,7 @@ core describes. It ships and stands on its own.
 
 None. The reasoning for splitting this out from the .NET pack increment — that these have standalone
 value in any language, and that the pack's wording follows them — is recorded in
-`_work/dotnet-pack/discovery.md` §9a and in that increment's spec.
+`_work/shipped/dotnet-pack/discovery.md` §9a and in that increment's spec.
 
 ## Possible Edge Cases
 

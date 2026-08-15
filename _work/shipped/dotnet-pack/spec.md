@@ -5,7 +5,7 @@
 > capability, an existing feature doc for a change, or a `docs/` runbook for a fix.
 
 branch: dotnet-pack
-design reference (if any): none — `_work/dotnet-pack/discovery.md` holds the decisions and rationale
+design reference (if any): none — `_work/shipped/dotnet-pack/discovery.md` holds the decisions and rationale
 
 **Work type**: new-capability
 **Feature doc**: dotnet-guidance
@@ -72,7 +72,7 @@ README and changelog are the only mechanism by which an existing project learns 
 ## Design Reference (only if one exists)
 
 None. The decisions, the review of the source material, the rejected alternatives, and the trigger-eval
-results are all in `_work/dotnet-pack/discovery.md`.
+results are all in `_work/shipped/dotnet-pack/discovery.md`.
 
 ## Possible Edge Cases
 

@@ -1,6 +1,6 @@
 # Plan: .NET Guidance Pack and Its Core Dependencies
 
-**Spec**: `_work/dotnet-pack/spec.md`
+**Spec**: `_work/shipped/dotnet-pack/spec.md`
 **Branch**: dotnet-pack
 **Work type**: new-capability
 **Feature doc**: dotnet-guidance
@@ -66,7 +66,7 @@ review guidance names the C# form of defects core describes, so its wording foll
 Everything is markdown. There is no build, no compile step, and the only mechanical checks are
 `scripts/check-contract.sh` (14 checks, enforced by `.githooks/pre-commit`) and `tests/run.sh`
 (fixture runner for `check-install.sh`). The decisions, the review of the source material, the rejected
-alternatives, and measured trigger-eval results are all in `_work/dotnet-pack/discovery.md` — read it
+alternatives, and measured trigger-eval results are all in `_work/shipped/dotnet-pack/discovery.md` — read it
 before Step 2, since it is the substance the pack units are written from.
 
 **Unit of work**: one skill unit, or one core file, plus whatever mechanical check proves it. The
@@ -126,7 +126,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — Gate the pack roster, and fix the drift it exposes
 
-> **Prompt**: Implement Step 1 of `_work/dotnet-pack/plan.md`. In `scripts/check-contract.sh`, extend
+> **Prompt**: Implement Step 1 of `_work/shipped/dotnet-pack/plan.md`. In `scripts/check-contract.sh`, extend
 > check 13 so it compares `check-install.sh`'s `ROSTER_PACK` against the skills that actually exist
 > under `skills/` outside `skills/core/`, the same way it already compares `ROSTER_CORE` against
 > `skills/core/`. Run `scripts/check-contract.sh` and confirm it now FAILS, naming the CMS pack units
@@ -161,7 +161,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 2 — The authoring unit: `dotnet-conventions`
 
-> **Prompt**: Implement Step 2 of `_work/dotnet-pack/plan.md`. Read `_work/dotnet-pack/discovery.md`
+> **Prompt**: Implement Step 2 of `_work/shipped/dotnet-pack/plan.md`. Read `_work/shipped/dotnet-pack/discovery.md`
 > first — §1 has the reviewed source material bucketed, §2 the namespace correction, §4 the resolution
 > order and slot mechanics, §5 the dividing line against the audit pack, §6 the validated description.
 > Create `skills/dotnet/reference/dotnet-conventions/SKILL.md` using the description in §6 verbatim; it
@@ -206,9 +206,9 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 3 — The review unit: `dotnet-review-rules`, with its eval cases
 
-> **Prompt**: Implement Step 3 of `_work/dotnet-pack/plan.md`. Create
+> **Prompt**: Implement Step 3 of `_work/shipped/dotnet-pack/plan.md`. Create
 > `skills/dotnet/reference/dotnet-review-rules/SKILL.md` using the validated description from
-> `_work/dotnet-pack/discovery.md` §6 verbatim. Write `evals/evals.json` **first**, following the shape
+> `_work/shipped/dotnet-pack/discovery.md` §6 verbatim. Write `evals/evals.json` **first**, following the shape
 > of `skills/umbraco-17/reference/architecture-audit/evals/evals.json`, with one case per planted defect
 > from the spec's acceptance criteria. Run those cases against the pack before writing the body and
 > record that the defects are **not** reported. Then write the body: what to look for, mapped onto the
@@ -245,7 +245,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 4 — The detection line: contract, then `/setup`
 
-> **Prompt**: Implement Step 4 of `_work/dotnet-pack/plan.md`. Document the optional `**Detect:**` line
+> **Prompt**: Implement Step 4 of `_work/shipped/dotnet-pack/plan.md`. Document the optional `**Detect:**` line
 > in `docs/contract.md`'s reference-pattern section: what it is for, that it is optional, and that it
 > carries a detection recipe a pack owns because core may not name a technology. Then add one sentence to
 > Step 2 of `skills/core/spellbook/setup/SKILL.md` telling it to honor a pack's `**Detect:**` before
@@ -277,7 +277,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 5 — The CMS pack defers its general async rule
 
-> **Prompt**: Implement Step 5 of `_work/dotnet-pack/plan.md`. In
+> **Prompt**: Implement Step 5 of `_work/shipped/dotnet-pack/plan.md`. In
 > `skills/umbraco-17/reference/umbraco-17-review-rules/SKILL.md`, narrow the bullet about long-running
 > outbound calls so it keeps only the CMS-specific instance — form submission handlers — and defers the
 > general async, cancellation, and timeout rule to the .NET pack's review guidance without naming that
@@ -306,7 +306,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 6 — Documentation: README, changelog, ADR
 
-> **Prompt**: Implement Step 6 of `_work/dotnet-pack/plan.md`. In `README.md`: add the install command
+> **Prompt**: Implement Step 6 of `_work/shipped/dotnet-pack/plan.md`. In `README.md`: add the install command
 > for the new pack alongside the CMS one, add its two units to the reference list, and correct the claim
 > that "a stack pack adds its own spells on top" — this pack adds only references, which that sentence
 > currently makes impossible. In `CHANGELOG.md`: record the pack as an addition, and the

@@ -6,7 +6,7 @@ already decided and stays deliberately silent on what each project prefers, so i
 overruling it: a stated preference or an editor-config setting always wins over the guidance's own
 default.
 
-**Source**: `_work/dotnet-pack/spec.md`
+**Source**: `_work/shipped/dotnet-pack/spec.md`
 **Last verified**: 2026-08-14
 
 > **Thin by design.** This records what the pack's first increment established. The guidance itself is
@@ -23,7 +23,7 @@ Newest planned items first. When an item ships, flip the checkbox and point it a
 increment.
 
 - [x] 2026-08-14 — The .NET pack, its two units, and the detection line it enables
-      (`_work/dotnet-pack/spec.md`)
+      (`_work/shipped/dotnet-pack/spec.md`)
 - [x] **Prerequisite, landed 2026-08-13**: two language-agnostic review failure modes moved into core.
       Split out by dependency direction — the pack's wording follows them, and they help every project in
       every language with no pack installed. Their behavior belongs to a core review capability doc, not
@@ -32,7 +32,7 @@ increment.
 - [ ] Parking lot: worked examples for the remaining conventions, if the first set proves they carry
       more than the rule sentence does
 - [ ] Parking lot: whether the audit's .NET pillar eventually moves here from the CMS pack — deferred
-      deliberately, see `_work/dotnet-pack/discovery.md` §5
+      deliberately, see `_work/shipped/dotnet-pack/discovery.md` §5
 - [ ] Parking lot: the review unit ships eight eval cases and nothing runs them. If a pack's descriptions
       are meant to be eval-verified the way ADR 0003 says core references are, that is unowned work
 - [ ] Parking lot: one eval case carries an unconditioned `Minor–Major` severity, the shape review
@@ -280,7 +280,7 @@ one, so nothing below is `Covered`.
 
 | Scenario | Evidence | Status |
 |----------|-----------|--------|
-| A request that never names the language still gets the conventions | trigger measured in `_work/dotnet-pack/discovery.md` §10 | Not covered |
+| A request that never names the language still gets the conventions | trigger measured in `_work/shipped/dotnet-pack/discovery.md` §10 | Not covered |
 | A non-.NET project sees none of it | — | Not covered |
 | A rethrow that loses the original error is reported | eval case 1 | Not covered — case defined |
 | A log message that hides its values is reported | eval case 2 | Not covered — case defined |
