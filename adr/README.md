@@ -37,6 +37,12 @@ buried.
   so a pack can tell `/setup` how to read an answer the repository already holds — the pack owns the
   recipe, core owns the instruction to honour one.
 
+- **0015 — what a stack pack is, and what it owes.** Why a pack is worth having at all: a model's
+  knowledge of a platform is every version at once, and a pack pins the one in use so it stops
+  interpolating. Also that a pack has no required shape, and the seven rules the `dotnet` increment
+  learned by review rather than by design. Records two open questions — how a pack declares the
+  version it targets, and what content evals are for.
+
 ## Backfilled
 
 Five decisions predate this repository, having been settled in a direction document that is not in the
