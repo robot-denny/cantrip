@@ -207,6 +207,37 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   fenced code blocks first, because a name shown in a config example is demonstrated rather than
   documented. 13 compares `check-install.sh`'s hardcoded roster against `skills/core`.
 
+- **`dotnet` stack pack** — two opt-in reference units and no spells: `dotnet-conventions` (what should
+  be true of the `.cs` or `.csproj` file you are about to write — naming by code element, async and
+  `CancellationToken` discipline, structured logging with `ILogger`, `System.Text.Json` and camelCase
+  DTOs, nullable reference types, and the modern syntax that is now the default) and
+  `dotnet-review-rules` (what to check in a C# diff, at what severity, on the shared
+  Blocker/Major/Minor/Nit scale). It is a **peer of `umbraco-17`, not part of it** — C# and .NET apply
+  to every .NET project, CMS or not, so folding it into the CMS pack would have hidden it from the
+  majority case and put language-lifetime content behind a CMS-version release cadence. An Umbraco
+  project installs both. See [ADR 0014](adr/0014-dotnet-pack-and-the-detection-line.md).
+  **Nothing about this arrives by update** — a pack is a separate install, so an existing project sees
+  none of it until someone runs the command the README now carries.
+- **The pack asserts platform defaults and refuses to answer what the project owns.**
+  `dotnet-conventions` names the genuinely contested choices — `var` versus an explicit type, `sealed`
+  by default, member ordering and `using` placement, the validation library, an `s_` prefix on static
+  fields, when repetition earns a helper — and answers **none** of them, so installing the pack cannot
+  start an argument with a codebase that already decided. Each resolves in a stated order:
+  `.editorconfig` where it speaks, then a decision the project recorded in the slot
+  `.agents/config/conventions.md` → `## .NET style decisions`, then the pack's default, then the
+  dominant style of the surrounding file. Correctness never participates in that order — an
+  interpolated log message still loses its fields whatever a configuration file says.
+- **`**Detect:**`, an optional third line on a slot declaration**
+  ([ADR 0014](adr/0014-dotnet-pack-and-the-detection-line.md)). A pack can now tell `/setup` how a
+  project's own answer may be **read out of the repository** — which files to look at, and what in them
+  counts as an answer — so a question the repo already answers is proposed rather than asked. The
+  contract's existing `**If empty:**` governs *use* time, when a spell needs the fact and finds the slot
+  blank; nothing governed *configuration* time. Core never writes a recipe, because check 8 forbids an
+  L0 file from naming a technology: **the pack owns the recipe, core owns the instruction to honour
+  one.** Optional by design, so nothing pairs with it and no gate enforces it —
+  [docs/contract.md](docs/contract.md) states the five rules it must follow instead, including that it
+  goes *after* the fallback so check 4's three-line pairing window stays intact.
+
 ### Changed
 
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and
@@ -236,6 +267,32 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   Now "tests units of behavior at the code level", with the ambiguity named explicitly.
 - **The pack's absence clause names the remedy**, not just the absence. A note saying which skill set
   would improve the plan is actionable; one recording that something was unavailable is a shrug.
+
+- **Core's `code-reviewer` gained two failure modes**, and `reviewer-discipline` gained the rule that
+  stops them being reported twice. The agent now names an error passed onward with its origin no longer
+  recorded anywhere, and a log call that folds its values into the message text instead of passing them
+  as named fields. Both carry an exemption, because a response deliberately sanitized for an external
+  caller is not the first finding so long as the origin survives internally, and a message carrying no
+  values is not the second. `reviewer-discipline` gained **Where two domains abut**: cancellation and
+  timeouts on outbound and I/O-bound work belong to the performance reviewer alone, since a rule held by
+  two reviewers reaches the reader twice in a merged report — but a reviewer running *alone* raises it
+  anyway, because a finding withheld is indistinguishable from a finding absent. This landed in a
+  prerequisite increment and was never logged; recorded here.
+- **`umbraco-17-review-rules` narrowed its outbound-call bullet**, and this **changes a pack you may
+  already be running.** It now states only the form the CMS pack can claim as its own — a form
+  submission handler must be async, must take a `CancellationToken` and pass it on, and must carry a
+  deadline, because a token alone bounds nothing if nothing ever cancels it — and defers the general
+  rule about long-running outbound calls and streams to whatever language guidance is installed,
+  applying it itself where none is. Nothing is lost: with both packs installed, the two rules stated at
+  the same generality put one defect into the merged report twice.
+- **`/setup` treats a formatter or editor configuration as authoritative for whatever it encodes** —
+  indentation, ordering, declaration form, whichever slot records it — recording what the file says
+  rather than asking, and staying silent where the file is. Where an installed pack supplies a
+  narrower detection recipe, that recipe wins, because it knows which evidence counts. Setup also now
+  **says when a configuration overrode something**: a file that settles a question you already answered
+  differently gets reported alongside your answer rather than quietly preferred, since a configuration
+  is authoritative about the rule and not about your intent. **This applies to every install**, pack or
+  not — it is a change to a core spell rather than to pack content.
 
 ### Fixed
 
@@ -281,3 +338,13 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   `SKILL.md`. The table now states it, the multi-tool case is named as the one needing setup, and the
   reviewer-agent step carries a copy-based alternative — which `check-install.sh` already accepted, since
   it compares content rather than looking for a link.
+
+- **The install checker's pack roster listed two of the eight pack units that existed.** A unit absent
+  from `check-install.sh`'s roster is skipped entirely — not verified when it is installed, not reported
+  when it is not — so it passes as though absent either way. `umbraco-17-review-rules`,
+  `umbraco-17-starter-facts`, `architecture-audit`, `/block`, `/check-uda`, and `/umbraco-edit` were all
+  in that state, meaning a project running the full CMS pack could be told everything was fine about six
+  units the checker never looked at. **Gate check 13 now covers `ROSTER_PACK` as well as `ROSTER_CORE`**,
+  comparing it against every unit outside `skills/core`. It had gated only the core half, which is
+  exactly why the core half was caught drifting and the pack half was not — the same defect as the entry
+  above, one list over, and the gate that found it had been built with the blind spot in it.
