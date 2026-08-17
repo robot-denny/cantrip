@@ -42,9 +42,10 @@ explore → spec → plan → implement-step → feature → code-review → com
 # 1. Install the core workflow — works on any project, no stack assumptions
 npx skills add robot-denny/cantrip/skills/core --all
 
-# 2. Add a stack pack only if one fits
-npx skills add robot-denny/cantrip/skills/umbraco-17 --all   # Umbraco 17 CMS work
-npx skills add robot-denny/cantrip/skills/dotnet --all       # C# and .NET, CMS or not
+# 2. Add a stack pack only if one fits — they are independent, take any combination
+npx skills add robot-denny/cantrip/skills/umbraco-17 --all     # Umbraco 17 CMS work
+npx skills add robot-denny/cantrip/skills/umbraco-cloud --all  # Umbraco Deploy, Cloud or on-premise
+npx skills add robot-denny/cantrip/skills/dotnet --all         # C# and .NET, CMS or not
 
 # 3. Configure it — reads what your repo already answers, asks only for the rest
 /setup
@@ -110,29 +111,49 @@ matches the work in front of it. They are where the toolkit's opinions live.
 The last one is worth noticing: it is a skill for writing skills. Your visual conventions are yours, so
 the toolkit teaches the shape rather than shipping an answer.
 
+**Three packs, cut on three different axes.** `umbraco-17` is pinned to a CMS major, `umbraco-cloud`
+to a product that spans majors, `dotnet` to a language that only ever adds. Which axis a pack is cut
+on is what decides whether its name carries a version — see
+[ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md).
+
 ### `umbraco-17` pack
+
+Version-pinned: the major is in the pack name, because Umbraco majors break.
 
 | Unit | Kind | What it does |
 |---|---|---|
-| `umbraco-17-starter-facts` | reference | Verified platform facts that are easy to get wrong and **fail silently** — Management API shapes, unset-versus-false property behavior, Deploy and `.uda` mechanics |
+| `umbraco-17-starter-facts` | reference | Verified platform facts that are easy to get wrong and **fail silently** — Management API shapes, unset-versus-false property behavior, AI and Search configuration traps |
 | `umbraco-17-planning` | reference | How to inspect live backoffice schema before designing schema steps, and which authoritative extension skill to route each kind of work to |
 | `umbraco-17-review-rules` | reference | CMS-specific review surfaces — rendering security, alias traps, per-request cost, editor-authored accessibility |
 | `umbraco-17-feature-backfill` | reference | Reverse-engineering behavioral docs from Umbraco code when no spec exists |
-| `architecture-audit` | reference | A seven-pillar written assessment of an Umbraco/.NET codebase, staged to its maturity |
+| `umbraco-17-audit-patterns` | reference | Whether an existing Umbraco solution is idiomatic — composition, schema-as-code discipline, block and content-access patterns, decoupled-frontend readiness |
 | `/block` | spell | Creates a block through a test-first workflow — failing test, element type, view, palette membership |
-| `/check-uda` | spell | Finds Deploy schema conflicts and drift before they reach a commit |
 | `/umbraco-edit` | spell | Edits content through the Management API from outside the backoffice |
 
+### `umbraco-cloud` pack
+
+Versionless: Umbraco Deploy behaves the same across CMS majors, so releases are annotated per feature
+instead. Deploy is also licensed on its own, so this pack applies to a self-hosted install that runs
+it — **it is not Cloud-only despite the name.**
+
+| Unit | Kind | What it does |
+|---|---|---|
+| `umbraco-deploy-facts` | reference | How `.uda` artifacts are written and read, why files and an environment's database drift apart, which dashboard control genuinely imports, and the API calls that clear stuck entries |
+| `/check-uda` | spell | Finds Deploy schema conflicts and drift before they reach a commit |
+
 ### `dotnet` pack
+
+Versionless: .NET and C# majors add rather than break, so each newer form says when it arrived.
 
 | Unit | Kind | What it does |
 |---|---|---|
 | `dotnet-conventions` | reference | Writing C# — naming, async and cancellation, structured logging, serialization, nullability, and which style questions belong to your project rather than the toolkit |
 | `dotnet-review-rules` | reference | Reviewing a C# diff, on the same severity scale every reviewer uses |
+| `codebase-audit` | reference | A five-pillar written assessment of a .NET codebase — hygiene, separation, documentation, resilience, refactorability — staged to its lifecycle and framework-neutral, with an optional head-to-head against a second repo |
 
 **What a reference costs.** Its *description* sits in context from the moment you install it; only its
-*body* loads when triggered. So an installed reference you never use is cheap, not free — the two
-`dotnet` units add roughly 271 tokens against about 2,900 for the whole toolkit. That is the real
+*body* loads when triggered. So an installed reference you never use is cheap, not free — the three
+`dotnet` units add roughly 420 tokens against about 3,100 for the whole toolkit. That is the real
 argument for packs being opt-in.
 
 ---
@@ -204,7 +225,7 @@ Three layers, and knowing which one you are looking at answers most "where does 
 | Layer | Holds | Owned by |
 |---|---|---|
 | **Core** | The workflow, the spellbook, the references, the reviewer agents | this repo |
-| **Stack pack** | Knowledge about one technology at one major version | this repo |
+| **Stack pack** | Knowledge about one technology — pinned to a major where majors break, versionless where they only add | this repo |
 | **Your project** | Your paths, your commands, your conventions, your reviewer rules | you |
 
 **Core and packs contain no fact about any specific project** — not a path, not a build command, not an
@@ -224,8 +245,15 @@ knows the technology* — knowing it in general is exactly the problem.
 It is also why packs are opt-in. `/check-uda` is a superpower in an Umbraco repo and clutter in every
 other one, and stack units cost context on every request in a project that will never use them. Where
 majors break, there is a pack per major; where majors only add, one pack annotates features with the
-version they arrived in. [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) has the full
-reasoning.
+version they arrived in. A pack can also be wrong for you by **product** rather than by version —
+Deploy guidance is correct on your Umbraco major and useless if you do not run Deploy — which is why
+that content is its own pack.
+
+**A pack is replaced, not upgraded.** When your platform moves a major, you swap one pack for the pack
+named after the new major and leave the others alone. Reference names carry the version so your pinned
+major is visible; **spell names never do**, so `/block` is still `/block` afterwards and nothing you
+type has to change. [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) has the full
+reasoning, including the tests for deciding which axis a pack should be cut on.
 
 ### What you own
 
@@ -263,11 +291,13 @@ And this repository itself:
 ```
 skills/core/spellbook/     # the spells
 skills/core/reference/     # references, and the reviewer agents
-skills/umbraco-17/         # stack pack — the CMS
+skills/umbraco-17/         # stack pack — the CMS, pinned to a major
+skills/umbraco-cloud/      # stack pack — Umbraco Deploy, versionless
 skills/dotnet/             # stack pack — the language and platform
 docs/                      # durable reference
 adr/                       # decision records
 scripts/                   # the contract gate and the install checker
+tests/                     # install-verification fixtures and the runner
 ```
 
 Full annotated trees and which spell writes which artifact: **[docs/layout.md](docs/layout.md)**.

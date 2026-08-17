@@ -7,7 +7,7 @@ working install from a degraded one from a broken one, so problems surface befor
 rather than during one.
 
 **Source**: `_work/shipped/install-verification/spec.md`
-**Last verified**: 2026-08-03
+**Last verified**: 2026-08-17
 
 ---
 
@@ -17,8 +17,13 @@ The per-feature mini-roadmap: shipped increments, planned increments, and parkin
 Newest planned items first. When an item ships, flip the checkbox and point it at the archived
 increment.
 
+- [x] 2026-08-17 — Verification across several packs: a pack verifies alone, a reinstall hint names
+  the pack that ships a unit, and a setting read by two packs is counted once
+  (`_work/pack-boundaries-and-succession/spec.md`)
 - [x] 2026-08-03 — Install verification check (`_work/shipped/install-verification/spec.md`)
 - [ ] Parking lot: verify slot *content* rather than presence, if presence proves too weak in practice
+- [ ] Parking lot: tell a unit that *moved* from one that was *deleted* — a consumer's records can pin
+  a path a later release no longer ships, and today the only remedy is a reinstall nobody is told to run
 
 ---
 
@@ -73,6 +78,16 @@ Scenario: One missing skill is named
   And the check exits non-zero
 ```
 
+```scenario
+Scenario: The suggested fix names the pack that ships the missing unit
+  Given a project whose records list the schema drift check but the unit never arrived
+  When the consumer runs the install check
+  Then the report names it missing
+  And the suggested command names the Umbraco Cloud pack as its source
+  And the command contains no placeholder the consumer would have to fill in
+  And the check exits non-zero
+```
+
 ### Rule: Assets are verified by reading, not by listing
 
 ```scenario
@@ -121,6 +136,38 @@ Scenario: Unrelated skills are ignored
   Then the report covers only the toolkit's own skills and agents
 ```
 
+### Rule: Each pack verifies on its own, without its siblings
+
+```scenario
+Scenario: A Deploy project verifies with no CMS pack installed
+  Given a project with only the Umbraco Cloud pack installed
+  When the consumer runs the install check
+  Then both of that pack's units are reported present
+  And no finding mentions the CMS pack
+  And the check exits zero
+```
+
+```scenario
+Scenario: A setting is surveyed because the pack that reads it is installed
+  Given a project with only the Umbraco Cloud pack installed
+  And the consumer has filled the block palette parity setting that pack reads
+  When the consumer runs the install check
+  Then the setting is reported filled
+  And the report does not claim every setting is empty
+```
+
+### Rule: A setting read by two packs is counted once
+
+```scenario
+Scenario: Two packs reading one setting do not double-count it
+  Given a project with the Umbraco Cloud pack and the CMS planning unit installed
+  And both of them read the same Umbraco paths setting
+  And the consumer has filled that setting
+  When the consumer runs the install check
+  Then the setting is counted as one filled setting
+  And it is not counted twice
+```
+
 ---
 
 ## Edge Cases
@@ -162,11 +209,15 @@ Scenario: No lockfile does not stop the check
 | A self-hosted source-symlinked install passes | `tests/install-check/source-symlinked-complete` | Covered |
 | A deliberate selective install passes but names what is absent | `tests/install-check/selective-install` | Covered |
 | One missing skill is named | `tests/install-check/missing-skill` | Covered |
+| The suggested fix names the pack that ships the missing unit | `tests/install-check/cloud-unit-missing` | Covered |
 | A missing template is caught | `tests/install-check/missing-template` | Covered |
 | Unregistered reviewers are degraded, not broken | `tests/install-check/agents-unlinked` | Covered |
 | A fresh install with no slots filled reports as working | `tests/install-check/no-config` | Covered |
 | No stack pack is not a finding | `tests/install-check/foreign-units` | Covered |
 | Unrelated skills are ignored | `tests/install-check/foreign-units` | Covered |
+| A Deploy project verifies with no CMS pack installed | `tests/install-check/cloud-only` | Covered |
+| A setting is surveyed because the pack that reads it is installed | `tests/install-check/cloud-only` | Covered |
+| Two packs reading one setting do not double-count it | `tests/install-check/shared-slot-two-packs` | Covered |
 | A dangling symlink is broken, not present | `tests/install-check/dangling-symlink` | Covered |
 | Reviewer agents linked to the wrong place are broken | — | Not covered |
 | No lockfile does not stop the check | `tests/install-check/no-lockfile` | Covered |
@@ -183,3 +234,12 @@ Scenario: No lockfile does not stop the check
 - 2026-08-03: `/code-review` found that a selective install reported nothing about absent skills,
   leaving FR1 only half met. Fixed, and the resulting behavior added here as a scenario with its own
   fixture — the finding is now covered rather than only mentioned.
+- 2026-08-17: Folded in what changed when one pack became three. Four scenarios added under two new
+  Rules plus one under an existing Rule; all four are covered by new fixtures. Two of them exist
+  because `/code-review` found real defects rather than because they were specified: a setting read by
+  units in two packs was surveyed for only one of them, so a Cloud-only project was never asked to
+  fill a setting its own pack reads; and registering the second reader then counted the setting twice,
+  turning a coverage gap into a wrong total. The move mechanics and the pack-boundary decisions stay in
+  the shipped spec and [ADR 0015](../adr/0015-what-a-stack-pack-is-and-what-it-owes.md) — they are
+  point-in-time, not standing behavior. Also parked the gap this increment created for consumers: the
+  check cannot tell a unit that moved from one that was deleted.
