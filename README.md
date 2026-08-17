@@ -53,6 +53,11 @@ npx skills add robot-denny/cantrip/skills/dotnet --all         # C# and .NET, CM
 
 Then cast `/spec` on your next piece of work.
 
+`/setup` writes what it learns into **`.agents/config/`** — four files holding your paths, your
+commands, and your team's coding standards. That directory is the part you own and edit, and it is
+committed, so filling a slot answers it for your teammates too. [What you own](#what-you-own) says
+which file takes what.
+
 **Nothing is required to configure.** A fresh install works before `/setup` runs; every spell either
 does real work or asks for the single fact it is missing.
 
@@ -257,14 +262,37 @@ reasoning, including the tests for deciding which axis a pack should be cut on.
 
 ### What you own
 
-Fill slots in `.agents/config/` — `paths.md`, `stack.md`, `conventions.md`, and `reviewer-rules/`.
-`/setup` drafts most of it by reading your repo, and asks only for what it cannot observe.
+Your coding standards, style rules, commands, and team conventions all live in **`.agents/config/`**,
+as *slots* — named markdown headings that toolkit files read. Four files, by what the fact is:
+
+| File | What goes here | Examples |
+|---|---|---|
+| `paths.md` | **Where things live** — workspace directories, where each kind of code belongs, and which paths are generated output rather than authored source | `## Workspace`, `## Code layout`, `## Generated output` |
+| `stack.md` | **How to run things** — build and test commands, local URL, runtime version and how to invoke it | `## Build`, `## Tests`, `## Local URL` |
+| `conventions.md` | **How this project works** — your style decisions, commit and branch format, what a unit of work is, and any standing constraint a plan or review must respect | `## .NET style decisions`, `## Commit format`, `## Branch naming`, `## Unit of work` |
+| `reviewer-rules/` | **Per-reviewer rules** — one file per reviewer, plus a shared two-line repo orientation they all read | `code.md`, `accessibility.md`, `performance.md` |
+
+A slot is plain markdown under the heading — no schema, no templating. A rule as short as one line
+under `## Branch naming` is a filled slot.
+
+**Which file, when it is close.** A standard that shapes how any spell works goes in
+`conventions.md`. A standard only one reviewer enforces goes in that reviewer's file under
+`reviewer-rules/`, because reviewers load only their own — putting it in `conventions.md` would make
+every reviewer carry the whole set.
+
+**Slots are team settings, not personal ones.** `.agents/config/` is committed, so a slot you fill
+binds everyone on the repo. There is deliberately no per-developer layer: if a preference should not
+apply to your teammates, it belongs in your own agent tool's user-level config, outside the toolkit.
+
+`/setup` drafts most of this by reading your repo, and asks only for what it cannot observe. You can
+also just write a slot by hand at any time — nothing has to be regenerated.
 
 Editing an installed file is possible but is a **divergence**, not a workflow — `/update-toolkit` will
 surface it, and the bare installer would overwrite it. Tailoring belongs in your layer. If tailoring
 needs a core edit, that is a missing slot; please report it as one.
 
-See [docs/contract.md](docs/contract.md) for the full contract.
+[docs/contract.md](docs/contract.md) has the precise definition of each of the four, the full slot
+list, and the rules a toolkit file follows when it reads one.
 
 ---
 
