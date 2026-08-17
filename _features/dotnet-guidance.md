@@ -7,7 +7,7 @@ overruling it: a stated preference or an editor-config setting always wins over 
 default.
 
 **Source**: `_work/shipped/dotnet-pack/spec.md`
-**Last verified**: 2026-08-14
+**Last verified**: 2026-08-17
 
 > **Thin by design.** This records what the pack's first increment established. The guidance itself is
 > larger than what appears below — the naming table, serialization, nullability, records, and the modern
@@ -22,6 +22,8 @@ The per-feature mini-roadmap: shipped increments, planned increments, and parkin
 Newest planned items first. When an item ships, flip the checkbox and point it at the archived
 increment.
 
+- [x] 2026-08-17 — The codebase audit joined this pack, so a .NET project with no content management
+      system can get a structural assessment (`_work/pack-boundaries-and-succession/spec.md`)
 - [x] 2026-08-14 — The .NET pack, its two units, and the detection line it enables
       (`_work/shipped/dotnet-pack/spec.md`)
 - [x] **Prerequisite, landed 2026-08-13**: two language-agnostic review failure modes moved into core.
@@ -31,8 +33,12 @@ increment.
 - [ ] **Backfill**: the sections named in the note above. A candidate for `/feature`'s from-code mode
 - [ ] Parking lot: worked examples for the remaining conventions, if the first set proves they carry
       more than the rule sentence does
-- [ ] Parking lot: whether the audit's .NET pillar eventually moves here from the CMS pack — deferred
-      deliberately, see `_work/shipped/dotnet-pack/discovery.md` §5
+- [x] **Was parked, now shipped**: the audit moved here from the CMS pack — the whole unit rather than
+      just its .NET pillar. `_work/shipped/dotnet-pack/discovery.md` §5 deferred the question; the
+      pack-boundary increment answered it, because the audit named no CMS version and so was pinned to a
+      major it did not depend on
+- [ ] **Backfill**: the audit's own five pillars, its scoring anchors, and the comparison report shape.
+      The scenarios below cover what a user observes, not how a pillar is scored
 - [ ] Parking lot: the review unit ships eight eval cases and nothing runs them. If a pack's descriptions
       are meant to be eval-verified the way ADR 0003 says core references are, that is unowned work
 - [ ] Parking lot: one eval case carries an unconditioned `Minor–Major` severity, the shape review
@@ -217,6 +223,58 @@ Scenario: The install documentation lists the pack
   And they are told what installing it costs in context on every request
 ```
 
+### Rule: A codebase can be judged on its structure, with or without a content management system
+
+```scenario
+Scenario: A service with no content management system is assessed
+  Given a .NET service with no content management system in it
+  When the developer asks whether it is structured sensibly for the team to grow into
+  Then they get a written assessment covering the five pillars
+  And no finding refers to a content management system
+```
+
+```scenario
+Scenario: The assessment is a written report, not a conversation
+  Given a developer who asks for an audit of their architecture
+  When the assessment runs
+  Then the result is a written report naming strengths and weaknesses
+  And its recommendations are ranked by how urgent each one is
+```
+
+### Rule: Recommendations are framed for how far along the codebase is
+
+```scenario
+Scenario: A freshly scaffolded project is told to be ambitious
+  Given a web application just created from a project template
+  When the developer asks for an audit
+  Then foundational recommendations are raised as cheap to apply now
+```
+
+```scenario
+Scenario: An inherited codebase is told to understand before changing
+  Given a .NET codebase the developer has just taken over from someone else
+  When the developer asks for help working out what they have
+  Then the report leads with a map of the codebase before recommending any change
+```
+
+```scenario
+Scenario: A stage that cannot be read is asked about once
+  Given a codebase whose stage the assessment cannot determine from its contents
+  When the assessment runs
+  Then the developer is asked once how they would describe it
+  And their answer is accepted rather than overridden
+```
+
+### Rule: Two codebases can be compared without one being declared correct
+
+```scenario
+Scenario: Two differently organized codebases are compared
+  Given one codebase organized by feature and another organized by kind of component
+  When the developer asks how theirs compares to the other
+  Then the report describes the trade-off each organization makes
+  And neither is declared universally correct
+```
+
 ---
 
 ## Edge Cases
@@ -269,14 +327,47 @@ Scenario: The rule reaches beyond the surface the CMS pack narrowed to
   Then the rule still applies to it
 ```
 
+### Rule: Work outside the assessment's competence is declined, not attempted
+
+```scenario
+Scenario: A codebase on another platform is declined
+  Given a codebase that is not .NET
+  When the developer asks for a structural audit
+  Then the assessment declines and says its signals are .NET-specific
+  And it does not produce a report scored on signals it cannot read
+```
+
+```scenario
+Scenario: A request for a quick opinion is not answered with a document
+  Given a developer who wants a gut check rather than a written report
+  When they ask informally
+  Then the assessment offers to discuss it instead
+```
+
+### Rule: Documentation is credited by what exists, not penalized by what is missing
+
+```scenario
+Scenario: An unconventional documentation layout is credited
+  Given a codebase recording its decisions in a folder named unlike the common convention
+  When the assessment scores documentation and onboarding
+  Then the documentation it does find is credited
+  And no finding penalizes the absence of a particular filename
+```
+
 ---
 
 ## Test Coverage
 
-There is **no automated harness for a review** in this project, and none for a configuration run. What
-exists instead is a set of committed eval cases — definitions of what a run should produce, scoreable by
-hand, following the precedent set by `codebase-audit`, which is now a unit of this same pack. A case is
-a *specified check*, not a passing one, so nothing below is `Covered`.
+There is **no automated harness for a review** in this project, none for a configuration run, and none
+for an assessment. What exists instead is committed eval cases — definitions of what a run should
+produce, scoreable by hand. All three units of this pack now follow that pattern: the review unit ships
+eight cases, the audit six. A case is a *specified check*, not a passing one, so nothing below is
+`Covered`.
+
+Rows citing an **audit eval case** are numbered against
+`skills/dotnet/reference/codebase-audit/evals/evals.json`; unqualified case numbers are the review
+unit's. Those cases test *triggering* — whether the right unit fires for a given request — so a row
+citing one has evidence that the guidance is reached, not that its output is right.
 
 | Scenario | Evidence | Status |
 |----------|-----------|--------|
@@ -304,12 +395,21 @@ a *specified check*, not a passing one, so nothing below is `Covered`.
 | The first file in a new area | — | Not covered |
 | A CMS project that has not installed the .NET pack | eval case 8 | Not covered — case defined |
 | The rule reaches beyond the surface the CMS pack narrowed to | eval case 8 | Not covered — case defined |
+| A service with no content management system is assessed | audit eval case 5 | Not covered — case defined |
+| The assessment is a written report, not a conversation | audit eval case 1 | Not covered — case defined |
+| A freshly scaffolded project is told to be ambitious | audit eval case 2 | Not covered — case defined |
+| An inherited codebase is told to understand before changing | audit eval case 4 | Not covered — case defined |
+| A stage that cannot be read is asked about once | — | Not covered |
+| Two differently organized codebases are compared | audit eval case 3 | Not covered — case defined |
+| A codebase on another platform is declined | — | Not covered |
+| A request for a quick opinion is not answered with a document | — | Not covered |
+| An unconventional documentation layout is credited | — | Not covered |
 
 <!-- Covered: a test asserts it. Not covered: specified, untested. Not covered (code-derived):
      inferred from reading the code, never specified and never tested — the weakest claim here.
      Keeping the third distinct is what lets a reader tell verified behavior from inferred. -->
 
-**Six of twenty-four have a defined eval case, and none of the twenty-four has a test.** The distinction
+**Twelve of thirty-three have a defined eval case, and none of the thirty-three has a test.** The distinction
 matters: a case states what a run should produce, so it can be scored — but nothing runs it, and nothing
 fails when the behavior regresses. Where a scenario cites a commit instead, the evidence is a recorded
 before-and-after captured while the step was implemented; the working files were not committed, so what
@@ -331,6 +431,23 @@ survives is the commit's own account of it rather than the capture.
   that the resolution order settles shape and never correctness, and that the CMS pack's deferral still
   reaches outbound calls that are not behind a form. Each came from a review finding during implementation
   rather than from the spec.
+- 2026-08-17: The codebase audit joined this pack, and nine scenarios record what it observably does —
+  under three new Rules in Behaviors and two in Edge Cases. It arrived from a pack where no feature doc
+  covered it, so this is a backfill rather than a rename: the assessment works on a .NET project with no
+  content management system, frames its recommendations by how far along the codebase is, compares two
+  repositories without ranking them, and declines work outside its competence rather than scoring signals
+  it cannot read. Five of the nine cite the audit's own eval cases; those test *triggering*, so they
+  evidence that the guidance is reached, not that its output is right. A parking-lot item asking whether
+  the audit's .NET pillar would move here is now closed — though not on the terms it was parked. It asked
+  about moving the .NET pillar out of the CMS pack; the whole unit moved instead, which sidesteps the
+  problem that parked it (splitting Pillar 1's signals from its scoring anchors) rather than solving it as
+  posed. Its five pillars and scoring anchors remain undocumented and are parked as backfill. The move
+  mechanics stay in the shipped spec.
+- 2026-08-17: **The tally in the note below was wrong and is corrected here.** It read "six of
+  twenty-four" while the table held seven rows with a defined case. The current figure — twelve of
+  thirty-three — is counted from the table rather than derived from the old one, so the inherited
+  off-by-one does not survive in it. Recorded because a reader comparing versions would otherwise see
+  six become twelve and conclude this increment added six cases; it added five.
 - 2026-08-14: The coverage table now distinguishes a *defined* eval case from no evidence at all. Six
   scenarios have one. Nothing is `Covered`, which is accurate rather than pessimistic — a case nothing
   runs cannot catch a regression.
