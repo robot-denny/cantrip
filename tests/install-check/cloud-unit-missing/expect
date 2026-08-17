@@ -1,0 +1,5 @@
+exit: 1
+contains: check-uda
+contains: missing from
+contains: skills/umbraco-cloud --skill check-uda
+not_contains: <pack>

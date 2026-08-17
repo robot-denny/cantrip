@@ -165,6 +165,44 @@ C="$CASES/pack-installed";            build_copied "$C"
 for s in umbraco-17-planning umbraco-17-feature-backfill; do skill "$C/.claude/skills/$s" "$s"; done
 expect "$C" "exit: 0" "contains: pack:" "contains: umbraco-17-planning"
 
+# One pack installed with NO other pack present. Packs are independently installable, so a
+# project on Umbraco Cloud but not on the CMS pack must read as wired -- and must not be told
+# anything about the pack it deliberately did not install.
+#
+# `## Block palette parity` is filled because a Cloud unit reads it. A pack slot is surveyed
+# only when the unit that reads it is installed, so a slot filled here and reported as "every
+# slot is empty" is the precise symptom of a slot no roster entry claims.
+C="$CASES/cloud-only";                build_copied "$C"
+for s in check-uda umbraco-deploy-facts; do skill "$C/.claude/skills/$s" "$s"; done
+mkdir -p "$C/.agents/config"
+printf '## Block palette parity\n\nOne palette per site, declared on the composition.\n' \
+  > "$C/.agents/config/conventions.md"
+expect "$C" "exit: 0" "contains: pack:" "contains: check-uda" "contains: umbraco-deploy-facts" \
+  "not_contains: umbraco-17" "contains: 1 filled" "not_contains: Every slot is empty"
+
+# Two packs installed together, both of which read `## Umbraco`. Splitting a pack created the
+# first slot with more than one reader, and the survey appends per reader -- so the slot is at
+# risk of being counted twice, reporting a total higher than the number of slots that exist.
+# `1 filled` with the heading listed once is the assertion; a passing `2 filled` here would mean
+# the dedup regressed.
+C="$CASES/shared-slot-two-packs";     build_copied "$C"
+for s in check-uda umbraco-17-planning; do skill "$C/.claude/skills/$s" "$s"; done
+mkdir -p "$C/.agents/config"
+printf '## Umbraco\n\nRevision dir: src/Web/umbraco/Deploy/Revision\n' \
+  > "$C/.agents/config/paths.md"
+expect "$C" "exit: 0" "contains: check-uda" "contains: umbraco-17-planning" \
+  "contains: 1 filled" "not_contains: 2 filled"
+
+# A Cloud unit the lockfile declares but that never arrived. What is under test is the hint:
+# with more than one pack, a hint reading `skills/<pack>` is not a command anyone can run, and
+# the person reading it has no way to know which pack ships the unit.
+C="$CASES/cloud-unit-missing";        build_copied "$C"
+cat > "$C/skills-lock.json" <<'EOF'
+{"version":1,"skills":{"workflow":{"source":"robot-denny/cantrip"},"check-uda":{"source":"robot-denny/cantrip"}}}
+EOF
+expect "$C" "exit: 1" "contains: check-uda" "contains: missing from" \
+  "contains: skills/umbraco-cloud --skill check-uda" "not_contains: <pack>"
+
 # Install scatter: --all wrote to every detected target, including a project's own skills/ dir.
 C="$CASES/install-scatter";           build_copied "$C"
 mkdir -p "$C/agent/skills/workflow" "$C/skills/my-own-thing"

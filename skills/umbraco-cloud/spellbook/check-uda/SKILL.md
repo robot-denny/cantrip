@@ -9,8 +9,9 @@ Analyze Umbraco Deploy schema files for potential conflicts and drift before com
 
 ## Overview
 
-Umbraco stores CMS schema — document types, data types, templates, AI entities — as `.uda` files in
-the Deploy revision directory. Problems fall into two buckets, and only the first is visible to git.
+Deploy stores CMS schema — document types, data types, templates, languages, AI entities — as `.uda`
+files in the Deploy revision directory. Problems fall into two buckets, and only the first is visible
+to git.
 
 **Git-side conflicts** (local working tree versus the upstream branch):
 
@@ -273,7 +274,8 @@ State the overall level and a one-line summary.
 - **HIGH (Live drift)** — resolve drift on Live *before* pushing local changes on top. Orphans you
   want to keep: extract to `.uda` via the dashboard's per-row "Create file", then pull. Orphans that
   shouldn't exist: delete them in the backoffice. For pending or mismatched entries where local should
-  win, see `references/cloud-remediation.md`.
+  win, see the `umbraco-deploy-facts` reference where installed — without it, the short version is that
+  the per-row "Update item" action imports and the bulk button does not.
 - **HIGH (remote-ahead on the same entity type)** — coordinate with whoever pushed; on a solo project,
   inspect the remote diff before pulling.
 - **CRITICAL** — **do not push without resolving.** Pull with rebase (it will conflict), manually
@@ -290,6 +292,11 @@ backoffice — or when bulk-extracting pre-existing built-in defaults.
 ## When drift won't clear
 
 If Step 5 reports pending or mismatched entries that persist, the remediation paths — including which
-dashboard control actually imports and which silently does nothing — are in
-`references/cloud-remediation.md`. Read it rather than guessing; two of the obvious remedies are known
-not to work on Cloud.
+dashboard control actually imports and which silently does nothing — are in the `umbraco-deploy-facts`
+reference, where installed. Read it rather than guessing; two of the obvious remedies are known not to
+work on Cloud.
+
+**If that reference is not installed**, report the states you found and say the remediation guidance
+lives in a unit this project does not have, rather than improvising. The two remedies most people try
+first — restarting the environment from the portal, and pushing an empty commit — are both known not to
+import, so guessing costs time that reading would not.
