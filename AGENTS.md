@@ -48,7 +48,7 @@ be true; it does not describe one organization's way of working. Check 1b enforc
 
 ## Layer contract
 
-- `skills/core/` (L0) and `skills/umbraco-17/` (L1) must contain **no project facts**.
+- `skills/core/` (L0) and every stack pack under `skills/` (L1) must contain **no project facts**.
   They read L2 slots and degrade gracefully when a slot is empty.
 - Anything project-specific belongs in a consuming project's L2 config, not here.
 - Hardcoded absolute paths, tool versions, and environment assumptions are contract

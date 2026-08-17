@@ -19,6 +19,16 @@ buried.
 - Copy [_template.md](_template.md) to start.
 - Never rewrite history — supersede instead. Mark the old record `Superseded by NNNN` and
   link both ways.
+- **Amend in place when nothing is reversed; supersede when something is.** The test: does the new
+  material contradict a decision the record already made, or does it add a rule that decision
+  implied but never stated? Adding gets `**Amended, not superseded**` under the status line, a dated
+  note saying what was added and why, and new sections numbered after the existing ones. Reversing
+  gets a new record. Supersession is the wrong instrument for an addition, because it retires
+  reasoning that still holds — and amending is the wrong instrument for a reversal, because a reader
+  who acts on the amended record would act on a decision the project has abandoned.
+- **A record may describe something whose name later changed elsewhere.** Leave the observed name and
+  add a dated note pointing at where the thing lives now. Rewriting it would make the record a less
+  accurate account of what was actually seen at the time, which is the one thing an ADR is for.
 
 ## Decided
 
@@ -42,6 +52,10 @@ buried.
   interpolating. Also that a pack has no required shape, and the seven rules the `dotnet` increment
   learned by review rather than by design. Records two open questions — how a pack declares the
   version it targets, and what content evals are for.
+  **Amended 2026-08-17** with four rules that splitting a pack into three surfaced: the variant axis,
+  the replacement operation and its naming rules, where portable criteria end and stack-specific
+  detection recipes begin, and registering every reader of a shared slot. An amendment rather than a
+  new record because nothing in the original was reversed.
 
 ## Backfilled
 

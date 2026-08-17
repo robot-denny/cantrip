@@ -275,8 +275,8 @@ Scenario: The rule reaches beyond the surface the CMS pack narrowed to
 
 There is **no automated harness for a review** in this project, and none for a configuration run. What
 exists instead is a set of committed eval cases — definitions of what a run should produce, scoreable by
-hand, following the precedent set by `architecture-audit`. A case is a *specified check*, not a passing
-one, so nothing below is `Covered`.
+hand, following the precedent set by `codebase-audit`, which is now a unit of this same pack. A case is
+a *specified check*, not a passing one, so nothing below is `Covered`.
 
 | Scenario | Evidence | Status |
 |----------|-----------|--------|

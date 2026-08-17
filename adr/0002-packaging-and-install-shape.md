@@ -33,6 +33,12 @@ settled it, because the pattern is already proven twice over:
 - Both are installed to `.agents/skills/<name>/` and whole-directory symlinked to
   `.claude/skills/<name>`, so every asset comes along for free.
 
+> **Naming note, added 2026-08-17.** The unit surveyed above as `architecture-audit` ships in this
+> toolkit as `codebase-audit`, in the `dotnet` pack. The old name is left in place because this
+> section records what was observed in the source repos on the date above, and rewriting an
+> observation to match a later rename would make the record less true rather than more useful. No
+> claim here is superseded — the layout it was cited as evidence for is unchanged.
+
 There is also a counter-example in both repos worth naming: `BDD.md` sits as a bare loose file
 directly in `.claude/skills/`, with no `SKILL.md` and no frontmatter. It is not a skill, is not
 installable, and is the "legacy `skills/` folder" the direction doc flags for cleanup.

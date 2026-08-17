@@ -238,6 +238,36 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   [docs/contract.md](docs/contract.md) states the five rules it must follow instead, including that it
   goes *after* the fallback so check 4's three-line pairing window stays intact.
 
+- **`umbraco-cloud` stack pack** — a third pack, holding Umbraco Deploy knowledge that had been living
+  inside the CMS pack: `/check-uda`, moved, plus a new `umbraco-deploy-facts` reference merging the Deploy
+  schema facts and the Cloud remediation runbook into one unit. Two files where there were three, and the
+  facts stay model-discoverable rather than being reachable only by casting the spell. **Versionless on
+  purpose** — Deploy behaves the same across CMS majors, so releases are annotated per feature, which is
+  [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) §3's *majors add* branch. Its description
+  is written about **Deploy the product, not Cloud the host**: Deploy is licensed standalone for
+  on-premise, so a Cloud-scoped trigger would refuse to fire for a licensee who has the artifacts, the
+  drift, and no Cloud subscription. **Nothing about this arrives by update** — a pack is a separate
+  install: `npx skills add robot-denny/cantrip/skills/umbraco-cloud --all`.
+- **`umbraco-17-audit-patterns` pack skill** — the Umbraco half of the architecture audit, staying in the
+  CMS pack as assessment criteria: composition and service registration, schema-as-code discipline,
+  content and block patterns, and how ready a site is to serve a decoupled frontend. It is judgement
+  criteria rather than a defect list and says so, so it does not compete with `umbraco-17-review-rules`
+  over a diff.
+- **Gate check 14** — the audit's four stack-agnostic references are held to L0's no-technology rule
+  while still sitting in a pack, so promoting them to core later is a `git mv` and a roster edit rather
+  than a rewrite. The list is by *basename*, so the check follows the files through the very move it
+  protects, and a named file that has gone missing fails rather than passing quietly — the failure shape
+  checks 11 and 13 were both written to stop.
+- **Three install-check fixtures**, taking the suite to 17 cases: `cloud-only` (a pack verifies with no
+  sibling pack installed), `cloud-unit-missing` (the reinstall hint names the pack that provides the
+  unit), and `shared-slot-two-packs` (one slot, two readers, surveyed once).
+- **ADR 0015 amended** with four rules the pack split discovered — the **variant axis** (a pack can be
+  wrong for a project by host or product, not only by version), the **replacement operation** (a pack is
+  swapped for its successor, with version-carrying reference names, bare spell names, and one platform
+  major installed at a time), where **portable criteria end and stack-specific detection recipes begin**,
+  and the obligation to register **every** reader of a shared slot. Each is stated as a test an author can
+  apply. Three of the four existed only in a shell loop or in review notes before.
+
 ### Changed
 
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and
@@ -294,6 +324,38 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   is authoritative about the rule and not about your intent. **This applies to every install**, pack or
   not — it is a change to a core spell rather than to pack content.
 
+- **`architecture-audit` is now `codebase-audit`, and it ships in the `dotnet` pack.** The audit was
+  always a structural assessment of a .NET solution wearing CMS clothing; it now says so, and a .NET
+  project with no CMS can install it without bringing Umbraco content along. **Seven pillars became
+  five** — Umbraco-idiomatic use and headless suitability went back to the CMS pack, and
+  framework-idiomatic use is explicitly *not* a pillar, because it is version- and platform-specific,
+  which is what a stack pack is for: where one is installed the audit cites it, and where none is it says
+  so in the report rather than guessing. **This changes a path an existing install pinned.** A lockfile
+  naming `skills/umbraco-17/reference/architecture-audit/SKILL.md` names nothing now, and neither the
+  installer nor `/update-toolkit` distinguishes a move from a deletion, so the fix is manual:
+  `npx skills add robot-denny/cantrip/skills/dotnet --skill codebase-audit`.
+- **Detection recipes and judgement criteria are split inside the audit.** The criteria stay in the four
+  portable references; the greps that find the evidence moved to the pack-side hygiene reference, because
+  **a search that names no technology matches everything** — one logging search sanitized down to the
+  generic words went from 8 hits to 25 on a real repository, which is noise rather than a signal. The
+  audit's guide now says to read both halves for the pillars whose recipes moved.
+- **Deploy and `.uda` facts left `umbraco-17-starter-facts`** for the new Cloud pack. An Umbraco Cloud
+  project installs both packs and loses nothing; a CMS-only project stops carrying artifact mechanics for
+  a product it does not run.
+- **`/umbraco-edit` states its version floor.** It works entirely through the Management API, which exists
+  from Umbraco 14, and said so nowhere — a project on an earlier major would have followed it into a wall.
+  Named as a version rather than as "recent versions", per the annotate-per-feature rule.
+- **`/block` hedges its cross-pack deferral.** `/check-uda` now lives in a different pack, so the
+  reference is marked *where installed* and is followed by what a reader without it checks by hand. A
+  deferral to something absent is a silent loss of guidance, which is worse than no deferral at all.
+- **A reinstall hint names the pack that provides the unit.** It used to print the literal
+  `skills/<pack>`, which was already unhelpful with one pack and unresolvable with three — nothing in the
+  report said where a unit came from. A `PACK_SOURCE` map makes it answerable, so the hint answers it, and
+  a unit in no map still falls back to the placeholder rather than confidently naming the wrong pack.
+- **The README, `docs/layout.md`, and the layer table carry three packs**, each labelled with the axis it
+  is cut on — a CMS major, a product that spans majors, a language that only adds — since which axis a
+  pack is cut on is what decides whether its name carries a version.
+
 ### Fixed
 
 - **The documented core skill count was two short.** The README advertised 13 skills in both install
@@ -348,3 +410,22 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   comparing it against every unit outside `skills/core`. It had gated only the core half, which is
   exactly why the core half was caught drifting and the pack half was not — the same defect as the entry
   above, one list over, and the gate that found it had been built with the blind spot in it.
+
+- **A slot read by two packs was surveyed for only one of them.** `.agents/config/paths.md → ## Umbraco`
+  is read by `umbraco-17-planning` and by `/check-uda`, and `PACK_SLOTS` listed only the planning unit —
+  so a project that installed the Cloud pack alone was never told whether a slot its drift check depends
+  on was filled. Registering the second reader then exposed the other half of the defect: the survey
+  appends one entry per reader, so the slot was counted **twice** and the reported total was wrong rather
+  than merely incomplete, which is the worse failure because a wrong total reads as authoritative. Both
+  halves are fixed and the `shared-slot-two-packs` fixture holds them. This is the first slot with readers
+  in two packs, and splitting a pack is what produced it.
+- **`/check-uda`'s second slot was never verified at all.** It declares
+  `.agents/config/conventions.md → ## Block palette parity`, `PACK_SLOTS` did not list it, and an
+  unlisted slot is skipped — so the checker reported on one of the spell's two slots and looked
+  complete. Present since the slot was declared.
+- **A CMS-specific scoring anchor had already crept into the portable half of the audit**, which is all it
+  takes for those four references to stop being movable to core. Found by writing check 14 rather than by
+  reading them, which is the argument for the check: noticing it by eye costs four long re-reads. The
+  same gate then caught the fix overreaching — the pass that relocated the detection recipes wrote the
+  pack-side filename into a portable file, and a filename that contains the technology is a technology
+  name. A portable file names the *kind* of file it pairs with and lets the unit's own guide route.

@@ -103,17 +103,29 @@ cantrip/
 │   ├── core/                    L0 — technology-agnostic, works on any project
 │   │   ├── spellbook/             10 user-cast spells
 │   │   └── reference/             6 model-invoked references (+ the reviewer agents)
-│   └── umbraco-17/              L1 — first stack pack: technology facts, no project facts
-│       ├── spellbook/             3 spells
-│       └── reference/             5 references
+│   ├── umbraco-17/              L1 — the CMS, pinned to a major
+│   │   ├── spellbook/             2 spells
+│   │   └── reference/             5 references
+│   ├── umbraco-cloud/           L1 — Umbraco Deploy, versionless
+│   │   ├── spellbook/             1 spell
+│   │   └── reference/             1 reference
+│   └── dotnet/                  L1 — the language and platform, versionless
+│       └── reference/             3 references
 │
 ├── docs/                        contract, layout, durable reference
-├── adr/                         13 decision records
+├── adr/                         15 decision records
 ├── scripts/                     check-contract.sh · check-install.sh · check-preserved.py
 ├── tests/                       install-verification fixtures
 ├── _work/ · _features/          the toolkit dogfooding its own workflow
 └── .githooks/pre-commit         runs the contract gate before every commit
 ```
+
+In words, since the tree above carries it only in indentation: `skills/` holds one directory per layer
+— `core/` for L0, then one directory per stack pack. Each of those contains a `reference/` for
+model-invoked units and, **only if the pack has spells to name**, a `spellbook/` beside it. `umbraco-17`
+has both, with 2 spells and 5 references; `umbraco-cloud` has both, with 1 each; `dotnet` has
+`reference/` alone, holding 3 units, because a language earns references rather than repeatable
+operations. Every unit is a directory holding a `SKILL.md`, whatever depth it sits at.
 
 **Only `skills/` ships.** Installs are subpath-scoped, so `LICENSE`, `README.md`, `docs/`, and `adr/` never
 reach a consuming project. Worth knowing when deciding where something belongs: guidance a consumer needs
@@ -124,12 +136,18 @@ at cast time has to live inside a skill, because nothing else travels.
 | Layer | Where it lives | Who owns it | Contains |
 |---|---|---|---|
 | **L0 core** | `skills/core/` → installed | the toolkit | no technology names, no project facts |
-| **L1 pack** | `skills/umbraco-17/` → installed | the toolkit | technology facts, no project facts |
+| **L1 pack** | `skills/<pack>/` → installed | the toolkit | technology facts, no project facts |
 | **L2 project** | `.agents/config/` | **you** | every project fact, in slots |
 
 The contract is that L0 and L1 are *vendored copies you do not edit* — a local edit is a divergence that
 `/update-toolkit` surfaces, not a way to tailor. Tailoring goes in L2. If tailoring needs an L0 edit, that
 is a missing slot and should be reported as one.
+
+**L1 is one directory per pack, and packs are independent.** A project installs any combination —
+subpath-scoped installs mean taking one pack costs nothing in the others — and each pack is *replaced*
+rather than upgraded when its technology moves a major. Where a pack's boundary falls, and why some pack
+names carry a version while no spell name does, is
+[adr/0015](../adr/0015-what-a-stack-pack-is-and-what-it-owes.md).
 
 See [contract.md](contract.md) for the normative rules, and [adr/0001](../adr/0001-layer-contract-and-slots.md)
 for why the split falls here.
