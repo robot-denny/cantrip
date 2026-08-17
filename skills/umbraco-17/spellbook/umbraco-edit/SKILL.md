@@ -12,6 +12,11 @@ browser UI but needs to be done from here.
 The Umbraco MCP server's tools are designed for the backoffice browser. From a terminal we call the
 REST Management API directly, using the same OAuth client credentials.
 
+**Version floor — Umbraco 14.** The Management API arrived with the rewritten backoffice in Umbraco 14;
+majors 13 and earlier expose no `/umbraco/management/api/v1/` surface at all, so on those there is
+nothing here to call and no fallback to offer — content edits go through the backoffice UI or a custom
+controller instead. The endpoints and payload shapes below are the Umbraco 17 forms.
+
 **Slot:** `.agents/config/stack.md` → `## Local URL`
 **If empty:** infer the local base URL from the project's launch profile
 (`Properties/launchSettings.json`) or its `.env`; if neither resolves, ask rather than guessing — a
@@ -87,6 +92,12 @@ below require `Authorization: Bearer {token}`.
 
 Agents configured in the backoffice can be invoked via the Agent API, under
 `/umbraco/ai/management/api/v1/agents/`:
+
+**This surface is gated separately from the floor above.** It belongs to the AI add-on rather than the
+CMS itself, so it arrived later and on its own release line — clearing the Management API's floor does
+not mean these endpoints exist. A 404 here on a project that is otherwise working is most likely the
+add-on being absent or older than these routes, not a wrong path. Confirm the installed AI package
+version before treating it as anything else.
 
 | Method | Endpoint | Description |
 |---|---|---|

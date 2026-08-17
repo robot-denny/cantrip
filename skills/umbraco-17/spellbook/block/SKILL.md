@@ -104,8 +104,16 @@ have several, some scoped to a single parent block. Identify the candidates by l
 whose `Configuration` has a `blocks[]` array, then pick based on where the block is meant to appear.
 
 If the project maintains parity between palettes, adding to only one is a deliberate choice worth
-confirming with the user. `/check-uda` reports palette drift if you want to see the current state
-first.
+confirming with the user. `/check-uda` reports palette drift, where installed, if you want to see the
+current state before deciding.
+
+**Without that spell**, read the current state directly — it is all local. Where the project uses
+Deploy, each block-editor data type's `Configuration.blocks[]` *is* its palette, listing element types
+by key; resolve each key against the `Udi` in the `document-type__*.uda` files to read them as aliases.
+Where there are no `*.uda` files the project is not using Deploy, so read the same data types from the
+running instance via MCP instead. Either way, compare only palettes that already share a block — a
+palette offering just one block is normally scoped to a single parent, so measuring it against a
+page-body palette reports noise rather than drift.
 
 ## Step 5 — Author the view by copying the closest existing block
 
