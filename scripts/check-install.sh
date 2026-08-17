@@ -55,11 +55,37 @@ ROSTER_CORE=(
 # check 13 now compares it against every SKILL.md outside skills/core.
 ROSTER_PACK=(
   umbraco-17-planning umbraco-17-feature-backfill umbraco-17-review-rules
-  umbraco-17-starter-facts architecture-audit
-  block check-uda umbraco-edit
-  dotnet-conventions dotnet-review-rules
+  umbraco-17-starter-facts umbraco-17-audit-patterns
+  block umbraco-edit
+  check-uda umbraco-deploy-facts
+  dotnet-conventions dotnet-review-rules codebase-audit
 )
 ROSTER=( "${ROSTER_CORE[@]}" "${ROSTER_PACK[@]}" )
+
+# Which pack ships each pack unit. Separate from ROSTER_PACK because the roster answers "is this
+# unit ours?", where the pack is irrelevant, and this answers "where do I get it back?", where it
+# is the whole answer.
+#
+# Static data for the same reason the rosters are: this script runs in a CONSUMER project, where
+# skills/ does not exist to look the answer up in. There is nothing on disk to derive it from.
+#
+# A unit absent here still verifies normally and falls back to the pack-less hint below -- worth
+# less, never wrong. Keep it in step with ROSTER_PACK by hand; contract check 13 holds the roster
+# to what the toolkit ships, and the roster is what this list follows.
+PACK_SOURCE=(
+  "umbraco-17-planning|umbraco-17"
+  "umbraco-17-feature-backfill|umbraco-17"
+  "umbraco-17-review-rules|umbraco-17"
+  "umbraco-17-starter-facts|umbraco-17"
+  "umbraco-17-audit-patterns|umbraco-17"
+  "block|umbraco-17"
+  "umbraco-edit|umbraco-17"
+  "check-uda|umbraco-cloud"
+  "umbraco-deploy-facts|umbraco-cloud"
+  "dotnet-conventions|dotnet"
+  "dotnet-review-rules|dotnet"
+  "codebase-audit|dotnet"
+)
 
 # Assets each skill must be able to read. A skill whose SKILL.md is present but whose
 # assets are gone is broken in a way a directory listing hides.
@@ -79,14 +105,23 @@ BROKEN=()
 WIRED_NAMES=()
 
 # The reinstall hint for a unit, which differs by layer: core ships from one subpath, a pack from
-# its own. ROSTER_PACK is deliberately flat -- which pack a unit came from is the installer's
-# business, not this check's -- so for a pack unit the honest hint names the pack slot rather than
-# guessing a subpath. Telling someone to reinstall a pack unit from skills/core sends them to a
-# command that cannot work, which is worse than telling them less.
+# its own. Both forms are a command that can be pasted and run.
+#
+# The pack form used to emit the literal `skills/<pack>`, on the reasoning that naming the pack was
+# the installer's business. That was wrong in the only moment the hint is read: someone whose unit
+# is broken is handed a placeholder they have to resolve themselves, and with more than one pack
+# shipping they cannot -- nothing in the report says which pack a unit came from. PACK_SOURCE makes
+# it answerable, so the hint answers it.
+#
+# A unit in no list at all still gets the old placeholder. That only happens for a unit added to
+# ROSTER_PACK and not to PACK_SOURCE, and less help is better than confidently naming the wrong pack.
 reinstall_hint() {   # reinstall_hint <skill-name>
   local n
   for n in "${ROSTER_CORE[@]}"; do
     [[ "$n" == "$1" ]] && { printf 'npx skills add robot-denny/cantrip/skills/core --skill %s' "$1"; return; }
+  done
+  for n in "${PACK_SOURCE[@]}"; do
+    [[ "${n%%|*}" == "$1" ]] && { printf 'npx skills add robot-denny/cantrip/skills/%s --skill %s' "${n##*|}" "$1"; return; }
   done
   printf 'reinstall it from the pack that provides it — npx skills add robot-denny/cantrip/skills/<pack> --all'
 }
@@ -273,16 +308,24 @@ SLOTS=(
   "conventions.md|Planning gotchas" "conventions.md|Unit of work"
   "reviewer-rules|Reviewer names"
 )
-# Pack slot -> the installed skill that makes it relevant.
+# Pack slot -> the installed skill that makes it relevant. One slot may have several readers
+# across packs: `## Umbraco` is read by both a CMS planning unit and the Cloud drift check, and
+# either one alone makes the slot worth surveying. So list every reader -- and dedup on append,
+# because a slot surveyed twice is counted twice, which turns a coverage gap into a wrong total.
 PACK_SLOTS=(
   "stack.md|Models|umbraco-17-planning"
   "paths.md|Umbraco|umbraco-17-planning"
+  "paths.md|Umbraco|check-uda"
   "stack.md|Local URL|umbraco-edit"
+  "conventions.md|Block palette parity|check-uda"
   "conventions.md|.NET style decisions|dotnet-conventions"
 )
 for entry in "${PACK_SLOTS[@]}"; do
   IFS='|' read -r pf ph pskill <<<"$entry"
-  [[ -r "$SKILLS_DIR/$pskill/SKILL.md" ]] && SLOTS+=("$pf|$ph")
+  [[ -r "$SKILLS_DIR/$pskill/SKILL.md" ]] || continue
+  already=0
+  for s in "${SLOTS[@]}"; do [[ "$s" == "$pf|$ph" ]] && { already=1; break; }; done
+  [[ $already -eq 0 ]] && SLOTS+=("$pf|$ph")
 done
 
 slots_filled=0; slots_empty=0; slot_lines=()

@@ -15,7 +15,7 @@ otherwise.
 
 | Concern | Where it lives |
 |---|---|
-| Is this repo's .NET foundation sound? DI wiring, package pinning, config and secrets posture, lifecycle-staged priorities, the evidence a score rests on | a repo-level .NET architecture audit, where one is installed — `architecture-audit` is one such reference. Where none is, that question is simply out of scope here rather than answered here |
+| Is this repo's .NET foundation sound? DI wiring, package pinning, config and secrets posture, lifecycle-staged priorities, the evidence a score rests on | a repo-level .NET architecture audit, where one is installed — `codebase-audit` in this pack is one such reference. Where none is, that question is simply out of scope here rather than answered here |
 | Is this file, this method, this change correct and idiomatic? | here |
 | What makes something a defect at all — an error passed on with its origin lost, a log call that folds its values into the message, an unvalidated input | core's reviewer guidance. This file supplies the **C# form** of those defects, not the argument for why they matter |
 | What to look for in a C# diff, and at what severity | `dotnet-review-rules`, where it is installed. Where it is not, a reviewer falls back to its own checklist and to core's — this file is not a substitute for either |

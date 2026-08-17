@@ -621,6 +621,69 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 14. The audit's stack-agnostic references stay stack-agnostic (the core seam)
+# ---------------------------------------------------------------------------
+# Check 8's rule, applied one layer early. These four files sit in an L1 pack today and are
+# written to L0's standard on purpose: what a lifecycle stage is, which categories of
+# documentation exist, what resilience means, and how a score is anchored are claims about
+# codebases, not about a platform. Holding them to the rule now means promoting them to core
+# later is a `git mv` and a roster edit rather than a rewrite.
+#
+# Without a gate the seam closes silently and cheaply: the file that motivated this check had
+# picked up one CMS-specific scoring anchor, which is all it takes for the four files to stop
+# being movable. A reviewer would have to re-read four long references to notice.
+#
+# The list is by BASENAME, not path, so the check follows the files through the move it is
+# meant to protect -- into another pack, or eventually into skills/core. A named file that has
+# gone missing is reported rather than skipped, because a vanished entry looks exactly like a
+# clean run, which is the failure mode checks 11 and 13 were both written to stop.
+begin "stack-agnostic audit references name no technology"
+SEAM_FILES=(lifecycle-stages.md documentation-and-onboarding.md resilience-and-ops.md scoring-rubric.md)
+# Check 8's pattern plus the platform spellings it never needed: no L0 file has ever had
+# occasion to name a project file format or a package manager, so the pattern that guards L0
+# does not list them, and these four files are full of detection recipes that would.
+SEAM_TECH_PATTERN="$TECH_PATTERN"'|\.net\b|csproj|nuget|msbuild'
+if [[ -d skills ]]; then
+  # One traversal for every name. A find per name re-walks the whole tree, and this check runs
+  # on every commit via .githooks/pre-commit.
+  find_expr=()
+  for seam_name in "${SEAM_FILES[@]}"; do
+    [[ ${#find_expr[@]} -gt 0 ]] && find_expr+=(-o)
+    find_expr+=(-name "$seam_name")
+  done
+  all_seam=$(find skills -type f \( "${find_expr[@]}" \) -print 2>/dev/null)
+  seam_paths=""
+  seam_missing=""
+  for seam_name in "${SEAM_FILES[@]}"; do
+    found=$(printf '%s\n' "$all_seam" | grep -F "/$seam_name" || true)
+    if [[ -z "$found" ]]; then
+      seam_missing+="  - $seam_name (named in SEAM_FILES but nowhere under skills/)"$'\n'
+    else
+      seam_paths+="$found"$'\n'
+    fi
+  done
+  hits=$(
+    while IFS= read -r f; do
+      [[ -n "$f" ]] && grep_unexempted "$f" "$SEAM_TECH_PATTERN"
+    done <<<"$seam_paths"
+  )
+  if [[ -n "$hits" || -n "$seam_missing" ]]; then
+    details=""
+    [[ -n "$hits" ]] && details+="$hits"$'\n'
+    [[ -n "$seam_missing" ]] && details+="$seam_missing"
+    report_fail "$CURRENT" \
+      "These references are written to L0's standard so they can move to core unchanged." \
+      "Say it without the technology, or move the technology-specific signal to a pack file." \
+      "If a file was renamed or retired on purpose, update SEAM_FILES in this script." \
+      "" "$details"
+  else
+    report_pass "$CURRENT"
+  fi
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n'
 if [[ $FAILURES -eq 0 ]]; then
   printf '\033[32m%s checks passed.\033[0m\n' "$CHECKS_RUN"

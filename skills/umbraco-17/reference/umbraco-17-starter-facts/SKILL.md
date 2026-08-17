@@ -1,6 +1,6 @@
 ---
 name: umbraco-17-starter-facts
-description: Verified Umbraco 17 platform facts that are easy to get wrong and often fail silently — Management API shapes and quirks, content-model behaviors where an unset property is indistinguishable from a false one, Deploy and .uda schema mechanics, and AI plus Search configuration traps. Consult when writing or reviewing Umbraco code, authoring E2E tests against the Management API, designing schema, debugging a silent failure, or wondering whether behavior you are seeing is a bug or a platform behavior.
+description: Verified Umbraco 17 platform facts that are easy to get wrong and often fail silently — Management API shapes and quirks, content-model behaviors where an unset property is indistinguishable from a false one, and AI plus Search configuration traps. Consult when writing or reviewing Umbraco code, authoring E2E tests against the Management API, designing schema, debugging a silent failure, or wondering whether behavior you are seeing is a bug or a platform behavior.
 ---
 
 # Umbraco 17 starter facts
@@ -28,7 +28,6 @@ those cost hours, and they are what these files are for.
 |---|---|
 | `references/management-api.md` | Management API shapes, auth, and the test-helper package's known quirks |
 | `references/content-model.md` | Published content and generated model behaviors, and rendering traps |
-| `references/deploy-schema.md` | `.uda` artifacts, Deploy mechanics, and Cloud schema drift |
 | `references/ai-and-search.md` | Umbraco.AI and Cms.Search configuration, and their silent failure modes |
 
 ## How each fact is recorded

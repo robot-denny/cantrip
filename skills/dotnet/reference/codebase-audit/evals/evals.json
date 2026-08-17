@@ -1,0 +1,55 @@
+{
+  "skill_name": "codebase-audit",
+  "notes": "Test prompts for the codebase-audit skill. Each entry has a prompt, the expected qualitative result, and optional input files. Assertions are not yet defined — they're drafted during the skill-creator eval loop. Pillar numbers here are the five this skill scores: 1 platform hygiene, 2 architectural separation, 3 documentation & onboarding, 4 resilience & operations, 5 scalability & refactorability. Framework-idiomatic use is deliberately not a pillar, so no case asserts a verdict on one — case 5 asserts the opposite, that a repo with no framework on top still gets a full audit.",
+  "evals": [
+    {
+      "id": 1,
+      "label": "this-repo growing",
+      "prompt": "Review the architecture of this codebase. I want a written audit that calls out strengths and weaknesses, with prioritized recommendations.",
+      "expected_output": "Classifies lifecycle as growing (or asks once if ambiguous). High Pillar 3 (documentation & onboarding) score because of CLAUDE.md, ROADMAP.md, _specs/_plans/_features/ scaffolding. Low Pillar 2 (architectural separation) score — flat layout, no layering. Strong Pillar 4 signals around committed configuration and CI discipline. Recommendations include at least one P0 around a missing layer/seam and one P1 around documentation freshness. Report saved to docs/audits/<date>-this-repo.md.",
+      "files": [],
+      "target": "."
+    },
+    {
+      "id": 2,
+      "label": "vanilla starter (greenfield)",
+      "prompt": "I just scaffolded a new web application from a project template. Can you audit it?",
+      "expected_output": "Classifies lifecycle as greenfield (low commit count, starter fingerprints intact). Foundational P0 recommendations: layering plan, decision-record scaffolding, CI/pre-commit, secret-placeholder discipline. Low scores on most pillars but explicitly framed as 'greenfield is the ideal time to set these up.' Should NOT recommend a re-platform or a rendering-model change unprompted.",
+      "files": [],
+      "target": "<external-fixture-path>"
+    },
+    {
+      "id": 3,
+      "label": "comparison mode",
+      "prompt": "Audit our architecture and compare it to my colleague's service at <external-path>. I want to see how we stack up.",
+      "expected_output": "Two audits produced and saved separately. A 'Comparison' section appears at the bottom of the primary report with side-by-side scores for all five pillars, at least one 'this repo wins' finding, and at least one 'other repo wins' finding. The 'What to learn from each' section is concrete, not generic.",
+      "files": [],
+      "target": ".",
+      "compare": "<external-path>"
+    },
+    {
+      "id": 4,
+      "label": "brownfield",
+      "prompt": "I just inherited a .NET codebase from a previous developer. Can you help me figure out what I'm working with?",
+      "expected_output": "Classifies as brownfield (user-declared via the 'inherited' phrasing). Report leads with a 'Brownfield map' section listing where things live, what was inferred vs known, and where the surprises are. Recommendations emphasize 'understand before changing' and risk-prioritize. No wholesale refactor P0s. Skill suggests the new owner write down what they learn (a BROWNFIELD-NOTES.md or equivalent).",
+      "files": [],
+      "target": "<external-brownfield-fixture>"
+    },
+    {
+      "id": 5,
+      "label": "trigger accuracy — plain service, no framework on top",
+      "prompt": "Is this API project structured sensibly for the team to grow into?",
+      "expected_output": "Skill triggers on a .NET service with no CMS or other framework layered on it (description tuning test — the audit must not read as CMS-only). All five pillars are scored from the code that is there. The report states that framework-idiomatic use was not assessed because no framework guidance applies, rather than leaving a section empty or inventing a sixth pillar.",
+      "files": [],
+      "target": "<external-service-fixture>"
+    },
+    {
+      "id": 6,
+      "label": "trigger accuracy — vague prompt",
+      "prompt": "Is our codebase set up the right way?",
+      "expected_output": "Skill triggers. Asks one quick clarifying question if the working directory contents are ambiguous (no .NET project files found at all). Otherwise proceeds with the default audit.",
+      "files": [],
+      "target": "."
+    }
+  ]
+}

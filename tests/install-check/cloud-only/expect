@@ -1,0 +1,7 @@
+exit: 0
+contains: pack:
+contains: check-uda
+contains: umbraco-deploy-facts
+not_contains: umbraco-17
+contains: 1 filled
+not_contains: Every slot is empty
