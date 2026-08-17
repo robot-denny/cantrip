@@ -1,10 +1,19 @@
-# Pillar 3: Umbraco-Version-Appropriate Patterns
+# Umbraco-version-appropriate patterns
 
-Patterns that hold across Umbraco majors. Version-specific signals (which AI/Search/Deploy packages exist in vN, what's deprecated in vN+1, etc.) are *not* baked in here — they should be sourced from the installed Umbraco backoffice skills, the Umbraco MCP server, or the official docs for the detected major version.
+Patterns that hold across Umbraco majors. Written as assessment guidance: positive signals, negative signals, and detection recipes for judging whether an existing Umbraco codebase follows the platform's own conventions. A repo-level architecture audit, where one is installed, is the natural consumer — it covers the .NET foundation and the structure around it and leaves framework-idiomatic use to guidance like this. Version-specific signals (which AI/Search/Deploy packages exist in vN, what's deprecated in vN+1, etc.) are *not* baked in here — they should be sourced from the installed Umbraco backoffice skills, the Umbraco MCP server, or the official docs for the detected major version.
 
 ## How to use this reference
 
-1. Run `scripts/detect-umbraco-version.sh <target>` first. It returns a major version (e.g., `12`, `13`, `14`, `15`, `16`, `17`) or `none`.
+1. Establish the major version first, because everything version-sensitive below depends on it:
+
+   ```bash
+   # Major version from the CMS package reference
+   grep -rhoE 'Include="Umbraco\.Cms"[^>]+Version="[0-9]+' <target> --include="*.csproj" \
+     | grep -oE '[0-9]+$' | head -1
+   ```
+
+   No match and no `Umbraco.*` package reference at all means this file does not apply. A `.umbraco`
+   file at the repo root confirms an Umbraco Cloud project but does not reveal the major — ask.
 2. Use this file's heuristics for the version-agnostic patterns below.
 3. **If installed Umbraco backoffice skills or MCP are available**: prefer their version-current best-practice guidance for anything package-specific or version-sensitive (AI packages, Search, Deploy, Delivery API capabilities, Models Builder modes, Block Grid/List APIs).
 4. **If they're not available**: degrade to the version-agnostic baseline below and note in the report that "version-specific Umbraco guidance was unavailable; falling back to general principles."
@@ -18,9 +27,13 @@ Patterns that hold across Umbraco majors. Version-specific signals (which AI/Sea
 
 ### Content model
 
-- Document types, data types, templates, and (where the version supports it) AI/search/agent entities are serialized to schema artifact files (`.uda` for Umbraco Deploy, or equivalent) and committed to git. Schema is treated as code.
-- A pre-commit hook or skill (`/check-uda` or equivalent) checks for unexpected schema drift.
-- Built-in entities (default data types, default media types, default member types, languages) are extracted to schema files at setup so they don't appear as perpetual drift.
+- Document types, data types, templates, and (where the version supports it) AI/search/agent entities are serialized to schema artifact files and committed to git. **Schema is treated as code** — that judgement is what this file asserts.
+- Something checks for unexpected schema drift before it is committed, whether a hook or a dedicated check.
+- Built-in entities are extracted at setup rather than left database-only, so the drift report means something.
+
+**How schema artifacts actually behave — and how to clear drift that will not — is a subject of its own,
+covered by dedicated Deploy guidance where installed.** This file judges whether the discipline is in
+place; it deliberately does not restate the mechanics.
 
 ### Block patterns
 
@@ -53,7 +66,7 @@ Patterns that hold across Umbraco majors. Version-specific signals (which AI/Sea
 - Service registration done in `Program.cs` instead of a Composer — fine for tiny projects, smelly for anything growing.
 - Custom event handlers using legacy static event subscriptions.
 - Schema artifacts committed inconsistently (some doc types as `.uda`, others created manually per environment).
-- Builtin data type / media type drift on the Deploy dashboard left unaddressed for months.
+- Built-in entity drift left unaddressed for months, so the drift report is noise nobody reads.
 - Razor views with embedded SQL or `Examine` queries that should live in a service.
 - Secrets pasted into backoffice connection forms.
 - Long blocks of `if (Model.ContentType.Alias == "...") { ... } else if (...)` in templates — that's the property-editor switch the framework's `partialName` resolution is meant to handle.
@@ -87,13 +100,12 @@ grep -rEln "(sk-[A-Za-z0-9]{20,}|ANTHROPIC_[A-Z]+|AKIA[0-9A-Z]{16})" <target>/sr
 
 ## Lifecycle-stage adjustments
 
-- **Greenfield**: Recommend the composer pattern from day one. Recommend pre-commit `.uda` checks from day one. Set up secret-placeholder discipline before the first AI connection is made (saves a Data-Protection-key incident later).
-- **Growing**: If composer adoption is partial, recommend consolidating service registration there. If schema drift is appearing on the Deploy dashboard, address built-in entity extraction once.
+- **Greenfield**: Recommend the composer pattern from day one, and a pre-commit schema-drift check from day one. Set up secret-placeholder discipline before the first AI connection is made (saves a Data-Protection-key incident later).
+- **Growing**: If composer adoption is partial, recommend consolidating service registration there. If drift is appearing, address built-in entity extraction once.
 - **Mature**: Don't recommend a wholesale composer migration if `Program.cs` registration is working. Focus on schema-drift hygiene and cache strategy review.
-- **Brownfield**: Pay close attention to the `.uda` discipline. Schema drift in inherited Umbraco codebases is one of the highest-risk areas — it can block content transfers between environments.
+- **Brownfield**: Pay close attention to schema discipline. Drift in an inherited Umbraco codebase is one of the highest-risk areas, and the remediation is a subject of its own — defer to Deploy guidance where installed rather than improvising.
 
 ## Cite canonical sources
 
 - Umbraco Documentation for the detected major version (umbraco.com/docs)
-- Umbraco Deploy documentation
-- Umbraco Cloud knowledge base
+- For anything schema-artifact or deployment specific, the Deploy guidance installed alongside this pack, and failing that the vendor's own Deploy documentation

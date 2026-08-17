@@ -95,6 +95,6 @@ Some recommendations are *only* appropriate at certain stages:
 | Add ADRs | OK | OK | OK (and overdue) | OK (and especially valuable) |
 | Add CI/pre-commit hooks | OK (P0) | OK (P0 if missing) | OK | OK |
 | Map the codebase | Skip | Skip | Skip | First |
-| Headless migration | OK to plan | OK to plan | Only if business case | Never recommend unsolicited |
+| Re-platform or change rendering model | OK to plan | OK to plan | Only if business case | Never recommend unsolicited |
 
 The skill should consult this matrix when prioritizing recommendations.

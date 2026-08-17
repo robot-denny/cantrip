@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# collect-signals.sh — deterministic structural signals for the architecture audit
+# collect-signals.sh — deterministic structural signals for the codebase audit
 # Read-only. No side effects beyond stdout.
 # Usage: collect-signals.sh <target-dir>
 
@@ -14,7 +14,7 @@ fi
 
 cd "$TARGET" || exit 1
 
-echo "=== architecture-audit signals: $(pwd) ==="
+echo "=== codebase-audit signals: $(pwd) ==="
 echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo
 
@@ -53,14 +53,17 @@ echo "TypeScript files:                  $TS_FILES"
 echo "JavaScript files (excl. lib):      $JS_FILES"
 echo
 
-# --- DI / composition signals ---
-echo "## DI / composition"
-COMPOSER_COUNT=$(grep -rln "IComposer\|: ComposeAfter" . --include="*.cs" 2>/dev/null \
+# --- DI / registration signals ---
+# Framework-neutral on purpose: a framework may add its own registration seam (a startup
+# extension type, a module, a plugin entry point). Where the project has installed guidance
+# for its framework, count that seam too and say so in the report.
+echo "## DI / registration"
+DI_REG=$(grep -rln "AddSingleton\|AddScoped\|AddTransient\|builder\.Services\." . --include="*.cs" 2>/dev/null \
   | grep -v "/bin/" | grep -v "/obj/" | wc -l | tr -d ' ')
-NOTIF_HANDLER_COUNT=$(grep -rln "INotificationHandler\|INotificationAsyncHandler" . --include="*.cs" 2>/dev/null \
+DI_EXT=$(grep -rln "IServiceCollection " . --include="*.cs" 2>/dev/null \
   | grep -v "/bin/" | grep -v "/obj/" | wc -l | tr -d ' ')
-echo "Composer files:                    $COMPOSER_COUNT"
-echo "Notification handler files:        $NOTIF_HANDLER_COUNT"
+echo "Files registering services:        $DI_REG"
+echo "Files extending IServiceCollection: $DI_EXT"
 echo
 
 # --- Async hygiene ---
@@ -123,19 +126,6 @@ echo "Test directories:"
 echo "$TEST_DIR" | sed 's/^/  /'
 echo
 
-# --- Umbraco-specific ---
-echo "## Umbraco-specific"
-UDA_COUNT=$(find . -name "*.uda" -not -path "*/bin/*" -not -path "*/obj/*" 2>/dev/null | wc -l | tr -d ' ')
-DELIVERY_API=$(grep -rln "DeliveryApi" . --include="*.cs" --include="*.json" 2>/dev/null \
-  | grep -v "/bin/" | grep -v "/obj/" | wc -l | tr -d ' ')
-CACHED_PARTIAL=$(grep -rln "CachedPartialAsync\|CachedPartial" . --include="*.cshtml" 2>/dev/null | wc -l | tr -d ' ')
-EXAMINE_IN_VIEW=$(grep -rln "ExamineManager\|IExamineManager" . --include="*.cshtml" 2>/dev/null | wc -l | tr -d ' ')
-echo ".uda schema artifact count:        $UDA_COUNT"
-echo "DeliveryApi references:            $DELIVERY_API"
-echo "Cached partial usage:              $CACHED_PARTIAL"
-echo "Examine queries in Razor (smell):  $EXAMINE_IN_VIEW"
-echo
-
 # --- Documentation signals (pattern-detected, not filename-coupled) ---
 echo "## Documentation"
 for f in CLAUDE.md AGENTS.md AGENT.md CONVENTIONS.md README.md CONTRIBUTING.md GLOSSARY.md CONTEXT.md DOMAIN.md ARCHITECTURE.md DECISIONS.md .github/copilot-instructions.md; do
@@ -149,7 +139,7 @@ XMLDOC_COUNT=$(grep -rln "/// <summary>" . --include="*.cs" 2>/dev/null | grep -
 echo "Files with XML doc comments:       $XMLDOC_COUNT"
 echo
 
-# --- Frontend / headless signals ---
+# --- Frontend / build signals ---
 echo "## Frontend / build"
 PACKAGE_JSON=$(find . -maxdepth 4 -name "package.json" -not -path "*/node_modules/*" 2>/dev/null | head -10)
 VITE=$(find . -maxdepth 4 -name "vite.config.*" -not -path "*/node_modules/*" 2>/dev/null | wc -l | tr -d ' ')

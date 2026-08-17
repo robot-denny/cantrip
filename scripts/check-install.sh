@@ -55,10 +55,10 @@ ROSTER_CORE=(
 # check 13 now compares it against every SKILL.md outside skills/core.
 ROSTER_PACK=(
   umbraco-17-planning umbraco-17-feature-backfill umbraco-17-review-rules
-  umbraco-17-starter-facts architecture-audit
+  umbraco-17-starter-facts umbraco-17-audit-patterns
   block umbraco-edit
   check-uda umbraco-deploy-facts
-  dotnet-conventions dotnet-review-rules
+  dotnet-conventions dotnet-review-rules codebase-audit
 )
 ROSTER=( "${ROSTER_CORE[@]}" "${ROSTER_PACK[@]}" )
 
@@ -77,13 +77,14 @@ PACK_SOURCE=(
   "umbraco-17-feature-backfill|umbraco-17"
   "umbraco-17-review-rules|umbraco-17"
   "umbraco-17-starter-facts|umbraco-17"
-  "architecture-audit|umbraco-17"
+  "umbraco-17-audit-patterns|umbraco-17"
   "block|umbraco-17"
   "umbraco-edit|umbraco-17"
   "check-uda|umbraco-cloud"
   "umbraco-deploy-facts|umbraco-cloud"
   "dotnet-conventions|dotnet"
   "dotnet-review-rules|dotnet"
+  "codebase-audit|dotnet"
 )
 
 # Assets each skill must be able to read. A skill whose SKILL.md is present but whose

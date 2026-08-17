@@ -25,8 +25,8 @@ extract_score() {
 }
 
 extract_name() {
-  # Heuristic: use the line after "# Architecture Audit —"
-  head -3 "$1" | grep -E "^# " | head -1 | sed 's/^# Architecture Audit — //'
+  # Heuristic: use the line after "# Codebase Audit —"
+  head -3 "$1" | grep -E "^# " | head -1 | sed 's/^# Codebase Audit — //'
 }
 
 NAME_A=$(extract_name "$A")
@@ -43,13 +43,11 @@ cat <<EOF
 
 | Pillar | $NAME_A | $NAME_B |
 |---|---|---|
-| 1 — Modern .NET hygiene | $(extract_score "$A" 1) | $(extract_score "$B" 1) |
+| 1 — Modern platform hygiene | $(extract_score "$A" 1) | $(extract_score "$B" 1) |
 | 2 — Architectural separation | $(extract_score "$A" 2) | $(extract_score "$B" 2) |
-| 3 — Umbraco-version-appropriate | $(extract_score "$A" 3) | $(extract_score "$B" 3) |
-| 4 — Headless suitability | $(extract_score "$A" 4) | $(extract_score "$B" 4) |
-| 5 — Documentation & onboarding | $(extract_score "$A" 5) | $(extract_score "$B" 5) |
-| 6 — Resilience & operations | $(extract_score "$A" 6) | $(extract_score "$B" 6) |
-| 7 — Scalability & refactorability | $(extract_score "$A" 7) | $(extract_score "$B" 7) |
+| 3 — Documentation & onboarding | $(extract_score "$A" 3) | $(extract_score "$B" 3) |
+| 4 — Resilience & operations | $(extract_score "$A" 4) | $(extract_score "$B" 4) |
+| 5 — Scalability & refactorability | $(extract_score "$A" 5) | $(extract_score "$B" 5) |
 
 ### What to learn from each
 
@@ -71,7 +69,5 @@ cat <<EOF
 - **Pillar 3**: <narrative>
 - **Pillar 4**: <narrative>
 - **Pillar 5**: <narrative>
-- **Pillar 6**: <narrative>
-- **Pillar 7**: <narrative>
 
 EOF

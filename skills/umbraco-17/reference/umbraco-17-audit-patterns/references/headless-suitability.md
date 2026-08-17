@@ -1,4 +1,6 @@
-# Pillar 4: Headless Suitability
+# Headless suitability
+
+Assessment guidance for a question that is specific to a content-managed codebase: how ready is it to serve content to a decoupled frontend? A repo-level architecture audit, where one is installed, is the natural consumer.
 
 Reports the codebase's *current orientation* (traditional / hybrid / headless) and its *migration readiness* (well-positioned / neutral / firmly traditional) for a future headless move.
 
@@ -78,7 +80,7 @@ find <target> -maxdepth 2 -type d \( -name "frontend" -o -name "web" -o -name "u
 grep -rln "dynamic " <target>/src --include="*.cshtml"
 ```
 
-## What the report should produce for Pillar 4
+## What a report should produce for headless suitability
 
 A dedicated **Headless trajectory** subsection in the report:
 

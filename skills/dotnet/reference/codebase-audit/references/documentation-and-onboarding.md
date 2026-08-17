@@ -1,6 +1,8 @@
-# Pillar 5: Documentation & Onboarding
+# Pillar 3: Documentation & Onboarding
 
 How friendly the codebase is to a future human or AI collaborator picking it up cold. This is the agentic-coding-habitability pillar, broadened to cover human onboarding too.
+
+This file names signals, not packages. Where a recipe below needs the project's source file pattern it says `<source-glob>`; substitute the project's own.
 
 ## Critical rule: detect patterns, not filenames
 
@@ -37,14 +39,14 @@ This pillar must work in any codebase. Do *not* require a file named `CLAUDE.md`
 
 ### In-code documentation
 
-- XML doc comments (`/// <summary>`) on public APIs.
+- Documentation comments on public APIs, in whatever form the language provides (a doc-comment syntax the toolchain can extract).
 - "Why" comments (not "what" comments) at non-obvious points — e.g., "we await this twice because the underlying provider memoizes after the first call."
 - Workaround / hack comments that name the specific bug or constraint being worked around.
 
 ### Auto-generated docs
 
-- OpenAPI / Swagger generation enabled.
-- DocFX / Mintlify / similar configured.
+- API-schema generation enabled (an OpenAPI document produced from the code).
+- A docs-site generator configured.
 - Generated reference docs published anywhere (Pages, internal portal).
 
 ## What "good" looks like
@@ -56,7 +58,7 @@ This pillar must work in any codebase. Do *not* require a file named `CLAUDE.md`
 
 ## What "bad" looks like
 
-- A README that says "TODO" or only contains the auto-generated template from `dotnet new`.
+- A README that says "TODO" or still contains only the text the project scaffolder generated.
 - No build/run instructions for a non-trivial project.
 - ADR-style decisions made in commit messages or PR descriptions only (and therefore lost when the PR archive is hard to search).
 - "Helper" / "Manager" / "Util" naming everywhere — signals that domain language hasn't been worked out.
@@ -65,41 +67,11 @@ This pillar must work in any codebase. Do *not* require a file named `CLAUDE.md`
 
 ## Detection recipes
 
-```bash
-# Agentic-collaboration docs
-for f in CLAUDE.md AGENTS.md AGENT.md CONVENTIONS.md .github/copilot-instructions.md; do
-  test -f "<target>/$f" && echo "present: $f"
-done
-test -d "<target>/.claude/commands" && echo "present: .claude/commands/"
-test -d "<target>/.claude/agents"  && echo "present: .claude/agents/"
-test -d "<target>/.claude/skills"  && echo "present: .claude/skills/"
-test -d "<target>/.cursor"          && echo "present: .cursor/"
-test -d "<target>/.aider"           && echo "present: .aider/"
-
-# ADR locations
-for d in docs/adr adr decisions RFCs RFCS; do
-  test -d "<target>/$d" && echo "present: $d/"
-done
-
-# Spec/plan/feature folders
-for d in _specs specs docs/specs _plans plans docs/plans _features features docs/features _prds prds; do
-  test -d "<target>/$d" && echo "present: $d/"
-done
-
-# Glossary / domain language docs
-for f in GLOSSARY.md CONTEXT.md DOMAIN.md docs/glossary.md docs/context.md; do
-  test -f "<target>/$f" && echo "present: $f"
-done
-
-# README quality (length is a weak signal but worth knowing)
-wc -l "<target>/README.md" 2>/dev/null
-
-# XML doc comments on public APIs
-grep -rln "/// <summary>" <target>/src --include="*.cs" | wc -l
-
-# OpenAPI / Swagger
-grep -rn "AddSwaggerGen\|AddOpenApi\|Swashbuckle" <target>/src --include="*.cs" --include="*.csproj"
-```
+**The recipes for this pillar live with the platform-hygiene reference in this unit, not here** — the
+unit's own guide says which file that is. This file states what to judge; a recipe has to name the
+identifiers it greps for, and naming them is exactly what this file may not do. Splitting them that
+way keeps the criteria reusable on another stack without blunting the search that gathers the
+evidence.
 
 ## Lifecycle-stage adjustments
 
@@ -112,4 +84,4 @@ grep -rn "AddSwaggerGen\|AddOpenApi\|Swashbuckle" <target>/src --include="*.cs" 
 
 - Michael Nygard — *Documenting Architecture Decisions* (the original ADR essay)
 - Daniele Procida — *Diátaxis* documentation framework
-- Anthropic's skill-creator documentation (when relevant to agentic-collaboration recommendations)
+- The agent vendor's own guidance on collaboration files (when relevant to agentic-collaboration recommendations)
