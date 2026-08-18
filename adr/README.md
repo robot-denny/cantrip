@@ -75,6 +75,11 @@ Each is marked *backfilled* with both its decision date and its recording date, 
 been learned since — several were validated or complicated by things that only surfaced during
 extraction.
 
+**0010 amended 2026-08-18.** The spell budget moves from a stated aim of 6–8 to a working ceiling of
+ten, leaving room for a new stage without a documentation rewrite. An amendment rather than a new
+record because the principle behind the budget — merge or route rather than append — is unchanged, and
+nothing about invocation posture is touched.
+
 ## Backlog
 
 Empty. Add an entry when a decision is deferred rather than made.

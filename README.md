@@ -3,30 +3,32 @@
 An agentic spellbook for cross-functional teams.
 
 A *cantrip* is a minor spell cast at will, without preparation — and a Scots word for a small charm.
-That is the invocation model here: user-cast spells, deliberate and repeatable.
+That's the invocation model here.
 
 Cantrip packages a **spec → plan → implement → review** workflow as portable skills, so the same
-discipline can be installed into many projects instead of hand-ported between them. It works on a new
-project or an existing one.
+toolkit can be installed into many projects instead of hand-ported between them. The workflow itself
+names no language or framework, so it works on any stack, on a new project or an existing one.
 
 ---
 
-## What you actually get
+## The components
 
-Three things, and they are easier to judge than a skill list.
+**A flexible spellbook, not a rigid ritual.** Weave a curated selection of slash commands into your
+workflow. There's a natural sequence you can follow to explore, plan, build, and document. Spells
+suggest the next one in the flow but never cast automatically, so you can enter anywhere, stop
+anywhere, and use one piece without requiring the rest.
 
-**A workflow you cast, not one that runs you.** Every stage is a slash command you type. Spells suggest
-the next one and never call it, so you can enter anywhere, stop anywhere, and use one piece without
-buying the rest.
+**Living feature documentation, not rotting specs.** Most agent workflows aim at writing code
+faster, and leave behind a dragon's hoard of up-front specification — amassed with great care,
+guarded fiercely, and worth nothing a week after it ships. This one separates the evergreen, living
+documentation of *what the system does* — which stays true — from *what we are changing* — which is
+temporal, and mainly useful at the time of implementation. See
+[The artifacts](#the-artifacts-and-why-there-are-two-kinds).
 
-**Documentation that outlives the work.** Most agent workflows produce a burst of files nobody reads
-again. This one separates *what the system does* — which stays true — from *how one change got made* —
-which stops being interesting the moment it ships. See [The artifacts](#the-artifacts-and-why-there-are-two-kinds).
-
-**Review with guardrails.** Three reviewers, one shared contract that constrains what they may claim,
-what evidence they must cite, and what they must stay quiet about. The rules exist because an
-unconstrained reviewer produces confident findings nobody can act on. See
-[Code review](#code-review-and-its-guardrails).
+**Review with guardrails.** Three reviewers, one shared contract: it limits them to the diff in
+front of them, puts every finding on one shared severity scale, requires a file and line as evidence
+for each one, and fixes the shape of the report they hand back. It's a means to continually improve
+code quality, performance, and accessibility. See [Code review](#code-review-and-its-guardrails).
 
 ```
 explore → spec → plan → implement-step → feature → code-review → commit-message
@@ -57,17 +59,17 @@ DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/dotnet --all
 
 Then cast `/spec` on your next piece of work.
 
-`/setup` writes what it learns into **`.agents/config/`** — four files holding your paths, your
-commands, and your team's coding standards. That directory is the part you own and edit, and it is
-committed, so filling a slot answers it for your teammates too. [What you own](#what-you-own) says
-which file takes what.
+`/setup` analyzes your codebase and writes what it learns into **`.agents/config/`** — four files
+holding your paths, your existing commands, and your team's coding standards. That directory is the
+part you own and edit, and it is committed, so filling a slot answers it for your teammates too.
+[What you own](#what-you-own) says which file takes what.
 
 **Nothing is required to configure.** A fresh install works before `/setup` runs; every spell either
 does real work or asks for the single fact it is missing.
 
 Install edge cases — Windows symlinks, name collisions with existing commands, choosing an install
-shape, registering the reviewers for parallel dispatch — are in [Installing in
-detail](#installing-in-detail). Skip them until something looks wrong.
+shape, registering the reviewers for parallel dispatch — are in
+[Installing in detail](#installing-in-detail). Skip them until something looks wrong.
 
 ---
 
@@ -87,9 +89,10 @@ them by name.
 | `/commit-message` | Proposes a message that explains *why*, following your project's own convention. |
 | `/retrofit` | The easy button for a change that skipped the flow — reconciles intent against the diff, then proposes the missing tests and docs. |
 
-**Eight workflow spells, and that is deliberate.** The count is held at eight so the spellbook stays
-learnable; a ninth stage would mean merging two or adding a router. Two more sit outside the chain,
-because they are not stages of doing work:
+**Eight workflow spells, and the count is meant to stay small.** A spellbook you can hold in your
+head is worth more than one that covers every case, so ten is the working ceiling; past that, the
+answer is to merge two stages or add a router rather than keep appending. Two more spells sit
+outside the chain, because they are not stages of doing work:
 
 | Spell | What it does |
 |---|---|
@@ -117,8 +120,16 @@ matches the work in front of it. They are where the toolkit's opinions live.
 | `memory-discipline` | How an agent's persistent project memory should be written and calibrated, including recording its own false positives |
 | `design-system-authoring` | How to write your project's *own* design-system skill, so an agent conforms to your visual system instead of inventing a look |
 
-The last one is worth noticing: it is a skill for writing skills. Your visual conventions are yours, so
-the toolkit teaches the shape rather than shipping an answer.
+The last one is a skill for writing skills. Your visual conventions are your own, so instead of
+shipping design rules you would have to fight, the toolkit walks you through writing down the rules
+you already have.
+
+### Packs — optional add-on references
+
+Packs layer in references for one tech stack, so the model follows that platform's established
+practices instead of averaging across everything it has read. The three packs today cover Umbraco
+and .NET because that is where the toolkit was built — nothing in core assumes them, and a pack for
+any other stack drops in the same way.
 
 **Three packs, cut on three different axes.** `umbraco-17` is pinned to a CMS major, `umbraco-cloud`
 to a product that spans majors, `dotnet` to a language that only ever adds. Which axis a pack is cut
@@ -127,7 +138,8 @@ on is what decides whether its name carries a version — see
 
 ### `umbraco-17` pack
 
-Version-pinned: the major is in the pack name, because Umbraco majors break.
+Version-pinned: the major is in the pack name, because Umbraco majors break — a new major can change
+the options, the constraints, and what counts as good practice.
 
 | Unit | Kind | What it does |
 |---|---|---|
@@ -160,25 +172,26 @@ Versionless: .NET and C# majors add rather than break, so each newer form says w
 | `dotnet-review-rules` | reference | Reviewing a C# diff, on the same severity scale every reviewer uses |
 | `codebase-audit` | reference | A five-pillar written assessment of a .NET codebase — hygiene, separation, documentation, resilience, refactorability — staged to its lifecycle and framework-neutral, with an optional head-to-head against a second repo |
 
-**What a reference costs.** Its *description* sits in context from the moment you install it; only its
-*body* loads when triggered. So an installed reference you never use is cheap, not free — the three
-`dotnet` units add roughly 420 tokens against about 3,100 for the whole toolkit. That is the real
-argument for packs being opt-in.
+**What a reference costs.** Its *description* sits in context from the moment you install it; only
+its *body* loads when triggered. So an installed reference you never use is cheap, not free — the
+three `dotnet` units add roughly 420 tokens against about 3,100 for the whole toolkit. That's the
+reason packs are meant to be opt-in.
 
 ---
 
 ## The artifacts, and why there are two kinds
 
-This is the part most worth understanding, because it decides where things go and what stays true.
+Cantrip deliberately separates two kinds of artifact — source-of-truth docs describing what the
+system does today, and temporal docs describing a change you are making to it.
 
 | | Holds | Stays true until |
 |---|---|---|
 | `_features/<area>.md` | **What the system does now**, as Given/When/Then behavior in business language, one file per capability | the behavior itself changes |
 | `_work/<slug>/` | **How one change got made** — its discovery, spec, plan, notes | it ships; then it moves to `_work/shipped/` |
 
-**Grouped by lifecycle, not by type.** A capability doc and a spec are both markdown full of scenarios,
-so a type-based layout would file them together — and then half of it silently rots while the other
-half stays current, with no way to tell which is which.
+**Grouped by lifecycle, not by type.** A capability doc and a spec are both markdown full of
+scenarios, so a type-based layout would file them together — mixing source-of-truth docs in with
+requirements that stopped being true the day they shipped, and no way to tell which is which.
 
 The split is what makes the docs trustworthy:
 

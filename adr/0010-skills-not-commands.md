@@ -1,7 +1,15 @@
 # 0010. Ship skills, not commands — and encode invocation posture in frontmatter
 
 **Status:** Accepted — backfilled 2026-08-04; decided before this repository existed
-**Date:** 2026-07-30 (decision) / 2026-08-04 (recorded)
+**Date:** 2026-07-30 (decision) / 2026-08-04 (recorded) — amended 2026-08-18
+
+> **Amended, not superseded.** The spell budget recorded in the last consequence below was stated as
+> 6–8; it is now a working ceiling of ten. The reasoning it served is untouched — a spellbook has to
+> stay learnable, and the answer to crowding is still to merge two stages or add a router rather than
+> keep appending — but a budget already at its limit makes the first genuinely new stage a
+> documentation rewrite, which is a cost the aim was never meant to impose. Nothing about posture, the
+> verb/noun split, or the directory convention changes. A relaxed budget is not a reversed decision, so
+> this is an amendment under [adr/README.md](README.md).
 
 ## Context
 
@@ -49,6 +57,8 @@ Neither was anticipated.
 - **Reference descriptions become load-bearing.** A reference with a weak description silently never
   loads, and the symptom is merely-generic output rather than an error — which is why descriptions here
   are long, and why the same rigor is demanded of pack skills (ADR 0003).
-- Keeping spells at 6–8 was the stated aim. The workflow set is eight; two further spells —
+- Keeping spells at 6–8 was the stated aim; **amended 2026-08-18 to a working ceiling of ten**, so
+  that a genuinely new stage has somewhere to land. The workflow set is eight; two further spells —
   `update-toolkit` and `setup` — are maintenance and onboarding rather than workflow stages, and are
-  counted separately for that reason.
+  counted separately for that reason. Past the ceiling the answer is to merge two stages or add a
+  router, not to append another.
