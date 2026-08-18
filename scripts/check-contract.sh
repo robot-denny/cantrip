@@ -684,6 +684,49 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 15. Every documented install command disables telemetry (ADR 0009)
+# ---------------------------------------------------------------------------
+# ADR 0009: the installer uploads skill file contents by default, so every invocation a
+# reader might copy sets DISABLE_TELEMETRY=1. The README's Quick start shipped four bare
+# commands for the toolkit's whole life, and check-install printed four more — found by a
+# consumer running the toolkit on client work, not by review.
+#
+# An ALLOWLIST of live authored surface, deliberately not a repo-wide sweep with exclusions.
+# Records keep the command as it was run: CHANGELOG.md, adr/, and _work/ are history, and a
+# denylist over them would false-fail the moment a new archive appears. A gate that cries
+# wolf gets silenced, so this one fails silent instead: a documented invocation in a location
+# nobody added here is a coverage gap, not a broken build. Add the location when you make one.
+begin "documented install commands disable telemetry"
+INVOCATION="npx skills (add|update)"
+install_doc_files() {
+  local f
+  for f in README.md AGENTS.md CLAUDE.md; do [[ -f "$f" ]] && printf '%s\n' "$f"; done
+  [[ -d docs ]] && find docs -maxdepth 1 -name '*.md' -type f -print 2>/dev/null
+  # scripts/ is pruned from the repo-wide scans (it names the patterns it hunts), but the
+  # hints check-install PRINTS are commands a user runs at the moment something is wrong --
+  # the highest-value target here. Only this script is skipped, and only because the grep
+  # below would match itself.
+  [[ -d scripts ]] && find scripts -maxdepth 1 -name '*.sh' -type f \
+    ! -name 'check-contract.sh' -print 2>/dev/null
+  skill_files
+}
+hits=$(
+  while IFS= read -r f; do
+    [[ -n "$f" ]] || continue
+    grep -inE "$INVOCATION" "$f" 2>/dev/null | grep -v 'DISABLE_TELEMETRY' | sed "s|^|$f:|"
+  done < <(install_doc_files)
+)
+if [[ -n "$hits" ]]; then
+  report_fail "$CURRENT" \
+    "ADR 0009: the installer uploads skill file contents, so a copied command must disable it." \
+    "Prefix the invocation with DISABLE_TELEMETRY=1." \
+    "If this line is a historical record rather than a command to run, it belongs in CHANGELOG.md, adr/, or _work/ — not here." \
+    "" "$hits"
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n'
 if [[ $FAILURES -eq 0 ]]; then
   printf '\033[32m%s checks passed.\033[0m\n' "$CHECKS_RUN"
