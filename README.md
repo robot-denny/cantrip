@@ -40,12 +40,16 @@ explore → spec → plan → implement-step → feature → code-review → com
 
 ```bash
 # 1. Install the core workflow — works on any project, no stack assumptions
-npx skills add robot-denny/cantrip/skills/core --all
+#    DISABLE_TELEMETRY=1 stops the installer uploading your skill files; keep it on every command
+DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --all
 
 # 2. Add a stack pack only if one fits — they are independent, take any combination
-npx skills add robot-denny/cantrip/skills/umbraco-17 --all     # Umbraco 17 CMS work
-npx skills add robot-denny/cantrip/skills/umbraco-cloud --all  # Umbraco Deploy, Cloud or on-premise
-npx skills add robot-denny/cantrip/skills/dotnet --all         # C# and .NET, CMS or not
+#    Umbraco 17 CMS work
+DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/umbraco-17 --all
+#    Umbraco Deploy, Cloud or on-premise
+DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/umbraco-cloud --all
+#    C# and .NET, CMS or not
+DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/dotnet --all
 
 # 3. Configure it — reads what your repo already answers, asks only for the rest
 /setup
@@ -384,7 +388,7 @@ If you only use Claude Code, this is cleaner — same skills, assets and agents 
 location, an existing `skills/` folder left alone, and **no symlinks anywhere**:
 
 ```bash
-npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -y
+DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -y
 ```
 
 | | `--all` | `--skill '*' --agent claude-code` |
@@ -411,8 +415,10 @@ has one, the installer **merges** into it rather than replacing it.
 
 Note that `--all` overrides a preceding `--skill`, so `--skill workflow --all` installs everything.
 
-> `npx skills` uploads skill file contents as telemetry by default. Prefix with `DISABLE_TELEMETRY=1`
-> if that matters to you.
+> **Every install command in this README sets `DISABLE_TELEMETRY=1`**, because `npx skills` uploads
+> skill file contents by default. Keep the prefix on any command you copy — a repo holding client work,
+> internal architecture, or unreleased plans should not be publishing its skill files
+> ([ADR 0009](adr/0009-skills-cli-role-split.md)).
 
 ### If your project already has commands with these names
 

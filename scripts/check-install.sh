@@ -118,12 +118,12 @@ WIRED_NAMES=()
 reinstall_hint() {   # reinstall_hint <skill-name>
   local n
   for n in "${ROSTER_CORE[@]}"; do
-    [[ "$n" == "$1" ]] && { printf 'npx skills add robot-denny/cantrip/skills/core --skill %s' "$1"; return; }
+    [[ "$n" == "$1" ]] && { printf 'DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --skill %s' "$1"; return; }
   done
   for n in "${PACK_SOURCE[@]}"; do
-    [[ "${n%%|*}" == "$1" ]] && { printf 'npx skills add robot-denny/cantrip/skills/%s --skill %s' "${n##*|}" "$1"; return; }
+    [[ "${n%%|*}" == "$1" ]] && { printf 'DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/%s --skill %s' "${n##*|}" "$1"; return; }
   done
-  printf 'reinstall it from the pack that provides it — npx skills add robot-denny/cantrip/skills/<pack> --all'
+  printf 'reinstall it from the pack that provides it — DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/<pack> --all'
 }
 
 in_roster() {
@@ -136,7 +136,7 @@ in_roster() {
 # 1. Skills: present, readable, and whole
 # ---------------------------------------------------------------------------
 if [[ ! -d $SKILLS_DIR ]]; then
-  BROKEN+=("no $SKILLS_DIR directory — nothing is installed. Install with: npx skills add robot-denny/cantrip/skills/core --all")
+  BROKEN+=("no $SKILLS_DIR directory — nothing is installed. Install with: DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --all")
 else
   while IFS= read -r entry; do
     [[ -z "$entry" ]] && continue
