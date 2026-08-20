@@ -18,8 +18,9 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   with posture in frontmatter, and the lifecycle-based file layout. The reasoning now lives with the code
   instead of in a document consumers never see.
 - **ADR 0007** — repository ownership stays as-is, with the costs of a later move recorded.
-- The spell census is stated explicitly: **eight workflow spells**, held deliberately, plus `/setup` and
-  `/update-toolkit` counted separately as configuration and maintenance rather than workflow stages.
+- The spell census is stated explicitly: **eight workflow spells** against a working ceiling of ten, plus
+  `/setup` and `/update-toolkit` counted separately as configuration and maintenance rather than
+  workflow stages.
 
 ### Added
 
@@ -355,6 +356,20 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - **The README, `docs/layout.md`, and the layer table carry three packs**, each labelled with the axis it
   is cut on — a CMS major, a product that spans majors, a language that only adds — since which axis a
   pack is cut on is what decides whether its name carries a version.
+
+- **The spell budget is a working ceiling of ten, not a stated aim of 6–8**
+  ([ADR 0010](adr/0010-skills-not-commands.md), amended). The workflow set is still eight and the
+  principle is unchanged — past the ceiling, merge two stages or add a router rather than append
+  another — but a budget sitting at its limit would have made the next genuine stage a documentation
+  rewrite, which the aim was never meant to cost. `AGENTS.md` carries the new number and check 16
+  holds it, so it cannot drift back. **Nothing here arrives by update** — the budget governs what this
+  repository ships, not anything installed.
+- **The README describes the toolkit that exists.** `design-system-authoring` is a method for writing
+  your project's own design-system skill, not something that learns your conventions as you build; the
+  reviewer contract lists all four of its pillars, evidence included; and the packs section says plainly
+  that core assumes no stack while the three packs shipped today happen to cover Umbraco and .NET.
+  Prose is re-wrapped to the ~100 column convention the other markdown files use. **Documentation only**
+  — README and `adr/` are not vendored into a consuming project.
 
 ### Fixed
 
