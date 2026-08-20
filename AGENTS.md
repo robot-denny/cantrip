@@ -58,7 +58,9 @@ be true; it does not describe one organization's way of working. Check 1b enforc
 
 - Verbs are spells, nouns are reference.
 - Spells chain by suggestion (`Next:` line), never by invoking another spell.
-- Keep the core spellbook to 6–8 spells; add a router spell before letting the count creep.
+- Keep the core spellbook small — **ten workflow spells is the working ceiling**; merge two stages
+  or add a router before letting the count creep ([ADR 0010](adr/0010-skills-not-commands.md)).
+  `/setup` and `/update-toolkit` are configuration and maintenance, and count separately.
 - Record shaping decisions as ADRs in [adr/](adr/); log user-visible changes in
   [CHANGELOG.md](CHANGELOG.md).
 

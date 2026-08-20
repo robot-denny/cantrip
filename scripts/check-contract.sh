@@ -12,11 +12,12 @@
 # to every file here, not just shipped skills. Checks 2-10 apply to shipped units only.
 # Check 12 spans both: it pairs a declaration inside a shipped pack against the README.
 #
-# Checks 11 and 13 are the exceptions in the other direction — they inspect this repo rather
-# than what it ships. Both guard a hardcoded list that has to be kept in step with
-# skills/core by hand: 11 the self-hosting symlinks, 13 the install checker's roster. Each
-# was added after that list had already drifted, and each drifted in the same silent way,
-# reporting success for a skill that was not there.
+# Checks 11, 13, and 16 are the exceptions in the other direction — they inspect this repo
+# rather than what it ships. Each guards a hardcoded list that has to be kept in step with
+# skills/core by hand: 11 the self-hosting symlinks, 13 the install checker's roster, 16 the
+# spells the budget does not count. 11 and 13 were both added after that list had already
+# drifted, and each drifted in the same silent way, reporting success for a skill that was
+# not there.
 
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
@@ -722,6 +723,51 @@ if [[ -n "$hits" ]]; then
     "Prefix the invocation with DISABLE_TELEMETRY=1." \
     "If this line is a historical record rather than a command to run, it belongs in CHANGELOG.md, adr/, or _work/ — not here." \
     "" "$hits"
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
+# 16. The workflow spellbook stays inside its budget (this repo only)
+# ---------------------------------------------------------------------------
+# ADR 0010 sets a working ceiling of ten workflow spells, amended up from a stated aim of
+# 6-8 so a genuinely new stage has somewhere to land. A budget stated only in prose is one
+# an author discovers they have broken after the spell is written, reviewed, and documented
+# -- which is the point at which nobody merges two stages instead.
+#
+# The ceiling is on WORKFLOW spells. /setup and /update-toolkit are configuration and
+# maintenance, counted separately by the same ADR, so they are excluded by name. That list
+# is hardcoded and will drift the way checks 11 and 13 drifted: a third non-workflow spell
+# would be counted as a stage and eat budget it does not use. Where that list is wrong the
+# comparison fails loud with the count printed rather than passing quietly, which is the safe
+# direction for the count. The check as a whole is not silent-pass-proof: like checks 11 and
+# 13 it reports ok when the directory it inspects is absent, so moving skills/core/spellbook
+# retires this gate without saying so.
+begin "workflow spellbook stays inside its budget"
+SPELL_CEILING=10
+NON_WORKFLOW=(setup update-toolkit)
+if [[ -d skills/core/spellbook ]]; then
+  workflow_spells=""
+  for entry in skills/core/spellbook/*/; do
+    [[ -f "$entry/SKILL.md" ]] || continue
+    name="${entry%/}"; name="${name##*/}"
+    skip=0
+    for excluded in "${NON_WORKFLOW[@]}"; do
+      [[ "$name" == "$excluded" ]] && skip=1
+    done
+    (( skip )) || workflow_spells+="$name"$'\n'
+  done
+  spell_count=$(printf '%s' "$workflow_spells" | grep -c . || true)
+
+  if (( spell_count > SPELL_CEILING )); then
+    report_fail "$CURRENT" \
+      "ADR 0010: $spell_count workflow spells exceeds the working ceiling of $SPELL_CEILING." \
+      "Merge two stages, or add a router spell, rather than appending another." \
+      "If the ceiling itself should move, amend ADR 0010 first — the number lives there." \
+      "" "$(printf '%s' "$workflow_spells" | sed 's/^/  - /')"
+  else
+    report_pass "$CURRENT"
+  fi
 else
   report_pass "$CURRENT"
 fi
