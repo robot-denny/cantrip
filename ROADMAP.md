@@ -10,21 +10,56 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-The pack-boundary split is landing — built, reviewed, and on `pack-boundaries`, not yet merged or
-archived. Its working directory is `_work/pack-boundaries-and-succession/`; it moves under
-`_work/shipped/` when the increment closes.
+The pack-boundary split merged on 2026-08-17 and is awaiting archival — its working directory is
+still `_work/pack-boundaries-and-succession/` and moves under `_work/shipped/` when the increment
+closes. Nothing else is in flight.
 
 ---
 
 ## Next
 
+**Schema extraction has one rung missing.** `umbraco-17-feature-backfill` guards the absence of
+`.uda` files and routes straight to MCP against a running instance — but a uSync project serializes
+the same tabs, groups, sort order, and compositions to disk, so the guidance sends it to a live API
+for something already in the repository. Adding the uSync rung is a paragraph in an existing
+reference and is worth doing before anything else reads schema, since everything below inherits the
+gap. The two formats carry the same information in different shapes: compositions arrive as aliases
+under uSync and as UDIs under Deploy, so whatever reads either should normalize on the alias.
+
+**Editor-facing guides for a CMS project.** A styleguide, a component guide, and per-component
+how-to guides are what a client actually receives, and they cost enough per project to be first
+against the wall when scope tightens — which is the argument for automating them rather than for
+cutting them. The shape that makes them cheap: one extraction producing a structured dossier per
+component, two renderings from it (a short entry for the component guide, the full property tables
+for the how-to guide), and an inventory audit reconciling what exists in code against what is
+documented. The audit is the half that survives contact with a real project — on a new site the
+report stays short, and on an existing one its first run is the backlog. Extraction is an adapter
+seam rather than a Deploy requirement, per [ADR 0006](adr/0006-no-unguarded-preconditions.md):
+`.uda`, uSync, live API, then a degraded read from generated models, with an adapter that finds no
+properties failing loudly rather than reporting an empty set — a silent-empty read is what makes an
+audit report no drift on a project it could not parse. Which adapter runs is a `stack.md` slot with
+a `**Detect:**` recipe ([ADR 0014](adr/0014-dotnet-pack-and-the-detection-line.md)). Property tables
+are a deterministic transform and must never depend on a model; only purpose, when-to-use, and
+warnings need one, which is what lets the whole thing degrade to files when an AI service is absent.
+
+**A spell for tests.** The gap the spell budget was raised for. A feature doc already carries a Test
+Coverage table mapping each scenario to a test file and a status, which is the contract such a spell
+would serve: read the scenarios, find what is uncovered, write and run, update the table. That makes
+it a pair with `/feature` — both operate on the living doc — rather than a new stage in the chain,
+and it would be the first QA-owned verb in the spellbook. Whether it is a ninth spell or a mode on
+`/feature` is the open question, and the answer decides whether the count goes to nine or stays at
+eight.
+
 **Pack-authoring meta-skill.** The direct parallel to `design-system-authoring`: a model-invoked
-reference that fires when someone sets out to add a pack, turning [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md)'s
-rules into something followed rather than remembered. This is the highest-leverage item here,
-because every other pack-related cost is paid per pack until it exists — and the ADR now carries
-four more rules than it did, since splitting a pack surfaced the variant axis, the replacement
-operation, the criteria-versus-recipes seam, and shared-slot registration. Two of the boundary tests
-are applied by hand and cannot be gated, so the authoring skill is where they get read.
+reference that fires when someone sets out to add a pack, turning [ADR
+0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md)'s rules into something followed rather than
+remembered. This is the highest-leverage item here, because every other pack-related cost is paid
+per pack until it exists — and the ADR now carries four more rules than it did, since splitting a
+pack surfaced the variant axis, the replacement operation, the criteria-versus-recipes seam, and
+shared-slot registration. Two of the boundary tests are applied by hand and cannot be gated, so the
+authoring skill is where they get read. It is also where one sentence settles whether a pack may be
+cut on an organization's own conventions and kept private — a question that costs a sentence there
+and would cost an ADR anywhere else.
 
 **A moved unit breaks an install silently.** Renaming `architecture-audit` to `codebase-audit` and
 moving it to another pack left every existing lockfile pinning a path that no longer resolves, and
@@ -54,6 +89,11 @@ planted defect should produce, and nothing runs them. Their value is highest whi
 and lowest as regression protection, so the answer probably falls out of the authoring skill above
 rather than being a separate piece of work. Until then they are a specification for a test, and the
 feature doc says so.
+
+**Pack spell counts are ungated.** Contract check 16 holds the core spellbook to ten workflow spells
+and says nothing about packs, so a pack could ship a dozen spells and nothing would notice. Whether
+that is deliberate — a pack serves one stack and its spells arrive only with it — or a gap the
+ceiling implies, is unasked rather than answered.
 
 **A pack conformance check.** `scripts/check-pack.sh` — could someone outside this repository ship a
 pack that works? Only worth building if third-party packs are ever a goal; noted so the question is
@@ -99,6 +139,9 @@ on both sides.
 
 ## Recently shipped
 
+- **2026-08-24** — The spell budget as a working ceiling of ten rather than a stated aim of 6–8,
+carried into `AGENTS.md` and held by contract check 16 ([ADR 0010](adr/0010-skills-not-commands.md),
+amended), plus the README corrections that prompted it
 - **2026-08-17** — Pack boundaries and succession: one pack holding three subjects became three packs,
   a versionless `umbraco-cloud` for Deploy and the codebase audit into `dotnet`, plus the naming rule
   that lets a future pack replace a current one and a gate holding the audit's portable half portable
