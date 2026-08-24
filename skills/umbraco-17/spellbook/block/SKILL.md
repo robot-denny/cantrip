@@ -110,10 +110,13 @@ current state before deciding.
 **Without that spell**, read the current state directly — it is all local. Where the project uses
 Deploy, each block-editor data type's `Configuration.blocks[]` *is* its palette, listing element types
 by key; resolve each key against the `Udi` in the `document-type__*.uda` files to read them as aliases.
-Where there are no `*.uda` files the project is not using Deploy, so read the same data types from the
-running instance via MCP instead. Either way, compare only palettes that already share a block — a
-palette offering just one block is normally scoped to a single parent, so measuring it against a
-page-body palette reports noise rather than drift.
+Where there are no `*.uda` files the project is not using Deploy — read the same data types from
+`uSync/*/DataTypes/*.config`, whose `<Config>` payload carries the same block list, and go to the
+running instance via MCP only when no config file matches this data type. A `DataTypes/` folder with
+no match for it is a partial export, not an empty block list — say so rather than reporting no
+palette. Either way, compare only palettes that already share a block — a palette offering just one
+block is normally scoped to a single parent, so measuring it against a page-body palette reports
+noise rather than drift.
 
 ## Step 5 — Author the view by copying the closest existing block
 
@@ -128,7 +131,8 @@ these are common and valid:
 **Slot:** `.agents/config/paths.md` → `## Umbraco`
 **If empty:** locate each by search — the Deploy revision directory by its `*.uda` files, views by
 their `*.cshtml` files, and the extension root by its `umbraco-package.json`. If no `*.uda` files
-exist, the project is not using Deploy — read schema from the running instance via MCP instead.
+exist, check `uSync/*/ContentTypes/*.config` for the same schema before falling back to MCP; a folder
+with no matching file is a partial export, not an empty schema.
 
 **If the project has no blocks yet** — a greenfield build — there is nothing to copy, and inventing a
 convention here would set one by accident that every later block inherits. Instead, in order:

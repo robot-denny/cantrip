@@ -271,6 +271,17 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 ### Changed
 
+- **Schema reading gained a uSync rung, and this changes four pack files you may have vendored.**
+  `umbraco-17-feature-backfill`, `umbraco-17-planning`, `/block`, and `/check-uda` all guarded the
+  absence of `.uda` files by routing to a live instance via MCP — so a uSync project was sent to an
+  API for schema already committed to its own repository. The ladder is now Deploy → uSync → MCP,
+  and it routes on a *matching file* rather than a folder's existence, because a uSync folder with
+  no file for the type you asked about is a partial export rather than an empty schema.
+  `umbraco-17-feature-backfill` also carries a Deploy-to-uSync field mapping, and the rule that
+  **compositions normalize on the alias** whichever format was read — Deploy gives UDIs, uSync gives
+  aliases, so a reader that keeps whichever it found works on one project and breaks on the other.
+  The uSync element names are written from uSync's serializer format and are marked in the file as
+  unverified against a real uSync project.
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and
   `skills/core/reference/` — which lets the contract gate enforce invocation posture by path.
 - Templates moved from a root directory into the `workflow` skill, so they install with the

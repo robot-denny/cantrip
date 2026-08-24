@@ -11,20 +11,13 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 ## Now
 
 **Nothing in flight.** The pack-boundary split closed on 2026-08-17 and is archived under
-`_work/shipped/pack-boundaries-and-succession/`. Next opens with the uSync rung, which is both the
-smallest item there and the one the guides work depends on.
+`_work/shipped/pack-boundaries-and-succession/`. The uSync rung that Next opened with closed on
+2026-08-24, so the guides work no longer has a prerequisite ahead of it and is the natural next
+pickup.
 
 ---
 
 ## Next
-
-**Schema extraction has one rung missing.** `umbraco-17-feature-backfill` guards the absence of
-`.uda` files and routes straight to MCP against a running instance — but a uSync project serializes
-the same tabs, groups, sort order, and compositions to disk, so the guidance sends it to a live API
-for something already in the repository. Adding the uSync rung is a paragraph in an existing
-reference and is worth doing before anything else reads schema, since everything below inherits the
-gap. The two formats carry the same information in different shapes: compositions arrive as aliases
-under uSync and as UDIs under Deploy, so whatever reads either should normalize on the alias.
 
 **Editor-facing guides for a CMS project.** A styleguide, a component guide, and per-component
 how-to guides are what a client actually receives, and they cost enough per project to be first
@@ -37,8 +30,10 @@ report stays short, and on an existing one its first run is the backlog. Extract
 seam rather than a Deploy requirement, per [ADR 0006](adr/0006-no-unguarded-preconditions.md):
 `.uda`, uSync, live API, then a degraded read from generated models, with an adapter that finds no
 properties failing loudly rather than reporting an empty set — a silent-empty read is what makes an
-audit report no drift on a project it could not parse. Which adapter runs is a `stack.md` slot with
-a `**Detect:**` recipe ([ADR 0014](adr/0014-dotnet-pack-and-the-detection-line.md)). Property tables
+audit report no drift on a project it could not parse. The first two rungs and the fail-loudly rule
+landed on 2026-08-24 as guidance; what remains here is an adapter that implements them. Which
+adapter runs is a `stack.md` slot with a `**Detect:**` recipe
+([ADR 0014](adr/0014-dotnet-pack-and-the-detection-line.md)). Property tables
 are a deterministic transform and must never depend on a model; only purpose, when-to-use, and
 warnings need one, which is what lets the whole thing degrade to files when an AI service is absent.
 
@@ -73,6 +68,12 @@ caught by greps run by hand — a pack restating core's reasoning instead of cit
 sibling pack's file path, duplicating its own project-owned list across two units, drifting off the
 shared severity scale. Each is deterministic and cheap, and each currently depends on a reviewer
 happening to think of it. As checks they run on every commit and cost nothing per additional pack.
+A fifth candidate arrived with the uSync rung: no shipped file should route to a live API for schema
+without first naming the on-disk formats. It was not built as a one-off, because the guides item's
+ladder grows a fourth rung that would force the check to be rewritten. Check 9 is not a substitute
+for it, and the rung proved so: the first fix was applied to the four gated fallbacks and missed an
+ungated prose paragraph eighteen lines from one of them, which review caught and no gate would
+have.
 
 **A contributor path for packs.** The intent is that people outside this repository write packs for
 the stacks and versions they work in — an `umbraco-13` beside the `umbraco-17`, an Episerver, a
@@ -139,6 +140,12 @@ on both sides.
 
 ## Recently shipped
 
+- **2026-08-24** — The uSync rung in schema extraction: four pack files across `umbraco-17` and
+  `umbraco-cloud` stopped sending a uSync project to a live API for schema already in its repository,
+  a Deploy-to-uSync field mapping and the normalize-on-the-alias rule landed in
+  `umbraco-17-feature-backfill`, and the ladder routes on a matching file so a partial export reports
+  itself instead of reading as an empty schema. The uSync element names are marked unverified pending
+  a real uSync project
 - **2026-08-24** — The spell budget as a working ceiling of ten rather than a stated aim of 6–8,
 carried into `AGENTS.md` and held by contract check 16 ([ADR 0010](adr/0010-skills-not-commands.md),
 amended), plus the README corrections that prompted it
