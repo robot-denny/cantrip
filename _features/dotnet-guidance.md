@@ -22,8 +22,9 @@ The per-feature mini-roadmap: shipped increments, planned increments, and parkin
 Newest planned items first. When an item ships, flip the checkbox and point it at the archived
 increment.
 
-- [x] 2026-08-17 — The codebase audit joined this pack, so a .NET project with no content management
-      system can get a structural assessment (`_work/pack-boundaries-and-succession/spec.md`)
+- [x] 2026-08-17 — The codebase audit joined this pack, so a .NET project with no content
+      management system can get a structural assessment
+      (`_work/shipped/pack-boundaries-and-succession/spec.md`)
 - [x] 2026-08-14 — The .NET pack, its two units, and the detection line it enables
       (`_work/shipped/dotnet-pack/spec.md`)
 - [x] **Prerequisite, landed 2026-08-13**: two language-agnostic review failure modes moved into core.

@@ -1,6 +1,6 @@
 # Plan: Pack Boundaries and Succession
 
-**Spec**: `_work/pack-boundaries-and-succession/spec.md`
+**Spec**: `_work/shipped/pack-boundaries-and-succession/spec.md`
 **Branch**: pack-boundaries
 **Work type**: change-to install-verification
 **Feature doc**: `_features/install-verification.md` — plus a second pass on
@@ -15,7 +15,7 @@ ADR 0015.
 
 Nothing is broken today — both real projects are Umbraco 17 *and* Cloud. That sets the bar for
 scope: **reorganize and document, do not rewrite guidance.** Discovery is at
-`_work/pack-boundaries-and-succession/discovery.md`.
+`_work/shipped/pack-boundaries-and-succession/discovery.md`.
 
 The unit of work is the skill unit — a directory with a `SKILL.md`, registered in
 `scripts/check-install.sh`'s rosters and gated by `scripts/check-contract.sh`.
@@ -63,7 +63,7 @@ Each step is designed to be completed independently in its own context window.
 
 ### Step 1 — Create the `umbraco-cloud` pack
 
-> **Prompt**: Implement Step 1 of `_work/pack-boundaries-and-succession/plan.md`. Create a new
+> **Prompt**: Implement Step 1 of `_work/shipped/pack-boundaries-and-succession/plan.md`. Create a new
 > versionless pack at `skills/umbraco-cloud/`. Move `skills/umbraco-17/spellbook/check-uda/` to
 > `skills/umbraco-cloud/spellbook/check-uda/` with `git mv`. Create a new reference unit
 > `skills/umbraco-cloud/reference/umbraco-deploy-facts/SKILL.md` that merges the content of
@@ -102,7 +102,7 @@ Each step is designed to be completed independently in its own context window.
 
 ### Step 2 — Register the pack and prove it installs alone
 
-> **Prompt**: Implement Step 2 of `_work/pack-boundaries-and-succession/plan.md`. In
+> **Prompt**: Implement Step 2 of `_work/shipped/pack-boundaries-and-succession/plan.md`. In
 > `scripts/check-install.sh`: add `check-uda` and `umbraco-deploy-facts` to `ROSTER_PACK` and remove
 > nothing else yet; add the missing slot entry `conventions.md|Block palette parity|check-uda` to
 > `PACK_SLOTS`; and change `reinstall_hint()` so a pack unit yields a runnable command naming its
@@ -133,7 +133,7 @@ Each step is designed to be completed independently in its own context window.
 
 ### Step 3 — Extract the audit into the `dotnet` pack
 
-> **Prompt**: Implement Step 3 of `_work/pack-boundaries-and-succession/plan.md`. `git mv`
+> **Prompt**: Implement Step 3 of `_work/shipped/pack-boundaries-and-succession/plan.md`. `git mv`
 > `skills/umbraco-17/reference/architecture-audit/` to `skills/dotnet/reference/codebase-audit/` and
 > rename the unit to `codebase-audit` in its frontmatter. Move two references *out* to
 > `skills/umbraco-17/reference/umbraco-17-starter-facts/references/`:
@@ -171,7 +171,7 @@ Each step is designed to be completed independently in its own context window.
 
 ### Step 4 — Close the two CMS-pack loose ends
 
-> **Prompt**: Implement Step 4 of `_work/pack-boundaries-and-succession/plan.md`. Two edits in
+> **Prompt**: Implement Step 4 of `_work/shipped/pack-boundaries-and-succession/plan.md`. Two edits in
 > `skills/umbraco-17/`. First, `spellbook/umbraco-edit/SKILL.md` depends on the Management API,
 > which exists only from Umbraco 14, and says so nowhere — add a version-floor annotation in the
 > body, per ADR 0015 §3's annotate-per-feature rule. Second, `spellbook/block/SKILL.md` references
@@ -198,7 +198,7 @@ something absent is a silent loss of guidance, which is the failure this step ex
 
 ### Step 5 — Record the rules in the ADR and the docs
 
-> **Prompt**: Implement Step 5 of `_work/pack-boundaries-and-succession/plan.md`. Amend
+> **Prompt**: Implement Step 5 of `_work/shipped/pack-boundaries-and-succession/plan.md`. Amend
 > `adr/0015-what-a-stack-pack-is-and-what-it-owes.md` with two things it lacks: the **variant axis**
 > (a pack may be wrong for a project by host or product, not only by version — `check-uda` on a
 > non-Cloud install is the worked example) and the **replacement operation** (how a future pack

@@ -19,7 +19,7 @@ increment.
 
 - [x] 2026-08-17 — Verification across several packs: a pack verifies alone, a reinstall hint names
   the pack that ships a unit, and a setting read by two packs is counted once
-  (`_work/pack-boundaries-and-succession/spec.md`)
+  (`_work/shipped/pack-boundaries-and-succession/spec.md`)
 - [x] 2026-08-03 — Install verification check (`_work/shipped/install-verification/spec.md`)
 - [ ] Parking lot: verify slot *content* rather than presence, if presence proves too weak in practice
 - [ ] Parking lot: tell a unit that *moved* from one that was *deleted* — a consumer's records can pin

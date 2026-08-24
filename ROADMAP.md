@@ -10,9 +10,9 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-The pack-boundary split merged on 2026-08-17 and is awaiting archival — its working directory is
-still `_work/pack-boundaries-and-succession/` and moves under `_work/shipped/` when the increment
-closes. Nothing else is in flight.
+**Nothing in flight.** The pack-boundary split closed on 2026-08-17 and is archived under
+`_work/shipped/pack-boundaries-and-succession/`. Next opens with the uSync rung, which is both the
+smallest item there and the one the guides work depends on.
 
 ---
 
@@ -66,7 +66,7 @@ moving it to another pack left every existing lockfile pinning a path that no lo
 neither the installer nor `/update-toolkit` tells a move apart from a deletion. Today's remedy is a
 manual reinstall from the new pack, which nobody is told to run. Worth deciding whether the fix is a
 migration note per release, a redirect the checker understands, or an accepted cost of vendoring —
-left open in `_work/pack-boundaries-and-succession/spec.md`.
+left open in `_work/shipped/pack-boundaries-and-succession/spec.md`.
 
 **Structural gate checks for pack discipline.** Four of the `dotnet` increment's real findings were
 caught by greps run by hand — a pack restating core's reasoning instead of citing it, naming a
@@ -145,7 +145,7 @@ amended), plus the README corrections that prompted it
 - **2026-08-17** — Pack boundaries and succession: one pack holding three subjects became three packs,
   a versionless `umbraco-cloud` for Deploy and the codebase audit into `dotnet`, plus the naming rule
   that lets a future pack replace a current one and a gate holding the audit's portable half portable
-  (`_work/pack-boundaries-and-succession/spec.md`,
+  (`_work/shipped/pack-boundaries-and-succession/spec.md`,
   [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) §§4–7)
 - **2026-08-15** — The `dotnet` pack: authoring and review guidance for C#, an optional detection
   line letting a pack tell `/setup` how to read an answer from the repository, and a gated pack
