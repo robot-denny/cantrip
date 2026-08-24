@@ -27,7 +27,7 @@ what it is about. This increment moves each unit to the pack its subject implies
 naming rule that lets a future pack replace a current one, and writes down the boundary test that
 was previously applied by taste.
 
-Discovery is at `_work/pack-boundaries-and-succession/discovery.md` and its framing is not repeated
+Discovery is at `_work/shipped/pack-boundaries-and-succession/discovery.md` and its framing is not repeated
 here. Two of its findings govern this spec:
 
 - **The pain is forward-looking, not observed.** Both real projects are Umbraco 17 *and* Cloud, so
