@@ -27,13 +27,14 @@ Useful MCP tools for planning:
 **Record any IDs or aliases discovered here in the plan's Key Decisions section**, so
 implementers don't need to look them up again.
 
-The `.uda` files remain the committed source of truth for property structure.
+The committed schema files remain the source of truth for property structure — `.uda` under
+Deploy, `uSync/*/ContentTypes/*.config` under uSync.
 
 **Slot:** `.agents/config/paths.md` → `## Umbraco`
 **If empty:** locate each by search — the Deploy revision directory by its `*.uda` files,
 views by their `*.cshtml` files, and the extension root by its `umbraco-package.json`. If no
-`*.uda` files exist, the project is not using Deploy — read schema from the running instance
-via MCP instead.
+`*.uda` files exist, check `uSync/*/ContentTypes/*.config` for the same schema before falling
+back to MCP; a folder with no matching file is a partial export, not an empty schema.
 
 ## Route backoffice extension work to its authoritative skill
 
@@ -95,7 +96,7 @@ what keeps core technology-agnostic while still making an external dependency vi
 
 | Layer | Governing constraint |
 |---|---|
-| **Schema** | `.uda` files are the source of truth. Author via the backoffice or Management API, not by hand-editing. **Schema leads** — nothing downstream compiles against types that don't exist. |
+| **Schema** | The committed schema files are the source of truth — `.uda` under Deploy, uSync `.config` under uSync. Author via the backoffice or Management API, not by hand-editing. **Schema leads** — nothing downstream compiles against types that don't exist. |
 | **Slice (block or page type)** | A view model plus its Razor view, and for page types a controller. Follow the closest existing analogue in the project rather than a generic MVC split. If the project has no analogue yet, say so in Key Decisions and establish the shape deliberately rather than assuming one — the first slice sets the convention. |
 | **Client-side components** | Built and bundled separately. Prefer a plain component; reach for a framework runtime only when reactivity justifies the cost. |
 | **Backoffice extension** | Loaded by the backoffice host via a package manifest — see the routing table above. |

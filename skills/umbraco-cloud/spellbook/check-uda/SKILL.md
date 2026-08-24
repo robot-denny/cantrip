@@ -32,7 +32,8 @@ to git.
 **Slot:** `.agents/config/paths.md` → `## Umbraco`
 **If empty:** locate each by search — the Deploy revision directory by its `*.uda` files, views by
 their `*.cshtml` files, and the extension root by its `umbraco-package.json`. If no `*.uda` files
-exist, the project is not using Deploy — read schema from the running instance via MCP instead.
+exist, check `uSync/*/ContentTypes/*.config` for the same schema before falling back to MCP; a folder
+with no matching file is a partial export, not an empty schema.
 
 ## Step 0 — Live credentials (optional, enables Steps 5+)
 
