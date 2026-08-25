@@ -136,6 +136,14 @@ CLIENT_PATTERN+='|UmbAI_Search|openai-embeddings|text-embedding-3-small'
 CLIENT_PATTERN+='|claude/(feature|fix)/|migrate-ai-search|remove-seotoolkit|fix-e2e-dev-only'
 CLIENT_PATTERN+='|ai-search-editor-content|blockParity|_umbracoApi'
 CLIENT_PATTERN+='|\bcounty\b|\bdepartment\b'
+# Third extraction source, added 2026-08-25: the uSync reference project. Org and solution names,
+# plus the block aliases distinctive enough to identify it if they were ever copied verbatim.
+# Deliberately excludes its generic aliases (articlePage, category, location, quoteBlock) — those
+# collide with this repo's own synthetic examples, and a pattern that fires on our own worked
+# examples gets deleted rather than obeyed.
+CLIENT_PATTERN+='|Houlihan|Lokey'
+CLIENT_PATTERN+='|twoColumn2575|mNTPCategorySelector|globalBlockSelectorComposition'
+CLIENT_PATTERN+='|headingLabelSectionComposition|calloutWithTableBlock|blankHTMLTemplate'
 hits=$(while IFS= read -r f; do [[ -n "$f" ]] && grep_unexempted "$f" "$CLIENT_PATTERN"; done < <(repo_md_files))
 if [[ -n "$hits" ]]; then
   report_fail "$CURRENT" \
