@@ -12,8 +12,9 @@ read them.
 
 ### 1. The serialized schema artifact
 
-Find the matching `document-type__*.uda` or `element-type__*.uda` under the Deploy revision
-directory. Parse its JSON for:
+Find the matching `document-type__*.uda` under the Deploy revision directory. **There is no
+`element-type__*.uda`** — Deploy serializes element types as `document-type__*.uda` too, with the
+same `DocumentTypeArtifact` type, so the kind is never in the filename. Parse its JSON for:
 
 - `Name` — the human-readable capability name
 - `Alias` — the identifier, and the basis for the doc's slug
@@ -21,9 +22,21 @@ directory. Parse its JSON for:
 - Every `PropertyGroups[].PropertyTypes[]` entry — each property's `Name` (label), `Alias`,
   `DataType` UDI, `Mandatory` flag, and per-property `Description` (help text)
 - `CompositionContentTypes` — inherited property groups, resolved recursively via their UDIs
+- `Permissions.IsElementType` — **the only signal for the kind.** It is emitted *only when true*, so
+  its absence means "not an element type" and a reader must treat this as a truthy check rather than
+  a field it can read and trust. Verified across two Deploy projects: 171 of 240 document types
+  carried the key, and the remaining 69 carried a `Permissions` object without it
 
 Reading `.uda` structure: groups with `"Type": 1` are tabs; groups without a `Type` use
 `tabAlias`/`groupAlias` as their `Alias`.
+
+**Each artifact carries its own `__version`, and one project holds a mix.** `__version` tracks the
+Deploy package at the time that artifact was last serialized — not the CMS version, and not the
+project. One project observed running Umbraco 17.5.3 held artifacts stamped 17.0.2, 17.1.0, 17.2.0,
+and 17.2.1 side by side, because artifacts only re-serialize when touched. **So a version check
+belongs per file, not per project**; refusing a whole read over one stale artifact would reject the
+normal case. `__type` names the artifact class and is the reliable discriminator where the filename
+prefix is ambiguous — the prefix set is open, and packages contribute their own.
 
 **Under uSync the same schema is already on disk, in a different shape.** A project running uSync
 rather than Deploy serializes content types to `uSync/*/ContentTypes/*.config` — XML instead of
@@ -32,25 +45,47 @@ for something the repository already holds; read the equivalents:
 
 | What you need | Deploy (`.uda`, JSON) | uSync (`.config`, XML) |
 |---|---|---|
-| Name, alias, icon, description | `Name`, `Alias`, `Icon`, `Description` | `<Info>` children of the same names |
+| Name, icon, description | `Name`, `Icon`, `Description` | `<Info>` children of the same names |
+| Alias | `Alias` | **`Alias` attribute on the root `<ContentType>`**, not an `<Info>` child |
 | Properties | `PropertyGroups[].PropertyTypes[]` | `<GenericProperties>` → `<GenericProperty>` |
 | A property's editor | `DataType` UDI — resolve via the table below | `<Type>` — already the editor alias; look it up in that table's left column |
 | Whether it is required | `Mandatory` | `<Mandatory>` |
-| Tabs and groups | `PropertyGroups[]`, `"Type": 1` marking a tab | `<Tabs>` → `<Tab>`, each property's `<Tab>` naming its owner |
+| Tabs and groups | `PropertyGroups[]`, `"Type": 1` marking a tab | `<Tabs>` → `<Tab>`, discriminated by `<Type>Tab</Type>` vs `<Type>Group</Type>` — see below |
 | Sort order | `SortOrder`, on groups and properties alike | `<SortOrder>`, on tabs and properties alike |
-| Compositions | `CompositionContentTypes` UDIs | `<Info>` → `<Compositions>` → `<Composition>` aliases |
+| Compositions | `CompositionContentTypes` UDIs | `<Info>` → `<Compositions>` → `<Composition>`, alias as the element text |
+| The kind | `Permissions.IsElementType`, **present only when true** | `<IsElement>`, **always present**, `true` or `false` |
 
-uSync draws no filename distinction between the two kinds: an element type is a content type with
-`<IsElement>` set, serialized into the same `ContentTypes/` folder, where Deploy gives it a separate
-`element-type__*.uda`. So the kind is not in the filename — read it from `<IsElement>` inside the
-file. Where the alias is already known, read that one file and check the flag; a scan of the folder's
-full contents is warranted only when enumerating element types without a known alias.
+**The two formats express the kind asymmetrically, and a reader must branch.** uSync always writes
+`<IsElement>`, so read the boolean. Deploy writes `Permissions.IsElementType` only when true, so
+test for truthiness and treat absence as false. A reader that assumes symmetry finds no element
+types on one format or none on the other, and reports an empty inventory on a project full of
+blocks — the silent-empty shape this guidance exists to prevent.
 
-<!-- The uSync element names above — both in the table and in the note on `<IsElement>` — are
-     written from uSync's serializer format and have NOT been verified against a real uSync
-     project; none was available when this was written. Confirm them the first time this guidance
-     runs on one, including whether `ContentTypes/` filenames are keyed on the alias, which is what
-     decides whether a known alias can be read as a single file. -->
+**Resolving a uSync property to its tab and group takes two steps.** Tabs and groups both appear as
+`<Tab>` entries inside `<Tabs>`, told apart only by `<Type>Tab</Type>` or `<Type>Group</Type>`. A
+property names its owner as `<Tab Alias="content/content">`, which is a `tab/group` path — but
+sometimes it is a bare alias instead, and a bare alias may name *either* a group or a tab. In one
+project: 235 path-form references, 164 bare, of which 114 resolved to a group and 50 to a tab. **So
+resolve every property's `Tab Alias` against the `<Tabs>` list and read that entry's `<Type>`; never
+infer the level from whether the alias contains a slash.** Captions repeat freely — a "Content" tab
+routinely holds a "Content" group — so the caption is not a key.
+
+**uSync filenames are the lowercased alias.** An `alertBanner` element type serializes to
+`ContentTypes/alertbanner.config`; across 174 files in one project there were no exceptions. So
+a known alias can be read as a single file provided the lookup case-folds, and a full folder scan is
+needed only when enumerating without a known alias.
+
+**uSync declares its format version once per project**, in `uSync/<v>/usync.config`:
+
+```xml
+<uSync version="17.0.4.0" format="10.7.0" />
+```
+
+`format` is the serialization shape and the thing to gate on. Note that it sits on its own numbering
+line — the project above ran uSync 17.3.6 in a `uSync/v17/` folder with `format="10.7.0"`, so
+neither the package version nor the folder name tells you the format. **Because it is declared once,
+a uSync version check is a single up-front gate on the whole read** — the opposite of Deploy's
+per-artifact `__version`.
 
 **Normalize compositions on the alias, whichever format you read.** Deploy gives UDIs and uSync
 gives aliases, so a reader that keeps whichever form it found works on one project and breaks on

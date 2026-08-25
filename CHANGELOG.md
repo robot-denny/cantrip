@@ -280,8 +280,8 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   `umbraco-17-feature-backfill` also carries a Deploy-to-uSync field mapping, and the rule that
   **compositions normalize on the alias** whichever format was read — Deploy gives UDIs, uSync gives
   aliases, so a reader that keeps whichever it found works on one project and breaks on the other.
-  The uSync element names are written from uSync's serializer format and are marked in the file as
-  unverified against a real uSync project.
+  The uSync element names were carried as unverified until 2026-08-25, when a real uSync project was
+  available to check them against; see Fixed below for what they got wrong.
 - Skills organized by invocation taxonomy — `skills/core/spellbook/` and
   `skills/core/reference/` — which lets the contract gate enforce invocation posture by path.
 - Templates moved from a root directory into the `workflow` skill, so they install with the
@@ -384,6 +384,29 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 ### Fixed
 
+- **`umbraco-17-feature-backfill` looked for element types under a filename that does not exist**, so
+  following it would have found none on any Deploy project. It told you to locate
+  `element-type__*.uda` and said the kind was in the filename for Deploy. Deploy serializes element
+  types as `document-type__*.uda` with the same artifact type; the kind is `Permissions.IsElementType`
+  *inside* the file, and it is emitted only when true. Verified against two Deploy projects, one of
+  which holds 171 element types and zero `element-type__` files. A reader following the old guidance
+  would have reported a project full of blocks as having none — the silent-empty read ADR 0006
+  forbids, arriving through the guidance rather than through a missing file.
+- **The uSync half of that mapping was unverified, and three parts of it were wrong or too thin.** Now
+  checked against a real uSync project. The alias is an attribute on the root `<ContentType>`, not an
+  `<Info>` child. `<IsElement>` is always written, `true` or `false` — the *opposite* of Deploy's
+  only-when-true flag, so a reader must branch per format rather than assume symmetry. Tabs and groups
+  are both `<Tab>` entries told apart by `<Type>Tab</Type>` versus `<Type>Group</Type>`, and a
+  property's `<Tab Alias>` is sometimes a `tab/group` path and sometimes a bare alias that may name
+  either level — so it must be resolved against the `<Tabs>` list rather than inferred from the
+  slash. The file also now answers its own open question: **uSync filenames are the lowercased
+  alias**, so a known alias can be read as a single file if the lookup case-folds.
+- **Neither format's version marker was documented, and they need opposite handling.** Deploy stamps
+  `__version` on every artifact and one project holds a mix of them, because artifacts only
+  re-serialize when touched — so a version check belongs per file, and refusing a whole read over one
+  stale artifact would reject the normal case. uSync declares one `format` for the entire export in
+  `usync.config`, on a numbering line unrelated to its package version or its folder name — so there
+  the check is a single gate.
 - **The documented core skill count was two short.** The README advertised 13 skills in both install
   shapes; a core install has installed 15 since `design-system-authoring` and `/setup` were extracted.
   Nothing about the install changes — the number describing it was stale.
