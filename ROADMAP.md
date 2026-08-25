@@ -31,7 +31,9 @@ seam rather than a Deploy requirement, per [ADR 0006](adr/0006-no-unguarded-prec
 `.uda`, uSync, live API, then a degraded read from generated models, with an adapter that finds no
 properties failing loudly rather than reporting an empty set — a silent-empty read is what makes an
 audit report no drift on a project it could not parse. The first two rungs and the fail-loudly rule
-landed on 2026-08-24 as guidance; what remains here is an adapter that implements them. Which
+landed on 2026-08-24 as guidance; what remains here is an adapter that implements them — **claimed
+by the `editor-facing-guides` increment on 2026-08-25**, which decided to ship the deterministic
+half of that capability as a script and so builds the adapter rather than consuming one. Which
 adapter runs is a `stack.md` slot with a `**Detect:**` recipe
 ([ADR 0014](adr/0014-dotnet-pack-and-the-detection-line.md)). Property tables
 are a deterministic transform and must never depend on a model; only purpose, when-to-use, and
@@ -41,9 +43,14 @@ warnings need one, which is what lets the whole thing degrade to files when an A
 Coverage table mapping each scenario to a test file and a status, which is the contract such a spell
 would serve: read the scenarios, find what is uncovered, write and run, update the table. That makes
 it a pair with `/feature` — both operate on the living doc — rather than a new stage in the chain,
-and it would be the first QA-owned verb in the spellbook. Whether it is a ninth spell or a mode on
-`/feature` is the open question, and the answer decides whether the count goes to nine or stays at
-eight.
+and it would be the first QA-owned verb in the spellbook.
+
+**Decided 2026-08-25: a ninth spell, not a mode on `/feature`.** So the count goes to nine, leaving
+one under ADR 0010's ceiling of ten. The decision was forced by an unrelated increment —
+`editor-facing-guides` ships an audit that reports documentation gaps, and whether that report shape
+belonged in core or in a pack depended on this answer. A separate spell means the two share no
+machinery and the gap-report shape stays with its own caller, so that increment keeps its report
+shape local while writing it as a self-contained section, extractable later if the shapes converge.
 
 **Pack-authoring meta-skill.** The direct parallel to `design-system-authoring`: a model-invoked
 reference that fires when someone sets out to add a pack, turning [ADR
