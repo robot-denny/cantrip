@@ -76,6 +76,18 @@ Every extraction step should read it first.
   guide page `editorGuide`, kind container `editorGuideGroup` (carrying a `guideKind` value), index
   page `editorGuideIndex`, stored reference property `guideSource` (alias, kind, source signature,
   rung), optional index blurb `guideBlurb`.
+- **What the inventory determiner is actually worth, measured on the demo project 2026-08-26.**
+  The raw artifact count is not the guide count, and Step 8 should start from these numbers
+  rather than re-derive them. Of 68 document types: 34 carry the element flag, but only **23**
+  are offered as content blocks in one of the 7 block-editor palettes; **8** are the settings
+  half of a block, and **3** appear in no palette and are used as compositions. Of the 34
+  non-element types, **16** carry a template and are page-type candidates while 18 do not. So
+  the theoretical guide count is **39**, against a naive 68 or a flag-based 34. The spec
+  recorded 125-of-174 flagged versus 52 real blocks on the client project — a 2.4x over-count
+  there against 1.5x here, so the ratio varies but the direction holds on a second project.
+  **One caveat**: these counts came from inferring palette entry roles by key naming (a key
+  containing "settings" versus a content-element key). Step 8 must read the real palette
+  schema rather than inherit that heuristic.
 - **Live inspection of the demo project, 2026-08-25** — recorded so no step re-derives it. 68
   `document-type__*.uda` artifacts; 34 carry `Permissions.IsElementType`; three `__version` values
   side by side (`17.1.0` ×47, `17.2.0` ×16, `17.2.1` ×5), which confirms the mixed-version case is

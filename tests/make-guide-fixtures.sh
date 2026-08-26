@@ -43,6 +43,8 @@ U_TEXT=dddd1111dddd1111dddd111111111111   ; G_TEXT=dddd1111-dddd-1111-dddd-11111
 U_TOGGLE=dddd2222dddd2222dddd222222222222 ; G_TOGGLE=dddd2222-dddd-2222-dddd-222222222222
 U_DROP=dddd3333dddd3333dddd333333333333   ; G_DROP=dddd3333-dddd-3333-dddd-333333333333
 U_AREA=dddd4444dddd4444dddd444444444444   ; G_AREA=dddd4444-dddd-4444-dddd-444444444444
+# A second identity for the same alias, used only by the duplicate-alias refusal case.
+U_OTHER=cccc9999cccc9999cccc999999999999
 
 DEPLOY_ARTIFACT_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact'
 DEPLOY_DATATYPE_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact'
@@ -492,6 +494,34 @@ EOF
 EOF
 }
 
+# A property-less twin of alertBanner, for the two refusal cases. It is deliberately the
+# thinner of the pair: a refusal that only ever saw identical copies would pass while the
+# real hazard -- a stale empty artifact winning over a full one -- went unnoticed.
+duplicate_banner() {  # duplicate_banner <path> <udi>
+  cat > "$1" <<EOF
+{
+  "Name": "Alert Banner",
+  "Alias": "alertBanner",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-alert color-red",
+  "Thumbnail": "folder.png",
+  "Description": "A banner that announces something time-sensitive at the top of a page.",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$2",
+  "Dependencies": [],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+}
+
 expect() {  # expect <case-root> <lines...>
   local root=$1; shift
   printf '%s\n' "$@" > "$root/expect"
@@ -671,5 +701,55 @@ C="$CASES/usync-dossier";  mkdir -p "$C"; usync_tree "$C";  expected_dossier "$C
 expect "$C" "${COMMON[@]}" \
   'contains: "rung": "usync"' \
   'not_contains: "rung": "deploy"'
+
+# --- two refusals, each guarding a behavior a review found missing --------------
+#
+# Both are the same rule seen twice: a read that cannot be answered unambiguously must say
+# so rather than produce a thinner dossier. Both were reachable before, and both produced a
+# valid-looking document with exit 0 — the silent-empty shape the ladder exists to prevent.
+
+# Two shapes of the same ambiguity, because they trip different guards and both occur.
+#
+# A stale revision folder beside a live one is a COPY: same entity, so same UDI. The stale
+# copy carries no properties, so whichever the walk reached first decided the answer, and it
+# reliably picked the empty one.
+C="$CASES/deploy-duplicate-udi"; mkdir -p "$C"
+deploy_tree "$C"
+STALE="$C/stale-export/umbraco/Deploy/Revision"; mkdir -p "$STALE"
+duplicate_banner "$STALE/document-type__$U_BANNER.uda" "$U_BANNER"
+expect "$C" \
+  "exit: 1" \
+  "args: extract alertBanner" \
+  "contains: declare the same UDI" \
+  "contains: stale-export" \
+  'not_contains: "dossierVersion"'
+
+# A type recreated rather than copied is a DIFFERENT entity wearing the same alias, so the
+# UDI guard never sees it and the alias index is what has to refuse. This is the path that
+# produced the observed empty dossier, since a lookup is by alias.
+C="$CASES/deploy-duplicate-alias"; mkdir -p "$C"
+deploy_tree "$C"
+OTHER="$C/second-export/umbraco/Deploy/Revision"; mkdir -p "$OTHER"
+duplicate_banner "$OTHER/document-type__$U_OTHER.uda" "$U_OTHER"
+expect "$C" \
+  "exit: 1" \
+  "args: extract alertBanner" \
+  "contains: declare the same alias" \
+  "contains: second-export" \
+  'not_contains: "dossierVersion"'
+
+# The content type is exported and one data type it points at is not. The property is real,
+# so the earlier reading kept it with an empty editor -- but a property table whose whole job
+# is to say what an editor types into a field cannot report the field and not its type, and
+# `structureAvailable` would have claimed true while saying so.
+C="$CASES/deploy-missing-data-type"; mkdir -p "$C"
+deploy_tree "$C"
+rm "$C/src/Web/umbraco/Deploy/Revision/data-type__$U_DROP.uda"
+expect "$C" \
+  "exit: 1" \
+  "args: extract alertBanner" \
+  "contains: the export is partial" \
+  "contains: $U_DROP" \
+  'not_contains: "dossierVersion"'
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"
