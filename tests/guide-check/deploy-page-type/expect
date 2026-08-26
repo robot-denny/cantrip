@@ -1,0 +1,6 @@
+exit: 0
+args: extract articlePage
+contains: "alias": "articlePage"
+contains: "kind": "document"
+not_contains: "kind": "element"
+contains: "rung": "deploy"

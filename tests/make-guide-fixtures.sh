@@ -45,6 +45,7 @@ U_DROP=dddd3333dddd3333dddd333333333333   ; G_DROP=dddd3333-dddd-3333-dddd-33333
 U_AREA=dddd4444dddd4444dddd444444444444   ; G_AREA=dddd4444-dddd-4444-dddd-444444444444
 # A second identity for the same alias, used only by the duplicate-alias refusal case.
 U_OTHER=cccc9999cccc9999cccc999999999999
+U_PAGE=eeee1111eeee1111eeee111111111111   ; G_PAGE=eeee1111-eeee-1111-eeee-111111111111
 
 DEPLOY_ARTIFACT_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact'
 DEPLOY_DATATYPE_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact'
@@ -522,6 +523,130 @@ duplicate_banner() {  # duplicate_banner <path> <udi>
 EOF
 }
 
+# --- a page type, in each format -----------------------------------------------
+#
+# Its whole job is the kind. Every other fixture component is an element type, so reading
+# the kind flag wrongly — Deploy's key is emitted ONLY when true, uSync's is always written
+# and must be read as a boolean — produced a correct answer by luck: `element` is what you
+# get from a truthiness test, a presence test, or a coin toss when the value is always true
+# and always present. A review demonstrated that mutating uSync's read to a presence test
+# passed all seven cases. These two are the cases that mutation fails.
+#
+# Deliberately minimal: one tab, one property, no compositions, no option lists. Anything
+# more would duplicate coverage the alertBanner pair already carries.
+deploy_page_type() {  # deploy_page_type <case-root>
+  local rev="$1/src/Web/umbraco/Deploy/Revision"
+  mkdir -p "$rev"
+  # No `Permissions.IsElementType` at all — Deploy omits the key on a document type rather
+  # than writing false, which is why a reader has to treat its absence as the answer.
+  cat > "$rev/document-type__$U_PAGE.uda" <<EOF
+{
+  "Name": "Article Page",
+  "Alias": "articlePage",
+  "AllowedTemplates": [
+    "umb://template/eeee1111eeee1111eeee111111111111"
+  ],
+  "DefaultTemplate": "umb://template/eeee1111eeee1111eeee111111111111",
+  "HistoryCleanup": {},
+  "Icon": "icon-article color-blue",
+  "Thumbnail": "folder.png",
+  "Description": "A page carrying one article.",
+  "Permissions": {
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [
+    {
+      "Key": "eeee1111-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": [
+        {
+          "Key": "eeee1111-0101-4000-8000-000000000101",
+          "Alias": "articleHeading",
+          "DataType": "umb://data-type/$U_TEXT",
+          "ValueType": "System.String",
+          "Mandatory": true,
+          "Description": "The headline.",
+          "Name": "Article Heading",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$U_PAGE",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/$U_TEXT",
+      "Ordering": true
+    }
+  ],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+  deploy_data_type "$rev" "$U_TEXT" "Textstring" "Umbraco.TextBox" \
+    "Umb.PropertyEditorUi.TextBox" "Nvarchar" '{}'
+}
+
+usync_page_type() {  # usync_page_type <case-root>
+  local root="$1/uSync/v17"
+  mkdir -p "$root/ContentTypes"
+  cat > "$root/usync.config" <<'EOF'
+<uSync version="17.0.4.0" format="10.7.0" />
+EOF
+  # <IsElement> is written either way, so here it says false — the value a presence test
+  # cannot see.
+  cat > "$root/ContentTypes/articlepage.config" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<ContentType Key="$G_PAGE" Alias="articlePage" Level="1">
+  <Info>
+    <Name>Article Page</Name>
+    <Icon>icon-article color-blue</Icon>
+    <Thumbnail>folder.png</Thumbnail>
+    <Description><![CDATA[A page carrying one article.]]></Description>
+    <AllowAtRoot>False</AllowAtRoot>
+    <IsListView>False</IsListView>
+    <Variations>Nothing</Variations>
+    <IsElement>false</IsElement>
+    <Compositions />
+    <DefaultTemplate>articlePage</DefaultTemplate>
+    <AllowedTemplates>
+      <Template Key="eeee1111-eeee-1111-eeee-111111111111">articlePage</Template>
+    </AllowedTemplates>
+  </Info>
+  <Structure />
+  <GenericProperties>
+    <GenericProperty>
+      <Key>eeee1111-0101-4000-8000-000000000101</Key>
+      <Name>Article Heading</Name>
+      <Alias>articleHeading</Alias>
+      <Definition>$G_TEXT</Definition>
+      <Type>Umbraco.TextBox</Type>
+      <Mandatory>true</Mandatory>
+      <Validation></Validation>
+      <Description><![CDATA[The headline.]]></Description>
+      <SortOrder>10</SortOrder>
+      <Tab Alias="content">Content</Tab>
+      <Variations>Nothing</Variations>
+    </GenericProperty>
+  </GenericProperties>
+  <Tabs>
+    <Tab>
+      <Key>eeee1111-0001-4000-8000-000000000001</Key>
+      <Caption>Content</Caption>
+      <Alias>content</Alias>
+      <Type>Tab</Type>
+      <SortOrder>10</SortOrder>
+    </Tab>
+  </Tabs>
+</ContentType>
+EOF
+}
+
 expect() {  # expect <case-root> <lines...>
   local root=$1; shift
   printf '%s\n' "$@" > "$root/expect"
@@ -702,6 +827,41 @@ expect "$C" "${COMMON[@]}" \
   'contains: "rung": "usync"' \
   'not_contains: "rung": "deploy"'
 
+# --- format-blindness: one component, two serializations, one signature ---------
+#
+# The claim the whole adapter seam exists to make: a component read through two formats is
+# the same component, so the signature over it is the same string. Neither case asserts WHAT
+# that string is -- a hash cannot be hand-authored, and pasting one in would assert the
+# implementation against itself. `same_stdout_as` asserts the equality directly, which is the
+# only form the claim has.
+#
+# Both cases read the SAME project tree, carrying both serializations side by side, and each
+# forces its own adapter. Two separate trees would let the pair pass while the two fixtures
+# described two subtly different components; one tree cannot.
+#
+# `not_contains: dossierVersion` is how "the signature alone" is stated: the subcommand
+# prints one line, so any dossier field reaching the output means it printed the document too
+# and the byte comparison above would be comparing dossiers rather than signatures.
+signature_project() {  # signature_project <case-root>
+  deploy_tree "$1"
+  usync_tree "$1"
+}
+
+C="$CASES/signature-deploy"; mkdir -p "$C"; signature_project "$C"
+expect "$C" \
+  "exit: 0" \
+  "args: signature alertBanner --adapter deploy" \
+  "contains: sha256:" \
+  "not_contains: dossierVersion"
+
+C="$CASES/signature-usync"; mkdir -p "$C"; signature_project "$C"
+expect "$C" \
+  "exit: 0" \
+  "args: signature alertBanner --adapter usync" \
+  "contains: sha256:" \
+  "not_contains: dossierVersion" \
+  "same_stdout_as: signature-deploy"
+
 # --- two refusals, each guarding a behavior a review found missing --------------
 #
 # Both are the same rule seen twice: a read that cannot be answered unambiguously must say
@@ -751,5 +911,24 @@ expect "$C" \
   "contains: the export is partial" \
   "contains: $U_DROP" \
   'not_contains: "dossierVersion"'
+
+# --- the kind, asserted where it can actually be wrong -------------------------
+#
+# `kind` is a single top-level field and the assertion names both values, so a substring
+# match is exact here: "document" must appear and "element" must not. A golden file would
+# add a second document to maintain for one field's sake.
+PAGE_KIND=(
+  "exit: 0"
+  "args: extract articlePage"
+  'contains: "alias": "articlePage"'
+  'contains: "kind": "document"'
+  'not_contains: "kind": "element"'
+)
+
+C="$CASES/deploy-page-type"; mkdir -p "$C"; deploy_page_type "$C"
+expect "$C" "${PAGE_KIND[@]}" 'contains: "rung": "deploy"'
+
+C="$CASES/usync-page-type";  mkdir -p "$C"; usync_page_type "$C"
+expect "$C" "${PAGE_KIND[@]}" 'contains: "rung": "usync"'
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

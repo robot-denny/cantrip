@@ -1,0 +1,4 @@
+exit: 0
+args: signature alertBanner --adapter deploy
+contains: sha256:
+not_contains: dossierVersion

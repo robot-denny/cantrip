@@ -57,6 +57,20 @@ UNGROUPED_TAB_ALIAS = ""
 UNGROUPED_TAB_NAME = ""
 UNGROUPED_TAB_SORT_ORDER = 0
 
+# The keys a data type's configuration uses for its option list and its default marker.
+# Both on-disk formats carry the *same* JSON payload here -- Deploy in an artifact's
+# `Configuration` object, uSync in a `<Config>` CDATA block -- so the reading of it belongs
+# in one place rather than once per adapter. Two adapters normalizing an option list
+# separately is the most intricate thing they would each have to get right, and the
+# signature's equality across formats is exactly what a divergence there would break.
+#
+# `default` is a BORROWED key: Umbraco's toggle configuration carries one, and the fixtures
+# use it to state which option is the default. A stock dropdown export has not been confirmed
+# to carry it -- of the demo project's data types, 11 carry `items[]` and none carries
+# `default` -- so it is read as optional. Absent means no option is marked, never "the first".
+CONFIG_ITEMS = "items"
+CONFIG_DEFAULT = "default"
+
 KIND_ELEMENT = "element"
 KIND_DOCUMENT = "document"
 
@@ -85,6 +99,72 @@ def make_property(alias, name, editor, description="", mandatory=False,
         "options": list(options or []),
         "inheritedFrom": inherited_from,
     }
+
+
+def text(value):
+    """Normalize an absent or null field to the empty string.
+
+    Both formats omit what has nothing to say -- Deploy leaves `Description` and `Icon` out
+    of the JSON, uSync writes an empty element. A guide renderer wants one type back, not
+    "string or missing"; the honest distinction the dossier does preserve is `mandatory`,
+    where absence and false mean different things to a reader.
+
+    **This does not strip whitespace, and the uSync adapter does.** That asymmetry is
+    deliberate rather than an oversight: pretty-printed XML puts newlines and indentation
+    inside every element, so an unstripped XML read would differ from its JSON twin on
+    formatting alone and the two adapters would hash the same component differently. JSON
+    strings carry no serializer-added whitespace, so stripping there would instead destroy a
+    value someone typed. A future rung reading a third format has to make the same call: strip
+    where the serializer adds whitespace, never where an author could have.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
+
+
+def options_from_config(config):
+    """Option values in declared order, with the default marked if the config names one.
+
+    Declared order is kept rather than sorted: an option list is a sequence an editor sees in
+    the backoffice, and reordering it would misdescribe the field. Shared by every adapter,
+    because the payload is the same JSON whatever envelope it arrived in.
+    """
+    if not isinstance(config, dict):
+        return []
+    items = config.get(CONFIG_ITEMS)
+    values = []
+    if isinstance(items, list):
+        for item in items:
+            values.append(_option_value(item))
+    elif isinstance(items, dict):
+        # The older keyed shape, `{"0": {...}, "1": {...}}`. Sorted numerically where the
+        # keys are numbers, so `"10"` does not sort before `"2"`.
+        for key in sorted(items, key=_key_order):
+            values.append(_option_value(items[key]))
+    else:
+        return []
+
+    default = config.get(CONFIG_DEFAULT)
+    marked = None if default is None else text(default)
+    return [make_option(v, marked is not None and v == marked) for v in values if v != ""]
+
+
+def _option_value(item):
+    if isinstance(item, dict):
+        for key in ("value", "Value", "name", "Name"):
+            if key in item:
+                return text(item[key])
+        return ""
+    return text(item)
+
+
+def _key_order(key):
+    try:
+        return (0, int(key), "")
+    except (TypeError, ValueError):
+        return (1, 0, str(key))
 
 
 def _sort_key(entry):

@@ -42,16 +42,6 @@ TYPE_DATA = "DataTypeArtifact"
 # would double every artifact and let a stale copy win a lookup.
 SKIP_DIRS = {"bin", "obj", "node_modules", "packages", "TestResults"}
 
-# The key a data type's configuration uses for its option list. Both the flexible dropdown
-# and the list editors use it.
-CONFIG_ITEMS = "items"
-
-# `Configuration.default` is a BORROWED key: Umbraco's toggle configuration carries one, and
-# the fixtures use it to state which option is the default. A stock dropdown export has not
-# been confirmed to carry it, so it is read as optional — absent means no option is marked,
-# never "the first one".
-CONFIG_DEFAULT = "default"
-
 
 def present(project_root):
     """Whether this project carries Deploy artifacts at all — the adapter's detect probe."""
@@ -216,7 +206,13 @@ class Catalog:
         return self._by_udi.get(_normalize_udi(udi))
 
     def editor_and_options(self, udi):
-        """A property's editor alias and option list, resolved through its data type."""
+        """A property's editor alias and option list, resolved through its data type.
+
+        The option list itself is read by `dossier.options_from_config`: an artifact's
+        `Configuration` object holds the same JSON payload uSync writes into a `<Config>`
+        block, so normalizing it belongs in one place rather than once per adapter — and the
+        note on `default` being a borrowed key with no verified source lives there too.
+        """
         self._load_all()
         artifact = self.by_udi(udi)
         if artifact is None or TYPE_DATA not in (artifact.get("__type") or ""):
@@ -233,62 +229,17 @@ class Catalog:
         config = artifact.get("Configuration")
         if not isinstance(config, dict):
             config = {}
-        return _text(artifact.get("EditorAlias")), _options(config)
-
-
-def _options(config):
-    """Option values in declared order, with the default marked if the config names one.
-
-    Declared order is kept rather than sorted: an option list is a sequence an editor sees in
-    the backoffice, and reordering it would misdescribe the field.
-    """
-    items = config.get(CONFIG_ITEMS)
-    values = []
-    if isinstance(items, list):
-        for item in items:
-            values.append(_option_value(item))
-    elif isinstance(items, dict):
-        # The older keyed shape, `{"0": {...}, "1": {...}}`. Sorted numerically where the
-        # keys are numbers, so `"10"` does not sort before `"2"`.
-        for key in sorted(items, key=_key_order):
-            values.append(_option_value(items[key]))
-    else:
-        return []
-
-    default = config.get(CONFIG_DEFAULT)
-    marked = None if default is None else _text(default)
-    return [dossier.make_option(v, marked is not None and v == marked) for v in values
-            if v != ""]
-
-
-def _option_value(item):
-    if isinstance(item, dict):
-        for key in ("value", "Value", "name", "Name"):
-            if key in item:
-                return _text(item[key])
-        return ""
-    return _text(item)
-
-
-def _key_order(key):
-    try:
-        return (0, int(key), "")
-    except (TypeError, ValueError):
-        return (1, 0, str(key))
+        return _text(artifact.get("EditorAlias")), dossier.options_from_config(config)
 
 
 def _text(value):
-    """Normalize an absent or null field to the empty string.
+    """Deploy's absent-field normalization — `dossier.text`, shared with every other adapter.
 
-    Deploy omits `Description` and `Icon` when they have nothing to say. A guide renderer
-    wants one type back, not "string or missing"; the honest distinction the dossier does
-    preserve is `mandatory`, where absence and false mean different things to a reader.
+    Kept as a local name because it is used on nearly every line of the mapping below, and
+    because a second adapter normalizing absence differently is one of the two ways the
+    cross-format signature equality can break quietly.
     """
-    if value is None:
-        return ""
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    return str(value)
+    return dossier.text(value)
 
 
 # ---------------------------------------------------------------------------

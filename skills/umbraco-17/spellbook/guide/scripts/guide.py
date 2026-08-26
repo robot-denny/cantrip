@@ -17,7 +17,7 @@ the sentence is not.
 A project's schema is read from whichever source it actually has, in descending fidelity:
 
     deploy   Umbraco Deploy artifacts, `*.uda` JSON            guidelib/deploy.py
-    usync    uSync configuration, `*.config` XML               not implemented yet
+    usync    uSync configuration, `*.config` XML               guidelib/usync.py
     models   committed `*.generated.cs` model classes          not implemented yet
 
 `ADAPTERS` below is the live list — ask it rather than this comment.
@@ -32,7 +32,12 @@ component.
 
 ## Usage
 
-    guide.py extract <alias> [--project-root DIR] [--adapter deploy]
+    guide.py extract   <alias> [--project-root DIR] [--adapter deploy|usync]
+    guide.py signature <alias> [--project-root DIR] [--adapter deploy|usync]
+
+`extract` prints the whole dossier; `signature` prints its `sourceSignature` and nothing else,
+which is what makes format-blindness assertable: the same component read through two adapters
+prints the same line, and no test has to hardcode a hash to say so.
 
 `--project-root` defaults to the current directory, and the serialization folder is searched
 for beneath it (the `paths.md → ## Umbraco` slot's fallback). `--adapter` defaults to whichever
@@ -58,18 +63,20 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from guidelib import GuideError  # noqa: E402
 from guidelib import deploy      # noqa: E402
 from guidelib import dossier     # noqa: E402
+from guidelib import usync       # noqa: E402
 
 # Rung name -> adapter module. The name is the `--adapter` value, the recorded `rung`, and the
 # module, all the same string, so a project's declared serialization needs no translation
 # table. Later rungs register here and change nothing else.
 ADAPTERS = {
     deploy.RUNG: deploy,
+    usync.RUNG: usync,
 }
 
 # Detection order — highest fidelity first, so a project holding two serializations is read
 # from the better one. Each adapter answers for its own format; this dispatcher knows no file
 # names or extensions, which is what keeps a new rung to one registration.
-DETECT_ORDER = (deploy.RUNG,)
+DETECT_ORDER = (deploy.RUNG, usync.RUNG)
 
 PROG = "guide.py"
 
@@ -100,6 +107,19 @@ def cmd_extract(args):
     return 0
 
 
+def cmd_signature(args):
+    """The dossier's signature, alone on a line.
+
+    Alone because the assertion that two formats agree is a byte comparison of two runs, and
+    anything else printed would be compared too. It is also what a caller stores against a
+    guide page, so a bare value is what a shell pipeline wants.
+    """
+    adapter = resolve_adapter(args.project_root, args.adapter)
+    entry = adapter.extract(args.project_root, args.alias)
+    print(entry["sourceSignature"])
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog=PROG,
@@ -111,8 +131,13 @@ def build_parser():
     extract.add_argument("alias", help="the component's document-type or element-type alias")
     extract.set_defaults(handler=cmd_extract)
 
+    signature = subparsers.add_parser(
+        "signature", help="print one component's source signature and nothing else")
+    signature.add_argument("alias", help="the component's document-type or element-type alias")
+    signature.set_defaults(handler=cmd_signature)
+
     # Shared by every subcommand that reads the project rather than a supplied JSON file.
-    for sub in (extract,):
+    for sub in (extract, signature):
         sub.add_argument(
             "--project-root", default=".", metavar="DIR",
             help="the project to read (default: the current directory)")
