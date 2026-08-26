@@ -76,16 +76,19 @@ begin() {
 #
 # `.uda` (Deploy) and `.config` (uSync) were added when the guide-check suite arrived, ahead
 # of its first committed fixture: those fixtures carry document-type aliases, property names,
-# and folder paths, which is exactly the content check 1 exists to catch.
+# and folder paths, which is exactly the content check 1 exists to catch. `.cs` followed for
+# the generated-models rung, whose fixtures are C# model classes carrying the same aliases and
+# property names -- the same hole, found by looking for it this time rather than after a leak.
 repo_md_files() {
   if git rev-parse --git-dir >/dev/null 2>&1; then
     { git ls-files; git ls-files --others --exclude-standard; } 2>/dev/null \
-      | grep -E '\.(md|json|sh|py|txt|diff|uda|config)$|(^|/)LICENSE$' \
+      | grep -E '\.(md|json|sh|py|txt|diff|uda|config|cs)$|(^|/)LICENSE$' \
       | grep -vE '^scripts/check-contract\.sh$'
   else
     find . \( "${PRUNE[@]}" \) -prune -o -type f \
       \( -name '*.md' -o -name '*.json' -o -name '*.sh' -o -name '*.py' -o -name '*.txt' \
-         -o -name '*.diff' -o -name '*.uda' -o -name '*.config' -o -name 'LICENSE' \) \
+         -o -name '*.diff' -o -name '*.uda' -o -name '*.config' -o -name '*.cs' \
+         -o -name 'LICENSE' \) \
       -print 2>/dev/null
   fi
 }

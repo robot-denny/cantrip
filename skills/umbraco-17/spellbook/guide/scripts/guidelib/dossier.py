@@ -28,6 +28,17 @@ orders, the option lists, the compositions, and whether structure was available 
 adapters reading the same component must therefore print the same signature; anything
 format-specific leaking into the canonical form breaks that equality.
 
+**Two rungs reading the same component do not.** A rung that cannot report tabs, required
+flags or option lists produces a dossier carrying less schema, so its signature differs by
+construction — the equality above holds between two *formats* of the same fidelity, never
+across the ladder. That is the correct behavior for what the signature is for: the audit
+compares a stored value against a fresh read of the same project, and a project whose
+readable source changed really has changed what anyone can say about it. `rung` is stored
+beside the signature so the comparison can say *why* every value moved at once, which is the
+difference between a report and a hundred false stale findings. Nothing here compares
+signatures across rungs, and nothing should: the two values are hashes of different
+questions.
+
 The value carries a `sha256:` prefix because it is stored in the CMS against a guide page and
 compared on later runs. A stored value that names its own algorithm can be superseded without
 a migration that cannot tell old from new.
@@ -44,7 +55,13 @@ DOSSIER_VERSION = 1
 
 # Fields excluded from the canonical subset the signature covers. `rung` and dossierVersion
 # describe the read, not the component; sourceSignature cannot cover itself.
-SIGNATURE_EXCLUDED = ("dossierVersion", "rung", "sourceSignature")
+SIGNATURE_EXCLUDED = ("dossierVersion", "rung", "sourceSignature", "structureGaps")
+# `structureGaps` is excluded for the same reason `rung` is, and it was nearly missed: it
+# describes the READ, not the component, and its wording is documentation. Left in, editing a
+# gap sentence -- adding one, or splitting one in two, both of which have already happened --
+# moved every stored signature at that rung at once, with no schema change underneath. That is
+# the hundred-false-stale-findings shape this list exists to prevent, arriving through a
+# comment field.
 
 SIGNATURE_PREFIX = "sha256:"
 
@@ -341,8 +358,22 @@ def signature(entry):
 
 
 def build(rung, alias, name, kind, icon, description,
-          structure_available, compositions, tabs):
-    """Assemble a dossier and sign it. Key order here is the serialized key order."""
+          structure_available, compositions, tabs, structure_gaps=()):
+    """Assemble a dossier and sign it. Key order here is the serialized key order.
+
+    `structure_gaps` names, per dossier field, what the rung could not report — and it is the
+    only way a consumer can tell a missing option list from an empty one. `"options": []` is
+    the same three characters either way, so `structureAvailable: false` says *something* is
+    missing and this list says **what**. See GAPS in `guidelib/models.py` for the only rung
+    that currently has any.
+
+    **Omitted entirely when there are none**, the way the unnamed bucket is suppressed when
+    empty, and for the same reason: it is a statement about the read rather than something the
+    project declared, and a rung with nothing missing has nothing to state. `structureAvailable`
+    already carries the positive claim, so "no gaps" is never inferred from silence. The
+    omission also keeps a full-fidelity dossier's canonical form — and so every stored
+    signature taken at rung 1 or 2 — unchanged by the arrival of this field.
+    """
     entry = {
         "dossierVersion": DOSSIER_VERSION,
         "rung": rung,
@@ -352,9 +383,15 @@ def build(rung, alias, name, kind, icon, description,
         "icon": icon,
         "description": description,
         "structureAvailable": bool(structure_available),
-        "compositions": list(compositions),
-        "tabs": list(tabs),
     }
+    # Inserted here, immediately after the claim it qualifies, rather than appended: a reader
+    # meets "structure was not available" and the list of what that cost on the next line.
+    # Sorted, so the canonical form does not depend on the order an adapter happened to
+    # declare them in.
+    if structure_gaps:
+        entry["structureGaps"] = sorted(structure_gaps)
+    entry["compositions"] = list(compositions)
+    entry["tabs"] = list(tabs)
     entry["sourceSignature"] = signature(entry)
     return entry
 

@@ -161,6 +161,12 @@ In `guide-check`, one pair of cases exists to keep a refusal from widening by ac
   document types. The line is whether anything was left *unresolved*, never how thin the result is,
   and these three are the cases that say so. A refusal with no case proving what it does **not**
   refuse is how the next increment tightens it by accident.
+- **`models-only-rung`** asserts a thin dossier that says *what* is thin about it. Its golden file
+  states `structureAvailable: false` plus a `structureGaps` entry per field the rung cannot report,
+  because `"options": []` cannot tell a component with no choices from a source that could not read
+  them. It also asserts `not_contains: declares no editable properties` — the property-less note and
+  the gap list are different claims, and an implementation that flattened the properties somewhere
+  the count could not see them would print both and contradict itself.
 
 ## Why 46 fixture `SKILL.md` files do not pollute an install
 

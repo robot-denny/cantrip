@@ -1,0 +1,10 @@
+exit: 0
+args: extract alertBanner
+stdout_matches: expected-dossier.json
+mask: "sourceSignature":
+contains: "rung": "models"
+contains: "structureAvailable": false
+not_contains: "rung": "deploy"
+not_contains: "rung": "usync"
+not_contains: declares no editable properties
+not_contains: the export is partial

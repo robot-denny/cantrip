@@ -1,0 +1,6 @@
+exit: 0
+args: signature alertBanner
+stdout_matches: expected-stdout.txt
+mask: sha256:
+not_contains: "dossierVersion"
+not_contains: structureGaps

@@ -18,7 +18,7 @@ A project's schema is read from whichever source it actually has, in descending 
 
     deploy   Umbraco Deploy artifacts, `*.uda` JSON            guidelib/deploy.py
     usync    uSync configuration, `*.config` XML               guidelib/usync.py
-    models   committed `*.generated.cs` model classes          not implemented yet
+    models   committed `*.generated.cs` model classes          guidelib/models.py
 
 `ADAPTERS` below is the live list — ask it rather than this comment.
 
@@ -28,7 +28,15 @@ consumes a dossier, so the live rung costs no duplicated logic.
 
 The rung a dossier was read at is recorded on it, because completeness is judged relative to
 the rung: a missing option list at the models rung is a limit of the source, not a gap in the
-component.
+component. Where a rung cannot report a field at all, the dossier says so per field in
+`structureGaps` rather than leaving a consumer to read an empty list as an answer.
+
+**Two rungs reading one component produce different signatures, and that is correct.** The
+signature covers the schema a dossier carries, so a dossier carrying less of it hashes
+differently — the equality the adapter seam asserts is between two *formats* of the same
+fidelity, never up and down the ladder. A project that gains or loses a serialization format
+therefore sees every stored signature move at once, and `rung` is stored beside the signature
+so that reads as one change of source rather than a hundred stale components.
 
 A serialization version this toolkit has not been verified against is not read, and what that
 costs depends on where the format declares it. uSync declares one `format` for a whole export,
@@ -39,8 +47,8 @@ declared once in `guidelib/__init__.py`.
 
 ## Usage
 
-    guide.py extract   <alias> [--project-root DIR] [--adapter deploy|usync]
-    guide.py signature <alias> [--project-root DIR] [--adapter deploy|usync]
+    guide.py extract   <alias> [--project-root DIR] [--adapter deploy|usync|models]
+    guide.py signature <alias> [--project-root DIR] [--adapter deploy|usync|models]
 
 `extract` prints the whole dossier; `signature` prints its `sourceSignature` and nothing else,
 which is what makes format-blindness assertable: the same component read through two adapters
@@ -71,6 +79,7 @@ from guidelib import GuideError    # noqa: E402
 from guidelib import deploy        # noqa: E402
 from guidelib import dossier       # noqa: E402
 from guidelib import drain_notes   # noqa: E402
+from guidelib import models        # noqa: E402
 from guidelib import usync         # noqa: E402
 
 # Rung name -> adapter module. The name is the `--adapter` value, the recorded `rung`, and the
@@ -79,12 +88,18 @@ from guidelib import usync         # noqa: E402
 ADAPTERS = {
     deploy.RUNG: deploy,
     usync.RUNG: usync,
+    models.RUNG: models,
 }
 
 # Detection order — highest fidelity first, so a project holding two serializations is read
 # from the better one. Each adapter answers for its own format; this dispatcher knows no file
 # names or extensions, which is what keeps a new rung to one registration.
-DETECT_ORDER = (deploy.RUNG, usync.RUNG)
+#
+# `models` is last because it is the fallback, not an alternative: a project committing both
+# Deploy artifacts and generated models (the demo project does) must be read from the artifacts,
+# which carry the tabs and the required flags the models cannot. A project with only models is
+# read from them rather than refused.
+DETECT_ORDER = (deploy.RUNG, usync.RUNG, models.RUNG)
 
 PROG = "guide.py"
 
