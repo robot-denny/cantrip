@@ -6,15 +6,48 @@ The repo's first test harness, established by the `install-verification` increme
 ## Convention
 
 - **`run.sh`** — the runner. Dependency-free bash; no framework to install.
-- **`install-check/<case>/`** — one directory per case: a minimal fake project tree plus an `expect`
-  file declaring the expected exit code and output substrings.
-- **`make-fixtures.sh`** — regenerates every fixture.
+- **`<suite>/`** — one directory per subject under test. A suite holds a `subject` file plus one
+  directory per case.
+- **`<suite>/<case>/`** — a minimal fake project tree plus an `expect` file declaring the expected
+  exit code and output substrings.
+- **`make-fixtures.sh`** — regenerates the `install-check` suite.
 
 ```bash
-tests/run.sh                    # all cases
-tests/run.sh agents-unlinked    # one case
-tests/make-fixtures.sh          # regenerate fixtures
+tests/run.sh                              # every suite
+tests/run.sh install-check                # one suite, every case
+tests/run.sh install-check agents-unlinked   # one case
+tests/make-fixtures.sh                    # regenerate install-check
 ```
+
+A case name is only meaningful inside a suite, so the suite comes first. A mistyped suite name
+exits 2 and lists the suites that do exist, rather than reporting a vacuous pass — the failure mode
+a runner that silently found nothing to do would have.
+
+## Why suites, and why `subject`
+
+The first runner hardcoded one subject (`scripts/check-install.sh`) and one cases directory. That was
+honest while there was exactly one thing to test, and wrong the moment there were two: the second
+subject would have meant a second copy of the runner, and the two copies would have drifted.
+
+So the subject is data, not code. `<suite>/subject` is one line holding a repo-relative path to an
+executable:
+
+```
+scripts/check-install.sh
+```
+
+The runner resolves it to an absolute path **before** `cd`-ing into a case directory, because a case
+runs with its own fixture tree as the working directory — a relative subject path would resolve
+against the fixture and vanish.
+
+`subject` lives inside the suite directory, which matters for `install-check`: `make-fixtures.sh`
+does `rm -rf install-check` and rebuilds it, so the generator writes `subject` too. A hand-placed
+`subject` would disappear on the next regeneration and every case would fail as "subject missing" —
+a failure that points nowhere near its cause.
+
+A suite whose subject does not exist yet fails every case with `subject missing or not executable`
+rather than aborting the run. That is deliberate: it is the RED signal for a suite written before its
+subject, which is the normal order.
 
 ## Why fixtures are generated, not committed by hand
 
@@ -29,12 +62,53 @@ file, and a suspicious failure can be cleared by regenerating rather than inspec
 
 ```
 exit: 0                        # required, once
+args: --guides guides.json     # zero or one; a single line
 contains: some substring       # zero or more, case-insensitive
 not_contains: some substring   # zero or more
+same_stdout_as: other-case     # zero or more
 ```
 
 `not_contains` is what asserts the check stays silent about things it should ignore — a project's own
 skills, an absent stack pack.
+
+`exit` and `args` are single-line directives, and declaring either twice **fails the case** rather
+than taking the first and dropping the rest. A silently discarded second line would leave the case
+running against arguments nobody reading the file would predict.
+
+`args` exists because a subject with subcommands cannot be exercised by cwd alone. The line is split
+on spaces and passed to the subject verbatim; it is **not** glob-expanded, so a `*` reaches the
+subject as a literal rather than as whatever happens to sit in the fixture directory.
+
+`same_stdout_as` asserts that this case's stdout byte-matches another case's stdout **in the same
+suite**. It exists for claims no substring can express: that two fixtures describing the same thing
+in different on-disk formats produce identical output. `contains:` cannot state that — it can only
+assert a value both happen to print, which passes just as well if the two are read by two divergent
+code paths that agree by luck on the one line the fixture checks.
+
+Naming a case that does not exist is a failure, not a silently skipped assertion.
+
+A mismatch prints the first six lines of the difference and says how many more there were, so a
+clipped diff is never mistaken for the whole one.
+
+### Why `same_stdout_as` re-runs the subject, and why it caches
+
+`contains` and `not_contains` see stdout and stderr **merged**, so a fixture does not have to know
+which stream a finding went to. A byte comparison cannot use that stream: any stderr noise, or a
+different interleaving of the two streams between two runs, would fail the comparison for reasons
+that have nothing to do with the claim.
+
+Rather than change what `contains` sees — which would silently alter all 17 existing cases —
+`same_stdout_as` runs the subject again with stderr discarded and compares those captures.
+
+**Each capture is taken at most once per run**, cached under the run's temporary directory and keyed
+by suite and case. Without the cache the cost tracks the number of *references* rather than the
+number of cases: the natural shape of this assertion is several format variants all pointing at one
+canonical case, and that canonical case would then be re-run once per variant to produce byte-identical
+output every time. Measured on a five-case suite, that was 15 subject invocations where 10 suffice.
+
+The cache assumes a case's stdout does not change within one run — true because subjects here are
+deterministic and read-only, and because cases run sequentially. **If case execution is ever
+parallelized, revisit this together with the cache key**, not separately.
 
 ## Fixtures worth understanding
 

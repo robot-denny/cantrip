@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Regenerate the install-check fixtures.
+# Regenerate the install-check suite.
 #
 # Fixtures are generated rather than hand-built so they are reproducible and reviewable:
 # a malformed fixture produces a test failure that looks exactly like a real bug, which
@@ -17,6 +17,11 @@ cd "$(dirname "$0")" || exit 2
 CASES="install-check"
 rm -rf "$CASES"
 mkdir -p "$CASES"
+
+# The suite's `subject` file names the executable under test. It lives inside the suite
+# directory this script wipes, so it has to be regenerated here — a hand-written subject
+# would vanish on the next run and every case would then fail as "subject missing".
+printf 'scripts/check-install.sh\n' > "$CASES/subject"
 
 CORE=(workflow spec plan code-review)
 REVIEWERS=(accessibility-reviewer code-reviewer perf-reviewer)
