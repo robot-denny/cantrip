@@ -59,6 +59,28 @@ Every extraction step should read it first.
   CMS. That keeps the arithmetic deterministic and fixture-testable while the CMS read stays where
   the connection is. The spec's testing guideline for audit arithmetic — "given a known inventory
   and a known set of guides" — is written for exactly this shape.
+- **Verified against a real uSync project on 2026-08-26** — 174 content types, 150 data types, no
+  Deploy artifacts. Recorded so no step re-derives it. All 174 extract at exit 0; 125 carry
+  `<IsElement>true</IsElement>` and 49 do not, matching the spec's 125-of-174 figure; 1022
+  properties of which 623 are inherited and 100 required; zero unresolved editors. Tab references
+  are 235 path-form and 164 bare, of which 114 resolve to a group and 50 to a tab — and **zero are
+  ambiguous**, so the ambiguous-reference refusal is a guard that never fires on real data.
+  ContentTypes filenames are the lowercased alias 174/174; **DataTypes filenames follow a different
+  rule entirely** — 0 of 150 match the lowercased alias, because the filename is the alias with
+  spaces and punctuation stripped and its *original casing kept* (`"Dropdown - Blank Settings"` →
+  `DropdownBlankSettings.config`). Resolve a data type by its `Key`, never by constructing a
+  filename. The extraction reference did not say this and now does. A DataType element carries `Info` with
+  `Name`, `EditorAlias`, `EditorUIAlias` (capital UI), plus `Config`, and often `Folder` (91/150) —
+  it carries no `DatabaseType` and no `SortOrder`. **A DataType's `Alias` attribute is a display name
+  with spaces** in 143 of 150 cases.
+- **The option-default marker is dropped: `options` is a list of plain strings.** Two projects in two
+  formats agree that no dropdown carries a default — Deploy had 11 configs with `items[]` and none
+  with `default`; uSync had 26 with `items[]` and none with `default`, and the only two `default`
+  keys anywhere sat on `Umbraco.TrueFalse` toggles. A field that can never be true is worse than an
+  absent one: it would appear in every guide's property table as noise and invite a reader to trust
+  it. A **toggle's** default is a real value with nowhere to live in the dossier today; that is a
+  known gap, not this increment's work. If a source for option defaults ever appears, restoring the
+  marker is a `dossierVersion` bump.
 - **The source signature is a sha256 over the canonical schema-bearing subset of the dossier**
   (alias, kind, tabs, groups, sort order, properties, mandatory flags, option lists), excluding
   `rung` and `dossierVersion`. This is what makes format-blindness assertable without hardcoding a
@@ -315,18 +337,43 @@ silent-empty shape this asserts against.
 > open question from the spec. The demo project's real spread is `17.1.0`, `17.2.0`, `17.2.1`, so the
 > accepted Deploy set must include all three or the normal case is refused.
 
+**Also folded into this step, from verifying the uSync adapter against a real project on
+2026-08-26** (the adapter was fixture-only until then):
+
+> **Drop the option-default marker.** `options` becomes a list of plain strings in the dossier.
+> Update `guidelib/dossier.py`'s `options_from_config`, both adapters if they touch it, the
+> hand-authored golden files that carry an option list, and the generator. No dropdown in either
+> project carries a default, so the marker could only ever be `false`.
+>
+> **Correct the uSync DataType fixture to the verified shape.** Restore the spaced `Alias` display
+> name (143 of 150 real ones contain spaces — a previous review flagged the spaced alias as an
+> inconsistency and it was "corrected" to camelCase, which made the fixture *less* faithful);
+> rename `EditorUiAlias` to `EditorUIAlias`; drop the invented `DatabaseType` and `SortOrder`
+> elements; add `Folder`, which 91 of 150 carry. Then delete the "confirm this shape against a real
+> uSync export" caution from the generator — it is now confirmed.
+>
+> **Amend `skills/umbraco-17/reference/umbraco-17-feature-backfill/SKILL.md`** with the two things
+> the sweep found it lacking: the verified DataType element names, and the fact that its
+> lowercased-alias filename rule holds for ContentTypes (174/174) but **not** for DataTypes
+> (0/150 — the filename keeps the alias's original casing with spaces and punctuation stripped).
+> That file is what other increments read.
+
 **What to build**: the uSync up-front gate, the Deploy per-artifact skip-and-report, a single
-declared accepted-version set per format; two fixture cases.
+declared accepted-version set per format; two fixture cases. Plus the three folded-in items above.
 
 **Test first**: write both cases and confirm each goes RED for the right reason — the uSync case by
 reading an unrecognized export as though it were understood, the Deploy case by either refusing the
 whole read or reading the stale artifact silently.
 
 **Validation**:
-- [Automated]: `tests/run.sh guide-check` — seven cases pass. `deploy-mixed-versions` must assert
+- [Automated]: `tests/run.sh guide-check` — every case passes. `deploy-mixed-versions` must assert
   both halves: the skipped artifact named, and the others still reported.
-- [Manual]: run `inventory` (once Step 8 exists) or `extract` against the demo project and confirm
-  its three-version spread reads cleanly rather than being refused.
+- [Manual]: run `extract` against the demo project and confirm its three-version spread
+  (`17.1.0`, `17.2.0`, `17.2.1`) reads cleanly rather than being refused — 68 of 68 at exit 0.
+- [Manual]: run `extract` across the real uSync project's 174 content types and confirm all 174
+  still read at exit 0 after the fixture and dossier changes, and that its `format="10.7.0"` passes
+  the new gate. Both projects are read-only additional working directories; never write to either,
+  and never copy an identifier from either into a committed file.
 
 ---
 

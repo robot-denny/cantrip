@@ -14,7 +14,8 @@
 #
 # The element and attribute shapes of both formats come from
 # skills/umbraco-17/reference/umbraco-17-feature-backfill/SKILL.md, which was verified
-# against real projects. Two shapes are NOT covered there and are marked in place below.
+# against real projects — including the uSync <DataType> shape, measured on a real export's
+# 150 data types and marked in place below.
 #
 # Usage:  tests/make-guide-fixtures.sh
 
@@ -45,6 +46,9 @@ U_DROP=dddd3333dddd3333dddd333333333333   ; G_DROP=dddd3333-dddd-3333-dddd-33333
 U_AREA=dddd4444dddd4444dddd444444444444   ; G_AREA=dddd4444-dddd-4444-dddd-444444444444
 # A second identity for the same alias, used only by the duplicate-alias refusal case.
 U_OTHER=cccc9999cccc9999cccc999999999999
+# A component nobody asks for, used only by the mixed-version case: it exists to be the one
+# artifact the read refuses, so it must not be reachable from any other fixture's component.
+U_STALE=cccc8888cccc8888cccc888888888888
 U_PAGE=eeee1111eeee1111eeee111111111111   ; G_PAGE=eeee1111-eeee-1111-eeee-111111111111
 G_VIS=ffff3333-ffff-3333-ffff-333333333333
 # The two components that legitimately have no properties. Both shapes were observed on the
@@ -69,7 +73,7 @@ DEPLOY_VERSION='17.2.0'
 #         alertDismissible  Umbraco.TrueFalse         optional   sort 20
 #     tab  settings "Settings"                sort 20
 #         alertSeverity     Umbraco.DropDown.Flexible optional   sort 10
-#                           options Info | Warning | Critical, Info the default
+#                           options Info | Warning | Critical
 #   baseSettings (element type)
 #     tab  seo      "SEO"                     sort 100
 #         metaDescription   Umbraco.TextArea          optional   sort 10
@@ -266,12 +270,12 @@ EOF
   deploy_data_type "$rev" "$U_AREA"   "Textarea"   "Umbraco.TextArea" "Umb.PropertyEditorUi.TextArea" "Ntext"    '{}'
 
   # The option list lives on the data type, in both formats — a content type only points at
-  # it. `items` and `multiple` are the keys a real Flexible Dropdown carries. `default` is
-  # the key Umbraco's own toggle configuration uses, borrowed here so the fixture can state
-  # which option is the default; a stock dropdown does not carry it, so an adapter must read
-  # it as optional and mark no default when it is absent. Confirm this key against a real
-  # project before treating the default marker as something a genuine export supplies -- it
-  # is the one dossier feature here with no verified source.
+  # it. `items` and `multiple` are the keys a real Flexible Dropdown carries, and they are the
+  # only two: verified 2026-08-26 across two projects in both formats, where 11 Deploy data
+  # types and 26 uSync ones carried `items[]` and NONE of the 37 carried a `default`. An
+  # earlier version of this fixture borrowed `default` from Umbraco's toggle configuration so
+  # it could state which option was the default; the dossier no longer carries that marker,
+  # because on this evidence it could only ever have been false.
   deploy_data_type "$rev" "$U_DROP" "Alert Severity" "Umbraco.DropDown.Flexible" \
     "Umb.PropertyEditorUi.Dropdown" "Nvarchar" '{
     "items": [
@@ -279,8 +283,7 @@ EOF
       "Warning",
       "Critical"
     ],
-    "multiple": false,
-    "default": "Info"
+    "multiple": false
   }'
 }
 
@@ -472,20 +475,28 @@ EOF
   # Only the dropdown is serialized here: a uSync property already names its editor inline,
   # so the DataTypes folder is needed for the option list and nothing else.
   #
-  # NOT COVERED by umbraco-17-feature-backfill: the reference documents uSync content types
-  # and the `usync.config` gate, and the block spell records that a data type's palette lives
-  # in its `<Config>` payload — but the surrounding <DataType>/<Info> element names are from
-  # neither. Confirm this shape against a real uSync export when one is available; the
-  # `<Config>` JSON is the part the adapter reads.
-  cat > "$root/DataTypes/alertseverity.config" <<EOF
+  # VERIFIED 2026-08-26 against a real uSync export's 150 data types, which is what this
+  # shape now reproduces: the root element carries Key, Alias and Level; <Info> carries Name,
+  # EditorAlias and EditorUIAlias — capital UI, not EditorUiAlias — plus <Folder> on 91 of the
+  # 150; and <Config> carries the JSON payload. **There is no <DatabaseType> and no
+  # <SortOrder> on a real DataType element.** An earlier version of this fixture invented both
+  # and mis-spelled EditorUIAlias, because the shape had never been checked.
+  #
+  # Two details below look like mistakes and are the measured truth, so leave them alone. A
+  # DataType's `Alias` is a DISPLAY NAME containing spaces — 143 of the 150 — which a review
+  # once "corrected" to camelCase here, making the fixture less faithful rather than more.
+  # And the filename is NOT the lowercased alias the way a ContentType's is: that rule held
+  # 174 of 174 times for content types and 0 of 150 for data types, where the name is the
+  # alias with spaces and punctuation removed and its casing kept. The adapter resolves a data
+  # type by its Key and never by its filename, so being faithful here costs nothing.
+  cat > "$root/DataTypes/AlertSeverity.config" <<EOF
 <?xml version="1.0" encoding="utf-8"?>
-<DataType Key="$G_DROP" Alias="alertSeverity" Level="1">
+<DataType Key="$G_DROP" Alias="Alert Severity" Level="2">
   <Info>
     <Name>Alert Severity</Name>
     <EditorAlias>Umbraco.DropDown.Flexible</EditorAlias>
-    <EditorUiAlias>Umb.PropertyEditorUi.Dropdown</EditorUiAlias>
-    <DatabaseType>Nvarchar</DatabaseType>
-    <SortOrder>0</SortOrder>
+    <EditorUIAlias>Umb.PropertyEditorUi.Dropdown</EditorUIAlias>
+    <Folder>Dropdowns</Folder>
   </Info>
   <Config><![CDATA[{
   "items": [
@@ -493,8 +504,7 @@ EOF
     "Warning",
     "Critical"
   ],
-  "multiple": false,
-  "default": "Info"
+  "multiple": false
 }]]></Config>
 </DataType>
 EOF
@@ -818,7 +828,9 @@ expect() {  # expect <case-root> <lines...>
 # It replaces a list of substring assertions, which could not do this job. `contains` finds a
 # value anywhere in the output, so a dossier with `mandatory` transposed between two
 # properties, or the default marker on the wrong option, satisfied every assertion the first
-# version of this suite made -- both were demonstrated against stub implementations. Field
+# version of this suite made -- both were demonstrated against stub implementations. (The
+# dossier carried an option-default marker then and no longer does; the demonstration stands
+# as the reason this file states a whole document rather than a bag of values.) Field
 # binding, nesting, and array order are all only assertable against the whole document.
 #
 # `sourceSignature` is masked in the comparison. It is a hash the subject computes, so it
@@ -892,18 +904,9 @@ expected_dossier() {  # expected_dossier <case-root> <rung>
           "mandatory": false,
           "sortOrder": 10,
           "options": [
-            {
-              "value": "Info",
-              "default": true
-            },
-            {
-              "value": "Warning",
-              "default": false
-            },
-            {
-              "value": "Critical",
-              "default": false
-            }
+            "Info",
+            "Warning",
+            "Critical"
           ],
           "inheritedFrom": null
         }
@@ -1227,5 +1230,126 @@ expect "$C" \
   'mask: sha256:' \
   "contains: declares no editable properties" \
   "not_contains: the export is partial"
+
+# --- version refusal, in the two shapes the formats force ----------------------
+#
+# One rule -- "never read a serialization shape you have not been verified against" -- and two
+# cases, because the two formats declare the version in places that force different answers.
+# Implementing either shape alone encodes the wrong single rule, so both are asserted.
+#
+# uSync declares ONE `format` for the whole export, in `usync.config`. So the check is a
+# single gate up front: an unrecognized format refuses the entire read and no component is
+# touched. Refusing per file would be arbitrary -- every file in the export shares the one
+# declaration.
+#
+# Deploy stamps `__version` on EVERY artifact, and one project holds a mix: the demo project
+# carries 17.1.0 on 47 document types, 17.2.0 on 16 and 17.2.1 on 5, because artifacts only
+# re-serialize when touched. So the check is per file: the unrecognized artifact is named as
+# unread and the rest of the read continues. Refusing the whole read would reject the normal
+# case -- there is no project whose artifacts all carry one version.
+
+# Rewrite one artifact's `__version` in place. A project's spread is whatever its edit
+# history was, so a fixture reproduces one by restamping rather than by generating a whole
+# second tree per version.
+restamp() {  # restamp <artifact> <version>
+  local tmp="$1.restamped"
+  sed 's/"__version": "[^"]*"/"__version": "'"$2"'"/' "$1" > "$tmp" && mv "$tmp" "$1"
+}
+
+# Rewrite the export's one format declaration. Same shape as the real file, which the
+# extraction reference records verbatim -- `format` numbers separately from both the package
+# version and the folder name, so a fixture must be able to vary it on its own.
+usync_format() {  # usync_format <case-root> <format>
+  printf '<uSync version="17.0.4.0" format="%s" />\n' "$2" > "$1/uSync/v17/usync.config"
+}
+
+# A document type stamped with a version this adapter has never been verified against. It is
+# deliberately a component NOBODY asks for and nothing composes: the assertion is that the
+# rest of the read completes, and a stale artifact the requested component depended on would
+# instead have to fail loudly, which is the missing-data-type case's job.
+stale_artifact() {  # stale_artifact <path> <udi> <alias> <version>
+  cat > "$1" <<EOF
+{
+  "Name": "Legacy Promo",
+  "Alias": "$3",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-bullhorn color-yellow",
+  "Thumbnail": "folder.png",
+  "Description": "A component last serialized by a version of the package this adapter does not know.",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$2",
+  "Dependencies": [],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$4"
+}
+EOF
+}
+
+# The whole read refused, up front. `not_contains` carries the two halves that a message-only
+# assertion would miss: no dossier was printed, and no component was read -- a run that
+# printed the document AND complained about the format would satisfy `contains` alone.
+C="$CASES/usync-format-refused"; mkdir -p "$C"; usync_tree "$C"
+usync_format "$C" "9.1.0"
+expect "$C" \
+  "exit: 1" \
+  "args: extract alertBanner" \
+  "contains: usync.config" \
+  "contains: 9.1.0" \
+  "contains: 10.7.0" \
+  'not_contains: "dossierVersion"' \
+  "not_contains: alertHeading"
+
+# Both halves, in one case, because either alone is a rule that looks implemented and is not.
+#
+# The skipped half: the stale artifact is named, with the version found on it, so an operator
+# can re-serialize the right file.
+#
+# The still-read half: `stdout_matches` against the SAME golden dossier every other Deploy
+# case uses. Three recognized versions are spread across this tree's artifacts -- the
+# requested type, the composition it inherits from, and the data type carrying the option
+# list -- so a run that refused the whole read over one stale file, or that let a version
+# check drop a recognized artifact, cannot produce this document.
+C="$CASES/deploy-mixed-versions"; mkdir -p "$C"; deploy_tree "$C"
+REV="$C/src/Web/umbraco/Deploy/Revision"
+restamp "$REV/document-type__$U_BASE.uda" "17.2.1"
+restamp "$REV/data-type__$U_DROP.uda"     "17.1.0"
+stale_artifact "$REV/document-type__$U_STALE.uda" "$U_STALE" "legacyPromo" "16.4.0"
+expected_dossier "$C" deploy
+expect "$C" \
+  "exit: 0" \
+  "args: extract alertBanner" \
+  "stdout_matches: expected-dossier.json" \
+  'mask: "sourceSignature":' \
+  "contains: document-type__$U_STALE.uda" \
+  "contains: 16.4.0" \
+  "contains: was not read" \
+  'contains: "inheritedFrom": "baseSettings"'
+
+# The same skip, but the requested component is the one that was skipped. This is the likely
+# real trigger -- an operator asks for a component whose artifact happens to be stale -- and
+# it used to be the case that said least: the note explaining exactly why the lookup found
+# nothing was computed, queued, and discarded when the lookup then raised. All the operator
+# got was "either the alias is misspelled, or the export is partial".
+#
+# So the assertions are the refusal AND the note, together. Asserting the refusal alone is
+# what passed before.
+C="$CASES/deploy-requested-version-skipped"; mkdir -p "$C"; deploy_tree "$C"
+REV="$C/src/Web/umbraco/Deploy/Revision"
+restamp "$REV/document-type__$U_BANNER.uda" "16.4.0"
+expect "$C" \
+  "exit: 1" \
+  "args: extract alertBanner" \
+  "contains: was not read" \
+  "contains: 16.4.0" \
+  "contains: document-type__$U_BANNER.uda" \
+  "contains: declares the alias" \
+  'not_contains: "dossierVersion"'
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

@@ -70,10 +70,18 @@ resolve every property's `Tab Alias` against the `<Tabs>` list and read that ent
 infer the level from whether the alias contains a slash.** Captions repeat freely — a "Content" tab
 routinely holds a "Content" group — so the caption is not a key.
 
-**uSync filenames are the lowercased alias.** An `alertBanner` element type serializes to
-`ContentTypes/alertbanner.config`; across 174 files in one project there were no exceptions. So
-a known alias can be read as a single file provided the lookup case-folds, and a full folder scan is
-needed only when enumerating without a known alias.
+**uSync content-type filenames are the lowercased alias — and data-type filenames are not.** An
+`alertBanner` element type serializes to `ContentTypes/alertbanner.config`; across 174 content types
+in one project there were no exceptions, so a known content-type alias can be read as a single file
+provided the lookup case-folds, and a full folder scan is needed only when enumerating without a
+known alias.
+
+**The same rule fails completely one folder over.** In the same project, 0 of 150
+`DataTypes/*.config` filenames were the lowercased alias. A data type's alias is a display name with
+spaces (below), and the filename is that alias with spaces and punctuation removed and its original
+casing kept — `Alias="Alert Severity"` serializes to `AlertSeverity.config`. So **resolve a data
+type by its `Key`, never by constructing a filename**; a property's `<Definition>` gives you that
+key, and a folder scan indexed by key is the reliable read.
 
 **uSync declares its format version once per project**, in `uSync/<v>/usync.config`:
 
@@ -86,6 +94,35 @@ line — the project above ran uSync 17.3.6 in a `uSync/v17/` folder with `forma
 neither the package version nor the folder name tells you the format. **Because it is declared once,
 a uSync version check is a single up-front gate on the whole read** — the opposite of Deploy's
 per-artifact `__version`.
+
+**A uSync `<DataType>` carries fewer elements than you would guess.** Verified across 150 data
+types in one project:
+
+```xml
+<DataType Key="dddd3333-dddd-3333-dddd-333333333333" Alias="Alert Severity" Level="2">
+  <Info>
+    <Name>Alert Severity</Name>
+    <EditorAlias>Umbraco.DropDown.Flexible</EditorAlias>
+    <EditorUIAlias>Umb.PropertyEditorUi.Dropdown</EditorUIAlias>
+    <Folder>Dropdowns</Folder>
+  </Info>
+  <Config><![CDATA[{ "multiple": false }]]></Config>
+</DataType>
+```
+
+- The root element carries `Key`, `Alias` and `Level`. **`Alias` is a display name containing
+  spaces** — 143 of the 150 — so it is not a code identifier and must not be treated as one.
+- `<Info>` carries `Name`, `EditorAlias`, and **`EditorUIAlias` with a capital UI** (not
+  `EditorUiAlias` — Deploy's JSON spells the equivalent key `EditorUiAlias`, and the two formats
+  genuinely differ). `<Folder>` appears when the data type sits in a backoffice folder, on 91 of the
+  150; `Level` tracks that nesting.
+- **There is no `DatabaseType` and no `SortOrder`** on a `<DataType>` element. Do not read for them.
+- `<Config>` holds the editor's configuration as a JSON payload — the option list, a block editor's
+  palette, and everything else editor-specific. It is the same payload Deploy puts in an artifact's
+  `Configuration` object, so a reader can normalize it once for both formats.
+- Not every file in `DataTypes/` is a `<DataType>`. One of the 150 was
+  `<Empty … Change="Rename" />`, a marker uSync leaves behind. **Confirm each file by its root
+  element** rather than trusting the folder.
 
 **Normalize compositions on the alias, whichever format you read.** Deploy gives UDIs and uSync
 gives aliases, so a reader that keeps whichever form it found works on one project and breaks on

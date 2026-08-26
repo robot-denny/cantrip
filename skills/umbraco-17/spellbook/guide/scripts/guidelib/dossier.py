@@ -24,9 +24,9 @@ Three rules the format exists to enforce:
 `sourceSignature` is a sha256 over the dossier minus the fields that describe *how* it was
 read — `rung` and `dossierVersion` — and minus itself. Everything else is schema-bearing:
 the alias, the kind, the names, the descriptions, the editors, the mandatory flags, the sort
-orders, the option lists and their default markers, the compositions, and whether structure
-was available at all. Two adapters reading the same component must therefore print the same
-signature; anything format-specific leaking into the canonical form breaks that equality.
+orders, the option lists, the compositions, and whether structure was available at all. Two
+adapters reading the same component must therefore print the same signature; anything
+format-specific leaking into the canonical form breaks that equality.
 
 The value carries a `sha256:` prefix because it is stored in the CMS against a guide page and
 compared on later runs. A stored value that names its own algorithm can be superseded without
@@ -57,33 +57,31 @@ UNGROUPED_TAB_ALIAS = ""
 UNGROUPED_TAB_NAME = ""
 UNGROUPED_TAB_SORT_ORDER = 0
 
-# The keys a data type's configuration uses for its option list and its default marker.
-# Both on-disk formats carry the *same* JSON payload here -- Deploy in an artifact's
-# `Configuration` object, uSync in a `<Config>` CDATA block -- so the reading of it belongs
-# in one place rather than once per adapter. Two adapters normalizing an option list
-# separately is the most intricate thing they would each have to get right, and the
-# signature's equality across formats is exactly what a divergence there would break.
+# The key a data type's configuration uses for its option list. Both on-disk formats carry
+# the *same* JSON payload here -- Deploy in an artifact's `Configuration` object, uSync in a
+# `<Config>` CDATA block -- so the reading of it belongs in one place rather than once per
+# adapter. Two adapters normalizing an option list separately is the most intricate thing
+# they would each have to get right, and the signature's equality across formats is exactly
+# what a divergence there would break.
 #
-# `default` is a BORROWED key: Umbraco's toggle configuration carries one, and the fixtures
-# use it to state which option is the default. A stock dropdown export has not been confirmed
-# to carry it -- of the demo project's data types, 11 carry `items[]` and none carries
-# `default` -- so it is read as optional. Absent means no option is marked, never "the first".
+# **An option is a plain string, and there is no default marker.** An earlier version read a
+# `default` key beside `items[]` and marked one option with it. Two projects in two formats
+# say no such key exists on a dropdown: of the demo project's Deploy data types, 11 carry
+# `items[]` and none carries `default`; of the uSync project's 150, 26 carry `items[]` and
+# none carries `default`. The only two `default` keys found anywhere sat on
+# `Umbraco.TrueFalse` toggles. So the marker could only ever have been false — a field that
+# cannot be true is worse than an absent one, because it appears in every guide's property
+# table as noise and invites a reader to trust it.
+#
+# **A toggle's default IS a real value, and the dossier has nowhere to put it.** That is a
+# known gap, recorded rather than fixed: a toggle has no option list to hang it on, and
+# inventing a home for one editor's configuration key is a decision for whoever needs it. If
+# a source for option defaults ever does appear, restoring the marker is a DOSSIER_VERSION
+# bump.
 CONFIG_ITEMS = "items"
-CONFIG_DEFAULT = "default"
 
 KIND_ELEMENT = "element"
 KIND_DOCUMENT = "document"
-
-
-def make_option(value, default=False):
-    """One entry in a property's option list, with the default marked.
-
-    The default marker is a separate boolean rather than an index or a bare value, because at
-    some rungs the option list is readable and the default is not. `False` on every option
-    then means "no default recorded", which is the honest reading of a data type whose
-    configuration does not carry one.
-    """
-    return {"value": value, "default": bool(default)}
 
 
 def make_property(alias, name, editor, description="", mandatory=False,
@@ -125,11 +123,14 @@ def text(value):
 
 
 def options_from_config(config):
-    """Option values in declared order, with the default marked if the config names one.
+    """The option values a data type offers, as plain strings in declared order.
 
     Declared order is kept rather than sorted: an option list is a sequence an editor sees in
     the backoffice, and reordering it would misdescribe the field. Shared by every adapter,
     because the payload is the same JSON whatever envelope it arrived in.
+
+    Plain strings, not objects — see the note beside CONFIG_ITEMS for what two projects in
+    two formats said about the default marker this used to carry.
     """
     if not isinstance(config, dict):
         return []
@@ -146,9 +147,7 @@ def options_from_config(config):
     else:
         return []
 
-    default = config.get(CONFIG_DEFAULT)
-    marked = None if default is None else text(default)
-    return [make_option(v, marked is not None and v == marked) for v in values if v != ""]
+    return [value for value in values if value != ""]
 
 
 def _option_value(item):

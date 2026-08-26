@@ -1,0 +1,7 @@
+exit: 1
+args: extract alertBanner
+contains: usync.config
+contains: 9.1.0
+contains: 10.7.0
+not_contains: "dossierVersion"
+not_contains: alertHeading

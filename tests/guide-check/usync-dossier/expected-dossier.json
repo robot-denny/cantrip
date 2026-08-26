@@ -59,18 +59,9 @@
           "mandatory": false,
           "sortOrder": 10,
           "options": [
-            {
-              "value": "Info",
-              "default": true
-            },
-            {
-              "value": "Warning",
-              "default": false
-            },
-            {
-              "value": "Critical",
-              "default": false
-            }
+            "Info",
+            "Warning",
+            "Critical"
           ],
           "inheritedFrom": null
         }

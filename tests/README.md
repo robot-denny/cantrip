@@ -99,7 +99,8 @@ clipped diff is never mistaken for the whole one.
 `"mandatory": true` and `"mandatory": false` and passed against a stub with the two flags transposed
 onto the wrong properties; it asserted the option list and its default marker and passed against a
 stub marking the wrong option. Both stubs were wrong in exactly the way the fixture existed to
-prevent.
+prevent. (The dossier carried an option-default marker at the time and no longer does — two real
+projects turned out to have none. The demonstration is why the case states a whole document.)
 
 `stdout_matches: <file>` compares stdout byte for byte against a file committed in the case
 directory. Field binding, nesting, and array order all become assertable, because the claim is the

@@ -9,8 +9,7 @@
       "Warning",
       "Critical"
     ],
-    "multiple": false,
-    "default": "Info"
+    "multiple": false
   },
   "Udi": "umb://data-type/dddd3333dddd3333dddd333333333333",
   "Dependencies": [],

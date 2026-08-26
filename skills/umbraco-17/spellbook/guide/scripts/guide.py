@@ -30,6 +30,13 @@ The rung a dossier was read at is recorded on it, because completeness is judged
 the rung: a missing option list at the models rung is a limit of the source, not a gap in the
 component.
 
+A serialization version this toolkit has not been verified against is not read, and what that
+costs depends on where the format declares it. uSync declares one `format` for a whole export,
+so an unrecognized one refuses the read before anything is parsed. Deploy stamps `__version`
+per artifact and one project holds a mix, so the artifact is skipped, named on stderr, and
+everything else is still read. The accepted sets, and the narrow evidence behind them, are
+declared once in `guidelib/__init__.py`.
+
 ## Usage
 
     guide.py extract   <alias> [--project-root DIR] [--adapter deploy|usync]
@@ -60,10 +67,11 @@ sys.dont_write_bytecode = True
 # realpath keeps that true when the script is reached through a symlink.
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-from guidelib import GuideError  # noqa: E402
-from guidelib import deploy      # noqa: E402
-from guidelib import dossier     # noqa: E402
-from guidelib import usync       # noqa: E402
+from guidelib import GuideError    # noqa: E402
+from guidelib import deploy        # noqa: E402
+from guidelib import dossier       # noqa: E402
+from guidelib import drain_notes   # noqa: E402
+from guidelib import usync         # noqa: E402
 
 # Rung name -> adapter module. The name is the `--adapter` value, the recorded `rung`, and the
 # module, all the same string, so a project's declared serialization needs no translation
@@ -146,9 +154,38 @@ def note_if_propertyless(entry):
         % (PROG, entry.get("alias")), file=sys.stderr)
 
 
+def report_read_notes():
+    """Print whatever the adapters recorded about the read itself, to stderr.
+
+    Before the dossier, because these are caveats about the document that follows: an
+    artifact the read declined to open changes how much the reader should trust a gap in it.
+    The two streams are separate, so a caller piping stdout is unaffected either way — this
+    is for the person watching a terminal.
+
+    stderr, and never stdout, for the reason `signature` exists at all: stdout carries the
+    document and nothing else, so a byte comparison of two runs compares what was read
+    rather than what was said about the reading.
+
+    Called from a `finally`, so a failed read still reports what it noticed on the way. A
+    refusal is then two messages -- the note, then the error -- and that order is deliberate:
+    the note is the context the error is missing.
+    """
+    for message in drain_notes():
+        print("%s: note: %s" % (PROG, message), file=sys.stderr)
+
+
 def cmd_extract(args):
     adapter = resolve_adapter(args.project_root, args.adapter)
-    entry = adapter.extract(args.project_root, args.alias)
+    # `finally`, because the read's own caveats matter most when the read then fails. The
+    # case that forced this: the requested alias IS the artifact skipped for its version, so
+    # the lookup finds nothing and raises -- and the note explaining exactly why it found
+    # nothing was computed, queued, and then thrown away with the exception. What the
+    # operator saw was "either the alias is misspelled, or the export is partial", with no
+    # mention of the version the tool had already read and rejected.
+    try:
+        entry = adapter.extract(args.project_root, args.alias)
+    finally:
+        report_read_notes()
     print(dossier.render(entry))
     note_if_propertyless(entry)
     return 0
@@ -162,7 +199,10 @@ def cmd_signature(args):
     guide page, so a bare value is what a shell pipeline wants.
     """
     adapter = resolve_adapter(args.project_root, args.adapter)
-    entry = adapter.extract(args.project_root, args.alias)
+    try:
+        entry = adapter.extract(args.project_root, args.alias)
+    finally:
+        report_read_notes()
     print(entry["sourceSignature"])
     # Noted here too, not only under `extract`. A caller may only ever ask for the signature,
     # and a signature over a component with no fields is a value worth knowing is thin.

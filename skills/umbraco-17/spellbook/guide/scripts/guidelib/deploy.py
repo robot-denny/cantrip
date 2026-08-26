@@ -5,7 +5,7 @@ content type, so tabs, groups, sort order, mandatory flags, compositions and dat
 configuration are all on disk.
 
 The mapping comes from `umbraco-17-feature-backfill`, which was verified against real Deploy
-projects. Three of its rules are the ones an implementation gets wrong:
+projects. Four of its rules are the ones an implementation gets wrong:
 
 - **The kind is a truthiness test, not a field.** `Permissions.IsElementType` is emitted only
   when true, so a reader that treats it as a boolean it can read and trust finds no element
@@ -16,19 +16,29 @@ projects. Three of its rules are the ones an implementation gets wrong:
   recursively, and every property they contribute is marked with the alias of the type that
   declared it — so a guide can say which fields are inherited rather than presenting a
   composed type's fields as its own.
+- **`__version` is per artifact, and one project holds a mix.** Deploy stamps the package
+  version at the moment an artifact was last serialized, so a project's spread is its edit
+  history: the demo project carries three versions across 68 document types. The version
+  check therefore skips the one artifact and names it, and never refuses the read — the
+  opposite shape from uSync, which declares one format for a whole export and so refuses up
+  front. Same rule, and the format decides what obeying it looks like.
 
 Two more things this adapter has to do that the reference does not spell out. There is no
 `element-type__*.uda`, so aliases are found by reading artifacts rather than by filename. And
 a property's editor is reachable only by resolving its `DataType` UDI to the data-type
-artifact, which is also where an option list and its default marker live.
+artifact, which is also where an option list lives.
 """
 
 import json
 import os
 
+from guidelib import ACCEPTED_DEPLOY_VERSIONS
 from guidelib import GuideError
 from guidelib import dossier
 from guidelib import missing_alias_error
+from guidelib import note
+from guidelib import unread_artifacts_note
+from guidelib import version_recognized
 
 RUNG = "deploy"
 
@@ -38,6 +48,10 @@ ARTIFACT_EXTENSION = ".uda"
 # contribute their own prefixes. Matched as a substring of the fully-qualified type name.
 TYPE_DOCUMENT = "DocumentTypeArtifact"
 TYPE_DATA = "DataTypeArtifact"
+
+# The serialization version, stamped on every artifact. The accepted set lives in
+# `guidelib/__init__.py`, beside uSync's, because the two sets share one body of evidence.
+VERSION_KEY = "__version"
 
 # Build output and tooling directories can hold copies of a revision folder. Reading them
 # would double every artifact and let a stale copy win a lookup.
@@ -156,10 +170,21 @@ class Catalog:
         if self._loaded:
             return
         self._loaded = True
+        unread = []
         for path in _artifact_files(self.project_root):
             artifact = _load(path)
             if not isinstance(artifact, dict):
                 raise GuideError("Deploy artifact %s is not a JSON object" % path)
+            declared = dossier.text(artifact.get(VERSION_KEY))
+            if not version_recognized(declared, ACCEPTED_DEPLOY_VERSIONS):
+                # Skipped, not refused, and this is where the two formats' one rule takes
+                # its Deploy shape. An unread artifact is simply absent from both indexes,
+                # so it cannot be returned as a component and cannot resolve a reference —
+                # which means a component that *depended* on it fails loudly through the
+                # partial-export refusals rather than being reported from a shape nobody
+                # verified. Everything else reads exactly as before.
+                unread.append((path, declared))
+                continue
             artifact["__path"] = path
             udi = _normalize_udi(artifact.get("Udi"))
             if udi:
@@ -167,6 +192,11 @@ class Catalog:
             alias = artifact.get("Alias")
             if alias and TYPE_DOCUMENT in (artifact.get("__type") or ""):
                 self._claim(self._documents, alias.lower(), artifact, "alias")
+        # One note for the whole corpus rather than one per file. The operator's next action
+        # is the same for all of them, and a per-file line ahead of every dossier would train
+        # a reader to skip it.
+        if unread:
+            note(unread_artifacts_note(unread, ACCEPTED_DEPLOY_VERSIONS))
 
     @staticmethod
     def _claim(index, key, artifact, what):
@@ -221,7 +251,7 @@ class Catalog:
         The option list itself is read by `dossier.options_from_config`: an artifact's
         `Configuration` object holds the same JSON payload uSync writes into a `<Config>`
         block, so normalizing it belongs in one place rather than once per adapter — and the
-        note on `default` being a borrowed key with no verified source lives there too.
+        note on why an option is a plain string rather than a marked one lives there too.
         """
         self._load_all()
         artifact = self.by_udi(udi)

@@ -2,8 +2,8 @@
 
 The same schema Deploy serializes, in a different shape: tabs, groups, sort order, mandatory
 flags and compositions are all on disk, so this rung is as complete as rung 1. What differs is
-where each value lives, and four of those differences are places an implementation goes wrong
-quietly. All four come from `umbraco-17-feature-backfill`, which measured them on real
+where each value lives, and five of those differences are places an implementation goes wrong
+quietly. All five come from `umbraco-17-feature-backfill`, which measured them on real
 projects:
 
 - **The alias is an attribute on the root `<ContentType>`, not an `<Info>` child.** A reader
@@ -18,6 +18,11 @@ projects:
   of the bare cases. See `_resolve_owner`.
 - **Captions repeat and are never keys.** A "Content" tab routinely holds a "Content" group,
   so every lookup here is on the alias.
+- **The format is declared once, for the whole export**, in `usync.config`. So the version
+  check is a single gate before anything is parsed, and an unrecognized format refuses the
+  entire read — the mirror image of Deploy, where `__version` is stamped per artifact and one
+  project holds a mix, so the unrecognized artifact is skipped and the read continues. One
+  rule, two shapes; implementing either shape alone encodes the wrong single rule.
 
 Two more things this adapter has to decide that the reference does not spell out.
 
@@ -39,13 +44,24 @@ import json
 import os
 import xml.etree.ElementTree as ElementTree
 
+from guidelib import ACCEPTED_USYNC_FORMATS
 from guidelib import GuideError
 from guidelib import dossier
 from guidelib import missing_alias_error
+from guidelib import usync_format_refusal
+from guidelib import version_recognized
 
 RUNG = "usync"
 
 CONFIG_EXTENSION = ".config"
+
+# The export's one declaration, at `uSync/<v>/usync.config` — the parent of the folders read
+# below. `format` is the serialization shape and the thing to gate on: it numbers separately
+# from both the package version and the folder name, so neither of those is a substitute. The
+# accepted set lives in `guidelib/__init__.py`, beside Deploy's, because the two share one
+# body of evidence.
+DECLARATION_FILE = "usync.config"
+FORMAT_ATTRIBUTE = "format"
 
 # The two folders of a uSync export this rung reads, matched case-insensitively. uSync writes
 # them capitalized; a case-insensitive filesystem or a hand-moved export may not.
@@ -140,8 +156,8 @@ def _config_files(project_root, dirname):
     The location is searched for rather than configured, per the `paths.md → ## Umbraco`
     slot's fallback: a uSync export is identified by `uSync/*/ContentTypes/*.config`. The
     folder name is the filter because the extension alone would sweep up every `web.config`
-    in the repository. A project may hold more than one export folder, so all of them are
-    read — a lookup that silently picked the first would depend on directory order.
+    in the repository. Every matching folder is read rather than the first one found, so the
+    result does not depend on directory order.
     """
     for dirpath, dirnames, filenames in os.walk(project_root):
         dirnames[:] = sorted(d for d in dirnames
@@ -151,6 +167,51 @@ def _config_files(project_root, dirname):
         for name in sorted(filenames):
             if name.lower().endswith(CONFIG_EXTENSION):
                 yield os.path.join(dirpath, name)
+
+
+def _declaration_files(content_type_files):
+    """Every `usync.config` governing an export this adapter would read.
+
+    Found as the sibling of a `ContentTypes/` folder rather than by walking for the name, so
+    a `usync.config` elsewhere in the repository cannot gate a read it does not govern.
+
+    Takes the already-collected content-type paths rather than walking for them. Walking here
+    as well cost a second full traversal of the project immediately before the read's own:
+    measured at 8ms of a 44ms catalog build on a 325-file export, for a list the caller was
+    about to build anyway.
+    """
+    seen = set()
+    for path in content_type_files:
+        declaration = os.path.join(
+            os.path.dirname(os.path.dirname(path)), DECLARATION_FILE)
+        if declaration in seen:
+            continue
+        seen.add(declaration)
+        if os.path.isfile(declaration):
+            yield declaration
+
+
+def check_format(content_type_files):
+    """Refuse an export whose declared format is not one this toolkit has read before.
+
+    Up front, before a single content type is parsed, because that is what uSync's own
+    declaration forces: one `format` covers the whole export, so there is no subset of it a
+    reader could still trust and no partial answer worth giving. The refusal can therefore
+    say truthfully that nothing was read.
+
+    An export declaring no format at all is read — absence is not a claim to be
+    unrecognized, and the reasoning is beside the accepted sets in `guidelib/__init__.py`.
+
+    **One unrecognized declaration refuses the whole read**, including any other export
+    folder that happens to sit alongside it. Every project measured holds exactly one export,
+    so refusing per export rather than per read would be behavior invented on no evidence and
+    tested against nothing. If a two-export project ever turns up, that is the moment to
+    decide, with a real example in hand.
+    """
+    for path in _declaration_files(content_type_files):
+        declared = dossier.text(_parse(path).get(FORMAT_ATTRIBUTE)).strip()
+        if not version_recognized(declared, ACCEPTED_USYNC_FORMATS):
+            raise usync_format_refusal(path, declared, ACCEPTED_USYNC_FORMATS)
 
 
 def _parse(path):
@@ -187,7 +248,15 @@ class Catalog:
         if self._loaded:
             return
         self._loaded = True
-        for path in _config_files(self.project_root, CONTENT_TYPE_DIR):
+        # Before anything is parsed, so "no content type was read" is a fact rather than a
+        # claim. Here rather than in `extract` because every consumer of this adapter — the
+        # inventory determiner included — comes through the catalog, and a gate one caller
+        # can skip is a gate that will be skipped.
+        # Collected once and used twice: the gate needs these paths to find each export's
+        # declaration, and the loop below needs them to read the content types.
+        content_type_files = list(_config_files(self.project_root, CONTENT_TYPE_DIR))
+        check_format(content_type_files)
+        for path in content_type_files:
             root = _parse(path)
             if root.tag != CONTENT_TYPE_ELEMENT:
                 continue
