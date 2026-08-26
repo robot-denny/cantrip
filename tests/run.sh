@@ -14,6 +14,9 @@
 #     contains: some substring     zero or more; output must contain each
 #     not_contains: substring      zero or more; output must contain none
 #     same_stdout_as: other-case   zero or more; stdout must byte-match that case's stdout
+#     stdout_matches: file         zero or more; stdout must byte-match a file in the case dir
+#     mask: regex                  zero or more; matching lines are neutralized on both sides
+#                                  of a stdout_matches comparison (no `|` in the regex)
 #
 # `contains`/`not_contains` see stdout and stderr merged, because a check's findings may go
 # to either and a fixture should not have to care which. `same_stdout_as` cannot use that
@@ -73,6 +76,29 @@ capture_stdout() {  # capture_stdout <suite-dir> <case> <subject-abs> <outfile>
   local dir="$1/$2" a=()
   read_args "$dir/expect" a
   ( cd "$dir" && "$3" ${a[@]+"${a[@]}"} ) >"$4" 2>/dev/null
+}
+
+# Replace every line matching a `mask:` regex with a fixed placeholder, applied to both
+# sides of a golden comparison.
+#
+# A golden file states the whole expected document, which is the only way to assert that a
+# value sits on the *right* field -- a substring check finds a value anywhere in the output
+# and cannot tell a correct document from one with two fields transposed. The exception is a
+# value the subject derives rather than reads: a content hash cannot be hand-authored, and
+# hardcoding one would mean asserting the implementation against itself. Masking that one
+# line keeps every other line byte-exact instead of giving up on the comparison.
+#
+# The regex is used as a sed address, so it must not contain the `|` delimiter.
+apply_masks() {  # apply_masks <expect-file> <file>
+  local exprs=() m
+  while IFS= read -r m; do
+    [[ -n "$m" ]] && exprs+=(-e "s|.*${m}.*|<masked>|")
+  done < <(sed -n 's/^mask:[[:space:]]*//p' "$1")
+  if [[ ${#exprs[@]} -eq 0 ]]; then
+    cat "$2"
+  else
+    sed "${exprs[@]}" "$2"
+  fi
 }
 
 # A case's stdout-only capture, computed at most once per run.
@@ -205,6 +231,26 @@ for suite in "${suites[@]}"; do
             problems+=("  ... $((total - 6)) more diff lines; run the two cases to see them")
         fi
       done < <(sed -n 's/^same_stdout_as:[[:space:]]*//p' "$expect")
+
+      while IFS= read -r golden; do
+        [[ -z "$golden" ]] && continue
+        if [[ ! -f "$dir/$golden" ]]; then
+          problems+=("stdout_matches: no such file in the case directory: $golden")
+          continue
+        fi
+        mine=$(stdout_of "$suite_dir" "$name" "$SUBJECT")
+        apply_masks "$expect" "$mine"        >"$WORK/got"
+        apply_masks "$expect" "$dir/$golden" >"$WORK/want"
+        if ! cmp -s "$WORK/got" "$WORK/want"; then
+          problems+=("stdout does not match $golden:")
+          total=$(diff "$WORK/want" "$WORK/got" | wc -l | tr -d ' ')
+          while IFS= read -r line; do
+            problems+=("  $line")
+          done < <(diff "$WORK/want" "$WORK/got" | head -8)
+          [[ "$total" -gt 8 ]] && \
+            problems+=("  ... $((total - 8)) more diff lines; diff the file against the subject's output")
+        fi
+      done < <(sed -n 's/^stdout_matches:[[:space:]]*//p' "$expect")
     fi
 
     if [[ ${#problems[@]} -eq 0 ]]; then

@@ -98,6 +98,17 @@ and lowest as regression protection, so the answer probably falls out of the aut
 rather than being a separate piece of work. Until then they are a specification for a test, and the
 feature doc says so.
 
+**Check 1 greps file by file, and it is over half the commit gate.** The scrub check spawns two or
+three `grep` processes per scanned file, unconditionally, so its cost tracks file *count* rather than
+content. Measured on 2026-08-26: 369 files, ≈3.0s, against a full `check-contract.sh` of ≈5.7s — so
+roughly 53% of what every commit waits for. One batched `grep` over the same list finished in under
+0.01s, with per-file exemption filtering then needed only for files that actually produced a hit,
+normally none. Filed rather than fixed in passing: this is the gate that keeps a public repo scrubbed,
+and rewriting how it collects hits deserves its own change with its own negative tests — an exemption
+still honored, a planted token still caught in both the `git ls-files` and `find` branches. The
+`editor-facing-guides` fixtures add to the scanned set as they land (the plan reaches roughly 20
+cases, projecting +0.4s to +0.8s), which is what raised it; none of that cost is measurable today.
+
 **Pack spell counts are ungated.** Contract check 16 holds the core spellbook to ten workflow spells
 and says nothing about packs, so a pack could ship a dozen spells and nothing would notice. Whether
 that is deliberate — a pack serves one stack and its spells arrive only with it — or a gap the

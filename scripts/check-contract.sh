@@ -73,15 +73,19 @@ begin() {
 # and the gate reported success. Two lessons in that. Keep the two lists below in step, since
 # only the second runs outside a git checkout. And when adding a fixture in a new format,
 # check it is scanned before assuming it is.
+#
+# `.uda` (Deploy) and `.config` (uSync) were added when the guide-check suite arrived, ahead
+# of its first committed fixture: those fixtures carry document-type aliases, property names,
+# and folder paths, which is exactly the content check 1 exists to catch.
 repo_md_files() {
   if git rev-parse --git-dir >/dev/null 2>&1; then
     { git ls-files; git ls-files --others --exclude-standard; } 2>/dev/null \
-      | grep -E '\.(md|json|sh|py|txt|diff)$|(^|/)LICENSE$' \
+      | grep -E '\.(md|json|sh|py|txt|diff|uda|config)$|(^|/)LICENSE$' \
       | grep -vE '^scripts/check-contract\.sh$'
   else
     find . \( "${PRUNE[@]}" \) -prune -o -type f \
       \( -name '*.md' -o -name '*.json' -o -name '*.sh' -o -name '*.py' -o -name '*.txt' \
-         -o -name '*.diff' -o -name 'LICENSE' \) \
+         -o -name '*.diff' -o -name '*.uda' -o -name '*.config' -o -name 'LICENSE' \) \
       -print 2>/dev/null
   fi
 }

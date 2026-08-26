@@ -66,6 +66,8 @@ args: --guides guides.json     # zero or one; a single line
 contains: some substring       # zero or more, case-insensitive
 not_contains: some substring   # zero or more
 same_stdout_as: other-case     # zero or more
+stdout_matches: golden.json    # zero or more; a file in the case directory
+mask: "someDerivedField":      # zero or more; applies to stdout_matches only
 ```
 
 `not_contains` is what asserts the check stays silent about things it should ignore — a project's own
@@ -89,6 +91,32 @@ Naming a case that does not exist is a failure, not a silently skipped assertion
 
 A mismatch prints the first six lines of the difference and says how many more there were, so a
 clipped diff is never mistaken for the whole one.
+
+### `stdout_matches` — when a substring cannot state the claim at all
+
+`contains` finds a value **anywhere** in the output, so it cannot say that a value sits on the
+*right* field. That is not a theoretical gap. The first version of the `guide-check` suite asserted
+`"mandatory": true` and `"mandatory": false` and passed against a stub with the two flags transposed
+onto the wrong properties; it asserted the option list and its default marker and passed against a
+stub marking the wrong option. Both stubs were wrong in exactly the way the fixture existed to
+prevent.
+
+`stdout_matches: <file>` compares stdout byte for byte against a file committed in the case
+directory. Field binding, nesting, and array order all become assertable, because the claim is the
+whole document rather than a bag of values found in it.
+
+**Author the golden file by hand, from the fixture's intent — never capture it from a run.** A
+captured file asserts that the code still does what it did; an authored one asserts that the code
+does what was asked. Capturing also makes the first implementation self-certifying, which is the one
+thing a test must never be.
+
+`mask: <regex>` neutralizes matching lines on **both** sides of that comparison, for values the
+subject derives rather than reads — a content hash cannot be hand-authored, and pasting one in would
+assert the implementation against itself. Mask that line and every other line stays exact. The regex
+is used as a `sed` address, so it must not contain `|`.
+
+Use `contains` for a claim worth stating in human terms, and the golden file for structure. Stating
+structure in both places means two files to edit and one of them going stale.
 
 ### Why `same_stdout_as` re-runs the subject, and why it caches
 
