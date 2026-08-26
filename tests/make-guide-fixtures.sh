@@ -46,6 +46,11 @@ U_AREA=dddd4444dddd4444dddd444444444444   ; G_AREA=dddd4444-dddd-4444-dddd-44444
 # A second identity for the same alias, used only by the duplicate-alias refusal case.
 U_OTHER=cccc9999cccc9999cccc999999999999
 U_PAGE=eeee1111eeee1111eeee111111111111   ; G_PAGE=eeee1111-eeee-1111-eeee-111111111111
+G_VIS=ffff3333-ffff-3333-ffff-333333333333
+# The two components that legitimately have no properties. Both shapes were observed on the
+# demo project's 68 document types, which is why they are fixtures rather than hypotheses.
+U_TAG=ffff1111ffff1111ffff111111111111    ; G_TAG=ffff1111-ffff-1111-ffff-111111111111
+U_VIS=ffff2222ffff2222ffff222222222222    ; G_VIS=ffff2222-ffff-2222-ffff-222222222222
 
 DEPLOY_ARTIFACT_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact'
 DEPLOY_DATATYPE_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact'
@@ -647,6 +652,155 @@ EOF
 EOF
 }
 
+# --- the two components that have no properties and are not broken ---------------
+#
+# A component with no properties is the shape a refusal rule is most tempting to write and
+# most expensive to get wrong, because BOTH of these are real. Each was found on the demo
+# project's 68 document types, so neither is a hypothetical the fixtures invented:
+#
+#   topicTag        a taxonomy-style node: no compositions, no tabs, no groups, no
+#                   properties. Only a name, an icon and a description. The dossier's tabs
+#                   list comes out empty, which is the most extreme shape a completed read
+#                   can produce -- and the one an over-eager "empty means broken" rule
+#                   refuses first.
+#   pageVisibility  a type declaring one tab and nothing in it. It contributes STRUCTURE and
+#                   no fields, which is exactly what an editor sees: a tab that a composition
+#                   or a later change is expected to fill.
+#
+# Both must extract with exit 0. A refusal here would refuse a fifth of the demo project's
+# document types, so these cases exist to pin the permissive half of the line as deliberately
+# as the refusal cases pin the other half. A refusal rule with no case proving what it does
+# NOT refuse is how the next increment tightens it by accident.
+deploy_propertyless() {  # deploy_propertyless <case-root>
+  local rev="$1/src/Web/umbraco/Deploy/Revision"
+  mkdir -p "$rev"
+
+  # No `Permissions.IsElementType`, so this reads as a document type. `PropertyGroups` and
+  # `PropertyTypes` are both written as empty arrays, which is what Deploy does -- all 68
+  # of the demo project's artifacts carry both keys, including the property-less ones.
+  cat > "$rev/document-type__$U_TAG.uda" <<EOF
+{
+  "Name": "Topic Tag",
+  "Alias": "topicTag",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-tag color-blue",
+  "Thumbnail": "folder.png",
+  "Description": "A tag an editor picks when classifying an article.",
+  "Permissions": {
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$U_TAG",
+  "Dependencies": [],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+
+  cat > "$rev/document-type__$U_VIS.uda" <<EOF
+{
+  "Name": "Page Visibility",
+  "Alias": "pageVisibility",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-eye color-grey",
+  "Thumbnail": "folder.png",
+  "Description": "A tab every page carries, filled in by whatever composes this.",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [
+    {
+      "Key": "ffff2222-0001-4000-8000-000000000001",
+      "Name": "Visibility",
+      "SortOrder": 30,
+      "Type": 1,
+      "Alias": "visibility",
+      "PropertyTypes": []
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$U_VIS",
+  "Dependencies": [],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+}
+
+# The uSync twin of topicTag, and the only one of the pair worth serializing twice: the
+# taxonomy node is the extreme shape, so if the permissive rule lives in the shared layer
+# rather than in one adapter, this is where that shows. `<GenericProperties />` and `<Tabs />`
+# are the empty containers -- present and empty, not absent.
+usync_propertyless() {  # usync_propertyless <case-root>
+  local root="$1/uSync/v17"
+  mkdir -p "$root/ContentTypes"
+  cat > "$root/usync.config" <<'EOF'
+<uSync version="17.0.4.0" format="10.7.0" />
+EOF
+  cat > "$root/ContentTypes/topictag.config" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<ContentType Key="$G_TAG" Alias="topicTag" Level="1">
+  <Info>
+    <Name>Topic Tag</Name>
+    <Icon>icon-tag color-blue</Icon>
+    <Thumbnail>folder.png</Thumbnail>
+    <Description><![CDATA[A tag an editor picks when classifying an article.]]></Description>
+    <AllowAtRoot>False</AllowAtRoot>
+    <IsListView>False</IsListView>
+    <Variations>Nothing</Variations>
+    <IsElement>false</IsElement>
+    <Compositions />
+    <DefaultTemplate></DefaultTemplate>
+    <AllowedTemplates />
+  </Info>
+  <Structure />
+  <GenericProperties />
+  <Tabs />
+</ContentType>
+EOF
+
+  # A tab declared with nothing referencing it. Deploy's twin of this is a PropertyGroup with
+  # an empty PropertyTypes array; here it is a <Tab> that no <GenericProperty> names. The tab
+  # has to survive into the dossier either way -- the backoffice shows it -- and the two
+  # adapters reach that answer through completely different parsing, which is why this shape
+  # needs a case per format rather than one shared case.
+  cat > "$root/ContentTypes/pagevisibility.config" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<ContentType Key="$G_VIS" Alias="pageVisibility" Level="1">
+  <Info>
+    <Name>Page Visibility</Name>
+    <Icon>icon-eye color-grey</Icon>
+    <Thumbnail>folder.png</Thumbnail>
+    <Description><![CDATA[A tab every page carries, filled in by whatever composes this.]]></Description>
+    <AllowAtRoot>False</AllowAtRoot>
+    <IsListView>False</IsListView>
+    <Variations>Nothing</Variations>
+    <IsElement>true</IsElement>
+    <Compositions />
+    <DefaultTemplate></DefaultTemplate>
+    <AllowedTemplates />
+  </Info>
+  <Structure />
+  <GenericProperties />
+  <Tabs>
+    <Tab>
+      <Key>ffff3333-0001-4000-8000-000000000001</Key>
+      <Caption>Visibility</Caption>
+      <Alias>visibility</Alias>
+      <Type>Tab</Type>
+      <SortOrder>30</SortOrder>
+    </Tab>
+  </Tabs>
+</ContentType>
+EOF
+}
+
 expect() {  # expect <case-root> <lines...>
   local root=$1; shift
   printf '%s\n' "$@" > "$root/expect"
@@ -930,5 +1084,148 @@ expect "$C" "${PAGE_KIND[@]}" 'contains: "rung": "deploy"'
 
 C="$CASES/usync-page-type";  mkdir -p "$C"; usync_page_type "$C"
 expect "$C" "${PAGE_KIND[@]}" 'contains: "rung": "usync"'
+
+# --- a read that finds nothing, and a read that finds nothing to find -----------
+#
+# Two halves of one line, and the line is what the whole increment turns on.
+#
+# The REFUSING half: a serialization folder that exists, is readable, and holds no artifact
+# for the requested alias. The read cannot be completed, so it must not produce a document.
+# Both formats get a case, because "the two adapters answer the same question the same way" is
+# the ladder's claim and a wording that drifted between them would be invisible otherwise.
+#
+# The PERMITTING half, below: a component that genuinely has no properties. The artifact is
+# there, every reference in it resolved, and the answer is "no fields". That is a fact about
+# the component, not about the export, and refusing it would refuse real components.
+#
+# What separates them is whether anything was left UNRESOLVED, never how thin the result is.
+# Thinness is not evidence: the thinnest possible dossier and a perfectly healthy taxonomy
+# node are the same document.
+
+MISSING_ALIAS=(
+  "exit: 1"
+  "args: extract alertBanner"
+  # The alias asked for, so the operator can see it is the one they typed.
+  "contains: alertBanner"
+  # The folder searched, and that it was read rather than skipped -- one component was found
+  # there, just not this one. This is the difference between "nothing to read" and "read, and
+  # your component is not in it", and only the second is worth a re-export.
+  "contains: 1 component"
+  "contains: the export is partial"
+  # What to do next, in both readings: fix the export, or point the read somewhere else.
+  "contains: re-export"
+  "contains: --project-root"
+  # No dossier. Asserting the message alone would pass on a run that printed a document AND
+  # complained about it, which is the silent-empty shape with a warning stapled on.
+  'not_contains: "dossierVersion"'
+)
+
+C="$CASES/deploy-missing-alias"; mkdir -p "$C"; deploy_page_type "$C"
+expect "$C" "${MISSING_ALIAS[@]}" \
+  "contains: Deploy/Revision"
+
+C="$CASES/usync-missing-alias"; mkdir -p "$C"; usync_page_type "$C"
+expect "$C" "${MISSING_ALIAS[@]}" \
+  "contains: uSync/v17/ContentTypes"
+
+# The permitting half. `exit: 0` plus the golden file says the dossier was printed; the note
+# says the emptiness was reported rather than left for a reader to interpret; and
+# `not_contains` is the assertion that stops a later increment tightening this into a refusal
+# by accident.
+PROPERTYLESS=(
+  "exit: 0"
+  "stdout_matches: expected-dossier.json"
+  'mask: "sourceSignature":'
+  "contains: declares no editable properties"
+  "not_contains: the export is partial"
+)
+
+propertyless_node_dossier() {  # propertyless_node_dossier <case-root> <rung>
+  cat > "$1/expected-dossier.json" <<EOF
+{
+  "dossierVersion": 1,
+  "rung": "$2",
+  "alias": "topicTag",
+  "name": "Topic Tag",
+  "kind": "document",
+  "icon": "icon-tag color-blue",
+  "description": "A tag an editor picks when classifying an article.",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [],
+  "sourceSignature": "<computed>"
+}
+EOF
+}
+
+C="$CASES/deploy-propertyless"; mkdir -p "$C"; deploy_propertyless "$C"
+propertyless_node_dossier "$C" deploy
+expect "$C" "${PROPERTYLESS[@]}" \
+  "args: extract topicTag" \
+  'contains: "rung": "deploy"'
+
+C="$CASES/usync-propertyless"; mkdir -p "$C"; usync_propertyless "$C"
+propertyless_node_dossier "$C" usync
+expect "$C" "${PROPERTYLESS[@]}" \
+  "args: extract topicTag" \
+  'contains: "rung": "usync"'
+
+# The second shape: structure with nothing in it. The tab has to survive into the dossier --
+# the backoffice shows it, so a guide that omitted it would describe a screen the editor does
+# not see -- while the component still counts as having no properties.
+empty_tab_dossier() {  # empty_tab_dossier <case-root> <rung>
+  cat > "$1/expected-dossier.json" <<EOF
+{
+  "dossierVersion": 1,
+  "rung": "$2",
+  "alias": "pageVisibility",
+  "name": "Page Visibility",
+  "kind": "element",
+  "icon": "icon-eye color-grey",
+  "description": "A tab every page carries, filled in by whatever composes this.",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "visibility",
+      "name": "Visibility",
+      "sortOrder": 30,
+      "properties": [],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "<computed>"
+}
+EOF
+}
+
+C="$CASES/deploy-empty-tab"; mkdir -p "$C"; deploy_propertyless "$C"
+empty_tab_dossier "$C" deploy
+expect "$C" "${PROPERTYLESS[@]}" \
+  "args: extract pageVisibility"
+
+C="$CASES/usync-empty-tab"; mkdir -p "$C"; usync_propertyless "$C"
+empty_tab_dossier "$C" usync
+expect "$C" "${PROPERTYLESS[@]}" \
+  "args: extract pageVisibility"
+
+# --- item 1: the note must never reach stdout, asserted where it could ----------
+#
+# `signature` prints one line and nothing else, because the format-blindness pair compares
+# stdout byte for byte. Every existing signature case reads a component WITH properties, so
+# the note branch in cmd_signature never ran under test: reordering the print and the note,
+# or routing the note to stdout, would have passed the whole suite. This case is that branch.
+#
+# `stdout_matches` is what carries the claim -- it sees stdout alone, so a note that leaked
+# there would fail even though `contains` (which sees both streams merged) would not notice.
+C="$CASES/signature-propertyless"; mkdir -p "$C"; deploy_propertyless "$C"
+printf 'sha256:<computed>\n' > "$C/expected-stdout.txt"
+expect "$C" \
+  "exit: 0" \
+  "args: signature topicTag" \
+  "stdout_matches: expected-stdout.txt" \
+  'mask: sha256:' \
+  "contains: declares no editable properties" \
+  "not_contains: the export is partial"
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

@@ -1,0 +1,21 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "pageVisibility",
+  "name": "Page Visibility",
+  "kind": "element",
+  "icon": "icon-eye color-grey",
+  "description": "A tab every page carries, filled in by whatever composes this.",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "visibility",
+      "name": "Visibility",
+      "sortOrder": 30,
+      "properties": [],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "<computed>"
+}

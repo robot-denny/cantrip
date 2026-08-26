@@ -149,6 +149,18 @@ Three cases encode decisions that are easy to implement backwards:
 - **`dangling-symlink`** asserts broken. A directory listing looks fine while every read fails, which
   is why the check reads assets rather than listing them.
 
+In `guide-check`, one pair of cases exists to keep a refusal from widening by accident:
+
+- **`deploy-missing-alias` / `usync-missing-alias`** assert **exit 1** with no dossier printed. A
+  folder that exists, reads fine, and holds no artifact for the requested alias cannot be answered,
+  so it must not produce a thin document instead.
+- **`deploy-propertyless` / `usync-propertyless` / `deploy-empty-tab`** assert **exit 0** with the
+  dossier printed. A component with no editable fields is a real component — a taxonomy-style node,
+  or a type contributing one empty tab — and both shapes were found among the demo project's 68
+  document types. The line is whether anything was left *unresolved*, never how thin the result is,
+  and these three are the cases that say so. A refusal with no case proving what it does **not**
+  refuse is how the next increment tightens it by accident.
+
 ## Why 46 fixture `SKILL.md` files do not pollute an install
 
 Fixtures contain real `SKILL.md` files, because the check under test looks for exactly those. That

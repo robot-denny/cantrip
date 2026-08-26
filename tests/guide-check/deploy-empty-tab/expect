@@ -1,0 +1,6 @@
+exit: 0
+stdout_matches: expected-dossier.json
+mask: "sourceSignature":
+contains: declares no editable properties
+not_contains: the export is partial
+args: extract pageVisibility

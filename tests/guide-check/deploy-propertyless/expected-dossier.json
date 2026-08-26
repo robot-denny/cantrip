@@ -1,0 +1,13 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "topicTag",
+  "name": "Topic Tag",
+  "kind": "document",
+  "icon": "icon-tag color-blue",
+  "description": "A tag an editor picks when classifying an article.",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [],
+  "sourceSignature": "<computed>"
+}

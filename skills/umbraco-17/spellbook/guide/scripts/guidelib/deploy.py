@@ -28,6 +28,7 @@ import os
 
 from guidelib import GuideError
 from guidelib import dossier
+from guidelib import missing_alias_error
 
 RUNG = "deploy"
 
@@ -69,9 +70,9 @@ def extract(project_root, alias, catalog=None):
     catalog = catalog or Catalog(project_root)
     artifact = catalog.document(alias)
     if artifact is None:
-        raise GuideError(
-            "no Deploy artifact declares the alias '%s' under %s"
-            % (alias, ", ".join(searched_locations(project_root))))
+        raise missing_alias_error(
+            "Deploy artifact", alias, searched_locations(project_root),
+            catalog.document_count())
 
     schema = dossier.Schema()
     compositions = []
@@ -201,6 +202,15 @@ class Catalog:
         self._load_all()
         return self._documents.get((alias or "").lower())
 
+    def document_count(self):
+        """How many document types the export actually holds.
+
+        Reported when a lookup misses, because a folder that yielded components and a folder
+        that yielded none call for different responses from the operator.
+        """
+        self._load_all()
+        return len(self._documents)
+
     def by_udi(self, udi):
         self._load_all()
         return self._by_udi.get(_normalize_udi(udi))
@@ -277,6 +287,12 @@ def _collect(artifact, catalog, schema, compositions, seen, inherited_from):
 
 def _collect_groups(artifact, catalog, schema, inherited_from):
     """Declare an artifact's tabs and groups, and file its properties under them."""
+    # `or []` treats a MISSING key exactly like an empty one, and that is deliberate: a
+    # truncated export whose artifact declares nothing is not distinguishable from a
+    # genuinely property-less component by reading the artifact. Tightening this into a
+    # refusal would reject real components -- two of the demo project's 68 have no fields
+    # legitimately. The reasoning and the one weak signal that was deliberately NOT used
+    # are in guide.py's note_if_propertyless docstring; read it before changing this.
     for group in artifact.get("PropertyGroups") or []:
         alias = _text(group.get("Alias"))
         name = _text(group.get("Name"))

@@ -41,6 +41,7 @@ import xml.etree.ElementTree as ElementTree
 
 from guidelib import GuideError
 from guidelib import dossier
+from guidelib import missing_alias_error
 
 RUNG = "usync"
 
@@ -103,9 +104,11 @@ def extract(project_root, alias, catalog=None):
     catalog = catalog or Catalog(project_root)
     artifact = catalog.document(alias)
     if artifact is None:
-        raise GuideError(
-            "no uSync content type declares the alias '%s' under %s"
-            % (alias, ", ".join(searched_locations(project_root))))
+        # The same refusal Deploy raises, from the same place, so the two adapters cannot
+        # drift apart on the one message an operator is most likely to meet.
+        raise missing_alias_error(
+            "uSync content type", alias, searched_locations(project_root),
+            catalog.document_count())
 
     schema = dossier.Schema()
     compositions = []
@@ -233,6 +236,16 @@ class Catalog:
         self._load_all()
         return self._documents.get((alias or "").strip().lower())
 
+    def document_count(self):
+        """How many content types the export actually holds — see Deploy's twin.
+
+        Counted after the root-element check, so a folder full of some other tool's
+        `*.config` reports zero rather than claiming it held components this adapter could
+        not use.
+        """
+        self._load_all()
+        return len(self._documents)
+
     def by_key(self, key):
         self._load_all()
         return self._by_key.get(_normalize_key(key))
@@ -334,6 +347,10 @@ def _collect_structure(artifact, catalog, schema, inherited_from):
         else:
             schema.declare_tab(entry["alias"], entry["caption"], entry["sortOrder"])
 
+    # An absent <GenericProperties> or <Tabs> element yields an empty list here, the same
+    # as an element present and empty. Deliberate, and the reasoning is the same as
+    # deploy.py's note at its PropertyGroups read: a truncated export and a genuinely
+    # property-less component are indistinguishable from the file, so neither is refused.
     for prop in element.findall("GenericProperties/GenericProperty"):
         owner = _resolve_owner(_owner_alias(prop), entries, artifact.path,
                                _text(prop.findtext("Alias")))

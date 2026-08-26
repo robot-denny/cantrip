@@ -100,10 +100,57 @@ def resolve_adapter(project_root, requested):
         % (os.path.abspath(project_root), ", ".join(sorted(ADAPTERS))))
 
 
+def note_if_propertyless(entry):
+    """Say so when a completed read describes a component with no editable fields.
+
+    A note, not a refusal, and the difference is the whole of this behavior.
+
+    The refusing rule the ladder does enforce is "never answer a question you could not
+    read", and every way an export can be partial *and* visible in what was read already
+    raises before a dossier exists: a composition whose base was not exported, a Deploy
+    property whose data type was not exported, a folder holding no artifact for the requested
+    alias. So the line is drawn on **resolvability**, never on how thin the result is.
+
+    Thinness cannot be the line, because thin and healthy are the same document. Two shapes
+    among the demo project's 68 document types have no fields and are perfectly correct: a
+    taxonomy-style node carrying only a name, and a type declaring one empty tab that a
+    composition or a later change fills. Refusing an empty property list would refuse both,
+    and a guide set missing its taxonomy nodes is a worse outcome than one that reports them
+    plainly.
+
+    **The limit, stated rather than guessed at:** a truncated export whose artifact exists and
+    declares nothing is *not* distinguishable from a genuinely property-less component by
+    reading the artifact. There is one weak signal -- Deploy writes `PropertyGroups` and
+    `PropertyTypes` even when empty, on all 68 of the demo project's artifacts, so an artifact
+    missing the keys entirely was probably not written by the serializer -- and it is not used
+    here. It rests on one project, and no equivalent has been observed for uSync at all, so
+    implementing it would refuse on evidence too narrow to name in the message and would leave
+    the two adapters asymmetric for no stated reason. The note goes to the one reader who can
+    actually resolve the ambiguity instead.
+
+    stderr, so stdout stays the dossier and nothing else: a caller that already knew this
+    component has no fields is unaffected, and a person running the command by hand sees it.
+    """
+    if dossier.count_properties(entry):
+        return
+    # One clause per line, the same shape the refusal uses. These messages are read side by
+    # side in a scrollback or a log, and a wall of wrapped prose beside an indented list reads
+    # as two different kinds of thing when they are two halves of one rule.
+    print(
+        "%s: note: '%s' declares no editable properties.\n"
+        "  Every reference in its export resolved, so this is the component's own shape "
+        "rather than a gap in the export \u2014 a taxonomy-style node, or a type contributing "
+        "one empty tab, reads exactly like this.\n"
+        "  If you expected fields, look for them on a composition this project does not "
+        "export, or under a different alias."
+        % (PROG, entry.get("alias")), file=sys.stderr)
+
+
 def cmd_extract(args):
     adapter = resolve_adapter(args.project_root, args.adapter)
     entry = adapter.extract(args.project_root, args.alias)
     print(dossier.render(entry))
+    note_if_propertyless(entry)
     return 0
 
 
@@ -117,6 +164,9 @@ def cmd_signature(args):
     adapter = resolve_adapter(args.project_root, args.adapter)
     entry = adapter.extract(args.project_root, args.alias)
     print(entry["sourceSignature"])
+    # Noted here too, not only under `extract`. A caller may only ever ask for the signature,
+    # and a signature over a component with no fields is a value worth knowing is thin.
+    note_if_propertyless(entry)
     return 0
 
 

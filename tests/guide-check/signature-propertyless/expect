@@ -1,0 +1,6 @@
+exit: 0
+args: signature topicTag
+stdout_matches: expected-stdout.txt
+mask: sha256:
+contains: declares no editable properties
+not_contains: the export is partial

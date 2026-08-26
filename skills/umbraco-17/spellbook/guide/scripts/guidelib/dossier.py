@@ -307,6 +307,24 @@ class Schema:
         return self._tabs[alias]
 
 
+def count_properties(entry):
+    """How many editable fields a dossier describes, across both levels of the tree.
+
+    Zero is a real answer, not a failure. Two shapes with no fields were found among the demo
+    project's 68 document types -- a taxonomy-style node carrying only a name, and a type
+    declaring one empty tab for a composition to fill -- so a rule that read an empty property
+    list as a broken export would refuse real components. What that rule wants is
+    resolvability, not thinness, and every detectable partial export already raises before a
+    dossier is built. guide.py carries the full reasoning and reports the count.
+    """
+    total = 0
+    for tab in entry.get("tabs") or []:
+        total += len(tab.get("properties") or [])
+        for group in tab.get("groups") or []:
+            total += len(group.get("properties") or [])
+    return total
+
+
 def canonical(entry):
     """The schema-bearing subset the signature covers."""
     return {k: v for k, v in entry.items() if k not in SIGNATURE_EXCLUDED}
