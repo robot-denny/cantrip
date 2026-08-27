@@ -1,0 +1,10 @@
+exit: 0
+args: plan alertBanner --page page.json --dossier dossier.json
+stdout_matches: expected-plan.txt
+contains: Machine-owned, regenerated and proposed for approval: 0
+contains: pending your approval:
+contains: added     alertMessage (Alert Message)
+contains: Somebody wrote this page by hand
+not_contains: proposed:
+not_contains: (the table matches the source
+not_contains: Traceback

@@ -2491,6 +2491,167 @@ expect "$C" \
   "not_contains: The line a visitor reads first" \
   "not_contains: Left over from the old build"
 
+# --- a page somebody wrote before the tooling reached its component -------------
+#
+# The adoption path. Provenance decides ownership: this page carries no stored reference, so it
+# has NO machine-owned fields — every field on it belongs to whoever wrote it. A plan here
+# offers rather than proposes, and writing the reference is what would make the page's fields
+# machine-owned from then on, so that offer is the one needing approval most.
+#
+# Two cases over one pair of inputs, because the harness runs a subject once per case and the
+# claim has two halves: the report has to say "nothing here is a write" in words a person
+# reads, and the JSON has to say it in a key a consumer can branch on. An unasserted machine
+# contract is the half that breaks silently.
+adoption_inputs() {  # adoption_inputs <case-root>
+  cat > "$1/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use the alert banner",
+  "source": null,
+  "fields": {
+    "guidePurpose": "Somebody wrote this page by hand. Use an alert banner when something is time-limited.",
+    "guideWhenToUse": "Above the page content, and never two on one page.",
+    "guideBlurb": "The banner that warns about something time-limited.",
+    "name": "How to use the alert banner"
+  }
+}
+EOF
+  cat > "$1/dossier.json" <<'EOF'
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "alertBanner",
+  "name": "Alert Banner",
+  "kind": "element",
+  "icon": "icon-alert color-red",
+  "description": "A banner that warns a visitor about something time-limited.",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "alertMessage",
+          "name": "Alert Message",
+          "description": "The sentence a visitor reads.",
+          "editor": "Umbraco.TextArea",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "alertTone",
+          "name": "Alert Tone",
+          "description": "How loud the banner looks.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": ["Information", "Warning"],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "structureGaps": [],
+  "sourceSignature": "sha256:alertbannerasread"
+}
+EOF
+}
+
+C="$CASES/plan-adoption"; mkdir -p "$C"; adoption_inputs "$C"
+cat > "$C/expected-plan.txt" <<'EOF'
+Change plan for alertBanner (Alert Banner), read at the deploy rung.
+  Guide page: How to use the alert banner
+  Stored reference: none — this page claims no source, so it was written by hand.
+  Current signature: sha256:alertbannerasread
+  This page carries no stored reference, so nothing on it was generated: it has NO
+  machine-owned fields, and every field on it belongs to whoever wrote it. There is no
+  stored signature to compare either, so no run against this page can be a no-op — every
+  one of them is a proposal.
+
+Nothing here is a write. The property table is offered as a difference, and the stored
+reference is pending your approval — approving it is what makes this page's
+machine-owned fields machine-owned from that point on. Every word already on the page
+is kept exactly as it stands.
+
+Machine-owned, regenerated and proposed for approval: 0
+
+Offered as a difference, pending your approval: 2
+  Every field on this page is human-owned. With no stored reference nothing here was
+  generated, so nothing here is the tooling's to replace: the three ownership classes
+  describe a page that carries a reference, and this page carries none.
+  Offered, not written. Each value below is a difference for a person to accept or
+  refuse, and this script has written nothing either way. The stored reference is the
+  one to read twice: writing it is what makes this page's machine-owned fields
+  machine-owned from that point on, so it is pending your approval rather than
+  proposed. No prose is offered — the words on this page are somebody's.
+  Every value is printed as the page carries it, never wrapped and never shortened: a
+  value nobody can read whole is a value nobody can approve.
+    guideSource (human-owned): computed here
+      current:
+        (this page carries no stored reference)
+      pending your approval:
+        alias: alertBanner
+        kind: element
+        signature: sha256:alertbannerasread
+        rung: deploy
+    guideProperties (human-owned): content computed here, markup rendered by the spell
+      changes:
+        added     alertMessage (Alert Message)
+        added     alertTone (Alert Tone)
+
+Kept exactly as it stands, every field human-owned: 4
+  Every value below is reproduced exactly as the page carries it, and this plan
+  proposes no write against any of them. Nothing is offered in their place: a page
+  with no stored reference was written by a person, and their words are not a value
+  to regenerate.
+    guidePurpose (human-owned)
+      Somebody wrote this page by hand. Use an alert banner when something is time-limited.
+    guideWhenToUse (human-owned)
+      Above the page content, and never two on one page.
+    guideBlurb (human-owned)
+      The banner that warns about something time-limited.
+    name (human-owned)
+      How to use the alert banner
+
+Nothing was written. This document is a proposal: every write happens in the spell,
+after a person approves it.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan alertBanner --page page.json --dossier dossier.json" \
+  "stdout_matches: expected-plan.txt" \
+  "contains: Machine-owned, regenerated and proposed for approval: 0" \
+  "contains: pending your approval:" \
+  "contains: added     alertMessage (Alert Message)" \
+  "contains: Somebody wrote this page by hand" \
+  "not_contains: proposed:" \
+  "not_contains: (the table matches the source" \
+  "not_contains: Traceback"
+
+C="$CASES/plan-adoption-json"; mkdir -p "$C"; adoption_inputs "$C"
+expect "$C" \
+  "exit: 0" \
+  "args: plan alertBanner --page page.json --dossier dossier.json --json" \
+  "contains: \"provenance\": \"hand-written\"" \
+  "contains: \"proposeOnly\": true" \
+  "contains: \"comparison\": \"noReference\"" \
+  "contains: \"noop\": false" \
+  "contains: \"machineOwned\": []" \
+  "contains: \"pendingApproval\": true" \
+  "contains: \"proposedOnApproval\"" \
+  "contains: \"ownership\": \"human-owned\"" \
+  "not_contains: \"proposed\":" \
+  "not_contains: \"ownership\": \"machine-owned\"" \
+  "contains: \"consequence\"" \
+  "contains: makes this page's machine-owned fields machine-owned from" \
+  "contains: \"modelCallNeeded\": true"
+
 # --- the refusals `plan` documents and nothing exercised --------------------------
 #
 # Thirteen refusal shapes were written down and none was tested — which is exactly why a

@@ -36,11 +36,48 @@ lives in.
     never-touched    the page's name, address and visibility settings, the editorial levers,
                      the media a person uploaded, and every field not named above
 
-**Ownership is a property of the page's provenance, not of a field's declaration.** This
-increment plans against a page that carries a stored reference. A page carrying none has no
-machine-owned fields at all — every field on it is human-owned — and that branch (the adoption
-path) refuses here rather than guessing, so nothing offers to overwrite a person's prose
-before the path that handles it properly exists.
+**Ownership is a property of the page's provenance, not of a field's declaration.** The three
+classes above describe a page that carries a stored reference. A page carrying none has no
+machine-owned fields at all — every field on it is human-owned, whichever class the register
+puts it in — and the register is read for *what a field is for*, never for permission to write
+it. Ownership declared per field cannot describe both kinds of page on one document type,
+which is the whole reason it is declared per page here.
+
+## The adoption path: a page nobody generated
+
+A guide page with `"source": null` was written by a person, in the backoffice, about a
+component this tooling can also read. One document type serves both, so there is nothing on
+the page itself to distinguish "generated and now stale" from "somebody's work" — only the
+absent reference. So a plan against it is **propose-only**, and every part of that word is
+load bearing:
+
+    the property table    offered as a difference. A hand-written page carries no rows, so
+                          every row is `added` — which is the honest answer, not a special
+                          case: the table does not exist yet.
+    the person's prose    kept, listed with its value reproduced exactly, and nothing is
+                          offered in its place. No prose is proposed on this path at all.
+    the stored reference  **pending approval**, never proposed. Writing it is what makes
+                          this page's machine-owned fields machine-owned from then on, so it
+                          is the one value on the page whose write changes every later run.
+
+`provenance` and `proposeOnly` say this in the document, and `comparison` carries a fourth
+value, `noReference`, so a consumer never has to infer propose-only from something's absence.
+The offered entries carry `proposedOnApproval` rather than `proposed`, and `machineOwned` is
+present and **empty** — a positive claim that this page has no machine-owned fields, not an
+omission. A consumer walking `machineOwned` for things to write therefore finds nothing to
+write, which is the property that has to hold whatever else changes here. It is also
+why `planVersion` does not move: no key a consumer already reads means anything new.
+
+**There is no signature to compare, so no adoption run can ever be a no-op.** `noop` is false
+on this path always, and `storedSignature` and `storedRung` are null: the comparison did not
+fail, there was nothing on the page to compare against. Every run against a hand-written page
+is a proposal, and the report says so rather than leaving it to be worked out.
+
+**An absent `source` key still refuses**, and that distinction is not cosmetic: `null` is a
+fact about the CMS ("this page claims no source") and an absent key is a fact about the
+producer ("the spell did not read one"). Collapsing them would adopt a page that should have
+been regenerated. `guidelib.stored_reference` holds that rule for both stages that read a
+reference.
 
 ## Three kinds of proposal, because "machine-owned" does not mean "this script can write it"
 
@@ -82,9 +119,12 @@ crashing with a traceback.
     the file is not JSON, or is not an object  refused
     `pageVersion` is not one known here      refused, naming the version found
     no `source` key                          refused: absent is not "explicitly none"
-    `source` is null                          refused for now — that is the adoption path
+    `source` is null                          read as a hand-written page: the adoption path
     `source.alias` is not the requested alias  refused: planning a page against the wrong
                                               component is how a guide gets overwritten
+                                              (there is no alias to check on the adoption
+                                              path — the caller named the component, and the
+                                              page claims none)
     no `fields` key                          refused: "the producer read no fields" and "this
                                               page has none" are opposite facts, and the second
                                               would report a page's whole content as absent
@@ -122,6 +162,15 @@ UNNAMED_PAGE = "unnamed guide page"
 MACHINE_OWNED = "machine-owned"
 SEEDED_ONCE = "seeded-once"
 NEVER_TOUCHED = "never-touched"
+# The fourth class, and the only one a page's provenance can put every field in at once. It is
+# not a register entry and never will be: no field is declared human-owned, a *page* is.
+HUMAN_OWNED = "human-owned"
+
+# Which kind of page a plan was computed against, said in the document rather than left to be
+# inferred from a null signature. Only the adoption document carries the key: a regeneration
+# plan's shape is unchanged by this path, and `comparison` already tells the two apart on every
+# plan either way, so there is no second value to declare here and none is invented.
+PROVENANCE_HAND_WRITTEN = "hand-written"
 
 PROPOSAL_COMPUTED = "computed"
 PROPOSAL_CONTENT = "content"
@@ -138,6 +187,11 @@ PROPOSAL_LABEL = {
 COMPARISON_MATCHED = "matched"
 COMPARISON_DIFFERS = "differs"
 COMPARISON_NOT_COMPARABLE = "notComparable"
+# The fourth value, and the marker that tells an adoption plan from a regeneration plan. A
+# distinct value rather than `notComparable`: that one means "two signatures could not be set
+# against each other", and here there was never a second signature to try. The difference is
+# the difference between a stale page and somebody's own writing.
+COMPARISON_NO_REFERENCE = "noReference"
 
 
 # ---------------------------------------------------------------------------
@@ -229,6 +283,22 @@ BY_FIELD = dict((entry["field"], entry) for entry in REGISTER)
 UNREGISTERED_WHY = ("not named in this register, so no rule here would write it. The page's "
                     "own name, address and visibility settings arrive this way.")
 
+# The reason a field is kept on the adoption path, and it is the same reason for every field
+# there — which is exactly why it is one constant and not the register's per-field `why`. On a
+# page with no stored reference the register does not decide anything: provenance does, and a
+# consumer reading a per-field explanation there would be reading the wrong rule.
+KEPT_WHY = ("kept exactly as it stands. This page carries no stored reference, so this value "
+            "is somebody's writing rather than something the tooling generated, and nothing "
+            "in this plan proposes a write against it.")
+
+# What the stored reference's consequence is, carried on its entry so a consumer that renders
+# one field at a time still says it. The one value on the page whose write changes what every
+# later run is allowed to do.
+REFERENCE_WRITE_CONSEQUENCE = (
+    "writing this reference is what makes this page's machine-owned fields machine-owned from "
+    "that point on: every later run compares its signature and regenerates them. Pending "
+    "approval, never proposed, and never written here.")
+
 
 # --- the rules, one per class -------------------------------------------------
 #
@@ -249,6 +319,22 @@ RULE_SEEDED_ONCE = (
 RULE_NEVER_TOUCHED = (
     "The page's own name, address and visibility settings, the editorial levers, the media",
     "a person uploaded, and every field this register does not name.",
+)
+# The adoption path's two rules. They replace the three above rather than joining them, and the
+# report prints them instead: on a page nobody generated there is no machine-owned section to
+# qualify, and printing the seeded-once rule beside a field nothing will ever seed would teach
+# its reader that the rules here do not mean what they say.
+RULE_HUMAN_OWNED = (
+    "Every field on this page is human-owned. With no stored reference nothing here was",
+    "generated, so nothing here is the tooling's to replace: the three ownership classes",
+    "describe a page that carries a reference, and this page carries none.",
+)
+RULE_OFFERED = (
+    "Offered, not written. Each value below is a difference for a person to accept or",
+    "refuse, and this script has written nothing either way. The stored reference is the",
+    "one to read twice: writing it is what makes this page's machine-owned fields",
+    "machine-owned from that point on, so it is pending your approval rather than",
+    "proposed. No prose is offered — the words on this page are somebody's.",
 )
 
 # Printed inside the machine-owned section, because it is the section it qualifies, and once
@@ -273,9 +359,22 @@ RULE_LEFT_ALONE_EXACT = (
     "Every value below is reproduced exactly as the page carries it, which is what \"left",
     "alone\" means here: this plan proposes no write against any of them.",
 )
+# The same claim on the adoption path, and one clause further: there, a field left alone had a
+# proposal made for its machine-owned neighbours; here nothing is offered in its place at all.
+RULE_KEPT = (
+    "Every value below is reproduced exactly as the page carries it, and this plan",
+    "proposes no write against any of them. Nothing is offered in their place: a page",
+    "with no stored reference was written by a person, and their words are not a value",
+    "to regenerate.",
+)
 
 CAPTION_MACHINE_OWNED = "Machine-owned, regenerated and proposed for approval"
 CAPTION_LEFT_ALONE = "Left alone"
+# Two captions the adoption path needs and the regeneration path has no use for. "Offered" and
+# "pending your approval" are both in the first deliberately: a caption is what a reader skims,
+# and "proposed" is the word this section must never be summarized with.
+CAPTION_OFFERED = "Offered as a difference, pending your approval"
+CAPTION_KEPT = "Kept exactly as it stands, every field human-owned"
 
 # --- the statements ----------------------------------------------------------
 
@@ -295,6 +394,22 @@ STATEMENT_NOT_COMPARABLE = (
     "The stored signature cannot be compared with this read, so this run cannot prove the",
     "source is unchanged: it proposes rather than assuming a no-op, and nothing is written",
     "either way. What could not be compared:",
+)
+
+STATEMENT_NO_REFERENCE = (
+    "This page carries no stored reference, so nothing on it was generated: it has NO",
+    "machine-owned fields, and every field on it belongs to whoever wrote it. There is no",
+    "stored signature to compare either, so no run against this page can be a no-op — every",
+    "one of them is a proposal.",
+)
+# The adoption path's headline, in the slot the model-call statement occupies on a regeneration
+# plan. It states what a consumer is holding before it reads a single field, because this is the
+# document whose whole risk is being read as though it were the other one.
+STATEMENT_ADOPTION = (
+    "Nothing here is a write. The property table is offered as a difference, and the stored",
+    "reference is pending your approval — approving it is what makes this page's",
+    "machine-owned fields machine-owned from that point on. Every word already on the page",
+    "is kept exactly as it stands.",
 )
 
 STATEMENT_NOOP = (
@@ -359,20 +474,19 @@ def load_page(path, alias):
         raise GuideError("%s has a non-string 'page': %r." % (path, name))
     label = (name or "").strip() or UNNAMED_PAGE
 
+    # `None` here is the adoption path, not a failure: the page states explicitly that it
+    # claims no source, which is a page somebody wrote by hand. An *absent* `source` key is
+    # still refused, inside `stored_reference` — one is a fact about the CMS and the other a
+    # fact about the producer, and adopting a page because a read failed is the mistake that
+    # costs somebody their work.
     source = stored_reference(path, label, payload,
                               consequence=REFERENCE_CONSEQUENCE_PLAN)
-    if source is None:
-        raise GuideError(
-            "%s ('%s') carries no stored reference, and planning against a page that has none "
-            "is the adoption path, which is not implemented yet.\n"
-            "  A page with no stored reference has NO machine-owned fields — every field on it "
-            "belongs to whoever wrote it — so a plan there is propose-only: the property tables "
-            "offered as a difference, the person's prose kept, the reference written only on "
-            "approval.\n"
-            "  Refusing rather than planning as though the page were generated, because the "
-            "difference between those two is somebody's work." % (path, label))
 
-    if source["alias"].lower() != alias.strip().lower():
+    # No alias to match on the adoption path, and none is wanted: the page claims no component,
+    # so there is nothing here that could disagree with the alias the caller asked for. The
+    # check below exists to catch a page that claims a *different* component, and a page
+    # claiming none cannot.
+    if source is not None and source["alias"].lower() != alias.strip().lower():
         raise GuideError(
             "%s ('%s') stores a reference to '%s', and this plan was asked for '%s'.\n"
             "  A plan is a set of writes against one page. Built from another component's "
@@ -571,7 +685,15 @@ def run(page, dossier_doc):
 
     Pure arithmetic over two inputs: no file is read here, and nothing anywhere is written, so
     a caller can hand this a hand-authored pair and get the document a project would produce.
+
+    Two branches, and the page's **provenance** picks between them — never a field's
+    declaration. A page carrying a stored reference is planned as a regeneration; a page
+    carrying none is planned as an adoption, where the register still says what each field is
+    for and says nothing at all about permission to write it.
     """
+    if page["source"] is None:
+        return _adoption(page, dossier_doc)
+
     stored = page["source"]["signature"]
     stored_rung = page["source"]["rung"]
     current = dossier_doc.get("sourceSignature")
@@ -626,6 +748,159 @@ def run(page, dossier_doc):
         "machineOwned": machine_owned,
         "leftAlone": left_alone,
     }
+
+
+def _adoption(page, dossier_doc):
+    """The plan for a page nobody generated: everything offered, nothing owned, nothing written.
+
+    **The document's key set is the regeneration branch's plus three** — `provenance`,
+    `proposeOnly` and `offered` — and no shared key changes what it means. `machineOwned` is
+    present and empty; `leftAlone` carries every field the page holds; `comparison` carries its
+    fourth value. So the list a consumer walks looking for writes is empty, which is the true
+    answer and not a shape it has to recognize first. `rule` is the one shared key whose
+    entries differ, and they differ because the rules do.
+
+    The offer keys its value `proposedOnApproval` rather than `proposed`, so a consumer
+    scanning an adoption plan for a value to write finds no such key anywhere in it — least of
+    all on the stored reference, whose write is the one that changes what every later run may
+    do.
+
+    **`noop` is false, always.** There is no stored signature, so nothing was compared and
+    nothing could be: an adoption is a proposal every time it is asked for, and reporting one
+    as a no-op would be reporting a page as up to date with a source it never claimed.
+    """
+    current = dossier_doc.get("sourceSignature")
+    offered = _offered(page, dossier_doc, current)
+    # Only the `content` kind is counted, because it is the only kind an offer can be. A
+    # regeneration counts `owed` alongside it -- prose a model writes -- and mirroring that
+    # here read as though unwritten prose might make a model call necessary. It cannot:
+    # `_offered` skips every OWED entry, since a field somebody wrote is not a field this
+    # script proposes prose for. The mirrored sum was structurally zero, and dead arithmetic
+    # that looks live costs a reader more than the symmetry was worth.
+    content = sum(1 for entry in offered if entry["proposal"] == PROPOSAL_CONTENT)
+
+    return {
+        "planVersion": PLAN_VERSION,
+        "alias": dossier_doc["alias"].strip(),
+        "name": dossier_doc.get("name") or "",
+        "page": page["page"],
+        "rung": dossier_doc["rung"].strip(),
+        "provenance": PROVENANCE_HAND_WRITTEN,
+        "proposeOnly": True,
+        "storedSignature": None,
+        "storedRung": None,
+        "currentSignature": current,
+        "comparison": COMPARISON_NO_REFERENCE,
+        "noop": False,
+        # The property table still has to be rendered in the project's own markup, and that is
+        # the spell's half. Counted the same way a regeneration counts it, so a consumer
+        # deciding whether to load a renderer reads one field on either path.
+        "modelCallNeeded": bool(content),
+        "statements": [_joined(STATEMENT_NO_REFERENCE),
+                       _joined(STATEMENT_ADOPTION),
+                       _joined(STATEMENT_NOTHING_WRITTEN)],
+        # The three class rules are absent rather than empty: they describe a page that carries
+        # a reference, and a consumer rendering them here would be quoting a rule that does not
+        # apply to the page in front of it.
+        "rule": {
+            "humanOwned": _joined(RULE_HUMAN_OWNED),
+            "offered": _joined(RULE_OFFERED),
+            "kept": _joined(RULE_KEPT),
+        },
+        "machineOwned": [],
+        "offered": offered,
+        "leftAlone": _kept(page),
+    }
+
+
+# The two register fields an adoption offers, and therefore the two it does not list as kept. A
+# tuple rather than a test against the proposal kind, because the two lists have to agree about
+# it: a field in both would read as offered and preserved at once.
+OFFERED_FIELDS = (FIELD_SOURCE, FIELD_PROPERTIES)
+
+
+def _offered(page, dossier_doc, current):
+    """What an adoption offers: the values this script can compute, and nothing else.
+
+    The owed fields are skipped deliberately and that is the rule, not an omission — prose is
+    what a person writes, and on a page they wrote there is nothing to improve on. So the offer
+    is the property table and the stored reference, and the plan says in words that no prose is
+    proposed rather than leaving a reader to notice two fields missing.
+    """
+    entries = []
+    for spec in REGISTER:
+        if spec["ownership"] != MACHINE_OWNED or spec["proposal"] == PROPOSAL_OWED:
+            continue
+        if spec["field"] == FIELD_SOURCE:
+            # By definition on this path: the page states `"source": null`, and `load_page`
+            # refuses a page that also carries a `guideSource` field.
+            present, value = False, None
+        else:
+            present = spec["field"] in page["fields"]
+            value = page["fields"].get(spec["field"])
+        entry = {
+            "field": spec["field"],
+            # Not the register's class. The register says what the field is for; provenance
+            # says who owns it, and on this page that answer is the same for every field.
+            "ownership": HUMAN_OWNED,
+            "proposal": spec["proposal"],
+            "why": spec["why"],
+            "current": value,
+            "onPage": present,
+            "pendingApproval": True,
+            # Never keyed `proposed`. A consumer looking for a value to write finds no such key
+            # anywhere in an adoption plan, which is the property this path exists to hold.
+            "proposedOnApproval": _proposed(spec, dossier_doc, current),
+        }
+        if spec["field"] == FIELD_SOURCE:
+            entry["consequence"] = REFERENCE_WRITE_CONSEQUENCE
+        if spec["field"] == FIELD_PROPERTIES:
+            # **A page carrying no table at all is an empty table, not an incomparable one.**
+            # A hand-written page has no rows, so every proposed row is `added` — which is the
+            # honest summary and the reason this must not fall through to the not-comparable
+            # note or, worse, to a comparison that finds nothing to report and prints "the
+            # table matches the source". The table does not exist yet.
+            if isinstance(value, list):
+                rows = value
+            elif not present:
+                rows = []
+            else:
+                rows = None
+            entry["rowChanges"] = (compare_rows(rows, proposed_rows(dossier_doc))
+                                   if rows is not None else None)
+            entry["rowsNotComparable"] = rows is None
+        entries.append(entry)
+    return entries
+
+
+def _kept(page):
+    """Every field the page carries that this plan proposes nothing against, human-owned.
+
+    Register fields in register order then the rest in alias order, the same ordering the
+    regeneration branch uses and for the same reason: a plan whose lines move between runs
+    cannot be diffed. The class in the register is not consulted — on a page with no stored
+    reference, a seeded-once field and an editorial one are equally somebody's.
+    """
+    entries = []
+    for spec in REGISTER:
+        if spec["field"] in OFFERED_FIELDS or spec["field"] not in page["fields"]:
+            continue
+        entries.append({
+            "field": spec["field"],
+            "ownership": HUMAN_OWNED,
+            "why": KEPT_WHY,
+            "current": page["fields"][spec["field"]],
+        })
+    for field in sorted(page["fields"], key=lambda f: f.lower()):
+        if field in BY_FIELD:
+            continue
+        entries.append({
+            "field": field,
+            "ownership": HUMAN_OWNED,
+            "why": KEPT_WHY,
+            "current": page["fields"][field],
+        })
+    return entries
 
 
 def _compare(stored, stored_rung, current, read_rung):
@@ -946,7 +1221,14 @@ def report(doc):
     only when it has any, exactly as the audit's sections do. A run whose whole finding is
     "nothing to do" should not cost its reader three headed sections of explanation to discover
     that, or they will skip the part that carries the counts next time too.
+
+    **An adoption gets its own rendering, not a variant of this one.** Every heading, rule and
+    label in the two differs, because they are saying different things — and a reader who has
+    seen one of them has to be able to tell at a glance which of the two is in front of them.
     """
+    if doc.get("provenance") == PROVENANCE_HAND_WRITTEN:
+        return _adoption_report(doc)
+
     lines = []
     lines.append("Change plan for %s, read at the %s rung."
                  % (rpt.item({"alias": doc["alias"], "name": doc["name"]}), doc["rung"]))
@@ -1006,6 +1288,95 @@ def report(doc):
     lines.append("")
     lines.extend(_statement_lines(doc, 2))
     return "\n".join(lines)
+
+
+# What the report prints where a generated page prints its stored reference's four fields.
+# Named as the absence of a reference rather than as the absence of a value: "the page carries
+# no value for this field" is true of a field somebody has not filled in yet, and this is not
+# that — it is the fact the whole plan turns on.
+NO_REFERENCE_VALUE = "(this page carries no stored reference)"
+
+# Where a regeneration report prints the stored signature and the rung it was recorded at.
+# Neither exists here, and "none recorded" beside a field labelled "Stored signature" would
+# read as a reference whose signature went missing rather than as a page that claims no source.
+ADOPTION_REFERENCE_LINE = ("  Stored reference: none — this page claims no source, so it was "
+                           "written by hand.")
+
+
+def _adoption_report(doc):
+    """The human rendering of an adoption: offered, kept, and nothing written.
+
+    Same three-part shape as a regeneration report — header, headline, sections — so a reader
+    finds the counts in the same place. Every word around them is different, which is the
+    point: the risk this document carries is being skimmed as though it were the other one.
+    """
+    lines = []
+    lines.append("Change plan for %s, read at the %s rung."
+                 % (rpt.item({"alias": doc["alias"], "name": doc["name"]}), doc["rung"]))
+    lines.append("  Guide page: %s" % doc["page"])
+    lines.append(ADOPTION_REFERENCE_LINE)
+    lines.append("  Current signature: %s" % (doc["currentSignature"] or "none"))
+    lines.extend("  " + line for line in STATEMENT_NO_REFERENCE)
+
+    lines.append("")
+    lines.extend(STATEMENT_ADOPTION)
+
+    # Printed with its zero, and printed first, in the place a regeneration puts the fields it
+    # proposes to write. A reader looking for "what will this change" reads a nought.
+    lines.append("")
+    lines.append("%s: %d" % (CAPTION_MACHINE_OWNED, len(doc["machineOwned"])))
+
+    lines.append("")
+    lines.append("%s: %d" % (CAPTION_OFFERED, len(doc["offered"])))
+    if doc["offered"]:
+        lines.extend("  " + line for line in RULE_HUMAN_OWNED)
+        lines.extend("  " + line for line in RULE_OFFERED)
+        lines.extend("  " + line for line in RULE_VERBATIM)
+        for entry in doc["offered"]:
+            # The class is on the field's own line here, where a regeneration report leaves it
+            # to the section heading. On this path the class is the finding — the section says
+            # nothing is machine-owned, and each field then says what it is instead.
+            lines.append("    %s (%s): %s" % (entry["field"], entry["ownership"],
+                                              PROPOSAL_LABEL[entry["proposal"]]))
+            if entry.get("rowChanges") is not None:
+                lines.append("      changes:")
+                lines.extend(row_summary_lines(entry["rowChanges"], "        "))
+                continue
+            if entry.get("rowsNotComparable"):
+                lines.append("      changes:")
+                lines.extend("        " + line for line in ROWS_NOT_COMPARABLE)
+                continue
+            lines.append("      current:")
+            lines.extend(_offered_current_lines(entry, "        "))
+            # Never "proposed:". The label a person reads has to say the same thing the
+            # document's keys say, or the two disagree about what this run did.
+            lines.append("      pending your approval:")
+            lines.extend(_side_lines(entry, entry["proposedOnApproval"], True, "        "))
+
+    lines.append("")
+    lines.append("%s: %d" % (CAPTION_KEPT, len(doc["leftAlone"])))
+    if doc["leftAlone"]:
+        lines.extend("  " + line for line in RULE_KEPT)
+        # No per-class rules: there is one class here, and the section's own rule states it.
+        for entry in doc["leftAlone"]:
+            lines.append("    %s (%s)" % (entry["field"], entry["ownership"]))
+            lines.extend(_value_lines(entry["current"], True, "      "))
+
+    lines.append("")
+    lines.extend(STATEMENT_NOTHING_WRITTEN)
+    return "\n".join(lines)
+
+
+def _offered_current_lines(entry, indent):
+    """The current side of one offered field, with the stored reference named as absent.
+
+    `_side_lines` would say "the page carries no value for this field" here, which is true of
+    any empty field and says nothing about the one thing a reader of an adoption plan needs to
+    know: there is no reference, which is why this is an adoption.
+    """
+    if entry["field"] == FIELD_SOURCE and not entry["onPage"]:
+        return ["%s%s" % (indent, NO_REFERENCE_VALUE)]
+    return _side_lines(entry, entry["current"], entry["onPage"], indent)
 
 
 def _statement_lines(doc, index):

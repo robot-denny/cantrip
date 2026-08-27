@@ -88,6 +88,13 @@ costs a model call per actual change. Human text by default and `--json` for the
 same split `inventory` makes. `guidelib/changeplan.py` holds the ownership register and the
 reasoning behind every class in it.
 
+**Ownership follows the page, not the field.** A page carrying no stored reference was written
+by a person, so it has no machine-owned fields at all, and `plan` against it is propose-only:
+the property table is offered as a difference, every word already there is kept, and the stored
+reference — the write that makes a page's machine-owned fields machine-owned from then on — is
+reported as pending approval rather than as a value to write. `comparison` reads `noReference`
+and `proposeOnly` is true, so a consumer never has to infer any of that.
+
 `--project-root` defaults to the current directory, and the serialization folder is searched
 for beneath it (the `paths.md → ## Umbraco` slot's fallback). `--adapter` defaults to whichever
 format the project carries. No path, host or version is hardcoded; the spell reads the slots

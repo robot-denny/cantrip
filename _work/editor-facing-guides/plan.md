@@ -711,6 +711,18 @@ print" from this file alone.
 > End with a report block and a `Next:` line, per the house style; spells suggest and never invoke
 > each other.
 
+**One contract the change plan imposes on this spell, recorded 2026-08-27 from a review.** A
+change plan's `rule` object carries **different keys on its two paths** and they share none:
+a regeneration carries `machineOwned`/`seededOnce`/`neverTouched`, an adoption carries
+`humanOwned`/`offered`/`kept`. **Branch on `comparison == "noReference"` (or `provenance`) before
+touching `rule`, or a hand-written page raises a KeyError.** The asymmetry is deliberate — the
+three class rules describe a page that carries a reference, and quoting them at a page that
+carries none would state a rule that does not apply to it — and the spell has to render two
+different shapes anyway, so the branch is not extra work. Two further keys the adoption path
+carries and the regeneration path does not: `proposeOnly` and, on the offered reference,
+`consequence`, which says in words that writing that reference is what makes the page's fields
+machine-owned from then on. Show it; it is the one approval that is not reversible by editing.
+
 **What to build**: `skills/umbraco-17/spellbook/guide/SKILL.md`, the generate path.
 
 **Test first**: the runnable subject is the script, already covered. The concrete manual check for
