@@ -1,0 +1,11 @@
+{
+  "Name": "Textarea",
+  "EditorAlias": "Umbraco.TextArea",
+  "EditorUiAlias": "Umb.PropertyEditorUi.TextArea",
+  "DatabaseType": "Ntext",
+  "Configuration": {},
+  "Udi": "umb://data-type/dddd4444dddd4444dddd444444444444",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact",
+  "__version": "17.2.0"
+}

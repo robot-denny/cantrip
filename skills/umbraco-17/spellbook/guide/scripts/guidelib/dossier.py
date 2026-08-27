@@ -97,6 +97,37 @@ UNGROUPED_TAB_SORT_ORDER = 0
 # bump.
 CONFIG_ITEMS = "items"
 
+# The block-editor palette, in the same shared payload and for the same reason as CONFIG_ITEMS:
+# `Umbraco.BlockList` and `Umbraco.BlockGrid` write one `blocks[]` array into a data type's
+# configuration, and both on-disk formats carry it verbatim -- Deploy inside an artifact's
+# `Configuration` object, uSync inside a `<Config>` block. Reading it once here keeps the two
+# adapters from disagreeing about what a palette is; each one only resolves the keys, which is
+# the half that genuinely differs between the formats.
+#
+# **The role of each element type in an entry is stated by its own key.** Nothing has to be
+# inferred from a name:
+#
+#     contentElementTypeKey    the block an editor places   -> a documentable unit
+#     settingsElementTypeKey   the settings half of a block -> excluded from the inventory
+#
+# Verified 2026-08-27 across both source projects. The demo project's 7 palettes hold 58
+# `contentElementTypeKey` and 45 `settingsElementTypeKey` entries; a second, uSync project's 26
+# palettes hold 62 and 38. An earlier count inferred the two roles by looking for "settings" in
+# a key name and got a different answer, which is why the keys are named as constants here
+# rather than matched as patterns anywhere.
+#
+# **The same element type appears in several entries and several palettes**, so an entry count
+# is not a component count: 58 Deploy entries resolve to 23 distinct content blocks. Every
+# consumer therefore de-duplicates on the resolved alias.
+#
+# **A settings model is a set difference, never a flag.** One element type can be the settings
+# half of one entry and a content block of another; nothing on the type itself says which. So
+# "settings model" means "named as settings somewhere and as a content block nowhere", and it
+# is computed once the whole project has been read.
+CONFIG_BLOCKS = "blocks"
+BLOCK_CONTENT_KEY = "contentElementTypeKey"
+BLOCK_SETTINGS_KEY = "settingsElementTypeKey"
+
 KIND_ELEMENT = "element"
 KIND_DOCUMENT = "document"
 
@@ -165,6 +196,44 @@ def options_from_config(config):
         return []
 
     return [value for value in values if value != ""]
+
+
+# A palette key naming a content type this export does not hold. Shared so both adapters and
+# the determiner agree on one sentinel, distinct from None -- which already means "this entry
+# declared no settings model", a different and perfectly healthy thing.
+PALETTE_UNRESOLVED = "\u0000unresolved"
+
+
+def palette_entries_from_config(config):
+    """The palette a block-editor data type declares, as (content key, settings key) pairs.
+
+    Declared order is kept, because it is the order an editor meets the blocks in. An entry
+    naming neither key is dropped: `blocks[]` is also where a grid records areas and span
+    options, and an entry with no element type at all offers nothing to place.
+
+    Returns an empty list for any configuration that carries no `blocks[]` array, which is
+    every data type that is not a block editor. That is the honest answer for a data type, and
+    is NOT the same claim as "this project has no palettes" -- see `guidelib/inventory.py`,
+    which reports that condition rather than inferring it from silence.
+
+    Keys are returned exactly as written. They are dashed GUIDs in both formats, while a Deploy
+    `Udi` strips the dashes, so folding the two spellings belongs to the adapter that owns the
+    reference -- both already have a normalizer for it.
+    """
+    if not isinstance(config, dict):
+        return []
+    blocks = config.get(CONFIG_BLOCKS)
+    if not isinstance(blocks, list):
+        return []
+    entries = []
+    for block in blocks:
+        if not isinstance(block, dict):
+            continue
+        content = text(block.get(BLOCK_CONTENT_KEY)).strip()
+        settings = text(block.get(BLOCK_SETTINGS_KEY)).strip()
+        if content or settings:
+            entries.append((content, settings))
+    return entries
 
 
 def _option_value(item):

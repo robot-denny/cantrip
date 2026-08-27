@@ -1,0 +1,6 @@
+exit: 0
+args: inventory --adapter deploy
+contains: Offered by a palette, absent from this export: 1
+contains: is a database row, never a class
+contains: Re-export from an environment that holds it
+not_contains: unresolved

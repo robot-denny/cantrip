@@ -167,6 +167,23 @@ In `guide-check`, one pair of cases exists to keep a refusal from widening by ac
   them. It also asserts `not_contains: declares no editable properties` — the property-less note and
   the gap list are different claims, and an implementation that flattened the properties somewhere
   the count could not see them would print both and contradict itself.
+- **`inventory-palette`** is the only case in the suite whose value is a single number. Its project
+  holds six element types and offers three of them as content blocks, so a determiner reading the
+  element-type flag scores 6 and a determiner reading the palette scores 3 — and *no* assertion on a
+  single component can tell those two apart. It compares `--json` output as a whole document
+  because `contains` cannot say which list an alias landed in: `"mediaRowSettings"` contains
+  `"mediaRow"`, and every excluded alias is deliberately named in the human report.
+- **`inventory-page-types-proposed`** asserts the whole human report, including the word `PROPOSED`
+  and the rule that produced each count. A page type, a folder, and an abstract base are separated
+  by no structural flag, so the behavior under test is *what the report says it did* rather than a
+  verdict — and all three aliases appear in the output, so section placement is the claim.
+- **`inventory-models-refused`** asserts **exit 1**. A generated model carries no palette, so an
+  empty inventory there would read as "this project offers no blocks" — true for some projects and
+  false for others, with nothing to tell them apart. **`inventory-no-palette`** is its mirror and
+  asserts **exit 0** with a note: a project that really has element types and no block editor gets
+  a truthful zero *plus* the sentence saying which of the two readings it cannot distinguish. Those
+  two cases together are what keeps the guard from becoming either a silent zero or a refusal that
+  rejects a true answer.
 
 ## Why 46 fixture `SKILL.md` files do not pollute an install
 

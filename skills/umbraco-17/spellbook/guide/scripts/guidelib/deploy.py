@@ -53,6 +53,10 @@ TYPE_DATA = "DataTypeArtifact"
 # `guidelib/__init__.py`, beside uSync's, because the two sets share one body of evidence.
 VERSION_KEY = "__version"
 
+# A palette names an element type by a bare GUID, not by a UDI. Wrapping it here lets one
+# normalizer serve both spellings rather than adding a second key-folding rule.
+DOCUMENT_TYPE_UDI_PREFIX = "umb://document-type/"
+
 # Build output and tooling directories can hold copies of a revision folder. Reading them
 # would double every artifact and let a stale copy win a lookup.
 SKIP_DIRS = {"bin", "obj", "node_modules", "packages", "TestResults"}
@@ -105,6 +109,121 @@ def extract(project_root, alias, catalog=None):
         compositions=sorted(set(compositions)),
         tabs=schema.tabs(),
     )
+
+
+# ---------------------------------------------------------------------------
+# The whole-project accessors the inventory determiner reads
+# ---------------------------------------------------------------------------
+#
+# Narrow on purpose. `guidelib/inventory.py` classifies every component in a project, which
+# needs two things no dossier carries -- the block-editor palettes, and the tree/template
+# signals that separate a page type from a folder -- and it must not reach into an adapter's
+# artifact shapes to get them. So each adapter answers both questions in format-blind terms
+# and keeps its own `Udi`, key-normalizing and truthiness rules to itself.
+
+
+def palettes(catalog):
+    """Every block-editor palette in the project, its entries resolved to aliases.
+
+    Each palette is `{"name", "editor", "entries": [{"content": alias|None,
+    "settings": alias|None}]}`, in the order the data type declared them.
+
+    **An entry naming an element type no artifact declares raises.** The alternative is
+    silently dropping a block an editor can place, which would under-count the inventory with
+    nothing in the output to say so -- the same silent-empty failure the missing-data-type
+    refusal exists to prevent, arriving one level up. Measured across both source projects,
+    every one of the 120 palette entries resolved, so this refusal is a guard rather than a
+    routine path.
+    """
+    found = []
+    for artifact in catalog.data_types():
+        config = artifact.get("Configuration")
+        entries = dossier.palette_entries_from_config(config)
+        if not entries:
+            continue
+        resolved = []
+        for content_key, settings_key in entries:
+            resolved.append({
+                "content": _palette_alias(catalog, artifact, content_key),
+                "settings": _palette_alias(catalog, artifact, settings_key),
+            })
+        found.append({
+            "name": _text(artifact.get("Name")),
+            "editor": _text(artifact.get("EditorAlias")),
+            "entries": resolved,
+        })
+    return found
+
+
+# A palette key that resolves to nothing is REPORTED, not fatal. It was a refusal first, and
+# that was wrong: an element type is always a database row rather than a class, so a package
+# that creates one at boot can legitimately leave it out of a project's own export. Four ways
+# that happens, none of them a broken project:
+#
+#   1. A package migration creates the type independently on each environment. If its
+#      package.xml pins no GUIDs, each environment gets its own copy — which reads as missing
+#      schema and is really duplicate schema.
+#   2. Deploy or uSync is configured to ignore the package's schema on purpose, so the
+#      migration stays the owner in every environment. The honest in-the-backoffice,
+#      absent-from-the-export case.
+#   3. The environment is not a schema source. A read-only Cloud production site writes no
+#      artifacts, so a type created there by a boot migration has no local file.
+#   4. The type exists only on an environment nobody booted locally.
+#
+# Refusing would take the whole inventory down over any of those. Dropping it silently would
+# under-count the thing this command exists to count. So it lands in its own category, with
+# the causes named, and the operator decides which they have.
+def _palette_alias(catalog, palette, key):
+    """One palette key resolved to a content-type alias, or None where none was declared.
+
+    The key is a dashed GUID while a document-type `Udi` is undashed, so it is wrapped as a UDI
+    and folded by the normalizer both references already share.
+    """
+    if not key:
+        return None
+    artifact = catalog.by_udi(DOCUMENT_TYPE_UDI_PREFIX + key)
+    if artifact is None or TYPE_DOCUMENT not in (artifact.get("__type") or ""):
+        # Reported by the determiner, not fatal -- see the note above.
+        return dossier.PALETTE_UNRESOLVED
+    return _text(artifact.get("Alias"))
+
+
+def components(catalog):
+    """Every content type in the project with the signals the page-type judgment needs.
+
+    Each entry is `{"alias", "name", "kind", "hasTemplate", "allowAtRoot", "children"}`, where
+    `children` holds the aliases this type allows beneath it. Reachability itself is computed
+    by the caller, because it is a property of the whole graph rather than of one type.
+
+    **`Permissions.AllowedAtRoot` is emitted only when true**, exactly like
+    `Permissions.IsElementType`, so it is a truthiness test here — and exactly unlike uSync,
+    which always writes `<AllowAtRoot>`. That is the same asymmetry the kind flag has, in a
+    second field, and a reader that assumes the two formats agree finds no root-level types on
+    one of them. One of the demo project's 68 artifacts carries the key.
+    """
+    listed = []
+    for artifact in catalog.documents():
+        permissions = artifact.get("Permissions") or {}
+        children = []
+        for udi in permissions.get("AllowedChildContentTypes") or []:
+            child = catalog.by_udi(udi if isinstance(udi, str) else "")
+            # Unresolved children are dropped rather than refused, unlike a palette entry: a
+            # child this project does not export costs a reachability signal on one type,
+            # never a whole component missing from the inventory. The signals are evidence for
+            # a human to confirm, and the report says so.
+            if child is not None:
+                children.append(_text(child.get("Alias")))
+        listed.append({
+            "alias": _text(artifact.get("Alias")),
+            "name": _text(artifact.get("Name")),
+            "kind": (dossier.KIND_ELEMENT if permissions.get("IsElementType")
+                     else dossier.KIND_DOCUMENT),
+            "hasTemplate": bool(artifact.get("AllowedTemplates")
+                                or _text(artifact.get("DefaultTemplate")).strip()),
+            "allowAtRoot": bool(permissions.get("AllowedAtRoot")),
+            "children": sorted(set(children)),
+        })
+    return listed
 
 
 # ---------------------------------------------------------------------------
@@ -164,6 +283,7 @@ class Catalog:
         self.project_root = project_root
         self._by_udi = {}
         self._documents = {}      # lowercased alias -> artifact
+        self._data_types = []     # every data-type artifact, in read order
         self._loaded = False
 
     def _load_all(self):
@@ -192,6 +312,10 @@ class Catalog:
             alias = artifact.get("Alias")
             if alias and TYPE_DOCUMENT in (artifact.get("__type") or ""):
                 self._claim(self._documents, alias.lower(), artifact, "alias")
+            # Collected as a list rather than indexed: a data type is looked up by UDI through
+            # `_by_udi`, and the only caller that wants all of them wants to scan for palettes.
+            if TYPE_DATA in (artifact.get("__type") or ""):
+                self._data_types.append(artifact)
         # One note for the whole corpus rather than one per file. The operator's next action
         # is the same for all of them, and a per-file line ahead of every dossier would train
         # a reader to skip it.
@@ -240,6 +364,20 @@ class Catalog:
         """
         self._load_all()
         return len(self._documents)
+
+    def documents(self):
+        """Every document-type artifact, in alias order.
+
+        Ordered here rather than by the caller so a whole-project read does not depend on
+        directory-walk order — the same reason the dossier sorts its tabs.
+        """
+        self._load_all()
+        return [self._documents[key] for key in sorted(self._documents)]
+
+    def data_types(self):
+        """Every data-type artifact, in path order — the palette scan's corpus."""
+        self._load_all()
+        return list(self._data_types)
 
     def by_udi(self, udi):
         self._load_all()

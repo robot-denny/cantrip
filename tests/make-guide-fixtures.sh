@@ -55,6 +55,20 @@ G_VIS=ffff3333-ffff-3333-ffff-333333333333
 # demo project's 68 document types, which is why they are fixtures rather than hypotheses.
 U_TAG=ffff1111ffff1111ffff111111111111    ; G_TAG=ffff1111-ffff-1111-ffff-111111111111
 U_VIS=ffff2222ffff2222ffff222222222222    ; G_VIS=ffff2222-ffff-2222-ffff-222222222222
+# The inventory determiner's own cast. Six element types and two block-editor data types,
+# because that is the smallest project in which the palette rule and the element-type flag
+# give DIFFERENT answers -- six carry the flag and three are content blocks.
+U_NOTICE=a11a1111a11a1111a11a111111111111  ; G_NOTICE=a11a1111-a11a-1111-a11a-111111111111
+U_MEDIA=a22a2222a22a2222a22a222222222222   ; G_MEDIA=a22a2222-a22a-2222-a22a-222222222222
+U_SLIDE=a33a3333a33a3333a33a333333333333   ; G_SLIDE=a33a3333-a33a-3333-a33a-333333333333
+U_MSET=a44a4444a44a4444a44a444444444444    ; G_MSET=a44a4444-a44a-4444-a44a-444444444444
+U_FOOTER=a55a5555a55a5555a55a555555555555  ; G_FOOTER=a55a5555-a55a-5555-a55a-555555555555
+U_SPACING=a66a6666a66a6666a66a666666666666 ; G_SPACING=a66a6666-a66a-6666-a66a-666666666666
+U_PBODY=d55d5555d55d5555d55d555555555555   ; G_PBODY=d55d5555-d55d-5555-d55d-555555555555
+U_PHERO=d66d6666d66d6666d66d666666666666   ; G_PHERO=d66d6666-d66d-6666-d66d-666666666666
+# The three shapes no structural flag tells apart: a page, a folder, and an abstract base.
+U_TOPIC=b11b1111b11b1111b11b111111111111   ; G_TOPIC=b11b1111-b11b-1111-b11b-111111111111
+U_PBASE=b22b2222b22b2222b22b222222222222   ; G_PBASE=b22b2222-b22b-2222-b22b-222222222222
 
 DEPLOY_ARTIFACT_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact'
 DEPLOY_DATATYPE_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact'
@@ -1919,5 +1933,860 @@ expect "$C" \
   'mask: "sourceSignature":' \
   'contains: "rung": "models"' \
   "not_contains: declare the same"
+
+# ==============================================================================
+# The inventory determiner — the step where the count stops being the file count
+# ==============================================================================
+#
+# Every case above reads ONE named component. These read the whole project and decide which
+# of its components an editor can actually place, which is a different question with a
+# different failure mode: not a wrong dossier but a right-looking count that is two to three
+# times too big, feeding an audit that reports a hundred components nobody wanted documented.
+#
+# So the fixture project is built to make the two candidate rules disagree by construction.
+# Six element types carry the flag; three are offered as content blocks. A determiner reading
+# `IsElementType` scores 6, a determiner reading the palette scores 3, and no assertion on a
+# single component could tell them apart.
+#
+# The palette schema below is measured, not guessed. Both formats carry the same JSON payload
+# in a block-editor data type — Deploy in `Configuration`, uSync in `<Config>` — and inside a
+# `blocks[]` entry the role of each element type is stated by its own KEY:
+#
+#     contentElementTypeKey    the block an editor places  -> a documentable unit
+#     settingsElementTypeKey   the settings half           -> excluded
+#
+# Verified 2026-08-27 on both source projects: the demo project's 7 palettes hold 58
+# `contentElementTypeKey` and 45 `settingsElementTypeKey` entries across `Umbraco.BlockList`
+# and `Umbraco.BlockGrid`; the client project's 26 hold 62 and 38. No entry in either project
+# names an element type this rule could not resolve. **The keys are dashed GUIDs in both
+# formats**, while a Deploy `Udi` strips the dashes — so a fixture that wrote them undashed
+# would let a broken normalizer pass.
+#
+# Three shapes in the cast exist because each one breaks a rule that looks correct:
+#
+#   mediaRow      is a content block in BOTH palettes, so a determiner that counts entries
+#                 rather than distinct components scores 4 instead of 3. (Entry counts and
+#                 component counts differ on both real projects for exactly this reason.)
+#   heroSlide     is the SETTINGS half of one palette entry and a CONTENT block in the other.
+#                 "Settings model" is therefore a set difference, never a per-type flag, and a
+#                 determiner that excludes anything named as settings loses a real block.
+#   sharedFooter  and spacingProperties appear in no palette at all, and each is composed by a
+#   spacingProperties  block that does. They are schema a guide READS and never schema a guide
+#                 documents, which is the spec's composition rule.
+
+INV_PALETTE_A='[BlockList] Page Body'
+INV_PALETTE_B='[BlockGrid] Hero Slides'
+
+# --- Deploy: six element types, two palettes -----------------------------------
+
+# One property each, which is the minimum that makes the component real: the inventory
+# extracts every documentable unit through the shared catalog, so each one has to resolve.
+inv_deploy_element() {  # inv_deploy_element <rev> <udi> <alias> <name> <prop-alias> <prop-name> [composition-udi]
+  local comp="" key="${2:0:8}"
+  if [[ -n "${7:-}" ]]; then
+    comp="
+    \"umb://document-type/$7\"
+  "
+  fi
+  cat > "$1/document-type__$2.uda" <<EOF
+{
+  "Name": "$4",
+  "Alias": "$3",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-brick color-blue",
+  "Thumbnail": "folder.png",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [$comp],
+  "PropertyGroups": [
+    {
+      "Key": "$key-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": [
+        {
+          "Key": "$key-0101-4000-8000-000000000101",
+          "Alias": "$5",
+          "DataType": "umb://data-type/$U_TEXT",
+          "ValueType": "System.String",
+          "Description": "",
+          "Name": "$6",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$2",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/$U_TEXT",
+      "Ordering": true
+    }
+  ],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+}
+
+# A block-editor data type, written directly rather than through `deploy_data_type`, because a
+# real palette artifact carries `"DatabaseType": null` and a multi-line `blocks[]` payload.
+inv_deploy_palette() {  # inv_deploy_palette <rev> <udi> <name> <editor> <ui> <blocks-json>
+  cat > "$1/data-type__$2.uda" <<EOF
+{
+  "Name": "$3",
+  "EditorAlias": "$4",
+  "EditorUiAlias": "$5",
+  "DatabaseType": null,
+  "Configuration": {
+    "blocks": $6,
+    "useLiveEditing": false
+  },
+  "Udi": "umb://data-type/$2",
+  "Dependencies": [],
+  "__type": "$DEPLOY_DATATYPE_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+}
+
+inv_deploy_tree() {  # inv_deploy_tree <case-root>
+  local rev="$1/src/Web/umbraco/Deploy/Revision"
+  mkdir -p "$rev"
+
+  inv_deploy_element "$rev" "$U_NOTICE" noticeBar "Notice Bar" \
+    noticeHeading "Notice Heading" "$U_FOOTER"
+  inv_deploy_element "$rev" "$U_MEDIA" mediaRow "Media Row" \
+    mediaCaption "Media Caption" "$U_SPACING"
+  inv_deploy_element "$rev" "$U_SLIDE" heroSlide "Hero Slide" \
+    slideHeading "Slide Heading"
+  inv_deploy_element "$rev" "$U_MSET" mediaRowSettings "Media Row Settings" \
+    settingsWidth "Settings Width"
+  inv_deploy_element "$rev" "$U_FOOTER" sharedFooter "Shared Footer" \
+    footerNote "Footer Note"
+  inv_deploy_element "$rev" "$U_SPACING" spacingProperties "Spacing Properties" \
+    spacingTop "Spacing Top"
+
+  deploy_data_type "$rev" "$U_TEXT" "Textstring" "Umbraco.TextBox" \
+    "Umb.PropertyEditorUi.TextBox" "Nvarchar" '{}'
+
+  inv_deploy_palette "$rev" "$U_PBODY" "$INV_PALETTE_A" \
+    "Umbraco.BlockList" "Umb.PropertyEditorUi.BlockList" "[
+      {
+        \"contentElementTypeKey\": \"$G_NOTICE\"
+      },
+      {
+        \"contentElementTypeKey\": \"$G_MEDIA\",
+        \"settingsElementTypeKey\": \"$G_SLIDE\"
+      }
+    ]"
+
+  inv_deploy_palette "$rev" "$U_PHERO" "$INV_PALETTE_B" \
+    "Umbraco.BlockGrid" "Umb.PropertyEditorUi.BlockGrid" "[
+      {
+        \"contentElementTypeKey\": \"$G_SLIDE\",
+        \"settingsElementTypeKey\": \"$G_MSET\"
+      },
+      {
+        \"contentElementTypeKey\": \"$G_MEDIA\"
+      }
+    ]"
+}
+
+# --- uSync: the same six element types and the same two palettes ---------------
+
+inv_usync_element() {  # inv_usync_element <root> <key> <alias> <name> <prop-alias> <prop-name> [comp-key] [comp-alias]
+  local comp="<Compositions />"
+  if [[ -n "${7:-}" ]]; then
+    comp="<Compositions>
+      <Composition Key=\"$7\">${8:-}</Composition>
+    </Compositions>"
+  fi
+  cat > "$1/ContentTypes/$(printf '%s' "$3" | tr '[:upper:]' '[:lower:]').config" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<ContentType Key="$2" Alias="$3" Level="1">
+  <Info>
+    <Name>$4</Name>
+    <Icon>icon-brick color-blue</Icon>
+    <Thumbnail>folder.png</Thumbnail>
+    <Description></Description>
+    <AllowAtRoot>False</AllowAtRoot>
+    <IsListView>False</IsListView>
+    <Variations>Nothing</Variations>
+    <IsElement>true</IsElement>
+    $comp
+    <DefaultTemplate></DefaultTemplate>
+    <AllowedTemplates />
+  </Info>
+  <Structure />
+  <GenericProperties>
+    <GenericProperty>
+      <Key>${2:0:8}-0101-4000-8000-000000000101</Key>
+      <Name>$6</Name>
+      <Alias>$5</Alias>
+      <Definition>$G_TEXT</Definition>
+      <Type>Umbraco.TextBox</Type>
+      <Mandatory>false</Mandatory>
+      <Validation></Validation>
+      <Description></Description>
+      <SortOrder>10</SortOrder>
+      <Tab Alias="content">Content</Tab>
+      <Variations>Nothing</Variations>
+    </GenericProperty>
+  </GenericProperties>
+  <Tabs>
+    <Tab>
+      <Key>${2:0:8}-0001-4000-8000-000000000001</Key>
+      <Caption>Content</Caption>
+      <Alias>content</Alias>
+      <Type>Tab</Type>
+      <SortOrder>10</SortOrder>
+    </Tab>
+  </Tabs>
+</ContentType>
+EOF
+}
+
+# The <DataType> shape is the one measured on a real export: Key/Alias/Level on the root,
+# Name/EditorAlias/EditorUIAlias (capital UI) under <Info>, and no <DatabaseType>.
+inv_usync_palette() {  # inv_usync_palette <root> <key> <file> <name> <editor> <ui> <blocks-json>
+  cat > "$1/DataTypes/$3.config" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<DataType Key="$2" Alias="$4" Level="2">
+  <Info>
+    <Name>$4</Name>
+    <EditorAlias>$5</EditorAlias>
+    <EditorUIAlias>$6</EditorUIAlias>
+  </Info>
+  <Config><![CDATA[{
+  "blocks": $7,
+  "useLiveEditing": false
+}]]></Config>
+</DataType>
+EOF
+}
+
+inv_usync_tree() {  # inv_usync_tree <case-root>
+  local root="$1/uSync/v17"
+  mkdir -p "$root/ContentTypes" "$root/DataTypes"
+  cat > "$root/usync.config" <<'EOF'
+<uSync version="17.0.4.0" format="10.7.0" />
+EOF
+
+  inv_usync_element "$root" "$G_NOTICE" noticeBar "Notice Bar" \
+    noticeHeading "Notice Heading" "$G_FOOTER" sharedFooter
+  inv_usync_element "$root" "$G_MEDIA" mediaRow "Media Row" \
+    mediaCaption "Media Caption" "$G_SPACING" spacingProperties
+  inv_usync_element "$root" "$G_SLIDE" heroSlide "Hero Slide" \
+    slideHeading "Slide Heading"
+  inv_usync_element "$root" "$G_MSET" mediaRowSettings "Media Row Settings" \
+    settingsWidth "Settings Width"
+  inv_usync_element "$root" "$G_FOOTER" sharedFooter "Shared Footer" \
+    footerNote "Footer Note"
+  inv_usync_element "$root" "$G_SPACING" spacingProperties "Spacing Properties" \
+    spacingTop "Spacing Top"
+
+  inv_usync_palette "$root" "$G_PBODY" BlockListPageBody "$INV_PALETTE_A" \
+    "Umbraco.BlockList" "Umb.PropertyEditorUi.BlockList" "[
+    {
+      \"contentElementTypeKey\": \"$G_NOTICE\"
+    },
+    {
+      \"contentElementTypeKey\": \"$G_MEDIA\",
+      \"settingsElementTypeKey\": \"$G_SLIDE\"
+    }
+  ]"
+
+  inv_usync_palette "$root" "$G_PHERO" BlockGridHeroSlides "$INV_PALETTE_B" \
+    "Umbraco.BlockGrid" "Umb.PropertyEditorUi.BlockGrid" "[
+    {
+      \"contentElementTypeKey\": \"$G_SLIDE\",
+      \"settingsElementTypeKey\": \"$G_MSET\"
+    },
+    {
+      \"contentElementTypeKey\": \"$G_MEDIA\"
+    }
+  ]"
+}
+
+# --- the expected inventory — hand-authored, and the determiner's specification ---
+#
+# Written from the cast above BY HAND, before any inventory code existed to capture output
+# from. The direction is the point: a captured file asserts that the code still does what it
+# did, an authored one asserts that the code does what was asked. The number 3 in
+# `"components"` is the whole reason this step exists, and it was decided here.
+#
+# The rung is the only difference between the two formats' expectations, which is the
+# inventory's half of the format-blindness claim: the same project read two ways yields the
+# same three components, the same settings model, and the same two compositions.
+#
+# `signature` is masked in the comparison. It is a hash the subject computes, so it cannot be
+# hand-authored, and pasting one in would assert the implementation against itself.
+expected_inventory() {  # expected_inventory <case-root> <rung>
+  cat > "$1/expected-inventory.json" <<EOF
+{
+  "inventoryVersion": 1,
+  "rung": "$2",
+  "contentTypesRead": 6,
+  "elementFlagged": 6,
+  "documentTypesRead": 0,
+  "palettesRead": 2,
+  "rule": {
+    "components": "A content type named as a palette entry's content block, in one of the project's block-editor data types. Read from the palette, never from the element-type flag.",
+    "settingsModels": "An element type named only as a palette entry's settings model and never as a content block. The settings half of a block already counted, not a block of its own.",
+    "unpalettedElementTypes": "An element type no palette offers. Read into an owning component's property table as a composition, never documented on its own.",
+    "unresolvedPaletteEntries": "A palette offers a content type this export does not hold, so its name and its fields cannot be read and it is counted here rather than among the components. An element type is a database row, never a class, so a package that creates one at boot can legitimately leave it out: the export may ignore that package's schema deliberately, the environment may not be a schema source at all, or the type may exist only where nobody booted locally. Re-export from an environment that holds it to document these.",
+    "pageTypesProposed": "PROPOSED, not decided. No flag separates a page type from a folder, a container, or an abstract base, so a document type is proposed when it carries a template or matches the project's own page-naming convention. Tree reachability is read as evidence and is not a gate, because a folder is reachable by definition."
+  },
+  "namingConvention": {
+    "suffix": null,
+    "templated": 0,
+    "matched": 0,
+    "why": "not derived. 0 document types carry a template, and at least 2 are needed to measure a shared suffix."
+  },
+  "palettes": [
+    {
+      "name": "$INV_PALETTE_B",
+      "editor": "Umbraco.BlockGrid",
+      "contentBlocks": 2,
+      "settingsModels": 1
+    },
+    {
+      "name": "$INV_PALETTE_A",
+      "editor": "Umbraco.BlockList",
+      "contentBlocks": 2,
+      "settingsModels": 1
+    }
+  ],
+  "components": [
+    {
+      "alias": "heroSlide",
+      "name": "Hero Slide",
+      "kind": "element",
+      "palettes": [
+        "$INV_PALETTE_B"
+      ],
+      "signature": "sha256:<computed>"
+    },
+    {
+      "alias": "mediaRow",
+      "name": "Media Row",
+      "kind": "element",
+      "palettes": [
+        "$INV_PALETTE_B",
+        "$INV_PALETTE_A"
+      ],
+      "signature": "sha256:<computed>"
+    },
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar",
+      "kind": "element",
+      "palettes": [
+        "$INV_PALETTE_A"
+      ],
+      "signature": "sha256:<computed>"
+    }
+  ],
+  "settingsModels": [
+    {
+      "alias": "mediaRowSettings",
+      "name": "Media Row Settings"
+    }
+  ],
+  "unpalettedElementTypes": [
+    {
+      "alias": "sharedFooter",
+      "name": "Shared Footer"
+    },
+    {
+      "alias": "spacingProperties",
+      "name": "Spacing Properties"
+    }
+  ],
+  "unresolvedPaletteEntries": 0,
+  "pageTypesProposed": [],
+  "notProposed": []
+}
+EOF
+}
+
+# --- the two palette cases ------------------------------------------------------
+#
+# One project tree carrying BOTH serializations, each case forcing its own adapter — the shape
+# the signature pair already uses. Two separate trees would let the pair pass while the two
+# fixtures described two subtly different projects; one tree cannot.
+#
+# `--json` because the claim is which alias lands in which list, and `contains` cannot state
+# that: "mediaRowSettings" contains "mediaRow", and every excluded alias is NAMED in the human
+# report by design. Only a whole-document comparison can say that mediaRowSettings sits under
+# `settingsModels` and not under `components`.
+inv_palette_project() {  # inv_palette_project <case-root>
+  inv_deploy_tree "$1"
+  inv_usync_tree "$1"
+}
+
+INV_PALETTE_EXPECT=(
+  "exit: 0"
+  "stdout_matches: expected-inventory.json"
+  'mask: "signature":'
+)
+
+C="$CASES/inventory-palette"; mkdir -p "$C"
+inv_palette_project "$C"; expected_inventory "$C" deploy
+expect "$C" "${INV_PALETTE_EXPECT[@]}" \
+  "args: inventory --json --adapter deploy"
+
+C="$CASES/inventory-palette-usync"; mkdir -p "$C"
+inv_palette_project "$C"; expected_inventory "$C" usync
+expect "$C" "${INV_PALETTE_EXPECT[@]}" \
+  "args: inventory --json --adapter usync"
+
+# --- one of everything, because "1 content types read" reads as a broken tool -----
+#
+# A project with exactly one content type. Every other inventory fixture has several, so every
+# count in the report header was plural and the singular branch printed "1 content types read:
+# 1 carry the element-type flag, 1 do not" -- three disagreements in one line, in a report
+# whose entire job is to be believed. The naming-convention line a few lines below already
+# inflected correctly, which is what made the header's silence about it a gap rather than a
+# decision.
+C="$CASES/inventory-singular"; mkdir -p "$C"; deploy_page_type "$C"
+expect "$C" \
+  "exit: 0" \
+  "args: inventory --adapter deploy" \
+  "contains: 1 content type read:" \
+  "contains: 1 does not." \
+  "not_contains: 1 content types read" \
+  "not_contains: 1 do not."
+
+# --- a palette offering something this export does not hold ---------------------
+#
+# Counted in its own category, exit 0 -- NOT refused, and that was a deliberate reversal. The
+# first version raised, on the reasoning that a block nobody can read is a component missing
+# from the inventory with nothing to say so. But an element type is a database row rather than
+# a class, so a package that creates one at boot can legitimately be absent from a project's
+# own export: the export may ignore that package's schema on purpose, the environment may not
+# be a schema source at all, or the type may exist only where nobody booted locally. Refusing
+# would take the whole inventory down over any of those, and dropping it silently would
+# under-count the one thing this command exists to count.
+#
+# Verified against both real projects before deciding: every palette key resolved in each, so
+# this path is a guard rather than a routine one -- which is exactly why it needs a fixture.
+C="$CASES/inventory-unresolved-entry"; mkdir -p "$C"
+inv_deploy_tree "$C"
+REV="$C/src/Web/umbraco/Deploy/Revision"
+inv_deploy_palette "$REV" "eeee7777eeee7777eeee777777777777" "Ghost Palette" \
+  "Umbraco.BlockList" "Umb.PropertyEditorUi.BlockList" '[
+      {
+        "contentElementTypeKey": "99999999-9999-9999-9999-999999999999"
+      }
+    ]'
+expect "$C" \
+  "exit: 0" \
+  "args: inventory --adapter deploy" \
+  "contains: Offered by a palette, absent from this export: 1" \
+  "contains: is a database row, never a class" \
+  "contains: Re-export from an environment that holds it" \
+  "not_contains: unresolved"
+
+# --- a data type whose payload cannot be parsed ---------------------------------
+#
+# This one DOES refuse, and the contrast with the case above is the point: a file that is
+# present and unreadable is a different fact from a reference to something absent. The first is
+# a broken export and nothing downstream can be trusted; the second is a normal consequence of
+# how packages create schema. Same rule as `usync-format-refused` -- a file that exists and
+# cannot be understood stops the read.
+C="$CASES/inventory-unreadable-palette"; mkdir -p "$C"
+inv_usync_tree "$C"
+BAD="$C/uSync/v17/DataTypes/BrokenPalette.config"
+cat > "$BAD" <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<DataType Key="eeee8888-eeee-8888-eeee-888888888888" Alias="Broken Palette" Level="1">
+  <Info>
+    <Name>Broken Palette</Name>
+    <EditorAlias>Umbraco.BlockList</EditorAlias>
+    <EditorUIAlias>Umb.PropertyEditorUi.BlockList</EditorUIAlias>
+  </Info>
+  <Config><![CDATA[{ "blocks": [ {"contentElementTypeKey": ]}]]></Config>
+</DataType>
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: inventory --adapter usync" \
+  "contains: not readable JSON" \
+  "contains: BrokenPalette.config" \
+  'not_contains: "inventoryVersion"'
+
+# --- the zero that would be a lie if it were silent ----------------------------
+#
+# A project carrying element types and NO block-editor data type. The palette rule gives 0
+# components, which is the correct answer for a project whose blocks are all compositions and
+# the WRONG answer — indistinguishably — for a project whose block-editor data types were left
+# out of the export. Reading it as "this project has no blocks" is the silent-empty failure the
+# whole ladder exists to refuse, so the read says which of the two it cannot tell apart.
+#
+# A note and exit 0, not a refusal: refusing would refuse a true answer. The fixture reuses the
+# dossier tree, whose two element types are exactly this shape.
+C="$CASES/inventory-no-palette"; mkdir -p "$C"; deploy_tree "$C"
+expect "$C" \
+  "exit: 0" \
+  "args: inventory --adapter deploy" \
+  "contains: no block-editor data type in this project declares a blocks[] palette" \
+  "contains: not as 'this project has none'" \
+  "contains: Components an editor can place: 0" \
+  "contains: Excluded, offered by no palette: 2"
+
+# ==============================================================================
+# Page types — the judgment that must be proposed rather than decided
+# ==============================================================================
+#
+# Three document types no structural flag tells apart, which is the spec's claim measured on
+# real projects: on the client project only 9 of 49 non-element types carried a template while
+# 21 were recognizably pages, and 45 of the 49 were reachable in the content tree because a
+# folder is reachable by definition. Neither signal decides alone.
+#
+#   articlePage   carries a template, and topicFolder allows it as a child  -> PROPOSED
+#   topicFolder   no template, allowed at root, so reachable               -> a folder
+#   pageBase      no template, reachable from nowhere, composed by the page -> an abstract base
+#
+# The report is asserted whole, rather than by substring, for the same reason the palette cases
+# use `--json`: every one of the three aliases appears in the output, so a substring assertion
+# cannot say WHICH section each one landed in — and that is the entire behavior.
+#
+# Deploy and uSync disagree on the root flag exactly as they disagree on the kind flag: Deploy
+# writes `Permissions.AllowedAtRoot` only when true (1 of the demo project's 68 artifacts),
+# uSync always writes `<AllowAtRoot>`. Both cases exist because a reader that assumes symmetry
+# passes one and fails the other.
+
+inv_deploy_page_tree() {  # inv_deploy_page_tree <case-root>
+  local rev="$1/src/Web/umbraco/Deploy/Revision"
+  mkdir -p "$rev"
+
+  cat > "$rev/document-type__$U_PAGE.uda" <<EOF
+{
+  "Name": "Article Page",
+  "Alias": "articlePage",
+  "AllowedTemplates": [
+    "umb://template/$U_PAGE"
+  ],
+  "DefaultTemplate": "umb://template/$U_PAGE",
+  "HistoryCleanup": {},
+  "Icon": "icon-article color-blue",
+  "Thumbnail": "folder.png",
+  "Permissions": {
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [
+    "umb://document-type/$U_PBASE"
+  ],
+  "PropertyGroups": [
+    {
+      "Key": "eeee1111-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": [
+        {
+          "Key": "eeee1111-0101-4000-8000-000000000101",
+          "Alias": "articleHeading",
+          "DataType": "umb://data-type/$U_TEXT",
+          "ValueType": "System.String",
+          "Mandatory": true,
+          "Description": "",
+          "Name": "Article Heading",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$U_PAGE",
+  "Dependencies": [],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+
+  # No template, no properties, and it is the only artifact carrying `AllowedAtRoot` — which
+  # Deploy emits only when true, so a reader has to treat its absence as the answer.
+  cat > "$rev/document-type__$U_TOPIC.uda" <<EOF
+{
+  "Name": "Topic Folder",
+  "Alias": "topicFolder",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-folder color-black",
+  "Thumbnail": "folder.png",
+  "Permissions": {
+    "AllowedAtRoot": true,
+    "AllowedChildContentTypes": [
+      "umb://document-type/$U_PAGE"
+    ]
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$U_TOPIC",
+  "Dependencies": [],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+
+  cat > "$rev/document-type__$U_PBASE.uda" <<EOF
+{
+  "Name": "Page Base",
+  "Alias": "pageBase",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-settings color-black",
+  "Thumbnail": "folder.png",
+  "Permissions": {
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [
+    {
+      "Key": "b22b2222-0001-4000-8000-000000000001",
+      "Name": "SEO",
+      "SortOrder": 100,
+      "Type": 1,
+      "Alias": "seo",
+      "PropertyTypes": [
+        {
+          "Key": "b22b2222-0101-4000-8000-000000000101",
+          "Alias": "metaDescription",
+          "DataType": "umb://data-type/$U_TEXT",
+          "ValueType": "System.String",
+          "Description": "",
+          "Name": "Meta Description",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$U_PBASE",
+  "Dependencies": [],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+
+  deploy_data_type "$rev" "$U_TEXT" "Textstring" "Umbraco.TextBox" \
+    "Umb.PropertyEditorUi.TextBox" "Nvarchar" '{}'
+}
+
+inv_usync_page_tree() {  # inv_usync_page_tree <case-root>
+  local root="$1/uSync/v17"
+  mkdir -p "$root/ContentTypes"
+  cat > "$root/usync.config" <<'EOF'
+<uSync version="17.0.4.0" format="10.7.0" />
+EOF
+
+  cat > "$root/ContentTypes/articlepage.config" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<ContentType Key="$G_PAGE" Alias="articlePage" Level="2">
+  <Info>
+    <Name>Article Page</Name>
+    <Icon>icon-article color-blue</Icon>
+    <Thumbnail>folder.png</Thumbnail>
+    <Description></Description>
+    <AllowAtRoot>False</AllowAtRoot>
+    <IsListView>False</IsListView>
+    <Variations>Nothing</Variations>
+    <IsElement>false</IsElement>
+    <Compositions>
+      <Composition Key="$G_PBASE">pageBase</Composition>
+    </Compositions>
+    <DefaultTemplate>articlePage</DefaultTemplate>
+    <AllowedTemplates>
+      <Template Key="$G_PAGE">articlePage</Template>
+    </AllowedTemplates>
+  </Info>
+  <Structure />
+  <GenericProperties>
+    <GenericProperty>
+      <Key>eeee1111-0101-4000-8000-000000000101</Key>
+      <Name>Article Heading</Name>
+      <Alias>articleHeading</Alias>
+      <Definition>$G_TEXT</Definition>
+      <Type>Umbraco.TextBox</Type>
+      <Mandatory>true</Mandatory>
+      <Validation></Validation>
+      <Description></Description>
+      <SortOrder>10</SortOrder>
+      <Tab Alias="content">Content</Tab>
+      <Variations>Nothing</Variations>
+    </GenericProperty>
+  </GenericProperties>
+  <Tabs>
+    <Tab>
+      <Key>eeee1111-0001-4000-8000-000000000001</Key>
+      <Caption>Content</Caption>
+      <Alias>content</Alias>
+      <Type>Tab</Type>
+      <SortOrder>10</SortOrder>
+    </Tab>
+  </Tabs>
+</ContentType>
+EOF
+
+  # <AllowAtRoot> is written either way, so here it says True — the value Deploy expresses by
+  # writing the key at all. <Structure> is uSync's allowed-children list.
+  cat > "$root/ContentTypes/topicfolder.config" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<ContentType Key="$G_TOPIC" Alias="topicFolder" Level="1">
+  <Info>
+    <Name>Topic Folder</Name>
+    <Icon>icon-folder color-black</Icon>
+    <Thumbnail>folder.png</Thumbnail>
+    <Description></Description>
+    <AllowAtRoot>True</AllowAtRoot>
+    <IsListView>False</IsListView>
+    <Variations>Nothing</Variations>
+    <IsElement>false</IsElement>
+    <Compositions />
+    <DefaultTemplate></DefaultTemplate>
+    <AllowedTemplates />
+  </Info>
+  <Structure>
+    <ContentType Key="$G_PAGE" SortOrder="0">articlePage</ContentType>
+  </Structure>
+  <GenericProperties />
+  <Tabs />
+</ContentType>
+EOF
+
+  cat > "$root/ContentTypes/pagebase.config" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<ContentType Key="$G_PBASE" Alias="pageBase" Level="1">
+  <Info>
+    <Name>Page Base</Name>
+    <Icon>icon-settings color-black</Icon>
+    <Thumbnail>folder.png</Thumbnail>
+    <Description></Description>
+    <AllowAtRoot>False</AllowAtRoot>
+    <IsListView>False</IsListView>
+    <Variations>Nothing</Variations>
+    <IsElement>false</IsElement>
+    <Compositions />
+    <DefaultTemplate></DefaultTemplate>
+    <AllowedTemplates />
+  </Info>
+  <Structure />
+  <GenericProperties>
+    <GenericProperty>
+      <Key>b22b2222-0101-4000-8000-000000000101</Key>
+      <Name>Meta Description</Name>
+      <Alias>metaDescription</Alias>
+      <Definition>$G_TEXT</Definition>
+      <Type>Umbraco.TextBox</Type>
+      <Mandatory>false</Mandatory>
+      <Validation></Validation>
+      <Description></Description>
+      <SortOrder>10</SortOrder>
+      <Tab Alias="seo">SEO</Tab>
+      <Variations>Nothing</Variations>
+    </GenericProperty>
+  </GenericProperties>
+  <Tabs>
+    <Tab>
+      <Key>b22b2222-0001-4000-8000-000000000001</Key>
+      <Caption>SEO</Caption>
+      <Alias>seo</Alias>
+      <Type>Tab</Type>
+      <SortOrder>100</SortOrder>
+    </Tab>
+  </Tabs>
+</ContentType>
+EOF
+}
+
+# The human report, hand-authored. It is the deliverable this step's own validation reads, so
+# it is asserted as a whole document: the counts, the rule that produced them, and the word
+# PROPOSED beside the one section that is a proposal.
+#
+# Nothing here was captured from a run. The three classifications were decided from the cast
+# above, and the wording states the rule so a wrong determiner is visible in the output rather
+# than after a hundred guides have been proposed.
+expected_page_report() {  # expected_page_report <case-root> <rung>
+  cat > "$1/expected-report.txt" <<EOF
+Inventory of documentable units, read at the $2 rung.
+  3 content types read: 0 carry the element-type flag, 3 do not.
+  0 block-editor data types carry a block list.
+
+Components an editor can place: 0
+  A content type named as a palette entry's content block, in one of the project's
+  block-editor data types. Read from the palette, never from the element-type flag.
+
+Page types PROPOSED for a human to confirm: 1 of 3 document types
+  PROPOSED, not decided. No flag separates a page type from a folder, a container, or an
+  abstract base, so a document type is proposed when it carries a template or matches the
+  project's own page-naming convention. Tree reachability is read as evidence and is not a
+  gate, because a folder is reachable by definition.
+  Naming convention: not derived.
+    1 document type carries a template, and at least 2 are needed to measure a shared
+    suffix.
+    articlePage (Article Page): template, reachable
+
+  Not proposed, a folder or a container: 1
+    Reachable in the content tree, but carries no template and matches no naming convention.
+      topicFolder (Topic Folder)
+
+  Not proposed, an abstract base or a composition: 1
+    Neither reachable in the content tree nor carrying a template.
+      pageBase (Page Base)
+
+Documentable: 0 components + 1 proposed page type = 1.
+EOF
+}
+
+inv_page_project() {  # inv_page_project <case-root>
+  inv_deploy_page_tree "$1"
+  inv_usync_page_tree "$1"
+}
+
+INV_PAGE_EXPECT=(
+  "exit: 0"
+  "stdout_matches: expected-report.txt"
+)
+
+C="$CASES/inventory-page-types-proposed"; mkdir -p "$C"
+inv_page_project "$C"; expected_page_report "$C" deploy
+expect "$C" "${INV_PAGE_EXPECT[@]}" \
+  "args: inventory --adapter deploy" \
+  "contains: PROPOSED, not decided"
+
+C="$CASES/inventory-page-types-usync"; mkdir -p "$C"
+inv_page_project "$C"; expected_page_report "$C" usync
+expect "$C" "${INV_PAGE_EXPECT[@]}" \
+  "args: inventory --adapter usync" \
+  "contains: PROPOSED, not decided"
+
+# --- the rung that cannot answer the question ----------------------------------
+#
+# A generated model carries no palette, no template assignment and no tree structure, so the
+# models rung can answer neither half of the inventory. Returning an empty set would read as
+# "this project has no blocks", which is the silent-empty failure the whole ladder exists to
+# prevent — and it would be indistinguishable from the truth on a project that genuinely has
+# none. So it refuses, and says which of its own limits made it refuse.
+#
+# `not_contains: "components"` is how "no document was printed" is stated: a refusal that also
+# emitted a report would have answered the question it just said it could not.
+C="$CASES/inventory-models-refused"; mkdir -p "$C"; models_tree "$C"
+expect "$C" \
+  "exit: 1" \
+  "args: inventory --adapter models" \
+  "contains: carries no block-editor palette" \
+  'not_contains: "components"' \
+  "not_contains: Components an editor can place"
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

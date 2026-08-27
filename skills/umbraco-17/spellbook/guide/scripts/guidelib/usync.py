@@ -147,6 +147,131 @@ def extract(project_root, alias, catalog=None):
 
 
 # ---------------------------------------------------------------------------
+# The whole-project accessors the inventory determiner reads
+# ---------------------------------------------------------------------------
+#
+# The same two questions Deploy answers, in the same format-blind terms, so
+# `guidelib/inventory.py` never learns that one format spells a reference as a UDI and the
+# other as a GUID, or that one writes a flag only when true.
+
+
+def palettes(catalog):
+    """Every block-editor palette in the export, its entries resolved to aliases.
+
+    Each palette is `{"name", "editor", "entries": [{"content": alias|None,
+    "settings": alias|None}]}`, in declared order — the shape Deploy's twin returns.
+
+    A palette entry naming a content type this export does not hold raises, for the reason
+    Deploy's twin raises: dropping it would remove a block an editor can place from the
+    inventory with nothing in the output to say so. Note this is the opposite call from
+    `options` a few lines down, and the difference is what each reference is worth. A missing
+    data type there costs an option list on a field whose editor is already known; a missing
+    content type here costs a whole component.
+    """
+    found = []
+    for artifact in catalog.data_type_artifacts():
+        payload = artifact.element.findtext("Config")
+        if payload is None or not payload.strip():
+            continue
+        try:
+            config = json.loads(payload)
+        except ValueError as exc:
+            raise GuideError(
+                "the <Config> payload of the data type in %s is not readable JSON: %s"
+                % (artifact.path, exc))
+        entries = dossier.palette_entries_from_config(config)
+        if not entries:
+            continue
+        resolved = []
+        for content_key, settings_key in entries:
+            resolved.append({
+                "content": _palette_alias(catalog, artifact, content_key),
+                "settings": _palette_alias(catalog, artifact, settings_key),
+            })
+        found.append({
+            "name": _child(_info(artifact.element), "Name"),
+            "editor": _child(_info(artifact.element), "EditorAlias"),
+            "entries": resolved,
+        })
+    return found
+
+
+# A palette key that resolves to nothing is REPORTED, not fatal. It was a refusal first, and
+# that was wrong: an element type is always a database row rather than a class, so a package
+# that creates one at boot can legitimately leave it out of a project's own export. Four ways
+# that happens, none of them a broken project:
+#
+#   1. A package migration creates the type independently on each environment. If its
+#      package.xml pins no GUIDs, each environment gets its own copy — which reads as missing
+#      schema and is really duplicate schema.
+#   2. Deploy or uSync is configured to ignore the package's schema on purpose, so the
+#      migration stays the owner in every environment. The honest in-the-backoffice,
+#      absent-from-the-export case.
+#   3. The environment is not a schema source. A read-only Cloud production site writes no
+#      artifacts, so a type created there by a boot migration has no local file.
+#   4. The type exists only on an environment nobody booted locally.
+#
+# Refusing would take the whole inventory down over any of those. Dropping it silently would
+# under-count the thing this command exists to count. So it lands in its own category, with
+# the causes named, and the operator decides which they have.
+def _palette_alias(catalog, palette, key):
+    """One palette key resolved to a content-type alias, or None where none was declared."""
+    if not key:
+        return None
+    artifact = catalog.by_key(key)
+    if artifact is None:
+        # Reported by the determiner, not fatal -- see the note above.
+        return dossier.PALETTE_UNRESOLVED
+    return artifact.element.get("Alias") or ""
+
+
+def components(catalog):
+    """Every content type in the export with the signals the page-type judgment needs.
+
+    **One deliberate divergence from the Deploy adapter, and it is narrow.** Deploy lists an
+    allowed child by UDI alone, so a reference to a type the export does not hold resolves to
+    nothing and is dropped. uSync writes the alias as the element's own text beside the key, so
+    the same broken reference still yields a name and still counts toward reachability. The two
+    adapters can therefore propose different page types for the same *broken* export — never
+    for a whole one, where every reference resolves either way. Aligning them would mean
+    throwing away a name uSync actually gives us, to match a limitation of the other format.
+
+    The same shape Deploy's twin returns. Two fields are read differently and the difference is
+    the formats', not a choice made here:
+
+    - **`<AllowAtRoot>` is always written**, so it is a boolean to read — the opposite of
+      Deploy's `Permissions.AllowedAtRoot`, which appears only when true. The same asymmetry
+      the kind flag has, in a second field.
+    - **Allowed children live in `<Structure>`**, one `<ContentType>` per child carrying the
+      key as an attribute and the alias as its text. The alias is taken from the resolved
+      content type where the key resolves, and from the element's own text where it does not,
+      which is the fallback the composition read already uses for a re-created type.
+    """
+    listed = []
+    for artifact in catalog.documents():
+        element = artifact.element
+        info = _info(element)
+        children = []
+        for child in element.findall("Structure/ContentType"):
+            resolved = catalog.by_key(child.get("Key"))
+            alias = (resolved.element.get("Alias") if resolved is not None
+                     else _text(child.text))
+            if alias:
+                children.append(alias)
+        listed.append({
+            "alias": element.get("Alias") or "",
+            "name": _child(info, "Name"),
+            "kind": (dossier.KIND_ELEMENT if _flag(_child(info, "IsElement"))
+                     else dossier.KIND_DOCUMENT),
+            "hasTemplate": bool(info.findall("AllowedTemplates/Template")
+                                or _child(info, "DefaultTemplate")),
+            "allowAtRoot": _flag(_child(info, "AllowAtRoot")),
+            "children": sorted(set(children)),
+        })
+    return listed
+
+
+# ---------------------------------------------------------------------------
 # Reading the export
 # ---------------------------------------------------------------------------
 
@@ -314,6 +439,25 @@ class Catalog:
         """
         self._load_all()
         return len(self._documents)
+
+    def documents(self):
+        """Every content type, in alias order.
+
+        Ordered here rather than by the caller so a whole-project read does not depend on
+        directory-walk order — the same reason the dossier sorts its tabs.
+        """
+        self._load_all()
+        return [self._documents[key] for key in sorted(self._documents)]
+
+    def data_type_artifacts(self):
+        """Every data type, in key order — the palette scan's corpus.
+
+        Named apart from `options`, which resolves ONE data type by key. Sorted by key rather
+        than by path so the order does not depend on the folder walk; the palette report is
+        sorted by name downstream anyway.
+        """
+        self._load_all()
+        return [self._data_types[key] for key in sorted(self._data_types)]
 
     def by_key(self, key):
         self._load_all()

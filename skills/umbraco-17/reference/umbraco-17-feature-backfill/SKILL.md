@@ -54,12 +54,56 @@ for something the repository already holds; read the equivalents:
 | Sort order | `SortOrder`, on groups and properties alike | `<SortOrder>`, on tabs and properties alike |
 | Compositions | `CompositionContentTypes` UDIs | `<Info>` → `<Compositions>` → `<Composition>`, alias as the element text |
 | The kind | `Permissions.IsElementType`, **present only when true** | `<IsElement>`, **always present**, `true` or `false` |
+| Root-placeable | `Permissions.AllowedAtRoot`, **present only when true** | `<Info>` → `<AllowAtRoot>`, **always present** |
+| Allowed children | `Permissions.AllowedChildContentTypes` UDIs | `<Structure>` → `<ContentType>`, `Key` attribute **and** the alias as element text |
+| Template assignment | `DefaultTemplate` and `AllowedTemplates` UDIs | `<Info>` → `<DefaultTemplate>` and `<AllowedTemplates>`, alias as element text |
 
 **The two formats express the kind asymmetrically, and a reader must branch.** uSync always writes
 `<IsElement>`, so read the boolean. Deploy writes `Permissions.IsElementType` only when true, so
 test for truthiness and treat absence as false. A reader that assumes symmetry finds no element
 types on one format or none on the other, and reports an empty inventory on a project full of
 blocks — the silent-empty shape this guidance exists to prevent.
+
+**The same asymmetry appears a second time, on `AllowedAtRoot`.** Deploy emits it only when true;
+uSync always writes `<AllowAtRoot>`. Whatever you do for the kind flag, do for this one — the two
+fields are the same shape of trap, and a reader that branches for one and not the other reads every
+Deploy content type as unplaceable at the root.
+
+**Allowed children resolve differently, and uSync gives more.** Deploy lists a child by UDI alone, so
+a reference to a type the export does not hold resolves to nothing. uSync writes the alias as the
+element's own text beside the `Key`, so the same broken reference still yields a name. A consumer
+that treats reachability as evidence rather than as a gate is unaffected; one that counts reachable
+types will count differently on the two formats for the same *broken* export.
+
+## The block-editor palette
+
+**A block editor's palette lives on its data type, never on a content type.** Both formats carry the
+same JSON payload — Deploy in `Configuration`, uSync inside the `<Config>` CDATA — and inside it a
+`blocks[]` array whose entries name content types by **two explicit keys**:
+
+| Key | What it names |
+|---|---|
+| `contentElementTypeKey` | the block an editor places — **the documentable unit** |
+| `settingsElementTypeKey` | the settings half of that block, not a block of its own |
+
+Both are dashed GUIDs, while a Deploy `Udi` strips the dashes, so folding the two spellings is the
+reader's job. Measured on two projects: Deploy carried 7 palettes across `Umbraco.BlockList` and
+`Umbraco.BlockGrid`; uSync carried 26, all `Umbraco.BlockList`. An entry may also carry grid layout
+keys — `areas`, `columnSpanOptions`, `rowMinSpan`, `allowInAreas`, `groupKey` — and an entry naming
+neither element type offers nothing to place.
+
+**Read the palette, never the element-type flag, to decide what an editor can place.** On one
+measured project the flag matched 34 of 68 content types while the palette named 23; on another it
+matched 125 of 174 while the palette named 52. The same element type appears in several palettes, so
+deduplicate on the resolved alias, and compute the settings-only set as a **difference** — a type can
+be one block's settings half and another block's content block.
+
+**A palette key that resolves to nothing is not necessarily a broken export.** An element type is a
+database row rather than a class, so a package that creates one at boot can be absent from a
+project's own export: the export may ignore that package's schema deliberately, the environment may
+not be a schema source at all, or the type may exist only where nobody booted locally. Report it;
+do not refuse over it. A data type whose payload cannot be *parsed* is the opposite case and does
+stop the read.
 
 **Resolving a uSync property to its tab and group takes two steps.** Tabs and groups both appear as
 `<Tab>` entries inside `<Tabs>`, told apart only by `<Type>Tab</Type>` or `<Type>Group</Type>`. A

@@ -218,6 +218,54 @@ def searched_locations(project_root):
     return found or [os.path.abspath(project_root)]
 
 
+# ---------------------------------------------------------------------------
+# The whole-project accessors — and the one question this rung refuses
+# ---------------------------------------------------------------------------
+
+def palettes(catalog):
+    """Refuse the inventory: a generated model carries no palette to read.
+
+    **This is where the three adapters legitimately differ, and returning an empty list would
+    be the wrong difference.** The higher two rungs read a project's block-editor data types,
+    which state per entry which element type an editor can place. ModelsBuilder generates one
+    class per content type and nothing about the data types at all, so there is no palette on
+    disk at this rung — not an empty one, not a partial one, none.
+
+    An empty list would render as "this project offers no blocks", which is indistinguishable
+    from the truth on a project that genuinely offers none, and would hand an audit an empty
+    backlog on a project full of them. That is precisely the silent-empty failure the whole
+    ladder is built to refuse, so this refuses instead and names its own limit.
+
+    The other half of the inventory is out of reach for the same reason: a generated model
+    records no template assignment and no allowed-children structure, so every page-type signal
+    but the alias itself is absent too. Both halves are named, because an operator told only
+    about palettes would reasonably expect the page types to have come out.
+
+    `catalog` is accepted and unused, so the three adapters present one signature.
+    """
+    raise GuideError(
+        "the generated-models rung carries no block-editor palette, so the inventory cannot "
+        "be determined from it — and an empty list would read as 'this project offers no "
+        "blocks', which is the one answer no source should ever invent.\n"
+        "  A generated model describes a content type's properties and nothing about the data "
+        "types that offer it, its template, or the content tree, so neither the components nor "
+        "the page types can be read here. `extract` and `signature` still work at this rung.\n"
+        "  Read the inventory from a project that commits its Deploy artifacts or its uSync "
+        "export, or have the spell read the running instance and supply the result.")
+
+
+def components(catalog):
+    """Refused, for the same reason `palettes` is.
+
+    Present so the three adapters actually share an interface rather than sharing one by the
+    order a caller happens to try them in. Without it, `determine()` survived only because it
+    asks for palettes first — and a caller that asked the other way round, or a later step
+    reaching for components alone, got an AttributeError instead of the refusal every other
+    dead end in this codebase produces.
+    """
+    return palettes(catalog)
+
+
 def extract(project_root, alias, catalog=None):
     """Read one content type's generated model, and its base chain, into a dossier.
 

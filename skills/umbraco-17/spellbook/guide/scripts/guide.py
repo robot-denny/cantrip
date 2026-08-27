@@ -49,10 +49,19 @@ declared once in `guidelib/__init__.py`.
 
     guide.py extract   <alias> [--project-root DIR] [--adapter deploy|usync|models]
     guide.py signature <alias> [--project-root DIR] [--adapter deploy|usync|models]
+    guide.py inventory [--json] [--project-root DIR] [--adapter deploy|usync|models]
 
 `extract` prints the whole dossier; `signature` prints its `sourceSignature` and nothing else,
 which is what makes format-blindness assertable: the same component read through two adapters
 prints the same line, and no test has to hardcode a hash to say so.
+
+`inventory` reads the whole project rather than one component, and answers a different question:
+which of its components an editor can actually place, and which of its document types are page
+types rather than folders. **It is read from the project's own block-editor palettes, never from
+the element-type flag** -- the flag matched 34 of the demo project's 68 content types where 23
+are blocks. The report states every count and the rule that produced it, because that is the
+only place a determiner reading the wrong signal is visible. The models rung refuses the
+question rather than answering it emptily; `guidelib/inventory.py` carries the whole rule.
 
 `--project-root` defaults to the current directory, and the serialization folder is searched
 for beneath it (the `paths.md → ## Umbraco` slot's fallback). `--adapter` defaults to whichever
@@ -63,6 +72,7 @@ Exit: 0 on a completed read, 1 when a read cannot be completed, 2 on a usage err
 """
 
 import argparse
+import json
 import os
 import sys
 
@@ -79,6 +89,7 @@ from guidelib import GuideError    # noqa: E402
 from guidelib import deploy        # noqa: E402
 from guidelib import dossier       # noqa: E402
 from guidelib import drain_notes   # noqa: E402
+from guidelib import inventory     # noqa: E402
 from guidelib import models        # noqa: E402
 from guidelib import usync         # noqa: E402
 
@@ -225,6 +236,29 @@ def cmd_signature(args):
     return 0
 
 
+def cmd_inventory(args):
+    """Every documentable unit in the project, with the rule that decided it.
+
+    Human text by default and `--json` for a machine, because the two readers want opposite
+    things from the same numbers: a person needs the rule beside the count, since a determiner
+    reading the element-type flag rather than the palette produces a plausible report and the
+    mistake is only visible next to the number it should not have matched. A consumer needs the
+    aliases and signatures without prose in the way.
+
+    Both go to stdout and nothing else does, so `--json` can be piped straight into the audit.
+    """
+    adapter = resolve_adapter(args.project_root, args.adapter)
+    try:
+        # Signatures are a full extract each and only `--json` carries them, so the text
+        # report does not pay for values it never prints.
+        doc = inventory.determine(adapter, args.project_root,
+                                  with_signatures=args.json)
+    finally:
+        report_read_notes()
+    print(json.dumps(doc, indent=2) if args.json else inventory.report(doc))
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog=PROG,
@@ -241,8 +275,16 @@ def build_parser():
     signature.add_argument("alias", help="the component's document-type or element-type alias")
     signature.set_defaults(handler=cmd_signature)
 
+    inventory_cmd = subparsers.add_parser(
+        "inventory",
+        help="classify every component in the project as documentable or not")
+    inventory_cmd.add_argument(
+        "--json", action="store_true",
+        help="emit the inventory as JSON for another tool instead of a human report")
+    inventory_cmd.set_defaults(handler=cmd_inventory)
+
     # Shared by every subcommand that reads the project rather than a supplied JSON file.
-    for sub in (extract, signature):
+    for sub in (extract, signature, inventory_cmd):
         sub.add_argument(
             "--project-root", default=".", metavar="DIR",
             help="the project to read (default: the current directory)")
