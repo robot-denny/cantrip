@@ -1,0 +1,25 @@
+{
+  "planVersion": 1,
+  "alias": "promoTile",
+  "name": "Promo Tile",
+  "page": "How to use a Promo Tile",
+  "rung": "deploy",
+  "storedSignature": "sha256:promotileasgenerated",
+  "storedRung": "deploy",
+  "currentSignature": "sha256:promotileasgenerated",
+  "comparison": "matched",
+  "noop": true,
+  "modelCallNeeded": false,
+  "statements": [
+    "The stored signature matches the source's current signature.",
+    "No model call is needed, and no field is proposed: with the source unchanged since this guide was generated, there is nothing to regenerate and nothing for the spell to send to a model. This run is a no-op.",
+    "Nothing was written. This document is a proposal: every write happens in the spell, after a person approves it."
+  ],
+  "rule": {
+    "machineOwned": "Regenerated when the source signature changes, shown as a difference against the current value, and written only after a person approves it. This script writes nothing.",
+    "seededOnce": "Written when the page was created and never touched again. Reported when it may have gone stale, never replaced: an arrangement is a person's work, not a value to overwrite.",
+    "neverTouched": "The page's own name, address and visibility settings, the editorial levers, the media a person uploaded, and every field this register does not name."
+  },
+  "machineOwned": [],
+  "leftAlone": []
+}

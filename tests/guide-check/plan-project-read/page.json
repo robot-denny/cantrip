@@ -1,0 +1,14 @@
+{
+  "pageVersion": 1,
+  "page": "How to use an Alert Banner",
+  "source": {
+    "alias": "alertBanner",
+    "kind": "element",
+    "signature": "sha256:alertbannerasgeneratedthreeweeksago",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guideExamples": "<alert-banner>one instance, severity Info</alert-banner>",
+    "name": "How to use an Alert Banner"
+  }
+}

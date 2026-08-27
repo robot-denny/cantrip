@@ -1,0 +1,6 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json --json
+stdout_matches: expected-plan.json
+contains: "noop": true
+contains: No model call is needed
+not_contains: A model call is needed

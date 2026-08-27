@@ -218,6 +218,33 @@ In `guide-check`, one pair of cases exists to keep a refusal from widening by ac
   inventory is supplied through `--inventory`, because the determiner refuses at the models rung on
   purpose (`inventory-models-refused`); nothing restricts what rung a supplied document may
   declare, which is what makes that seam worth having.
+- **`plan-noop`** is the cheapest guard in the suite and the reason `plan` exists ahead of the
+  spell: a page whose stored signature still matches its source produces no proposal, and the
+  output says in words that **no model call is needed**. Without it, a regeneration loop that
+  spends a model call on every run to rewrite prose identical to the prose already there passes
+  every other case here. Asserted as the whole `--json` document, because `noop` and
+  `modelCallNeeded` are what the spell reads to skip that call, and a report sentence is no use
+  to it. Its dossier is supplied through `--dossier`: a *matching* signature is only
+  hand-authorable that way, since a hash cannot be written into a fixture and computing one here
+  would assert the implementation against itself — the same reason `audit-signature-mismatch`
+  supplies both sides.
+- **`plan-ownership`** is its twin at the other end, compared as the whole human report because
+  "field, current value, proposed value" is a claim about *where* a value sits. Three things at
+  once: the four machine-owned fields are proposed (including the one the page does not carry at
+  all, which a plan that only diffed what it found would drop), the seeded-once example and the
+  never-touched blurb, screenshot and page name come back **byte for byte**, and the two prose
+  fields carry no proposed value while saying so — an absent proposal reads as "no change
+  needed", which is the opposite of the truth.
+- **`plan-other-rung`** holds the two signatures **identical** and the rungs different. A plan
+  that compares them without checking the rung reports a no-op, and two rungs sign one component
+  differently by design, so a matching string across rungs is no information at all. "No
+  information" read as "no change" is a guide that silently stops being regenerated the day a
+  project gains a serialization format.
+- **`plan-project-read`** is the only `plan` case that reads a project off disk, since the three
+  above all supply a dossier. Substrings rather than a golden: its claims are that the project was
+  read at all, that a tab and a group both reach the property table, and that an inherited
+  property is marked as inherited — a golden file would add a masked signature line and a second
+  copy of `plan-ownership`'s report.
 
 ## Why 46 fixture `SKILL.md` files do not pollute an install
 

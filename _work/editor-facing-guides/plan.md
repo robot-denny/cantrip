@@ -81,6 +81,33 @@ Every extraction step should read it first.
   it. A **toggle's** default is a real value with nowhere to live in the dossier today; that is a
   known gap, not this increment's work. If a source for option defaults ever appears, restoring the
   marker is a `dossierVersion` bump.
+- **The property table is stored as structured rows, not as markup in a rich-text field.** Decided
+  2026-08-27 after reading two reference guide pages from a shipped implementation. Each row is one
+  element type with six fields: `alias`, `label`, `required`, `tab`, `group`, and `information` (rich
+  text). Rows are flat and carry their tab and group as fields; **the project's template does the
+  grouping**, so a property moving between tabs is a field change rather than a row migrating
+  between nested containers. Three reasons, in order of weight:
+  - **Ownership works per column rather than per field.** `alias`/`label`/`required`/`tab`/`group`
+    carry no human writing, so they are machine-owned and update freely. `information` is a person's
+    prose from the moment it is seeded, so it is **seeded-once**: written at creation, never touched
+    again, reported when the property's shape changed so the note may be stale. No divergence
+    detection and no stored hash are needed, because nothing ever wants to overwrite the prose.
+  - **The caster gets a summary instead of a diff of markup.** Row identity is the alias, so the
+    comparison is a set operation: added, removed, unchanged. A whole-field comparison put rendered
+    markup beside structured rows and asked a person to diff them by eye — on a real page type that
+    is roughly sixty lines of markup against nineteen rows, which makes approval theatre.
+  - **A design change is one template edit, not forty page edits.** This is the spec's own
+    "standardize where it does not show" rule applied to the table.
+- **Option lists and recommendations live inside the seeded `information` prose, not in structured
+  sub-fields.** The reference pages annotate an option list with `(Default)`, and Step 6 verified
+  that **no dropdown data type records a default** on either measured project — that annotation came
+  from a model reading the project's design-system knowledge, not from the schema. A structured
+  option field could never carry it. So options stay in the prose, one fewer field, and the dossier
+  is right not to invent a default.
+- **Seeded-then-flag is a deferred enhancement, not this increment's rule.** Storing a hash of the
+  seeded prose would let the tool offer a fresh note *as a diff* where nobody has edited one. That
+  buys a convenience; the per-column split above already buys the safety property, so it is recorded
+  here rather than built.
 - **The source signature is a sha256 over the canonical schema-bearing subset of the dossier**
   (alias, kind, tabs, groups, sort order, properties, mandatory flags, option lists), excluding
   `rung` and `dossierVersion`. This is what makes format-blindness assertable without hardcoding a
@@ -502,6 +529,20 @@ audit in early — confirm it goes RED on the exit code before implementing.
 > plus a seeded-once field and a never-touched field carrying known values → machine-owned fields
 > proposed, the other two byte-identical in the plan's "left alone" list).
 
+**Amended 2026-08-27, after reading two reference guide pages.** The property table is stored as
+structured rows rather than markup in one rich-text field (see Key Decisions), so:
+
+> **`guideProperties` is row-oriented.** The comparison is a set operation on the row alias —
+> added, removed, unchanged — and the plan reports that summary rather than putting rendered markup
+> beside structured rows. Ownership is **per column inside a row**: `alias`, `label`, `required`,
+> `tab`, `group` are machine-owned and update freely; `information` is **seeded-once**, written at
+> creation and never touched again. A removed row may carry a person's writing, so removal is
+> proposed and says so — never silent.
+>
+> This replaces the whole-field markup comparison rather than adding to it, so the net effort is
+> roughly neutral. The scaffolding fields it reads are Step 14's; where they do not exist yet, leave
+> a **named seam** and say so in the report rather than inventing them.
+
 **What to build**: `guidelib/changeplan.py`, the `plan` subcommand, two fixture cases.
 
 **Test first**: write `plan-noop` and confirm RED. It is the cheapest guard against the regeneration
@@ -563,34 +604,45 @@ number and identity of seeds, which the fixture's option list fixes independentl
 
 ---
 
-### Step 14 — The shared scaffolding reference
+### Step 14 — The scaffolding reference: document types and the field register
+
+*Split from a single Step 14 on 2026-08-27. The structured property table added an element type and
+a full guide-page field set to what this file had to define, and one step defining an element type,
+a page type, two container types, the index, two slots, and the audit's report shape would sprawl.
+Step 14 is the schema; Step 14b is the report shape and the slots.*
 
 > **Prompt**: Implement Step 14 of `_work/editor-facing-guides/plan.md`. Create
 > `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md` — a model-invoked reference
 > (no `disable-model-invocation`), `name: umbraco-17-guide-scaffolding`, description over 40
-> characters. It describes, once, what both `/guide` and the deferred styleguide increment need: the
-> single guide document type serving every guide including hand-authored editorial ones; the
-> `guideSource` stored reference (alias, kind, source signature, rung) and why every
-> machine-populated field including it is **optional**; the three ownership classes as consequences
-> of provenance; the kind containers (`editorGuideGroup` carrying a `guideKind`, found as children of
-> the one guides pointer, never matched by name); the index page type whose list is **derived at
-> render time** and which carries no machine-owned fields; and the editorial levers that live on the
-> guide page rather than on the index. State that guides are located by the **stored key** of the
-> guides node, never by route, and that detection is on document type rather than on name. Declare
-> the two new slots here and nowhere else: `.agents/config/stack.md` → `## Schema serialization`
-> (which adapter runs, with a `**Detect:**` recipe after the fallback) and
-> `.agents/config/conventions.md` → `## Editor guides` (the guides node key and the document type
-> aliases used). Every alias is a slot with a default, not a constant. Include a **self-contained
-> section on the audit's report shape** — three counted sections, `alias (Display Name)` items, the
-> report-level rung statement, exit zero with `--strict` as the only opt-in — written so a later
-> extraction to core is a move rather than a rewrite. Check every alias against the forbidden-token
-> list in this plan's Key Decisions before writing it.
+> characters. **This step is the schema half**; Step 14b adds the slots, the index and the report
+> shape to the same file. Describe, once, what both `/guide` and the deferred styleguide increment
+> need:
+>
+> - The **single guide document type** serving every guide including hand-authored editorial ones,
+>   and its full field set: an intro (seeded-once rich text), a behaviour-or-notes section
+>   (seeded-once rich text — the reference implementation renders this as *How It Works* on a block
+>   and as a tip callout on a page type), the property row list, screenshots (never-touched), and the
+>   optional index blurb (never-touched).
+> - The **property row element type** and its six fields — `alias`, `label`, `required`, `tab`,
+>   `group`, `information` — with **ownership stated per column**: the first five machine-owned, the
+>   `information` rich text seeded-once. Rows are flat and the project's template groups them by tab
+>   and group. Say why the table is structured rather than markup in a rich-text field, citing the
+>   plan's Key Decisions rather than restating the whole argument.
+> - The **`guideSource` stored reference** (alias, kind, source signature, rung) and why every
+>   machine-populated field including it is **optional**.
+> - The **three ownership classes as consequences of provenance**, and that they apply per column
+>   inside a row rather than only per field.
+>
+> Cite `guidelib/changeplan.py`'s field register as the implementation of this, rather than
+> duplicating the list — the register is already the one place the field set is written down. Check
+> every alias against the forbidden-token list in this plan's Key Decisions before writing it.
 
-**What to build**: `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md`.
+**What to build**: `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md`, its schema
+half.
 
 **Test first**: no runnable test — this is a reference. The concrete check is the contract gate plus
 a read-back: a fresh reader must be able to answer "what document types does a guides section need,
-and which fields may the tooling write" from this file alone.
+and which column of which field may the tooling write" from this file alone.
 
 **Validation**:
 - [Automated]: `./scripts/check-contract.sh` passes — specifically check 4 (each `**Slot:**` has its
@@ -599,6 +651,41 @@ and which fields may the tooling write" from this file alone.
   enough), and check 1 (no forbidden aliases).
 - [Manual]: confirm no rule in this file is also stated in the spell — the spell must cite, not
   restate.
+
+---
+
+### Step 14b — The scaffolding reference: slots, the index, and the report shape
+
+> **Prompt**: Implement Step 14b of `_work/editor-facing-guides/plan.md`, continuing the reference
+> Step 14 started at
+> `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md`. Add: the **kind containers**
+> (`editorGuideGroup` carrying a `guideKind`, found as children of the one guides pointer, never
+> matched by name); the **index page type** whose list is derived at render time and which carries no
+> machine-owned fields; the editorial levers that live on the guide page rather than on the index;
+> and that guides are located by the **stored key** of the guides node, never by route, with
+> detection on document type rather than on name. Declare the two new slots here and nowhere else:
+> `.agents/config/stack.md` → `## Schema serialization` (which adapter runs, with a `**Detect:**`
+> recipe after the fallback) and `.agents/config/conventions.md` → `## Editor guides` (the guides
+> node key and the document type aliases used). Every alias is a slot with a default, not a constant.
+> Include a **self-contained section on the audit's report shape** — three counted sections,
+> `alias (Display Name)` items, the report-level rung statement, exit zero with `--strict` as the
+> only opt-in, and the three fidelity answers — written so a later extraction to core is a move
+> rather than a rewrite.
+
+**What to build**: the second half of
+`skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md`.
+
+**Test first**: no runnable test. The concrete check is the contract gate plus a read-back: a fresh
+reader must be able to answer "where do guides live, how is the index built, and what does the audit
+print" from this file alone.
+
+**Validation**:
+- [Automated]: `./scripts/check-contract.sh` passes — check 4 (each `**Slot:**` has its
+  `**If empty:**` within three lines, any `**Detect:**` line *after* the fallback), check 9 (one
+  slot, one fallback — these two slots are declared here and nowhere else), check 1 (no forbidden
+  aliases).
+- [Manual]: confirm the audit section states the report shape the script actually prints, checked
+  against a real run rather than from memory.
 
 ---
 

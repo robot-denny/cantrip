@@ -1,0 +1,60 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "promoTile",
+  "name": "Promo Tile",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "promoHeading",
+          "name": "Promo Headline",
+          "description": "",
+          "editor": "Umbraco.TextBox",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "promoBody",
+          "name": "Promo Body",
+          "description": "",
+          "editor": "Umbraco.TextArea",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    },
+    {
+      "alias": "settings",
+      "name": "Settings",
+      "sortOrder": 20,
+      "properties": [
+        {
+          "alias": "promoSpacing",
+          "name": "Promo Spacing",
+          "description": "",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": ["Tight", "Loose"],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:promotileafterthechange"
+}

@@ -295,3 +295,93 @@ def drain_notes():
     notes = list(_NOTES)
     del _NOTES[:]
     return notes
+
+
+# ---------------------------------------------------------------------------
+# The stored reference
+# ---------------------------------------------------------------------------
+#
+# A guide page records which component it documents, at which signature, read at which rung.
+# Two stages read that reference from two different files produced by the same spell -- the
+# audit reads a whole guide set, the change plan reads one page -- so what a reference IS,
+# and which shapes of it are refused, is declared once here rather than twice.
+#
+# It was twice. The audit's version was written first and reviewed twice, and both reviews
+# found gaps in exactly this validation; a second hand-rolled copy in the change plan would
+# have been a third chance to miss the same ones. The consequence clause of the first refusal
+# is the only caller-specific part, so it is a parameter and the rest is one message.
+
+# What an absent `source` key costs, in the words of the stage that is asking. Absent and
+# `null` are different facts -- one is about the CMS, the other about the producer -- and the
+# reason that difference matters is not the same for both readers.
+REFERENCE_CONSEQUENCE_REPORT = ("the two land a guide in opposite sections of this report")
+REFERENCE_CONSEQUENCE_PLAN = (
+    "the two decide whether this page is regenerated or adopted, which is the difference "
+    "between updating a guide and overwriting work somebody did by hand")
+
+
+def stored_reference(where, label, raw, consequence=REFERENCE_CONSEQUENCE_REPORT):
+    """One guide page's stored reference, validated and normalized, or None for "no source".
+
+    Returns `{"alias", "kind", "signature", "rung"}` with every field but `alias` optionally
+    None, or `None` when the entry states explicitly that it carries no reference.
+
+    `source: null` and a missing `source` key are **not** the same thing, and the difference
+    is why an absent key refuses rather than defaulting. "This page carries no stored
+    reference" is a fact about the CMS; "this file does not mention a reference" is a fact
+    about the producer. Defaulting the second to the first turns a spell that failed to read
+    the property into a report saying every guide was written by hand, or into a plan that
+    adopts a page it should have regenerated.
+
+    `where` locates the entry (a path, plus a position where a file holds many) and `label`
+    names the page, because the entry that is broken is often the one whose name did not come
+    through either.
+    """
+    if "source" not in raw:
+        raise GuideError(
+            "%s ('%s') has no 'source' key.\n"
+            "  Every entry states its stored reference or states explicitly that it has none "
+            "(\"source\": null). An absent key cannot be told from a reference the producer "
+            "failed to read, and %s."
+            % (where, label, consequence))
+    source = raw["source"]
+    if source is None:
+        return None
+    if not isinstance(source, dict):
+        raise GuideError("%s ('%s') has a 'source' that is %s, not an object or null."
+                         % (where, label, type(source).__name__))
+
+    alias = source.get("alias")
+    if not isinstance(alias, str) or not alias.strip():
+        raise GuideError(
+            "%s ('%s') has a stored reference with no alias.\n"
+            "  A reference naming nothing cannot be classified: it may be a guide whose source "
+            "was deleted, or a page that was never generated from one, and those belong in "
+            "different sections. Write \"source\": null for a guide that claims no source."
+            % (where, label))
+
+    return {
+        "alias": alias.strip(),
+        "kind": _reference_string(where, label, source, "kind"),
+        # Compared as an opaque string, never parsed. The signature's format belongs to
+        # guidelib/dossier.py, and a format check in a consumer would be a second rule that
+        # could disagree with the first.
+        "signature": _reference_string(where, label, source, "signature"),
+        "rung": _reference_string(where, label, source, "rung"),
+    }
+
+
+def _reference_string(where, label, source, key):
+    """A stored-reference field that may be absent, may be null, and must otherwise be text.
+
+    Absent and null both mean "the reference does not record this", which is answerable. A
+    number or an object means the producer wrote something no consumer can compare and none
+    can print, which is not -- so it refuses rather than coercing a value into a comparison
+    whose result would be meaningless.
+    """
+    value = source.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise GuideError("%s ('%s') has a non-string '%s': %r." % (where, label, key, value))
+    return value.strip() or None

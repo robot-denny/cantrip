@@ -1,0 +1,71 @@
+Change plan for promoTile (Promo Tile), read at the deploy rung.
+  Guide page: How to use a Promo Tile
+  Stored signature: sha256:promotileasgenerated, recorded at the deploy rung.
+  Current signature: sha256:promotilewithbody
+  The stored signature differs from the source's current signature: the component
+  changed shape after this guide was generated, so every machine-owned field is
+  regenerated below.
+
+A model call is needed. 2 machine-owned fields need prose this script cannot write, and 1
+carries content the spell renders in the project's own markup.
+
+Machine-owned, regenerated and proposed for approval: 4
+  Regenerated when the source signature changes, shown as a difference against the
+  current value, and written only after a person approves it. This script writes
+  nothing.
+  Three kinds of proposal, named per field below:
+    computed here — a value produced in full; write it as it stands.
+    content computed here — the rows are deterministic and the markup is not, so the
+      spell renders them from the project's own components. This toolkit ships no
+      markup.
+    owed by the spell — prose a model writes. This script cannot propose it and says so,
+      because a field left silently out of a plan reads as "no change needed".
+  Every value is printed as the page carries it, never wrapped and never shortened: a
+  value nobody can read whole is a value nobody can approve.
+    guideSource: computed here
+      current:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotileasgenerated
+        rung: deploy
+      proposed:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotilewithbody
+        rung: deploy
+    guideProperties: content computed here, markup rendered by the spell
+      changes:
+        This page stores its property table as one value rather than as rows, so the two sides
+        cannot be compared field by field and no summary of what changed is available here.
+        The spell renders the table from the project's own components; a page rebuilt with a
+        property row list gets an added/removed/changed summary instead of this note.
+    guidePurpose: owed by the spell, which is where the model is
+      current:
+        Use a promo tile to point at something an editor wants noticed.
+      proposed:
+        (none here — a model writes this one, in the spell)
+    guideWhenToUse: owed by the spell, which is where the model is
+      current:
+        (the page carries no value for this field)
+      proposed:
+        (none here — a model writes this one, in the spell)
+
+Left alone: 4
+  Written when the page was created and never touched again. Reported when it may have
+  gone stale, never replaced: an arrangement is a person's work, not a value to
+  overwrite.
+  The page's own name, address and visibility settings, the editorial levers, the media
+  a person uploaded, and every field this register does not name.
+  Every value below is reproduced exactly as the page carries it, which is what "left
+  alone" means here: this plan proposes no write against any of them.
+    guideExamples (seeded-once)
+      <promo-tile>two instances an editor arranged</promo-tile>
+    guideScreenshots (never-touched)
+      umb://media/aaaa1111aaaa1111aaaa111111111111
+    guideBlurb (never-touched)
+      The tile that points at something.
+    name (never-touched)
+      How to use a Promo Tile
+
+Nothing was written. This document is a proposal: every write happens in the spell,
+after a person approves it.

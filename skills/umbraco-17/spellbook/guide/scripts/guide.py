@@ -52,6 +52,8 @@ declared once in `guidelib/__init__.py`.
     guide.py inventory [--json] [--project-root DIR] [--adapter deploy|usync|models]
     guide.py audit     --guides FILE [--inventory FILE] [--strict]
                        [--project-root DIR] [--adapter RUNG]
+    guide.py plan      <alias> --page FILE [--dossier FILE] [--json]
+                       [--project-root DIR] [--adapter RUNG]
 
 `extract` prints the whole dossier; `signature` prints its `sourceSignature` and nothing else,
 which is what makes format-blindness assertable: the same component read through two adapters
@@ -74,6 +76,17 @@ default is how guides get cut from scope again. `--strict` is the only path to a
 on findings, and it changes nothing else — same report, byte for byte. It also judges
 completeness relative to the rung it read at, stating what that rung cannot report once for
 the whole report rather than against each guide. `guidelib/audit.py` carries the reasoning.
+
+`plan` is the write side of this script, and it still writes nothing. Given one guide page —
+read from the CMS by the spell and handed over as JSON (`--page`) — it says what regenerating
+that page would change: which fields are machine-owned and what is proposed for each, which
+are seeded-once or never-touched and are therefore left exactly as they are, and **whether the
+run is a no-op**. A stored signature that still matches the source's current one means nothing
+has changed shape, so nothing is proposed and there is nothing for the spell to send to a
+model — which is the difference between a spell that costs a model call per run and one that
+costs a model call per actual change. Human text by default and `--json` for the spell, the
+same split `inventory` makes. `guidelib/changeplan.py` holds the ownership register and the
+reasoning behind every class in it.
 
 `--project-root` defaults to the current directory, and the serialization folder is searched
 for beneath it (the `paths.md → ## Umbraco` slot's fallback). `--adapter` defaults to whichever
@@ -102,6 +115,7 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from guidelib import GuideError    # noqa: E402
 from guidelib import audit         # noqa: E402
+from guidelib import changeplan    # noqa: E402
 from guidelib import deploy        # noqa: E402
 from guidelib import dossier       # noqa: E402
 from guidelib import drain_notes   # noqa: E402
@@ -325,6 +339,35 @@ def cmd_audit(args):
     return 0
 
 
+def cmd_plan(args):
+    """What regenerating one guide page would change, and what it must not touch.
+
+    Two inputs again, and again only one of them is on disk. The page is in a CMS this script
+    holds no connection to, so it arrives as a file; the component's current shape is read from
+    the project here, and may also arrive as a file (`--dossier`) for the rung only the spell
+    can reach.
+
+    **Nothing is written, by this or by anything it calls.** The plan is a proposal: the diff a
+    person approves, and the write that follows, both belong to the spell. That is not a
+    limitation to be lifted later — approval is a conversation, and the reason this stage exists
+    separately is so that the conversation is had against a document somebody computed rather
+    than against a model's recollection of a schema.
+    """
+    try:
+        page = changeplan.load_page(args.page, args.alias)
+        if args.dossier:
+            entry = changeplan.load_dossier(args.dossier, args.alias)
+        else:
+            adapter = resolve_adapter(args.project_root, args.adapter)
+            entry = adapter.extract(args.project_root, args.alias)
+        doc = changeplan.run(page, entry)
+        rendered = json.dumps(doc, indent=2) if args.json else changeplan.report(doc)
+    finally:
+        report_read_notes()
+    print(rendered)
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog=PROG,
@@ -378,10 +421,45 @@ def build_parser():
              "reported and the exit stays 0)" % EXIT_FINDINGS)
     audit_cmd.set_defaults(handler=cmd_audit)
 
+    plan_cmd = subparsers.add_parser(
+        "plan",
+        help="say what regenerating one guide page would change, and write nothing")
+    plan_cmd.add_argument("alias", help="the component's document-type or element-type alias")
+    plan_cmd.add_argument(
+        "--page", required=True, metavar="FILE",
+        help="JSON the spell reads from the CMS: one guide page's stored reference and the "
+             "current value of every field on it")
+    plan_cmd.add_argument(
+        "--json", action="store_true",
+        help="emit the change plan as JSON for the spell instead of a human diff")
+    # Mutually exclusive for the reason `audit`'s pair is: a supplied dossier was read
+    # somewhere else, possibly at a rung this script cannot reach, so naming an adapter beside
+    # it names a format nothing is going to read. argparse exits 2, this script's usage code.
+    #
+    # **A caller planning more than one component should feed dossiers, not shell out per
+    # component.** Reading the project builds a catalog over the WHOLE project to answer one
+    # component's question: measured at 99ms per call on a 68-type project and 83ms on a
+    # 174-type one, roughly half of each being the catalog. Looped once per documentable unit
+    # that is 3.9s and 6.2s respectively, and it grows with units MULTIPLIED BY content types.
+    # `--dossier` skips the catalog entirely (~50ms), and building one catalog in-process and
+    # extracting from it is ~20x cheaper again. The spell is the caller this warns: it holds
+    # the loop, and `extract` already takes a shared catalog for exactly this reason.
+    plan_source = plan_cmd.add_mutually_exclusive_group()
+    plan_source.add_argument(
+        "--dossier", default=None, metavar="FILE",
+        help="plan against a pre-extracted dossier (as `extract` emits one) instead of reading "
+             "the project — the seam for a live read the spell performs, and the cheaper path "
+             "when planning more than one component")
+    plan_source.add_argument(
+        "--adapter", default=None, metavar="RUNG",
+        help="force a serialization format instead of detecting one: %s"
+             % ", ".join(sorted(ADAPTERS)))
+    plan_cmd.set_defaults(handler=cmd_plan)
+
     # Shared by every subcommand that reads the project rather than a supplied JSON file.
-    # `audit` takes `--project-root` here and declares its own `--adapter` above, where the
-    # mutually exclusive group can hold it.
-    for sub in (extract, signature, inventory_cmd, audit_cmd):
+    # `audit` and `plan` take `--project-root` here and declare their own `--adapter` above,
+    # where the mutually exclusive group can hold it.
+    for sub in (extract, signature, inventory_cmd, audit_cmd, plan_cmd):
         sub.add_argument(
             "--project-root", default=".", metavar="DIR",
             help="the project to read (default: the current directory)")

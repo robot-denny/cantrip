@@ -1,0 +1,11 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json
+contains: added     promoBody (Promo Body)
+contains: removed   promoLegacyStyle (Promo Legacy Style)
+contains: carries an information note — removal needs your approval
+contains: changed   promoHeading (Promo Headline)
+contains: label, required
+contains: 1 row unchanged, information notes untouched
+not_contains: This page stores its property table as one value
+not_contains: The line a visitor reads first
+not_contains: Left over from the old build

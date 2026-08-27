@@ -78,6 +78,7 @@ from guidelib import FIDELITY_UNKNOWN
 from guidelib import rung_fidelity
 from guidelib import rung_gap_lines
 from guidelib import rung_gaps
+from guidelib import stored_reference
 # Aliased, because both renderers define a function called `report` and the bare
 # module name would be shadowed by it inside exactly the function that needs it.
 from guidelib import report as rpt
@@ -246,55 +247,11 @@ def _entry(path, index, raw):
         raise GuideError("%s has a non-string 'page': %r." % (where, page))
     label = (page or "").strip() or UNNAMED_PAGE
 
-    if "source" not in raw:
-        raise GuideError(
-            "%s ('%s') has no 'source' key.\n"
-            "  Every entry states its stored reference or states explicitly that it has none "
-            "(\"source\": null). An absent key cannot be told from a reference the producer "
-            "failed to read, and the two land a guide in opposite sections of this report."
-            % (where, label))
-    source = raw["source"]
-    if source is None:
-        return {"page": label, "source": None}
-    if not isinstance(source, dict):
-        raise GuideError("%s ('%s') has a 'source' that is %s, not an object or null."
-                         % (where, label, type(source).__name__))
-
-    alias = source.get("alias")
-    if not isinstance(alias, str) or not alias.strip():
-        raise GuideError(
-            "%s ('%s') has a stored reference with no alias.\n"
-            "  A reference naming nothing cannot be classified: it may be a guide whose source "
-            "was deleted, or a page that was never generated from one, and those belong in "
-            "different sections. Write \"source\": null for a guide that claims no source."
-            % (where, label))
-
-    return {
-        "page": label,
-        "source": {
-            "alias": alias.strip(),
-            "kind": _optional_string(where, label, source, "kind"),
-            # Compared as an opaque string, never parsed. See the module docstring.
-            "signature": _optional_string(where, label, source, "signature"),
-            "rung": _optional_string(where, label, source, "rung"),
-        },
-    }
-
-
-def _optional_string(where, label, source, key):
-    """A stored-reference field that may be absent, may be null, and must otherwise be text.
-
-    Absent and null both mean "the reference does not record this", which is answerable. A
-    number or an object means the producer wrote something this cannot compare and cannot
-    print, which is not — so it refuses rather than coercing a value into a comparison whose
-    result would be meaningless.
-    """
-    value = source.get(key)
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        raise GuideError("%s ('%s') has a non-string '%s': %r." % (where, label, key, value))
-    return value.strip() or None
+    # What a stored reference is, and which of its shapes are refused, is declared once in
+    # guidelib/__init__.py. The change plan reads the same reference off a single page, and two
+    # hand-rolled validations of one shape drift in exactly the places the two reviews of this
+    # one found gaps.
+    return {"page": label, "source": stored_reference(where, label, raw)}
 
 
 def _note_duplicates(entries):

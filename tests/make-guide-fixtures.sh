@@ -2365,6 +2365,211 @@ expect "$C" \
   "not_contains: 1 content types read" \
   "not_contains: 1 do not."
 
+# --- the property table compared row by row --------------------------------------
+#
+# The behaviour the structured table exists for. A page storing its property table as ROWS gets
+# an added/removed/changed summary keyed on the alias; the `plan-ownership` case beside this one
+# stores it as one value and gets a note saying so instead.
+#
+# Four shapes in one fixture, because they are one comparison: a row added (the source gained a
+# property), a row removed AND carrying a person's information note (removal has to be approved,
+# never applied), a row whose label and required flag changed, and a row that did not change.
+# The information column is never proposed and never compared — that is the seeded-once half.
+C="$CASES/plan-property-rows"; mkdir -p "$C"
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotilebeforethechange",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guideProperties": [
+      {
+        "alias": "promoHeading",
+        "label": "Promo Heading",
+        "required": false,
+        "tab": "Content",
+        "group": "",
+        "information": "<p>The line a visitor reads first.</p>"
+      },
+      {
+        "alias": "promoLegacyStyle",
+        "label": "Promo Legacy Style",
+        "required": false,
+        "tab": "Content",
+        "group": "",
+        "information": "<p>Left over from the old build. Ask before using it.</p>"
+      },
+      {
+        "alias": "promoSpacing",
+        "label": "Promo Spacing",
+        "required": false,
+        "tab": "Settings",
+        "group": "",
+        "information": ""
+      }
+    ]
+  }
+}
+EOF
+cat > "$C/dossier.json" <<'EOF'
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "promoTile",
+  "name": "Promo Tile",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "promoHeading",
+          "name": "Promo Headline",
+          "description": "",
+          "editor": "Umbraco.TextBox",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "promoBody",
+          "name": "Promo Body",
+          "description": "",
+          "editor": "Umbraco.TextArea",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    },
+    {
+      "alias": "settings",
+      "name": "Settings",
+      "sortOrder": 20,
+      "properties": [
+        {
+          "alias": "promoSpacing",
+          "name": "Promo Spacing",
+          "description": "",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": ["Tight", "Loose"],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:promotileafterthechange"
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: added     promoBody (Promo Body)" \
+  "contains: removed   promoLegacyStyle (Promo Legacy Style)" \
+  "contains: carries an information note — removal needs your approval" \
+  "contains: changed   promoHeading (Promo Headline)" \
+  "contains: label, required" \
+  "contains: 1 row unchanged, information notes untouched" \
+  "not_contains: This page stores its property table as one value" \
+  "not_contains: The line a visitor reads first" \
+  "not_contains: Left over from the old build"
+
+# --- the refusals `plan` documents and nothing exercised --------------------------
+#
+# Thirteen refusal shapes were written down and none was tested — which is exactly why a
+# malformed leaf field in a `--dossier` shipped as a raw TypeError traceback rather than a
+# refusal. Four cases, chosen so the shared machinery under the other nine is covered too:
+# a malformed leaf (the crash's own case), a page missing `fields`, an alias mismatch, and a
+# version bump.
+
+# The crash. `editor` as a list reached the row builder and came out as
+# `TypeError: sequence item 0: expected str instance, list found`.
+C="$CASES/plan-dossier-bad-leaf"; mkdir -p "$C"
+cp "$CASES/plan-property-rows/page.json" "$C/page.json"
+python3 - "$C" <<'PYX'
+import json, sys, os
+root = sys.argv[1]
+d = json.load(open(os.path.join(root, "..", "plan-property-rows", "dossier.json")))
+d["tabs"][0]["properties"][0]["editor"] = ["Umbraco.TextBox"]
+json.dump(d, open(os.path.join(root, "dossier.json"), "w"), indent=2)
+PYX
+expect "$C" \
+  "exit: 1" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: non-str 'editor'" \
+  "not_contains: Traceback" \
+  "not_contains: Change plan for"
+
+C="$CASES/plan-page-no-fields"; mkdir -p "$C"
+cp "$CASES/plan-property-rows/dossier.json" "$C/dossier.json"
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotilebeforethechange",
+    "rung": "deploy"
+  }
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: fields" \
+  "not_contains: Traceback" \
+  "not_contains: Change plan for"
+
+# A page documenting one component, asked about another. Matching by address is what the spec
+# forbids; this is the check that keeps the two from being confused.
+C="$CASES/plan-alias-mismatch"; mkdir -p "$C"
+cp "$CASES/plan-property-rows/dossier.json" "$C/dossier.json"
+cp "$CASES/plan-property-rows/page.json" "$C/page.json"
+expect "$C" \
+  "exit: 1" \
+  "args: plan someOtherThing --page page.json --dossier dossier.json" \
+  "contains: someOtherThing" \
+  "contains: promoTile" \
+  "not_contains: Traceback" \
+  "not_contains: Change plan for"
+
+C="$CASES/plan-page-wrong-version"; mkdir -p "$C"
+cp "$CASES/plan-property-rows/dossier.json" "$C/dossier.json"
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 99,
+  "page": "How to use a Promo Tile",
+  "source": null,
+  "fields": {}
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: pageVersion" \
+  "contains: 99" \
+  "not_contains: Traceback" \
+  "not_contains: Change plan for"
+
+
 # --- a palette offering something this export does not hold ---------------------
 #
 # Counted in its own category, exit 0 -- NOT refused, and that was a deliberate reversal. The
@@ -3655,5 +3860,329 @@ expect "$C" \
   "exit: 0" \
   "args: audit --guides guides.json --inventory inventory.json --strict" \
   "contains: Findings: none."
+
+
+# ==============================================================================
+# The change plan
+# ==============================================================================
+#
+# `plan` answers one question: if this guide were regenerated now, what would change and
+# what must not be touched? Two cases carry the two claims that matter, and each uses the
+# rendering that states its own claim best.
+#
+# The component is `promoTile`, invented here rather than reused: the plan's output names
+# every field of a guide page, so a case wants the smallest component whose table is still a
+# table -- two properties, one tab.
+
+# The dossier as the spell would hand it back from a rung this script cannot read, or as this
+# script would produce it. Its `sourceSignature` is read as an opaque string, exactly as
+# `audit --inventory` reads a supplied signature, which is what makes a MATCHING pair
+# hand-authorable at all: a hash cannot be written into a fixture, and computing one here
+# would assert the implementation against itself.
+plan_dossier() {  # plan_dossier <case-root> <signature> <second-property-json>
+  cat > "$1/dossier.json" <<EOF
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "promoTile",
+  "name": "Promo Tile",
+  "kind": "element",
+  "icon": "icon-brick color-blue",
+  "description": "A small tile that points at something worth noticing.",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "promoHeading",
+          "name": "Promo Heading",
+          "description": "The line an editor reads first.",
+          "editor": "Umbraco.TextBox",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        }$3
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "$2"
+}
+EOF
+}
+
+# --- a matching signature: the no-op --------------------------------------------
+#
+# The load-bearing case of the whole subcommand, and the cheapest guard in the suite: a plan
+# that regenerated on every run would spend a model call every time anyone asked, which is
+# the cost the stored signature exists to avoid. Asserted as the machine-facing document,
+# because `noop` and `modelCallNeeded` are what the spell reads to skip that call, and a
+# report line saying so is no use to it.
+C="$CASES/plan-noop"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotileasgenerated" ""
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotileasgenerated",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a promo tile to point at something an editor wants noticed.",
+    "guideProperties": "<table><tr><td>Promo Heading</td></tr></table>",
+    "guideExamples": "<promo-tile>two instances an editor arranged</promo-tile>",
+    "guideBlurb": "The tile that points at something.",
+    "name": "How to use a Promo Tile"
+  }
+}
+EOF
+# Hand-authored from the two inputs. Both lists are empty and that is the claim: a no-op
+# proposes nothing AND leaves nothing to report as preserved, because no regeneration is
+# happening for a value to survive.
+cat > "$C/expected-plan.json" <<'EOF'
+{
+  "planVersion": 1,
+  "alias": "promoTile",
+  "name": "Promo Tile",
+  "page": "How to use a Promo Tile",
+  "rung": "deploy",
+  "storedSignature": "sha256:promotileasgenerated",
+  "storedRung": "deploy",
+  "currentSignature": "sha256:promotileasgenerated",
+  "comparison": "matched",
+  "noop": true,
+  "modelCallNeeded": false,
+  "statements": [
+    "The stored signature matches the source's current signature.",
+    "No model call is needed, and no field is proposed: with the source unchanged since this guide was generated, there is nothing to regenerate and nothing for the spell to send to a model. This run is a no-op.",
+    "Nothing was written. This document is a proposal: every write happens in the spell, after a person approves it."
+  ],
+  "rule": {
+    "machineOwned": "Regenerated when the source signature changes, shown as a difference against the current value, and written only after a person approves it. This script writes nothing.",
+    "seededOnce": "Written when the page was created and never touched again. Reported when it may have gone stale, never replaced: an arrangement is a person's work, not a value to overwrite.",
+    "neverTouched": "The page's own name, address and visibility settings, the editorial levers, the media a person uploaded, and every field this register does not name."
+  },
+  "machineOwned": [],
+  "leftAlone": []
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "stdout_matches: expected-plan.json" \
+  "contains: \"noop\": true" \
+  "contains: No model call is needed" \
+  "not_contains: A model call is needed"
+
+# --- a stale signature: ownership, asserted as the diff a person approves --------
+#
+# The other half of the behavior, and the half a first implementation gets wrong by writing
+# every field it CAN write. Three claims in one report, and only a whole document states all
+# three: the machine-owned fields are proposed, the seeded-once and never-touched fields are
+# reproduced BYTE FOR BYTE in the left-alone list, and the field the page does not carry at
+# all is proposed rather than skipped.
+#
+# Asserted as the human report, because the report is the rendering whose job is exactly this
+# -- field, current value, proposed value -- and a `contains` on a value cannot say which side
+# of a difference it landed on. `plan-noop` states the machine-facing document instead, so the
+# two cases cover both renderings and both input seams between them.
+C="$CASES/plan-ownership"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotilewithbody" ',
+        {
+          "alias": "promoBody",
+          "name": "Promo Body",
+          "description": "Two or three lines under the heading.",
+          "editor": "Umbraco.TextArea",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }'
+# The stored signature is the one the guide was generated at, and the dossier above has since
+# gained a property -- the spec's own scenario. The page's own name, the blurb, the screenshot
+# and the arranged example are all values a person put there, and every one of them has to come
+# back out of the plan unchanged.
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotileasgenerated",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a promo tile to point at something an editor wants noticed.",
+    "guideProperties": "<table><tr><td>Promo Heading</td></tr></table>",
+    "guideExamples": "<promo-tile>two instances an editor arranged</promo-tile>",
+    "guideBlurb": "The tile that points at something.",
+    "guideScreenshots": "umb://media/aaaa1111aaaa1111aaaa111111111111",
+    "name": "How to use a Promo Tile"
+  }
+}
+EOF
+cat > "$C/expected-plan.txt" <<'EOF'
+Change plan for promoTile (Promo Tile), read at the deploy rung.
+  Guide page: How to use a Promo Tile
+  Stored signature: sha256:promotileasgenerated, recorded at the deploy rung.
+  Current signature: sha256:promotilewithbody
+  The stored signature differs from the source's current signature: the component
+  changed shape after this guide was generated, so every machine-owned field is
+  regenerated below.
+
+A model call is needed. 2 machine-owned fields need prose this script cannot write, and 1
+carries content the spell renders in the project's own markup.
+
+Machine-owned, regenerated and proposed for approval: 4
+  Regenerated when the source signature changes, shown as a difference against the
+  current value, and written only after a person approves it. This script writes
+  nothing.
+  Three kinds of proposal, named per field below:
+    computed here — a value produced in full; write it as it stands.
+    content computed here — the rows are deterministic and the markup is not, so the
+      spell renders them from the project's own components. This toolkit ships no
+      markup.
+    owed by the spell — prose a model writes. This script cannot propose it and says so,
+      because a field left silently out of a plan reads as "no change needed".
+  Every value is printed as the page carries it, never wrapped and never shortened: a
+  value nobody can read whole is a value nobody can approve.
+    guideSource: computed here
+      current:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotileasgenerated
+        rung: deploy
+      proposed:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotilewithbody
+        rung: deploy
+    guideProperties: content computed here, markup rendered by the spell
+      changes:
+        This page stores its property table as one value rather than as rows, so the two sides
+        cannot be compared field by field and no summary of what changed is available here.
+        The spell renders the table from the project's own components; a page rebuilt with a
+        property row list gets an added/removed/changed summary instead of this note.
+    guidePurpose: owed by the spell, which is where the model is
+      current:
+        Use a promo tile to point at something an editor wants noticed.
+      proposed:
+        (none here — a model writes this one, in the spell)
+    guideWhenToUse: owed by the spell, which is where the model is
+      current:
+        (the page carries no value for this field)
+      proposed:
+        (none here — a model writes this one, in the spell)
+
+Left alone: 4
+  Written when the page was created and never touched again. Reported when it may have
+  gone stale, never replaced: an arrangement is a person's work, not a value to
+  overwrite.
+  The page's own name, address and visibility settings, the editorial levers, the media
+  a person uploaded, and every field this register does not name.
+  Every value below is reproduced exactly as the page carries it, which is what "left
+  alone" means here: this plan proposes no write against any of them.
+    guideExamples (seeded-once)
+      <promo-tile>two instances an editor arranged</promo-tile>
+    guideScreenshots (never-touched)
+      umb://media/aaaa1111aaaa1111aaaa111111111111
+    guideBlurb (never-touched)
+      The tile that points at something.
+    name (never-touched)
+      How to use a Promo Tile
+
+Nothing was written. This document is a proposal: every write happens in the spell,
+after a person approves it.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "stdout_matches: expected-plan.txt" \
+  "contains: <promo-tile>two instances an editor arranged</promo-tile>" \
+  "not_contains: No model call is needed"
+
+# --- the same subcommand reading a project off disk ------------------------------
+#
+# The seam the two cases above do not touch. Both supply a dossier, because a MATCHING
+# signature is only hand-authorable that way -- a hash cannot be written into a fixture. So one
+# case exercises the on-disk read, where the current signature is computed for real and the
+# stored one is a value no read can ever match.
+#
+# Asserted with substrings rather than a whole document, deliberately: the claims here are that
+# the project was read at all, that a tab and a group both reach the table, and that an
+# inherited property is marked as inherited. A golden file would add nothing but a masked
+# signature line and a second copy of the report above.
+C="$CASES/plan-project-read"; mkdir -p "$C"
+deploy_tree "$C"
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use an Alert Banner",
+  "source": {
+    "alias": "alertBanner",
+    "kind": "element",
+    "signature": "sha256:alertbannerasgeneratedthreeweeksago",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guideExamples": "<alert-banner>one instance, severity Info</alert-banner>",
+    "name": "How to use an Alert Banner"
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan alertBanner --page page.json --adapter deploy" \
+  "contains: Change plan for alertBanner (Alert Banner), read at the deploy rung." \
+  "contains: A model call is needed." \
+  "contains: [Content / Message]" \
+  "contains: alertHeading (Alert Heading): Umbraco.TextBox, required" \
+  "contains: alertSeverity (Alert Severity): Umbraco.DropDown.Flexible, optional, options: Info | Warning | Critical" \
+  "contains: metaKeywords (Meta Keywords): Umbraco.TextBox, optional, inherited from baseSettings" \
+  "contains: <alert-banner>one instance, severity Info</alert-banner>" \
+  "not_contains: No model call is needed"
+
+# --- a signature stored at another rung: not a no-op ----------------------------
+#
+# The third answer, and the one an implementation collapses into the first. Two rungs sign one
+# component differently by design, so a signature stored at a rung this read is not says
+# NOTHING about whether the source changed -- and "no information" read as "no change" is a
+# guide that silently stops being regenerated the day a project gains a serialization format.
+#
+# The signatures here are deliberately IDENTICAL strings, which is what makes the case sharp: a
+# plan comparing them without checking the rung reports a no-op, and the only thing standing
+# between that and a stale guide is the rung test.
+C="$CASES/plan-other-rung"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotileasgenerated" ""
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotileasgenerated",
+    "rung": "live"
+  },
+  "fields": {}
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"comparison\": \"notComparable\"" \
+  "contains: \"noop\": false" \
+  "contains: \"modelCallNeeded\": true" \
+  "contains: two rungs sign one component differently by design" \
+  "not_contains: \"noop\": true"
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"
