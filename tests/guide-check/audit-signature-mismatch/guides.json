@@ -1,0 +1,32 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": {
+        "alias": "noticeBar",
+        "kind": "element",
+        "signature": "sha256:currentnoticebar",
+        "rung": "deploy"
+      }
+    },
+    {
+      "page": "Media Row",
+      "source": {
+        "alias": "mediaRow",
+        "kind": "element",
+        "signature": "sha256:mediarowasgenerated",
+        "rung": "deploy"
+      }
+    },
+    {
+      "page": "Article Page",
+      "source": {
+        "alias": "articlePage",
+        "kind": "document",
+        "signature": "sha256:articlepagefromthemodels",
+        "rung": "models"
+      }
+    }
+  ]
+}

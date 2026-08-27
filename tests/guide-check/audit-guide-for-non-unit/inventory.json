@@ -1,0 +1,12 @@
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "components": [],
+  "pageTypesProposed": [],
+  "unpalettedElementTypes": [
+    {
+      "alias": "spacingProperties",
+      "name": "Spacing Properties"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+exit: 1
+args: audit --guides guides.json --inventory inventory.json
+contains: guidesVersion
+contains: 99
+not_contains: Guide audit

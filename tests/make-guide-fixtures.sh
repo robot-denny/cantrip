@@ -2789,4 +2789,645 @@ expect "$C" \
   'not_contains: "components"' \
   "not_contains: Components an editor can place"
 
+# ==============================================================================
+# The audit — arithmetic over an inventory and a set of guide pages
+# ==============================================================================
+#
+# Every case above answers a question about a project. These answer a question about the gap
+# between a project and its published guides, so each one needs a second input: a guides file,
+# which is JSON the spell reads out of the CMS. The script never touches a CMS — that keeps the
+# arithmetic testable here rather than only against a running instance.
+#
+# The three sections are the spec's, and a fixture exists per section because each has a
+# neighbouring case it is easy to conflate with:
+#
+#   undocumented   a unit in the inventory that no guide's stored reference names
+#   orphaned       a guide naming an alias this project no longer declares
+#   stale          a guide whose stored signature differs from its source's current one
+#
+# A guide claiming NO source is in none of them, which `audit-orphan-and-sourceless` asserts
+# in both directions at once: the deleted component must be named, and the hand-written guide
+# must not be — and no substring can say the second thing, so the report is compared whole.
+#
+# **A signature cannot be hand-authored**, which shapes two of these cases. A guides file
+# stating a plausible-looking hash would make every guide in it stale, so the project-backed
+# cases store no signature and assert the "not compared" count instead. The comparison itself
+# is asserted by `audit-signature-mismatch`, which supplies the inventory as a file too — then
+# both sides of the comparison are hand-authored strings, a matching pair and a differing pair
+# side by side, and no hash is involved anywhere.
+
+# --- fourteen blocks, thirteen guides ------------------------------------------
+#
+# The spec's scenario, with the numbers it names. Fourteen is not decoration: a set difference
+# implemented backwards (naming the thirteen that ARE documented) produces a report of the same
+# shape, and only a count this lopsided makes the two impossible to confuse in a failure.
+#
+# One palette offering all fourteen, so every one of them is a documentable unit by the
+# determiner Step 8 built — this case asserts the audit's arithmetic, not the determiner's.
+audit_fourteen_blocks() {  # audit_fourteen_blocks <case-root>
+  local rev="$1/src/Web/umbraco/Deploy/Revision" i two guid guids=() blocks
+  mkdir -p "$rev"
+  deploy_data_type "$rev" "$U_TEXT" "Textstring" "Umbraco.TextBox" \
+    "Umb.PropertyEditorUi.TextBox" "Nvarchar" '{}'
+  for i in $(seq 1 14); do
+    two=$(printf '%02d' "$i")
+    # Deploy writes a UDI with the dashes stripped and a palette key with them kept. The
+    # undashed form is DERIVED from the dashed one rather than written out a second time: the
+    # first version of this fixture spelled both by hand, they did not agree, and fourteen
+    # palette entries resolved to nothing.
+    guid="${two}aaaaaa-${two}aa-${two}aa-${two}aa-${two}aaaaaaaaaa"
+    guids+=("$guid")
+    inv_deploy_element "$rev" "${guid//-/}" "block$two" "Block $two" \
+      "block${two}Heading" "Block $two Heading"
+  done
+  blocks=$(printf '      { "contentElementTypeKey": "%s" },\n' "${guids[@]}")
+  inv_deploy_palette "$rev" "$U_PBODY" "$INV_PALETTE_A" \
+    "Umbraco.BlockList" "Umb.PropertyEditorUi.BlockList" "[
+${blocks%,}
+    ]"
+}
+
+# Thirteen guides, one per block except the fourteenth. `signature: null` is a stored reference
+# that records no signature, which is a real shape — a reference written before the signature
+# existed, or one an editor cleared — and it is the only shape a fixture can state, since the
+# current signature is a hash this file cannot compute.
+audit_thirteen_guides() {  # audit_thirteen_guides <case-root>
+  local i two entries
+  entries=$(for i in $(seq 1 13); do
+    two=$(printf '%02d' "$i")
+    printf '    {\n      "page": "Block %s",\n      "source": { "alias": "block%s", "kind": "element", "signature": null, "rung": "deploy" }\n    },\n' \
+      "$two" "$two"
+  done)
+  cat > "$1/guides.json" <<EOF
+{
+  "guidesVersion": 1,
+  "guides": [
+${entries%,}
+  ]
+}
+EOF
+}
+
+C="$CASES/audit-undocumented"; mkdir -p "$C"
+audit_fourteen_blocks "$C"; audit_thirteen_guides "$C"
+# Hand-authored from the two inputs above. The counts are arithmetic over a cast decided here,
+# and the one named item is the block deliberately left out of the guides file.
+cat > "$C/expected-report.txt" <<'EOF'
+Guide audit, read at the deploy rung.
+  14 documentable units: 14 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  13 guide pages read: 13 claim a source, 0 claim none.
+  Not compared: 13 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 1
+  A documentable unit that no guide page's stored reference names: a component an editor
+  can place from a block-editor palette, or a document type proposed as a page. Matched
+  on the alias, case-insensitively, never on a page's name or its address.
+    block14 (Block 14)
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: 1 undocumented, 0 orphaned, 0 stale.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --adapter deploy" \
+  "stdout_matches: expected-report.txt" \
+  "contains: block14 (Block 14)" \
+  "not_contains: block13 (Block 13)"
+
+# --- an orphan and a hand-written guide, asserted in one report ------------------
+#
+# The two shapes that look identical from the guide side and are opposite findings: both pages
+# document something absent from the inventory, and only the stored reference tells them apart.
+#
+#   a guide for testimonialSlider   the component was deleted from the codebase  -> ORPHAN
+#   "Image Sizing Standards"        source: null, written by a person by hand    -> neither
+#
+# Reusing the three-component palette project from the inventory cases, with a guide for each of
+# its three components, so both findings are read against a project with nothing else wrong: 0
+# undocumented is part of the claim, or an orphan could be mistaken for a coverage gap.
+#
+# The report is compared whole because "the second appears in NEITHER list" is not a substring
+# claim. `not_contains: Image Sizing` states half of it — that the page is named nowhere — and
+# even that cannot say the counts were not inflated by it. The golden file can.
+C="$CASES/audit-orphan-and-sourceless"; mkdir -p "$C"
+inv_deploy_tree "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Hero Slide",
+      "source": { "alias": "heroSlide", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Media Row",
+      "source": { "alias": "mediaRow", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Testimonial Slider",
+      "source": {
+        "alias": "testimonialSlider",
+        "kind": "element",
+        "signature": null,
+        "rung": "deploy"
+      }
+    },
+    {
+      "page": "Image Sizing Standards",
+      "source": null
+    }
+  ]
+}
+EOF
+# Hand-authored. The orphan is named `alias (the page's own name)` because the source it claims
+# is gone and has no display name left to print — the page is what the operator acts on.
+cat > "$C/expected-report.txt" <<'EOF'
+Guide audit, read at the deploy rung.
+  3 documentable units: 3 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  5 guide pages read: 4 claim a source, 1 claims none.
+  Not compared: 3 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 0
+
+Orphaned, claiming a source this project no longer holds: 1
+  A guide whose stored reference names an alias no content type in this read declares. A
+  guide claiming no source at all is never an orphan, because a hand-written guide
+  documents something that was never in the schema. Each is named as alias (the guide
+  page's own name), since the source it claims has no name left to print.
+    testimonialSlider (Testimonial Slider)
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: 0 undocumented, 1 orphaned, 0 stale.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --adapter deploy" \
+  "stdout_matches: expected-report.txt" \
+  "contains: testimonialSlider (Testimonial Slider)" \
+  "contains: 1 claims none." \
+  "not_contains: Image Sizing"
+
+# --- the signature comparison, with both sides hand-authored ---------------------
+#
+# The one case that supplies the INVENTORY as a file too, and the reason is that a signature is
+# a hash: a fixture cannot state the current one, so a project-backed case can only ever assert
+# the not-compared path. Supplied on both sides, the comparison becomes hand-authorable in both
+# directions at once, which is what this case needs — a mismatch reported AND a match not
+# reported. A case that only asserted the mismatch would pass against an implementation that
+# called every signature-bearing guide stale.
+#
+# The seam is not invented for the test. It is the plan's rung-3 seam: the running instance's
+# management API belongs to the spell, which reads it through MCP and hands the inventory back
+# as JSON. This case is also the only coverage that seam has.
+#
+# `signature` values here are deliberately not plausible hashes. They are compared as opaque
+# strings and never parsed, and writing `sha256:` plus 64 hex digits would invite a reader to
+# think the format mattered.
+C="$CASES/audit-signature-mismatch"; mkdir -p "$C"
+cat > "$C/inventory.json" <<'EOF'
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "contentTypesRead": 3,
+  "elementFlagged": 2,
+  "documentTypesRead": 1,
+  "palettesRead": 1,
+  "components": [
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar",
+      "kind": "element",
+      "palettes": ["[BlockList] Page Body"],
+      "signature": "sha256:currentnoticebar"
+    },
+    {
+      "alias": "mediaRow",
+      "name": "Media Row",
+      "kind": "element",
+      "palettes": ["[BlockList] Page Body"],
+      "signature": "sha256:currentmediarow"
+    }
+  ],
+  "settingsModels": [],
+  "unpalettedElementTypes": [],
+  "unresolvedPaletteEntries": 0,
+  "pageTypesProposed": [
+    {
+      "alias": "articlePage",
+      "name": "Article Page",
+      "kind": "document",
+      "signals": ["template", "reachable"],
+      "signature": "sha256:currentarticlepage"
+    }
+  ],
+  "notProposed": []
+}
+EOF
+# noticeBar's stored signature matches and mediaRow's does not, so exactly one of two guides
+# stored the same way is named. articlePage is stored at a rung this read is not, which is the
+# comparison that must NOT fire: two rungs sign one component differently by design, so
+# comparing across them would report every guide in a re-serialized project as stale.
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": {
+        "alias": "noticeBar",
+        "kind": "element",
+        "signature": "sha256:currentnoticebar",
+        "rung": "deploy"
+      }
+    },
+    {
+      "page": "Media Row",
+      "source": {
+        "alias": "mediaRow",
+        "kind": "element",
+        "signature": "sha256:mediarowasgenerated",
+        "rung": "deploy"
+      }
+    },
+    {
+      "page": "Article Page",
+      "source": {
+        "alias": "articlePage",
+        "kind": "document",
+        "signature": "sha256:articlepagefromthemodels",
+        "rung": "models"
+      }
+    }
+  ]
+}
+EOF
+# Hand-authored from the two files above. A stale item is named `alias (Display Name)` — its
+# source is still there, so its display name is the one an editor knows it by.
+cat > "$C/expected-report.txt" <<'EOF'
+Guide audit, read at the deploy rung.
+  3 documentable units: 2 components + 1 proposed page type.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  3 guide pages read: 3 claim a source, 0 claim none.
+  Not compared: 1 was stored at another rung, or at none this read can name.
+
+Undocumented, present in code with no guide page: 0
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 1
+  A guide whose stored signature differs from its source's current signature, so the
+  source changed shape after the guide was generated. Compared only where the guide
+  records a signature and was stored at this read's rung: two rungs sign one component
+  differently by design, so comparing across them would report every guide as stale.
+    mediaRow (Media Row)
+
+Findings: 0 undocumented, 0 orphaned, 1 stale.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "stdout_matches: expected-report.txt" \
+  "contains: mediaRow (Media Row)" \
+  "contains: 1 was stored at another rung" \
+  "not_contains: noticeBar" \
+  "not_contains: articlePage"
+
+# --- what a guides file may not be trusted to be --------------------------------
+#
+# The guides file is the one input this command cannot check by re-reading the project, and it
+# is produced by another process. So the three cases below fix where the refuse/permit line
+# falls, in both directions — a refusal with no case proving what it does NOT refuse is how the
+# next increment tightens it by accident.
+#
+# Each pairs its guides file with a supplied inventory rather than a project tree: the subject
+# under test here is the reading of the guides file, and a fourteen-artifact tree beside it
+# would only add a second thing that could fail.
+audit_tiny_inventory() {  # audit_tiny_inventory <case-root>
+  cat > "$1/inventory.json" <<'EOF'
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "contentTypesRead": 1,
+  "elementFlagged": 1,
+  "documentTypesRead": 0,
+  "palettesRead": 1,
+  "components": [
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar",
+      "kind": "element",
+      "palettes": ["[BlockList] Page Body"],
+      "signature": "sha256:currentnoticebar"
+    }
+  ],
+  "settingsModels": [],
+  "unpalettedElementTypes": [],
+  "unresolvedPaletteEntries": 0,
+  "pageTypesProposed": [],
+  "notProposed": []
+}
+EOF
+}
+
+# A guides file that is not JSON. Refused whole, with no report printed: a file half-read
+# reports the components its dropped entries documented as undocumented, and nothing in the
+# output would say so. `not_contains: Guide audit` is how "no report was printed" is stated.
+C="$CASES/audit-guides-unreadable"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{ "guides": [ { "page": "Notice Bar", "source": { "alias":
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: not readable JSON" \
+  "contains: guides.json" \
+  "not_contains: Guide audit"
+
+# An entry with no `source` key at all. Refused, and this is the subtle one: `"source": null`
+# means "this page carries no stored reference", which is a fact about the CMS, while an absent
+# key is a fact about the producer. Defaulting the second to the first would turn a spell that
+# failed to read the property into a report saying every guide was hand-written — every orphan
+# and every stale guide silently gone from the report whose job is to name them.
+C="$CASES/audit-guides-no-source-key"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar"
+    }
+  ]
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: has no 'source' key" \
+  "contains: Notice Bar" \
+  "contains: cannot be told from a reference the producer failed to read" \
+  "not_contains: Guide audit"
+
+# --- the refusals the module documents and nothing exercised ---------------------
+#
+# Seven guides-file shapes are refused, and the first pass fixtured two of them. An untested
+# refusal is exposed to regressing exactly the way an untested permit is: tests/README.md's own
+# rule cuts both ways. Each of these was hand-verified to refuse before it was written down.
+
+C="$CASES/audit-guides-not-object"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    "noticeBar"
+  ]
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: is str, not an object" \
+  'not_contains: Guide audit'
+
+C="$CASES/audit-guides-wrong-version"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 99,
+  "guides": []
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: guidesVersion" \
+  "contains: 99" \
+  'not_contains: Guide audit'
+
+C="$CASES/audit-guides-source-no-alias"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": {
+        "kind": "element",
+        "signature": "sha256:whatever"
+      }
+    }
+  ]
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: alias" \
+  "contains: Notice Bar" \
+  'not_contains: Guide audit'
+
+C="$CASES/audit-guides-non-string-field"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": {
+        "alias": "noticeBar",
+        "kind": "element",
+        "signature": 12345
+      }
+    }
+  ]
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: non-string" \
+  "contains: signature" \
+  'not_contains: Guide audit'
+
+# --- the inventory side, which got none of this validation at all -----------------
+#
+# `--inventory` is the seam the spell uses to hand back a live read, and it checked four
+# top-level keys and stopped. An item with a name and no alias produced a raw KeyError
+# traceback rather than a refusal — on the one input path a human never writes by hand.
+
+C="$CASES/audit-inventory-item-no-alias"; mkdir -p "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": []
+}
+EOF
+cat > "$C/inventory.json" <<'EOF'
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "components": [
+    {
+      "name": "Notice Bar"
+    }
+  ],
+  "pageTypesProposed": []
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: names no alias" \
+  "contains: components[0]" \
+  "not_contains: Traceback" \
+  'not_contains: Guide audit'
+
+# Two entries differing only in case. Counted once, so the header's own arithmetic holds --
+# it read "1 documentable unit: 2 components + 0 proposed page types" before.
+C="$CASES/audit-inventory-duplicate-alias"; mkdir -p "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": []
+}
+EOF
+cat > "$C/inventory.json" <<'EOF'
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "components": [
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar"
+    },
+    {
+      "alias": "noticebar",
+      "name": "Notice Bar Again"
+    }
+  ],
+  "pageTypesProposed": []
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: both name the alias" \
+  "contains: 1 documentable unit: 1 component" \
+  "not_contains: 2 components"
+
+# --- a signature with no rung is not comparable ----------------------------------
+#
+# `rung` is optional on a stored reference, and the guard required it to be present AND
+# different — so a signature with no rung went straight to the comparison and came out stale
+# against a rung that may not have produced it, while the printed rule claimed comparison
+# happened only at this read's rung. Two rungs sign one component differently by design.
+C="$CASES/audit-signature-no-rung"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": {
+        "alias": "noticeBar",
+        "kind": "element",
+        "signature": "sha256:fromsomewhereelse"
+      }
+    }
+  ]
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: stored at another rung, or at none this read can name" \
+  "contains: Stale, whose stored signature no longer matches its source: 0" \
+  "not_contains: noticeBar (Notice Bar)"
+
+# --- a guide for schema that is real but not documentable ------------------------
+#
+# A settings model, a composition, a folder. Its subject exists, so it is not an orphan; it is
+# not a documentable unit, so it closes no gap. It appears in no section and in no count but
+# the guide-page total -- which was correct by inspection and asserted nowhere.
+C="$CASES/audit-guide-for-non-unit"; mkdir -p "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Spacing Properties",
+      "source": {
+        "alias": "spacingProperties",
+        "kind": "element",
+        "signature": "sha256:whatever",
+        "rung": "deploy"
+      }
+    }
+  ]
+}
+EOF
+cat > "$C/inventory.json" <<'EOF'
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "components": [],
+  "pageTypesProposed": [],
+  "unpalettedElementTypes": [
+    {
+      "alias": "spacingProperties",
+      "name": "Spacing Properties"
+    }
+  ]
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: 1 guide page read" \
+  "contains: Orphaned, claiming a source this project no longer holds: 0" \
+  "contains: Undocumented, present in code with no guide page: 0" \
+  "contains: Findings: none"
+
+# Two guide pages claiming one source. NOT refused, and the contrast with the two cases above
+# is the point: this one is answerable. The component is documented either way, so no count in
+# the report moves — the note says so, and the audit still runs to completion at exit 0.
+C="$CASES/audit-guides-duplicate-source"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Notice Bar (old)",
+      "source": { "alias": "noticebar", "kind": "element", "signature": null, "rung": "deploy" }
+    }
+  ]
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: 2 guide pages claim the source 'noticebar'" \
+  "contains: Notice Bar (old)" \
+  "contains: only one is the one to keep" \
+  "contains: Undocumented, present in code with no guide page: 0" \
+  "contains: Findings: none."
+
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

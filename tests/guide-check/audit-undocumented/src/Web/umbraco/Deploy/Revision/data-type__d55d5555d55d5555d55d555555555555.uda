@@ -1,0 +1,29 @@
+{
+  "Name": "[BlockList] Page Body",
+  "EditorAlias": "Umbraco.BlockList",
+  "EditorUiAlias": "Umb.PropertyEditorUi.BlockList",
+  "DatabaseType": null,
+  "Configuration": {
+    "blocks": [
+      { "contentElementTypeKey": "01aaaaaa-01aa-01aa-01aa-01aaaaaaaaaa" },
+      { "contentElementTypeKey": "02aaaaaa-02aa-02aa-02aa-02aaaaaaaaaa" },
+      { "contentElementTypeKey": "03aaaaaa-03aa-03aa-03aa-03aaaaaaaaaa" },
+      { "contentElementTypeKey": "04aaaaaa-04aa-04aa-04aa-04aaaaaaaaaa" },
+      { "contentElementTypeKey": "05aaaaaa-05aa-05aa-05aa-05aaaaaaaaaa" },
+      { "contentElementTypeKey": "06aaaaaa-06aa-06aa-06aa-06aaaaaaaaaa" },
+      { "contentElementTypeKey": "07aaaaaa-07aa-07aa-07aa-07aaaaaaaaaa" },
+      { "contentElementTypeKey": "08aaaaaa-08aa-08aa-08aa-08aaaaaaaaaa" },
+      { "contentElementTypeKey": "09aaaaaa-09aa-09aa-09aa-09aaaaaaaaaa" },
+      { "contentElementTypeKey": "10aaaaaa-10aa-10aa-10aa-10aaaaaaaaaa" },
+      { "contentElementTypeKey": "11aaaaaa-11aa-11aa-11aa-11aaaaaaaaaa" },
+      { "contentElementTypeKey": "12aaaaaa-12aa-12aa-12aa-12aaaaaaaaaa" },
+      { "contentElementTypeKey": "13aaaaaa-13aa-13aa-13aa-13aaaaaaaaaa" },
+      { "contentElementTypeKey": "14aaaaaa-14aa-14aa-14aa-14aaaaaaaaaa" }
+    ],
+    "useLiveEditing": false
+  },
+  "Udi": "umb://data-type/d55d5555d55d5555d55d555555555555",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact",
+  "__version": "17.2.0"
+}

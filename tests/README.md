@@ -184,6 +184,23 @@ In `guide-check`, one pair of cases exists to keep a refusal from widening by ac
   a truthful zero *plus* the sentence saying which of the two readings it cannot distinguish. Those
   two cases together are what keeps the guard from becoming either a silent zero or a refusal that
   rejects a true answer.
+- **`audit-orphan-and-sourceless`** compares the whole report because half its claim is a negative:
+  a guide for a deleted component must be named as an orphan, and a hand-written guide claiming no
+  source must appear in **none** of the three sections. `not_contains` can say the page is named
+  nowhere; only the whole document can also say the counts were not inflated by it.
+- **`audit-signature-mismatch`** is the only case supplying the **inventory** as a file as well as
+  the guide set, and the reason is that a signature is a hash. A fixture cannot state the current
+  one, so a project-backed case can only ever assert the *not compared* path — supplied on both
+  sides, the comparison becomes hand-authorable in both directions at once: a differing pair named
+  as stale, a matching pair named nowhere. A case asserting only the mismatch would pass against an
+  implementation that called every signature-bearing guide stale. It is also the only coverage the
+  `--inventory` seam has, which is how the spell will hand over a live read.
+- **`audit-guides-unreadable` / `audit-guides-no-source-key` / `audit-guides-duplicate-source`** fix
+  the refuse/permit line on the one input this command cannot check by re-reading the project. The
+  first two assert **exit 1** with no report printed: a guides file half-read reports the components
+  its dropped entries documented as undocumented, and nothing in the output would say so. The third
+  asserts **exit 0** with a note — two pages claiming one source is answerable, since the component
+  is documented either way. The permit case is the one that keeps the refusal from widening.
 
 ## Why 46 fixture `SKILL.md` files do not pollute an install
 

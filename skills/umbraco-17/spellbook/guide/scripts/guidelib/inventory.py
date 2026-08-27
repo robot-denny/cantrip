@@ -89,6 +89,9 @@ import textwrap
 
 from guidelib import dossier
 from guidelib import note
+# Aliased, because both renderers define a function called `report` and the bare
+# module name would be shadowed by it inside exactly the function that needs it.
+from guidelib import report as rpt
 
 INVENTORY_VERSION = 1
 
@@ -159,9 +162,6 @@ CAPTION_SETTINGS = "Excluded, the settings half of a block"
 CAPTION_UNPALETTED = "Excluded, offered by no palette"
 CAPTION_UNRESOLVED = "Offered by a palette, absent from this export"
 
-# The width every hand-wrapped rule in this file already sits inside, applied to the one line
-# that is generated rather than written.
-WRAP_WIDTH = 88
 CAPTION_PAGE_TYPES = "Page types PROPOSED for a human to confirm"
 CAPTION_NOT_PROPOSED = {
     REASON_CONTAINER: "Not proposed, a folder or a container",
@@ -433,10 +433,6 @@ def _page_types(document_types, listed, suffix):
 # The report
 # ---------------------------------------------------------------------------
 
-def _plural(count, one, many):
-    """The singular form for exactly one. A report that says "1 content types read" reads as a
-    bug in the tool, which is the last thing a report whose job is to be believed can afford."""
-    return one if count == 1 else many
 
 
 def report(doc):
@@ -450,21 +446,21 @@ def report(doc):
     lines.append("Inventory of documentable units, read at the %s rung." % doc["rung"])
     lines.append("  %d content %s read: %d %s the element-type flag, %d %s."
                  % (doc["contentTypesRead"],
-                    _plural(doc["contentTypesRead"], "type", "types"),
+                    rpt.plural(doc["contentTypesRead"], "type", "types"),
                     doc["elementFlagged"],
-                    _plural(doc["elementFlagged"], "carries", "carry"),
+                    rpt.plural(doc["elementFlagged"], "carries", "carry"),
                     doc["documentTypesRead"],
-                    _plural(doc["documentTypesRead"], "does not", "do not")))
+                    rpt.plural(doc["documentTypesRead"], "does not", "do not")))
     lines.append("  %d block-editor data %s %s a block list."
                  % (doc["palettesRead"],
-                    _plural(doc["palettesRead"], "type", "types"),
-                    _plural(doc["palettesRead"], "carries", "carry")))
+                    rpt.plural(doc["palettesRead"], "type", "types"),
+                    rpt.plural(doc["palettesRead"], "carries", "carry")))
 
     lines.append("")
     lines.append("%s: %d" % (CAPTION_COMPONENTS, len(doc["components"])))
     lines.extend("  " + line for line in RULE_COMPONENTS)
     for item in doc["components"]:
-        lines.append("    %s" % _item(item))
+        lines.append("    %s" % rpt.item(item))
 
     _section(lines, CAPTION_SETTINGS, RULE_SETTINGS, doc["settingsModels"])
     _section(lines, CAPTION_UNPALETTED, RULE_UNPALETTED, doc["unpalettedElementTypes"])
@@ -489,10 +485,10 @@ def report(doc):
     # text is not fixed: the suffix in it is the project's own alias segment, so the line grows
     # with whatever a project happens to call its pages. Measured at 106 characters on one real
     # project and 138 with a plausible longer suffix, beside rule text hand-capped near 90.
-    for line in textwrap.wrap(detail, WRAP_WIDTH) or [detail]:
+    for line in textwrap.wrap(detail, rpt.WRAP_WIDTH) or [detail]:
         lines.append("    %s" % line)
     for item in doc["pageTypesProposed"]:
-        lines.append("    %s: %s" % (_item(item), ", ".join(item["signals"]) or "none"))
+        lines.append("    %s: %s" % (rpt.item(item), ", ".join(item["signals"]) or "none"))
 
     for reason in (REASON_CONTAINER, REASON_BASE):
         held = [i for i in doc["notProposed"] if i["reason"] == reason]
@@ -502,7 +498,7 @@ def report(doc):
         lines.append("  %s: %d" % (CAPTION_NOT_PROPOSED[reason], len(held)))
         lines.append("    %s" % REASON_SENTENCES[reason])
         for item in held:
-            lines.append("      %s" % _item(item))
+            lines.append("      %s" % rpt.item(item))
 
     lines.append("")
     lines.append("Documentable: %d component%s + %d proposed page type%s = %d."
@@ -526,10 +522,6 @@ def _section(lines, caption, rule, items):
     lines.append("  %s: %d" % (caption, len(items)))
     lines.extend("    " + line for line in rule)
     for item in items:
-        lines.append("      %s" % _item(item))
+        lines.append("      %s" % rpt.item(item))
 
 
-def _item(item):
-    """`alias (Display Name)` — the one way this toolkit names a component to a person."""
-    name = item.get("name") or ""
-    return "%s (%s)" % (item["alias"], name) if name else item["alias"]

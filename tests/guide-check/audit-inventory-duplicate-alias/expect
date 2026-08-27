@@ -1,0 +1,5 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json
+contains: both name the alias
+contains: 1 documentable unit: 1 component
+not_contains: 2 components

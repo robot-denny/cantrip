@@ -1,0 +1,19 @@
+Guide audit, read at the deploy rung.
+  14 documentable units: 14 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  13 guide pages read: 13 claim a source, 0 claim none.
+  Not compared: 13 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 1
+  A documentable unit that no guide page's stored reference names: a component an editor
+  can place from a block-editor palette, or a document type proposed as a page. Matched
+  on the alias, case-insensitively, never on a page's name or its address.
+    block14 (Block 14)
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: 1 undocumented, 0 orphaned, 0 stale.

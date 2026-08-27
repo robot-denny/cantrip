@@ -1,0 +1,6 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json
+contains: 1 guide page read
+contains: Orphaned, claiming a source this project no longer holds: 0
+contains: Undocumented, present in code with no guide page: 0
+contains: Findings: none

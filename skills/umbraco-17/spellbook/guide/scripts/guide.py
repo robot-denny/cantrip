@@ -50,6 +50,7 @@ declared once in `guidelib/__init__.py`.
     guide.py extract   <alias> [--project-root DIR] [--adapter deploy|usync|models]
     guide.py signature <alias> [--project-root DIR] [--adapter deploy|usync|models]
     guide.py inventory [--json] [--project-root DIR] [--adapter deploy|usync|models]
+    guide.py audit     --guides FILE [--inventory FILE] [--project-root DIR] [--adapter RUNG]
 
 `extract` prints the whole dossier; `signature` prints its `sourceSignature` and nothing else,
 which is what makes format-blindness assertable: the same component read through two adapters
@@ -62,6 +63,13 @@ the element-type flag** -- the flag matched 34 of the demo project's 68 content 
 are blocks. The report states every count and the rule that produced it, because that is the
 only place a determiner reading the wrong signal is visible. The models rung refuses the
 question rather than answering it emptily; `guidelib/inventory.py` carries the whole rule.
+
+`audit` compares that inventory against the project's published guides, which are in a CMS this
+script cannot reach — so they arrive as a JSON file the spell produces (`--guides`), and the
+inventory may arrive the same way (`--inventory`) for the rung only the spell can read. It
+reports what is undocumented, what is orphaned, and what has gone stale. **A completed audit
+exits 0 whatever it found**: it is a backlog, not a gate, and an audit that failed a build by
+default is how guides get cut from scope again. `guidelib/audit.py` carries the reasoning.
 
 `--project-root` defaults to the current directory, and the serialization folder is searched
 for beneath it (the `paths.md → ## Umbraco` slot's fallback). `--adapter` defaults to whichever
@@ -86,6 +94,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from guidelib import GuideError    # noqa: E402
+from guidelib import audit         # noqa: E402
 from guidelib import deploy        # noqa: E402
 from guidelib import dossier       # noqa: E402
 from guidelib import drain_notes   # noqa: E402
@@ -259,6 +268,40 @@ def cmd_inventory(args):
     return 0
 
 
+def cmd_audit(args):
+    """What the project declares against what its guides document.
+
+    Two inputs, and only one of them is on disk. The guide set is in a CMS behind a connection
+    this script does not hold, so it arrives as a file; the inventory is derived here by
+    default, and may also arrive as a file for the rung — the running instance's management
+    API — that only the spell can read.
+
+    **Exit 0 whatever it found.** Findings are a backlog, and a backlog that fails a build by
+    default fails it in exactly the projects that wired the audit in early. A non-zero exit
+    stays reserved for a read this command could not complete at all, which is why the two
+    inputs refuse rather than skip a malformed entry: a report with a quietly wrong number in
+    it is the one outcome an exit code could not distinguish from a healthy project.
+    """
+    # One `finally` over both inputs, for the reason `extract` has one: the guides file can
+    # record a duplicate the operator wants to know about even when the project read then
+    # fails, and a note computed and thrown away with the exception is a note nobody sees.
+    try:
+        guides = audit.load_guides(args.guides)
+        if args.inventory:
+            doc = audit.load_inventory(args.inventory)
+        else:
+            adapter = resolve_adapter(args.project_root, args.adapter)
+            # Signatures on, unlike the text inventory report: the staleness comparison is the
+            # one place they are read rather than printed, so this is the caller paying for
+            # them.
+            doc = inventory.determine(adapter, args.project_root, with_signatures=True)
+        rendered = audit.report(audit.run(doc, guides))
+    finally:
+        report_read_notes()
+    print(rendered)
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog=PROG,
@@ -283,11 +326,36 @@ def build_parser():
         help="emit the inventory as JSON for another tool instead of a human report")
     inventory_cmd.set_defaults(handler=cmd_inventory)
 
+    audit_cmd = subparsers.add_parser(
+        "audit",
+        help="report what the project's guides do not cover, and what has gone stale")
+    audit_cmd.add_argument(
+        "--guides", required=True, metavar="FILE",
+        help="JSON the spell reads from the CMS: one entry per published guide page, each "
+             "carrying its stored reference or explicitly none")
+    # Mutually exclusive because they are contradictory rather than merely redundant: a
+    # supplied inventory was read somewhere else, possibly at a rung this script cannot reach,
+    # so forcing an adapter alongside it names a format nothing is going to read. argparse
+    # exits 2 on the clash, which is this script's usage-error code.
+    source = audit_cmd.add_mutually_exclusive_group()
+    source.add_argument(
+        "--inventory", default=None, metavar="FILE",
+        help="audit against a pre-computed inventory document (as `inventory --json` emits) "
+             "instead of reading the project — the seam for a live read the spell performs")
+    source.add_argument(
+        "--adapter", default=None, metavar="RUNG",
+        help="force a serialization format instead of detecting one: %s"
+             % ", ".join(sorted(ADAPTERS)))
+    audit_cmd.set_defaults(handler=cmd_audit)
+
     # Shared by every subcommand that reads the project rather than a supplied JSON file.
-    for sub in (extract, signature, inventory_cmd):
+    # `audit` takes `--project-root` here and declares its own `--adapter` above, where the
+    # mutually exclusive group can hold it.
+    for sub in (extract, signature, inventory_cmd, audit_cmd):
         sub.add_argument(
             "--project-root", default=".", metavar="DIR",
             help="the project to read (default: the current directory)")
+    for sub in (extract, signature, inventory_cmd):
         sub.add_argument(
             "--adapter", default=None, metavar="RUNG",
             help="force a serialization format instead of detecting one: %s"

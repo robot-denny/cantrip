@@ -1,0 +1,22 @@
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "contentTypesRead": 1,
+  "elementFlagged": 1,
+  "documentTypesRead": 0,
+  "palettesRead": 1,
+  "components": [
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar",
+      "kind": "element",
+      "palettes": ["[BlockList] Page Body"],
+      "signature": "sha256:currentnoticebar"
+    }
+  ],
+  "settingsModels": [],
+  "unpalettedElementTypes": [],
+  "unresolvedPaletteEntries": 0,
+  "pageTypesProposed": [],
+  "notProposed": []
+}

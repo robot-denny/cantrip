@@ -1,0 +1,45 @@
+{
+  "Name": "Media Row",
+  "Alias": "mediaRow",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-brick color-blue",
+  "Thumbnail": "folder.png",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [
+    "umb://document-type/a66a6666a66a6666a66a666666666666"
+  ],
+  "PropertyGroups": [
+    {
+      "Key": "a22a2222-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": [
+        {
+          "Key": "a22a2222-0101-4000-8000-000000000101",
+          "Alias": "mediaCaption",
+          "DataType": "umb://data-type/dddd1111dddd1111dddd111111111111",
+          "ValueType": "System.String",
+          "Description": "",
+          "Name": "Media Caption",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/a22a2222a22a2222a22a222222222222",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/dddd1111dddd1111dddd111111111111",
+      "Ordering": true
+    }
+  ],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "17.2.0"
+}

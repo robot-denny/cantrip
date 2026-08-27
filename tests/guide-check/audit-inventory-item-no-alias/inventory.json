@@ -1,0 +1,10 @@
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "components": [
+    {
+      "name": "Notice Bar"
+    }
+  ],
+  "pageTypesProposed": []
+}

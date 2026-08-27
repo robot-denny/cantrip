@@ -1,0 +1,7 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json
+contains: 2 guide pages claim the source 'noticebar'
+contains: Notice Bar (old)
+contains: only one is the one to keep
+contains: Undocumented, present in code with no guide page: 0
+contains: Findings: none.
