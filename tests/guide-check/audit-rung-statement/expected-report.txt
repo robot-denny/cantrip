@@ -1,0 +1,35 @@
+Guide audit, read at the models rung.
+  12 documentable units: 12 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  12 guide pages read: 12 claim a source, 0 claim none.
+  Not compared: 12 guides record no stored signature.
+
+  Structure unavailable from this source: 8 dossier fields this rung cannot report in
+  full, so completeness below is judged against what it can. Stated here once, and
+  never against a guide: a guide is not incomplete for a field its source never
+  recorded, and every line below is a limit of the read rather than work for anyone.
+    description (component): not recorded. A generated model's class summary carries
+      the display name and nothing else.
+    description (property): recorded, but as ModelsBuilder escaped it: line breaks
+      collapsed to spaces, and angle brackets rewritten as braces.
+    editor: the generated C# property type, not the data type's editor alias.
+    icon: not recorded. The backoffice icon is not generated into a model.
+    mandatory: not recorded. Every property reads false; required flags
+      are not generated.
+    options: not recorded. Every option list reads empty; an option list lives on the
+      data type, which this rung does not read.
+    sortOrder: not recorded. Every property reads 0, and the unnamed bucket is in
+      alias order.
+    tabs: not recorded. A generated model carries no tab or group structure, so every
+      property is in the one unnamed bucket.
+
+Undocumented, present in code with no guide page: 0
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: none. Every documentable unit has a guide page, and every stored source still
+resolves and matches.

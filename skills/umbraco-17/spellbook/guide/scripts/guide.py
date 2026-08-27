@@ -50,7 +50,8 @@ declared once in `guidelib/__init__.py`.
     guide.py extract   <alias> [--project-root DIR] [--adapter deploy|usync|models]
     guide.py signature <alias> [--project-root DIR] [--adapter deploy|usync|models]
     guide.py inventory [--json] [--project-root DIR] [--adapter deploy|usync|models]
-    guide.py audit     --guides FILE [--inventory FILE] [--project-root DIR] [--adapter RUNG]
+    guide.py audit     --guides FILE [--inventory FILE] [--strict]
+                       [--project-root DIR] [--adapter RUNG]
 
 `extract` prints the whole dossier; `signature` prints its `sourceSignature` and nothing else,
 which is what makes format-blindness assertable: the same component read through two adapters
@@ -69,14 +70,20 @@ script cannot reach — so they arrive as a JSON file the spell produces (`--gui
 inventory may arrive the same way (`--inventory`) for the rung only the spell can read. It
 reports what is undocumented, what is orphaned, and what has gone stale. **A completed audit
 exits 0 whatever it found**: it is a backlog, not a gate, and an audit that failed a build by
-default is how guides get cut from scope again. `guidelib/audit.py` carries the reasoning.
+default is how guides get cut from scope again. `--strict` is the only path to a non-zero exit
+on findings, and it changes nothing else — same report, byte for byte. It also judges
+completeness relative to the rung it read at, stating what that rung cannot report once for
+the whole report rather than against each guide. `guidelib/audit.py` carries the reasoning.
 
 `--project-root` defaults to the current directory, and the serialization folder is searched
 for beneath it (the `paths.md → ## Umbraco` slot's fallback). `--adapter` defaults to whichever
 format the project carries. No path, host or version is hardcoded; the spell reads the slots
 and passes what it finds.
 
-Exit: 0 on a completed read, 1 when a read cannot be completed, 2 on a usage error.
+Exit: 0 on a completed read, 1 when a read cannot be completed, 2 on a usage error, and 3 for
+`audit --strict` when a completed audit found something. 3 rather than 1, because a CI job that
+opted in to a gate still has to tell "the audit found gaps" from "the audit broke", and only
+the first is something a person can go and fix.
 """
 
 import argparse
@@ -122,6 +129,12 @@ ADAPTERS = {
 DETECT_ORDER = (deploy.RUNG, usync.RUNG, models.RUNG)
 
 PROG = "guide.py"
+
+# The exit code `audit --strict` uses for a completed audit that found something. Its own code,
+# rather than 1: 1 means this script could not complete a read, and a gated CI job that cannot
+# tell a backlog from a broken tool will treat the second as the first and go looking for
+# guides to write. 0 stays the default with or without findings.
+EXIT_FINDINGS = 3
 
 
 def resolve_adapter(project_root, requested):
@@ -281,6 +294,11 @@ def cmd_audit(args):
     stays reserved for a read this command could not complete at all, which is why the two
     inputs refuse rather than skip a malformed entry: a report with a quietly wrong number in
     it is the one outcome an exit code could not distinguish from a healthy project.
+
+    `--strict` is the opt-in, and the whole of it is the exit code. The report is computed and
+    printed first, identically either way, so a team that gates its build reads exactly what a
+    team that does not reads — a flag that also changed what was said would make the gated
+    report the one nobody had reviewed.
     """
     # One `finally` over both inputs, for the reason `extract` has one: the guides file can
     # record a duplicate the operator wants to know about even when the project read then
@@ -295,10 +313,15 @@ def cmd_audit(args):
             # one place they are read rather than printed, so this is the caller paying for
             # them.
             doc = inventory.determine(adapter, args.project_root, with_signatures=True)
-        rendered = audit.report(audit.run(doc, guides))
+        result = audit.run(doc, guides)
+        rendered = audit.report(result)
     finally:
         report_read_notes()
     print(rendered)
+    # After the report, never instead of it: the findings a gate fails on are the ones its
+    # operator has to read.
+    if args.strict and audit.findings(result):
+        return EXIT_FINDINGS
     return 0
 
 
@@ -346,6 +369,13 @@ def build_parser():
         "--adapter", default=None, metavar="RUNG",
         help="force a serialization format instead of detecting one: %s"
              % ", ".join(sorted(ADAPTERS)))
+    # The opt-in gate. Not a mode: the report is identical with and without it, and the flag
+    # decides only whether findings reach the exit code. A team that wants its build to fail on
+    # a missing guide asks for that here and nowhere else.
+    audit_cmd.add_argument(
+        "--strict", action="store_true",
+        help="exit %d instead of 0 when the audit found something (default: findings are "
+             "reported and the exit stays 0)" % EXIT_FINDINGS)
     audit_cmd.set_defaults(handler=cmd_audit)
 
     # Shared by every subcommand that reads the project rather than a supplied JSON file.

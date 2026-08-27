@@ -1,0 +1,3 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json --strict
+contains: Findings: none.

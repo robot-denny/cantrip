@@ -18,7 +18,7 @@ A generated model carries properties and nothing about the screen they appear on
 tabs, no groups, no sort order, no required flags, no option lists, no icon, and no component
 description — the class summary carries the display name and stops. So the dossier says
 `structureAvailable: false` and carries `structureGaps`, a per-field statement of what is
-missing (see GAPS below).
+missing (see GAPS below, whose text lives in `RUNG_GAPS` at the package root).
 
 **Stating it is not decoration.** `"options": []` is the same three characters whether the
 component offers no options or the source could not report them, and a reader who cannot tell
@@ -106,6 +106,7 @@ import re
 from guidelib import GuideError
 from guidelib import dossier
 from guidelib import missing_alias_error
+from guidelib import rung_gaps
 
 RUNG = "models"
 
@@ -131,32 +132,14 @@ SKIP_DIRS = {"bin", "obj", "node_modules", "packages", "TestResults", "TEMP", "I
 # rather than as one sentence about the rung, because a consumer rendering a property table
 # needs to know which *column* it cannot fill; "the models rung is thin" does not tell it.
 #
-# ASCII only, and phrased as short declaratives: these strings are rendered into JSON with
-# `ensure_ascii`, so a dash or a curly quote here would reach a reader as an escape sequence.
-#
-# `editor` is the one entry that is not an absence. The generated C# property type IS the
-# rung's best answer to "what is this field", per `umbraco-17-feature-backfill` — but it is a
-# different vocabulary from the editor alias the higher rungs put in the same field, so a
-# consumer that pattern-matches on `Umbraco.*` has to be told rather than left to guess.
-GAPS = (
-    # Two entries, because the dossier has two `description` fields and this rung treats them
-    # differently. One entry naming both read as "no descriptions anywhere" to anyone skimming
-    # key-first, which is what the `field:` convention invites -- while property descriptions
-    # sit populated in the same document.
-    "description (component): not recorded. A generated model's class summary carries the "
-    "display name and nothing else.",
-    "description (property): recorded, but as ModelsBuilder escaped it: line breaks collapsed "
-    "to spaces, and angle brackets rewritten as braces.",
-    "editor: the generated C# property type, not the data type's editor alias.",
-    "icon: not recorded. The backoffice icon is not generated into a model.",
-    "mandatory: not recorded. Every property reads false; required flags are not generated.",
-    "options: not recorded. Every option list reads empty; an option list lives on the data "
-    "type, which this rung does not read.",
-    "sortOrder: not recorded. Every property reads 0, and the unnamed bucket is in alias "
-    "order.",
-    "tabs: not recorded. A generated model carries no tab or group structure, so every "
-    "property is in the one unnamed bucket.",
-)
+# The text lives in `RUNG_GAPS` at the package root, keyed by rung name, and the reasoning for
+# that location is beside it. The short version: the audit judges completeness relative to the
+# rung a dossier was read at, and on the `--inventory` seam it holds only the rung's name --
+# no adapter, so no module to ask. Looked up by `RUNG` rather than the literal "models", so
+# the rung's name has exactly one spelling in this module. A key that drifted out from under
+# it would leave this tuple empty and every dossier here silent about its own thinness -- which
+# is what the `models-only-rung` fixture's golden file asserts against, field by field.
+GAPS = rung_gaps(RUNG)
 
 # --- the shapes ModelsBuilder writes -----------------------------------------
 #

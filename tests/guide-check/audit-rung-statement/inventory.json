@@ -1,0 +1,22 @@
+{
+  "inventoryVersion": 1,
+  "rung": "models",
+  "components": [
+    { "alias": "modelBlock01", "name": "Model Block 01", "kind": "element" },
+    { "alias": "modelBlock02", "name": "Model Block 02", "kind": "element" },
+    { "alias": "modelBlock03", "name": "Model Block 03", "kind": "element" },
+    { "alias": "modelBlock04", "name": "Model Block 04", "kind": "element" },
+    { "alias": "modelBlock05", "name": "Model Block 05", "kind": "element" },
+    { "alias": "modelBlock06", "name": "Model Block 06", "kind": "element" },
+    { "alias": "modelBlock07", "name": "Model Block 07", "kind": "element" },
+    { "alias": "modelBlock08", "name": "Model Block 08", "kind": "element" },
+    { "alias": "modelBlock09", "name": "Model Block 09", "kind": "element" },
+    { "alias": "modelBlock10", "name": "Model Block 10", "kind": "element" },
+    { "alias": "modelBlock11", "name": "Model Block 11", "kind": "element" },
+    { "alias": "modelBlock12", "name": "Model Block 12", "kind": "element" }
+  ],
+  "settingsModels": [],
+  "unpalettedElementTypes": [],
+  "pageTypesProposed": [],
+  "notProposed": []
+}

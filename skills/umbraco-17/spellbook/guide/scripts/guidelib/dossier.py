@@ -433,8 +433,8 @@ def build(rung, alias, name, kind, icon, description,
     `structure_gaps` names, per dossier field, what the rung could not report — and it is the
     only way a consumer can tell a missing option list from an empty one. `"options": []` is
     the same three characters either way, so `structureAvailable: false` says *something* is
-    missing and this list says **what**. See GAPS in `guidelib/models.py` for the only rung
-    that currently has any.
+    missing and this list says **what**. `RUNG_GAPS` in `guidelib/__init__.py` holds the text
+    per rung, and the models rung is the only one that currently has any.
 
     **Omitted entirely when there are none**, the way the unnamed bucket is suppressed when
     empty, and for the same reason: it is a statement about the read rather than something the

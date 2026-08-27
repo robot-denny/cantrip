@@ -201,6 +201,23 @@ In `guide-check`, one pair of cases exists to keep a refusal from widening by ac
   its dropped entries documented as undocumented, and nothing in the output would say so. The third
   asserts **exit 0** with a note — two pages claiming one source is answerable, since the component
   is documented either way. The permit case is the one that keeps the refusal from widening.
+- **`audit-strict-exit` / `audit-strict-exit-gated` / `audit-strict-clean`** are one behavior in
+  three cases, and the behavior is entirely the exit code. The first asserts **exit 0 with a
+  finding** — the audit is a backlog, and one that exited non-zero on findings would fail a build
+  by default in exactly the projects that wired it into CI early. The second asserts a non-zero
+  exit under `--strict`, plus `same_stdout_as` the first, which is the whole of "and nothing else
+  changes with it": a flag that also added a line naming itself would pass an exit-code assertion
+  and still have changed the report. The third asserts `--strict` on a healthy project exits 0,
+  which is what a flag implemented as "exit non-zero" rather than "exit non-zero on findings"
+  fails.
+- **`audit-rung-statement`** is a project readable only from generated models with a guide for
+  every block: nothing undocumented, nothing orphaned, nothing stale, and a report that still owes
+  its reader the statement that this source records no tabs, no required flags and no option lists.
+  It is stated **once for the report** and never against a guide, so the report is compared whole —
+  a per-guide incompleteness finding would satisfy every substring assertion in the case. Its
+  inventory is supplied through `--inventory`, because the determiner refuses at the models rung on
+  purpose (`inventory-models-refused`); nothing restricts what rung a supplied document may
+  declare, which is what makes that seam worth having.
 
 ## Why 46 fixture `SKILL.md` files do not pollute an install
 

@@ -3430,4 +3430,230 @@ expect "$C" \
   "contains: Undocumented, present in code with no guide page: 0" \
   "contains: Findings: none."
 
+
+# --- completeness is relative to the rung, and thinness is said once -------------
+#
+# A project whose schema can only be read from generated model classes, with a guide for every
+# one of its blocks. Nothing is undocumented, nothing is orphaned, nothing is stale — and the
+# report still owes its reader one thing, because a guide generated from this rung shows no
+# tabs, no required flags and no option lists. That is a limit of the source, so it is stated
+# once for the whole report and never as a finding against a guide.
+#
+# **The inventory has to be supplied.** The determiner refuses at the models rung on purpose: a
+# generated model carries no block-editor palette, so an empty component list there would read
+# as "this project offers no blocks", which is true for some projects and false for others with
+# nothing to tell them apart. `inventory-models-refused` asserts that refusal. So this case
+# hands over a document through the same `--inventory` seam the spell uses for a live read —
+# nothing restricts what rung that document may declare, which is what makes the seam worth
+# having.
+#
+# Twelve blocks, the number the spec's scenario names. The report is compared whole because
+# "once" and "never per guide" are both claims about the document rather than about a value in
+# it: a per-guide incompleteness finding would satisfy every substring assertion here.
+C="$CASES/audit-rung-statement"; mkdir -p "$C"
+{
+  printf '{\n  "inventoryVersion": 1,\n  "rung": "models",\n  "components": [\n'
+  for i in $(seq 1 12); do
+    two=$(printf '%02d' "$i")
+    printf '    { "alias": "modelBlock%s", "name": "Model Block %s", "kind": "element" }' "$two" "$two"
+    [ "$i" -lt 12 ] && printf ',\n' || printf '\n'
+  done
+  printf '  ],\n  "settingsModels": [],\n  "unpalettedElementTypes": [],\n  "pageTypesProposed": [],\n  "notProposed": []\n}\n'
+} > "$C/inventory.json"
+# One guide per block, each storing a reference at the rung the inventory was read at. No
+# signature, because a fixture cannot state a hash — so all twelve land in the not-compared
+# line, and the thinness statement is what this case is actually about.
+{
+  printf '{\n  "guidesVersion": 1,\n  "guides": [\n'
+  for i in $(seq 1 12); do
+    two=$(printf '%02d' "$i")
+    printf '    {\n      "page": "Model Block %s",\n      "source": { "alias": "modelBlock%s", "kind": "element", "signature": null, "rung": "models" }\n    }' "$two" "$two"
+    [ "$i" -lt 12 ] && printf ',\n' || printf '\n'
+  done
+  printf '  ]\n}\n'
+} > "$C/guides.json"
+# Hand-authored. The statement's per-field lines are the same text a dossier read at this rung
+# carries in `structureGaps` — `models-only-rung`'s golden file states the JSON form of exactly
+# these eight — so the two documents cannot disagree about what the rung cannot report.
+cat > "$C/expected-report.txt" <<'EOF'
+Guide audit, read at the models rung.
+  12 documentable units: 12 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  12 guide pages read: 12 claim a source, 0 claim none.
+  Not compared: 12 guides record no stored signature.
+
+  Structure unavailable from this source: 8 dossier fields this rung cannot report in
+  full, so completeness below is judged against what it can. Stated here once, and
+  never against a guide: a guide is not incomplete for a field its source never
+  recorded, and every line below is a limit of the read rather than work for anyone.
+    description (component): not recorded. A generated model's class summary carries
+      the display name and nothing else.
+    description (property): recorded, but as ModelsBuilder escaped it: line breaks
+      collapsed to spaces, and angle brackets rewritten as braces.
+    editor: the generated C# property type, not the data type's editor alias.
+    icon: not recorded. The backoffice icon is not generated into a model.
+    mandatory: not recorded. Every property reads false; required flags
+      are not generated.
+    options: not recorded. Every option list reads empty; an option list lives on the
+      data type, which this rung does not read.
+    sortOrder: not recorded. Every property reads 0, and the unnamed bucket is in
+      alias order.
+    tabs: not recorded. A generated model carries no tab or group structure, so every
+      property is in the one unnamed bucket.
+
+Undocumented, present in code with no guide page: 0
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: none. Every documentable unit has a guide page, and every stored source still
+resolves and matches.
+EOF
+# The three `contains` lines are the manual claim in human terms: the statement names the
+# missing *structure* — tabs, required flags, option lists — and not merely the rung. Short
+# fragments, so they survive a rewording of the sentence they open.
+# `not_contains: modelBlock` is how "no guide was reported as incomplete" is stated: every
+# section names its items as `alias (Display Name)`, so an alias appearing anywhere in this
+# report would mean some guide or unit was named as a finding.
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "stdout_matches: expected-report.txt" \
+  "contains: tabs: not recorded." \
+  "contains: mandatory: not recorded." \
+  "contains: options: not recorded." \
+  "contains: Findings: none." \
+  "not_contains: modelBlock"
+
+# --- the exit code: a backlog by default, a gate only when asked for -------------
+#
+# Three cases over one pair of inputs, because the behavior under test is entirely the exit
+# code and nothing else. Findings are a backlog: an audit that exited non-zero on them would
+# fail a build by default in exactly the projects that wired it into CI early, which is how
+# guides get cut from scope again, louder. So the default is 0 WITH findings, and `--strict`
+# is the only path to a non-zero exit.
+#
+# The twin asserts `same_stdout_as` against the default case, which is the whole of "and
+# nothing else changes with it": a flag that also reordered a section, or added a line naming
+# itself, would pass an exit-code assertion and still have changed the report.
+#
+# One documentable unit and an empty guide set, so the finding is the smallest one that can
+# exist. An empty `guides` array is a real shape -- the first run on an existing site -- and
+# it is the one guide set that needs no invented page names.
+audit_strict_inputs() {  # audit_strict_inputs <case-root>
+  audit_tiny_inventory "$1"
+  cat > "$1/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": []
+}
+EOF
+}
+
+C="$CASES/audit-strict-exit"; mkdir -p "$C"; audit_strict_inputs "$C"
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: Undocumented, present in code with no guide page: 1" \
+  "contains: noticeBar (Notice Bar)" \
+  "contains: Findings: 1 undocumented, 0 orphaned, 0 stale."
+
+# The same findings, gated. Non-zero, and specifically NOT 1: a read that could not be
+# completed at all already exits 1, and a CI job that cannot tell "the audit found gaps" from
+# "the audit broke" has no reason to have opted in.
+C="$CASES/audit-strict-exit-gated"; mkdir -p "$C"; audit_strict_inputs "$C"
+expect "$C" \
+  "exit: 3" \
+  "args: audit --guides guides.json --inventory inventory.json --strict" \
+  "same_stdout_as: audit-strict-exit" \
+  "contains: Findings: 1 undocumented, 0 orphaned, 0 stale."
+
+# --strict on a healthy project. The permit side of the gate: a flag implemented as "exit
+# non-zero" rather than "exit non-zero on findings" passes both cases above and fails every
+# build that opted in, forever, with nothing to fix.
+# --- a rung this script has no fidelity record for --------------------------------
+#
+# The registry answered `()` for an unlisted rung, which is the same answer it gives a source
+# that reads everything — so a mistyped rung in a hand-built inventory, or a fourth adapter
+# added without an entry, printed no caveat and read as full fidelity. That is the most
+# over-confident sentence this report can produce, and it produced it silently.
+#
+# Three answers now: full, partial, and unknown. This case is the third, and it is the one no
+# amount of comment could pin.
+C="$CASES/audit-unknown-rung"; mkdir -p "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": []
+}
+EOF
+cat > "$C/inventory.json" <<'EOF'
+{
+  "inventoryVersion": 1,
+  "rung": "somethingElse",
+  "components": [
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar"
+    }
+  ],
+  "pageTypesProposed": []
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: Structure completeness unknown" \
+  "contains: somethingElse" \
+  "contains: treat a clean result as unconfirmed" \
+  "not_contains: Structure unavailable from this source"
+
+# The same rung name a case-fold apart. `Models` is a typo, not a fourth rung, so it must
+# resolve to the models rung's own gaps rather than falling through to unknown.
+C="$CASES/audit-rung-folded"; mkdir -p "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": []
+}
+EOF
+cat > "$C/inventory.json" <<'EOF'
+{
+  "inventoryVersion": 1,
+  "rung": "Models",
+  "components": [
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar"
+    }
+  ],
+  "pageTypesProposed": []
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: Structure unavailable from this source" \
+  "not_contains: Structure completeness unknown"
+
+C="$CASES/audit-strict-clean"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element", "signature": null, "rung": "deploy" }
+    }
+  ]
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json --strict" \
+  "contains: Findings: none."
+
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

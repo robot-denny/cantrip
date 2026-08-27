@@ -1,0 +1,11 @@
+{
+  "inventoryVersion": 1,
+  "rung": "Models",
+  "components": [
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar"
+    }
+  ],
+  "pageTypesProposed": []
+}

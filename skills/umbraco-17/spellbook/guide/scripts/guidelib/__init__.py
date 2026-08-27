@@ -155,6 +155,125 @@ def unread_artifacts_note(unread, accepted):
 
 
 # ---------------------------------------------------------------------------
+# What each rung cannot report
+# ---------------------------------------------------------------------------
+#
+# Keyed by rung name, and here rather than inside the adapter that owns the text, for one
+# reason: completeness is judged relative to the rung a dossier was read at, and on the
+# `--inventory` seam there is no adapter in play at all. The spell hands the audit a document
+# whose `rung` is a bare string read from a running instance, so a lookup that needed the
+# module could not answer the one question that seam exists to make answerable.
+#
+# The accepted-version sets above sit here for the same shape of reason -- a per-format fact
+# that more than one stage reads, declared once at the package root and imported back by the
+# adapter that owns it. This is that pattern, keyed rather than named.
+#
+# **Two representations of one constant, and neither is the source of the other's text.** A
+# dossier states each gap as one sentence in JSON; a report prints it inside 88 columns. So the
+# lines are authored wrapped and joined with a single space for the dossier, exactly the way
+# the sentences were assembled from source lines before -- one comma per line break. The
+# `models-only-rung` fixture's hand-authored golden file states the joined form, so it is the
+# guard that the joining is exact.
+#
+# **The empty tuples are a positive claim, not an omission.** Deploy and uSync read the whole
+# structure, so there is nothing for a report to state, and saying that here is what keeps
+# "this rung reads everything" from being inferred from a missing key. A rung absent from this
+# table -- the running instance's management API, which only the spell can read -- yields no
+# statement either, and that is right rather than a gap: it reads MORE than any file-reading
+# rung, so a caveat there would warn about the best source available.
+# Every rung this script knows the fidelity of, keyed by the rung's own name. A rung listed
+# with `()` reads the whole structure; a rung listed with entries names what it cannot report.
+#
+# **An unlisted rung is a third answer, not the first.** `.get(rung, ())` gave one answer to two
+# different questions, so a mistyped rung in a hand-built `--inventory` document -- or a fourth
+# adapter added without an entry here -- printed no caveat and read exactly like a source that
+# reports everything. That is the most over-confident thing this report can say. `rung_fidelity`
+# below tells the three apart, and the audit says "completeness unknown" for the third.
+#
+# `live` is registered ahead of the spell that produces it (plan Step 15). It reads the running
+# instance through the management API, which reports more than any file rung, so `()` is the
+# right entry -- and registering it now means the spell does not have to remember to.
+RUNG_GAPS = {
+    "deploy": (),
+    "usync": (),
+    "live": (),
+    # Every entry is `field: explanation`, key first, because a consumer rendering a property
+    # table needs to know which *column* it cannot fill; "the models rung is thin" does not
+    # tell it. ASCII only and short declaratives: these reach a dossier through JSON written
+    # with `ensure_ascii`, so a dash or a curly quote would arrive as an escape sequence.
+    #
+    # Declared in the order the dossier sorts them, so a report printing them as declared and
+    # a dossier printing them sorted read the same way round.
+    "models": (
+        # Two entries, because the dossier has two `description` fields and this rung treats
+        # them differently. One entry naming both read as "no descriptions anywhere" to
+        # anyone skimming key-first, which is what the `field:` convention invites -- while
+        # property descriptions sit populated in the same document.
+        ("description (component): not recorded. A generated model's class summary carries",
+         "the display name and nothing else."),
+        ("description (property): recorded, but as ModelsBuilder escaped it: line breaks",
+         "collapsed to spaces, and angle brackets rewritten as braces."),
+        # The one entry that is not an absence. The generated C# property type IS the rung's
+        # best answer to "what is this field", per `umbraco-17-feature-backfill` -- but it is
+        # a different vocabulary from the editor alias the higher rungs put in the same field,
+        # so a consumer that pattern-matches on `Umbraco.*` has to be told rather than left to
+        # guess.
+        ("editor: the generated C# property type, not the data type's editor alias.",),
+        ("icon: not recorded. The backoffice icon is not generated into a model.",),
+        ("mandatory: not recorded. Every property reads false; required flags",
+         "are not generated."),
+        ("options: not recorded. Every option list reads empty; an option list lives on the",
+         "data type, which this rung does not read."),
+        ("sortOrder: not recorded. Every property reads 0, and the unnamed bucket is in",
+         "alias order."),
+        ("tabs: not recorded. A generated model carries no tab or group structure, so every",
+         "property is in the one unnamed bucket."),
+    ),
+}
+
+
+# What `rung_fidelity` answers, kept as names rather than as a bare bool so a caller cannot
+# collapse the third case back into the first by accident.
+FIDELITY_FULL = "full"
+FIDELITY_PARTIAL = "partial"
+FIDELITY_UNKNOWN = "unknown"
+
+
+def _fold(rung):
+    """The lookup key. Folded because a rung can arrive from a hand-written `--inventory` file,
+    where `Models` is a typo and not a different rung -- the same reason a guide's alias is
+    folded before it is matched."""
+    return (rung or "").strip().lower()
+
+
+def rung_fidelity(rung):
+    """Whether this script knows how completely the named rung reads a project.
+
+    Three answers, because there are three states and two of them used to share one. A rung
+    this table does not name is `unknown`: it may read everything or nothing, and saying
+    nothing about it is the one thing that misleads.
+    """
+    key = _fold(rung)
+    if key not in RUNG_GAPS:
+        return FIDELITY_UNKNOWN
+    return FIDELITY_PARTIAL if RUNG_GAPS[key] else FIDELITY_FULL
+
+
+def rung_gap_lines(rung):
+    """What a rung cannot report in full, as lines a report prints inside its own width.
+
+    Empty for a rung that reads the whole structure AND for one this table does not name --
+    ask `rung_fidelity` to tell those apart before deciding what to print.
+    """
+    return RUNG_GAPS.get(_fold(rung), ())
+
+
+def rung_gaps(rung):
+    """The same statements, one sentence each, for a dossier or an audit document to carry."""
+    return tuple(" ".join(lines) for lines in rung_gap_lines(rung))
+
+
+# ---------------------------------------------------------------------------
 # Diagnostics about the read
 # ---------------------------------------------------------------------------
 #

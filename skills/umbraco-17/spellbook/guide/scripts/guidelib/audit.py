@@ -73,6 +73,11 @@ import os
 from guidelib import GuideError
 from guidelib import inventory
 from guidelib import note
+from guidelib import FIDELITY_FULL
+from guidelib import FIDELITY_UNKNOWN
+from guidelib import rung_fidelity
+from guidelib import rung_gap_lines
+from guidelib import rung_gaps
 # Aliased, because both renderers define a function called `report` and the bare
 # module name would be shadowed by it inside exactly the function that needs it.
 from guidelib import report as rpt
@@ -122,6 +127,32 @@ RULE_DOCUMENTABLE = (
     "Counted from the project's own block-editor palettes and the page types it proposes,",
     "never from the element-type flag. Run inventory for that rule in full, with its own",
     "counts.",
+)
+
+# Completeness is judged relative to the rung the inventory was read at, and where that rung
+# cannot report a field, the report says so **once, for the whole report**. Never per guide: a
+# guide whose property table has no required flags because the source records none is not an
+# incomplete guide, and twelve findings saying otherwise would be twelve pieces of work nobody
+# can do. The per-field text is `RUNG_GAPS` in `guidelib/__init__.py` — the same statements a
+# dossier read at that rung carries in `structureGaps`, so the two documents cannot disagree.
+#
+# Hand-wrapped like every rule above, count and plural interpolated into the first line only so
+# the rest sit at a width a reader can rely on.
+STATEMENT_STRUCTURE = (
+    "Structure unavailable from this source: %d dossier %s this rung cannot report in",
+    "full, so completeness below is judged against what it can. Stated here once, and",
+    "never against a guide: a guide is not incomplete for a field its source never",
+    "recorded, and every line below is a limit of the read rather than work for anyone.",
+)
+
+# The third fidelity answer. A rung this script has no record for may read everything or
+# almost nothing, and the old registry answered "nothing missing" for it -- the same words it
+# uses for a source that genuinely reports in full. Saying so is the whole fix.
+STATEMENT_UNKNOWN_RUNG = (
+    "Structure completeness unknown: this read reports the rung '%s', which this script",
+    "has no fidelity record for. Completeness below is therefore judged against a source",
+    "whose limits are not known here — treat a clean result as unconfirmed rather than as",
+    "a source that reported everything.",
 )
 
 CAPTION_UNDOCUMENTED = "Undocumented, present in code with no guide page"
@@ -472,6 +503,11 @@ def run(inventory_doc, guides):
     return {
         "auditVersion": AUDIT_VERSION,
         "rung": read_rung,
+        # Carried on the document for the reason a dossier carries the same list: it is a
+        # statement about the read, and a consumer holding the audit's arithmetic without it
+        # would read every count as though the source had been complete. Looked up by the rung
+        # name alone, which is all a supplied inventory holds — see `RUNG_GAPS`.
+        "structureGaps": list(rung_gaps(read_rung)),
         "componentsRead": len(inventory_doc.get("components") or []),
         "pageTypesProposed": len(inventory_doc.get("pageTypesProposed") or []),
         "documentableUnits": len(units),
@@ -491,6 +527,21 @@ def run(inventory_doc, guides):
         "orphaned": _sorted(orphaned),
         "stale": _sorted(stale),
     }
+
+
+def findings(doc):
+    """How many findings an audit document holds, across all three sections.
+
+    One definition, read by the report's closing line and by the caller deciding an exit code
+    under `--strict`. Two would be a gate that could fail a build over a number the report it
+    printed did not show.
+
+    Deliberately not a count of everything the report mentions: a not-compared signature, a
+    duplicate source, and a guide for schema that is real but not documentable are all facts
+    about the read rather than work for anyone, and a gate that failed on them would fail on
+    a project with nothing to fix.
+    """
+    return len(doc["undocumented"]) + len(doc["orphaned"]) + len(doc["stale"])
 
 
 def _sorted(items):
@@ -557,13 +608,21 @@ def report(doc):
                      % (doc["notComparedOtherRung"],
                         rpt.plural(doc["notComparedOtherRung"], "was", "were")))
 
+    # Last in the header, and the placement is the argument. The `Not compared:` lines above
+    # qualify one count; this qualifies every one of them, because it is about the source rather
+    # than the comparison — so it sits closest to the sections it applies to, and a reader meets
+    # it immediately before the first finding. Printed only when a rung actually has gaps, the
+    # way a section's rule prints only when it has findings: at the two full-fidelity rungs
+    # there is nothing to state, and a line saying so in every report is a line that gets
+    # skipped along with the ones that matter.
+    _structure_statement(lines, doc["rung"])
+
     _section(lines, CAPTION_UNDOCUMENTED, RULE_UNDOCUMENTED, doc["undocumented"])
     _section(lines, CAPTION_ORPHANED, RULE_ORPHANED, doc["orphaned"])
     _section(lines, CAPTION_STALE, RULE_STALE, doc["stale"])
 
     lines.append("")
-    found = len(doc["undocumented"]) + len(doc["orphaned"]) + len(doc["stale"])
-    if found:
+    if findings(doc):
         lines.append("Findings: %d undocumented, %d orphaned, %d stale."
                      % (len(doc["undocumented"]), len(doc["orphaned"]), len(doc["stale"])))
     else:
@@ -571,6 +630,41 @@ def report(doc):
                      "stored source still")
         lines.append("resolves and matches.")
     return "\n".join(lines)
+
+
+def _structure_statement(lines, rung):
+    """The one report-level statement of what the rung this was read at cannot report.
+
+    `gaps` is one entry per field, each already hand-wrapped into the lines a report prints —
+    authored at that width rather than wrapped here, so the golden file a fixture states this
+    against is hand-authorable line for line, exactly as every rule above it is.
+
+    Read from the registry rather than from the document's own `structureGaps`, which holds the
+    same statements as whole sentences for a consumer to carry. Two renderings of one entry, so
+    they cannot disagree; a report that re-wrapped the sentence form would be a second wrapper
+    to keep inside 88 columns.
+
+    A hanging indent under each field, one level deeper than the prose, because these are the
+    statement's items and the report has one way of showing that.
+    """
+    fidelity = rung_fidelity(rung)
+    if fidelity == FIDELITY_FULL:
+        return
+    # A blank line first. Without it this sat flush against the `Not compared:` lines at the
+    # same indent, and only the opening words told a reader that one qualifies a count while
+    # the other qualifies the whole source. Two reviewers read it the same wrong way.
+    lines.append("")
+    if fidelity == FIDELITY_UNKNOWN:
+        lines.append("  " + STATEMENT_UNKNOWN_RUNG[0] % (rung,))
+        lines.extend("  " + line for line in STATEMENT_UNKNOWN_RUNG[1:])
+        return
+    gaps = rung_gap_lines(rung)
+    lines.append("  " + STATEMENT_STRUCTURE[0]
+                 % (len(gaps), rpt.plural(len(gaps), "field", "fields")))
+    lines.extend("  " + line for line in STATEMENT_STRUCTURE[1:])
+    for gap in gaps:
+        lines.append("    " + gap[0])
+        lines.extend("      " + line for line in gap[1:])
 
 
 def _section(lines, caption, rule, items):
