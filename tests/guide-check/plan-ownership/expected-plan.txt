@@ -67,5 +67,27 @@ Left alone: 4
     name (never-touched)
       How to use a Promo Tile
 
+Live examples the source's variant set implies: 1
+  Seeded once, when the page is created, and never re-seeded: an editor arranges these
+  instances, and an arrangement is a person's work rather than a value to overwrite. The
+  set is derived from the source's own variation axis, and the rule that derived it is
+  printed with it — a wrong rule has to be visible beside the number it produced.
+  No property on this component carries an option list and none of them is a toggle,
+  so the source records no variation to enumerate: one instance of the component
+  itself, which is the least a guide page can show an editor.
+    (one instance, nothing set — the CMS applies its own defaults)
+  The instance above sets nothing, so its values are whatever the CMS applies. This
+  script records no default for an option list or a toggle — two real projects carry
+  none — so it has none to apply and does not invent one: the values that instance
+  ends up with are the CMS's, not this plan's.
+  This page already carries an arrangement, so nothing above is seeded and nothing
+  above is proposed: the set is listed to be read beside what is on the page. Which
+  variants that arrangement holds is not something this script can read — an
+  arrangement is markup or a block list, and it is a person's work either way.
+  This component records no variation axis now, and the stored signature says its schema
+  moved since this page was seeded — so the arrangement on the page may be built from an
+  option list the component no longer carries. Which of those it is cannot be read here,
+  and the arrangement is left alone either way — this prints so a person goes and looks.
+
 Nothing was written. This document is a proposal: every write happens in the spell,
 after a person approves it.

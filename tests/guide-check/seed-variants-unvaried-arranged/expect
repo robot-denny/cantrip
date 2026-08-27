@@ -1,0 +1,7 @@
+exit: 0
+args: plan pullQuote --page page.json --dossier dossier.json
+contains: The stored signature cannot be compared with this read
+contains: guideExamples (seeded-once)
+contains: <pull-quote>One quote, attributed</pull-quote>
+not_contains: Live examples the source's variant set implies
+not_contains: records no variation axis now

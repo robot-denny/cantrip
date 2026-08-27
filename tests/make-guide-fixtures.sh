@@ -4171,6 +4171,16 @@ plan_dossier "$C" "sha256:promotilewithbody" ',
 # gained a property -- the spec's own scenario. The page's own name, the blurb, the screenshot
 # and the arranged example are all values a person put there, and every one of them has to come
 # back out of the plan unchanged.
+#
+# The golden also carries the seeding section's HEDGE, and carries it deliberately. This
+# component has no variation axis and never had one -- it gained a text property -- so the
+# statement about an arrangement possibly built from an option list the source has dropped is
+# not what happened here. It prints anyway, because from inside the plan the two are the same
+# input: an arranged page, no axis now, and a signature saying the schema moved. Nothing
+# records the shape the page was seeded against, only a hash of it. The cost is a paragraph a
+# reader will sometimes not need; the alternative is silence on the case where the axis really
+# did go, which is the one the arrangement outlives. The statement is worded as a hedge for
+# exactly this reason, and this fixture is where the noise is visible and accepted.
 cat > "$C/page.json" <<'EOF'
 {
   "pageVersion": 1,
@@ -4261,6 +4271,28 @@ Left alone: 4
     name (never-touched)
       How to use a Promo Tile
 
+Live examples the source's variant set implies: 1
+  Seeded once, when the page is created, and never re-seeded: an editor arranges these
+  instances, and an arrangement is a person's work rather than a value to overwrite. The
+  set is derived from the source's own variation axis, and the rule that derived it is
+  printed with it — a wrong rule has to be visible beside the number it produced.
+  No property on this component carries an option list and none of them is a toggle,
+  so the source records no variation to enumerate: one instance of the component
+  itself, which is the least a guide page can show an editor.
+    (one instance, nothing set — the CMS applies its own defaults)
+  The instance above sets nothing, so its values are whatever the CMS applies. This
+  script records no default for an option list or a toggle — two real projects carry
+  none — so it has none to apply and does not invent one: the values that instance
+  ends up with are the CMS's, not this plan's.
+  This page already carries an arrangement, so nothing above is seeded and nothing
+  above is proposed: the set is listed to be read beside what is on the page. Which
+  variants that arrangement holds is not something this script can read — an
+  arrangement is markup or a block list, and it is a person's work either way.
+  This component records no variation axis now, and the stored signature says its schema
+  moved since this page was seeded — so the arrangement on the page may be built from an
+  option list the component no longer carries. Which of those it is cannot be read here,
+  and the arrangement is left alone either way — this prints so a person goes and looks.
+
 Nothing was written. This document is a proposal: every write happens in the spell,
 after a person approves it.
 EOF
@@ -4345,5 +4377,623 @@ expect "$C" \
   "contains: \"modelCallNeeded\": true" \
   "contains: two rungs sign one component differently by design" \
   "not_contains: \"noop\": true"
+
+# ==============================================================================
+# Live examples: the seed set, derived rather than invented
+# ==============================================================================
+#
+# A guide page carries live instances of the component it documents, and the set of them is
+# derived from the source's own variation axis -- never chosen here. Three cases, because the
+# rule has three answers and each is wrong in a different direction if implemented backwards.
+#
+# The components are invented for these cases. `statBadge` carries exactly ONE option list, so
+# that list IS the variant set; `noticeStrip` carries four independent toggles and no option
+# list, so its set is combinatorial and this script must refuse to enumerate it.
+
+# The dossier a seeding case plans against. Its `sourceSignature` is an opaque string, so the
+# stored/current pair is hand-authorable in both directions -- the same reason `plan-noop` and
+# `audit-signature-mismatch` supply both sides.
+seed_dossier() {  # seed_dossier <case-root> <alias> <name> <signature> <properties-json>
+  cat > "$1/dossier.json" <<EOF
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "$2",
+  "name": "$3",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+$5
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "$4"
+}
+EOF
+}
+
+# --- one option list, three values, three seeds ----------------------------------
+#
+# The enumerable case. The option list carries the set already, so seeding needs no new source
+# and no judgment: one instance per value, nothing else on the instance set. The NUMBER and the
+# IDENTITY of the seeds are both fixed by the fixture's own option list rather than by anything
+# the implementation computes, which is what makes them worth asserting -- an implementation
+# that seeded one instance regardless would satisfy every other assertion in this suite.
+#
+# The page carries no live examples, so the set is a set to create. `seed-variants-arranged`
+# below is the same component on a page that already carries an arrangement.
+C="$CASES/seed-variants-enumerable"; mkdir -p "$C"
+seed_dossier "$C" statBadge "Stat Badge" "sha256:statbadgewiththreetones" '        {
+          "alias": "badgeLabel",
+          "name": "Badge Label",
+          "description": "The number or word on the badge.",
+          "editor": "Umbraco.TextBox",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "badgeTone",
+          "name": "Badge Tone",
+          "description": "Which tone the badge is drawn in.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": ["Neutral", "Positive", "Urgent"],
+          "inheritedFrom": null
+        }'
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Stat Badge",
+  "source": {
+    "alias": "statBadge",
+    "kind": "element",
+    "signature": "sha256:statbadgebeforethetones",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a stat badge to put one number where an editor wants it noticed."
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan statBadge --page page.json --dossier dossier.json" \
+  "contains: Live examples the source's variant set implies: 3" \
+  "contains: Neutral — sets badgeTone (Badge Tone) to \"Neutral\"" \
+  "contains: Positive — sets badgeTone (Badge Tone) to \"Positive\"" \
+  "contains: Urgent — sets badgeTone (Badge Tone) to \"Urgent\"" \
+  "contains: Exactly one property on this component carries an option list" \
+  "contains: This page carries no live examples, so every instance above would be" \
+  "not_contains: combinatorial" \
+  "not_contains: nothing set — the CMS applies its own defaults" \
+  "not_contains: a person's judgment"
+
+# --- four independent toggles, one seed ------------------------------------------
+#
+# The combinatorial case, and the one an implementation gets wrong by multiplying the toggles
+# out: four booleans describe SIXTEEN combinations, and sixteen live instances on a guide page
+# is not documentation. So the set is not enumerable, one instance is seeded, and the plan says
+# in words that curating which combinations are worth showing is a person's job.
+#
+# The instance is created with NOTHING SET, and the plan says that too. There is no recorded
+# default for a toggle anywhere in a dossier -- measured across two real projects -- so "at the
+# default values" can only honestly mean "at the CMS's own defaults", and this script must not
+# be read as having chosen them. `not_contains: sets notice` is that assertion: no toggle is
+# named as being set to anything.
+C="$CASES/seed-variants-toggles"; mkdir -p "$C"
+seed_dossier "$C" noticeStrip "Notice Strip" "sha256:noticestripwithfourtoggles" '        {
+          "alias": "noticeMessage",
+          "name": "Notice Message",
+          "description": "The line an editor writes.",
+          "editor": "Umbraco.TextBox",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "noticeDismissible",
+          "name": "Notice Dismissible",
+          "description": "Whether a visitor can close it.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "noticeCompact",
+          "name": "Notice Compact",
+          "description": "Whether it is drawn in the shorter form.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 30,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "noticeShowIcon",
+          "name": "Notice Show Icon",
+          "description": "Whether the leading icon is drawn.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 40,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "noticePinned",
+          "name": "Notice Pinned",
+          "description": "Whether it stays at the top of the page.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 50,
+          "options": [],
+          "inheritedFrom": null
+        }'
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Notice Strip",
+  "source": {
+    "alias": "noticeStrip",
+    "kind": "element",
+    "signature": "sha256:noticestripbeforethepin",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a notice strip for something time-limited that every visitor should see."
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan noticeStrip --page page.json --dossier dossier.json" \
+  "contains: Live examples the source's variant set implies: 1" \
+  "contains: one instance, nothing set — the CMS applies its own defaults" \
+  "contains: 16 combinations" \
+  "contains: a person's judgment" \
+  "contains: records no default for an option list or a toggle" \
+  "contains: noticeDismissible (Notice Dismissible)" \
+  "not_contains: Live examples the source's variant set implies: 16" \
+  "not_contains: sets notice" \
+  "not_contains: Exactly one property on this component carries an option list"
+
+# --- several option lists, and the property this script will not choose ----------
+#
+# The judgment case. Which property is "the variant property" is recorded NOWHERE -- not in
+# either serialization format, not in a dossier -- and a tone list beside a size list is a
+# product either way. So this script does not pick one: both lists are named in the output as
+# candidates, the set stays combinatorial, and one instance is seeded.
+#
+# Without this case, an implementation that quietly enumerated the FIRST option list it found
+# passes every other seeding case in this suite: `seed-variants-enumerable` has exactly one
+# list, and `seed-variants-toggles` has none. The wrong answer here is a guide page carrying
+# three instances of one axis and silence about the other.
+C="$CASES/seed-variants-candidates"; mkdir -p "$C"
+seed_dossier "$C" cardStack "Card Stack" "sha256:cardstackwithtwolists" '        {
+          "alias": "stackTone",
+          "name": "Stack Tone",
+          "description": "Which tone the cards are drawn in.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": ["Neutral", "Positive", "Urgent"],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "stackColumns",
+          "name": "Stack Columns",
+          "description": "How many cards sit across the row.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": ["Two", "Four"],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "stackCompact",
+          "name": "Stack Compact",
+          "description": "Whether the cards are drawn in the shorter form.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 30,
+          "options": [],
+          "inheritedFrom": null
+        }'
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Card Stack",
+  "source": {
+    "alias": "cardStack",
+    "kind": "element",
+    "signature": "sha256:cardstackbeforethecolumns",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a card stack where several things of the same kind sit together."
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan cardStack --page page.json --dossier dossier.json" \
+  "contains: Live examples the source's variant set implies: 1" \
+  "contains: stackTone (Stack Tone): Neutral | Positive | Urgent" \
+  "contains: stackColumns (Stack Columns): Two | Four" \
+  "contains: records which one it is, so this plan does not choose:" \
+  "contains: 12 combinations" \
+  "not_contains: Live examples the source's variant set implies: 3" \
+  "not_contains: sets stackTone" \
+  "not_contains: sets stackColumns" \
+  "not_contains: Exactly one property on this component carries an option list"
+
+# --- a rung that cannot answer the question at all -------------------------------
+#
+# The fourth answer, and the one an implementation reaches by accident: at the models rung
+# every option list reads EMPTY whether the component has choices or not, so a seed set
+# derived there would report one instance for every component in a project and look like an
+# answer. `"seeds": []` would be the same trap in the document -- it reads as "no live examples
+# needed" -- so the set is null, the caption says so in words, and the rule names what was
+# missing.
+#
+# The dossier is a models-rung one, in the shape `models-only-rung` states as that rung's
+# whole output: `structureAvailable: false` plus a gap per field the rung cannot report.
+C="$CASES/seed-variants-thin-rung"; mkdir -p "$C"
+cat > "$C/dossier.json" <<'EOF'
+{
+  "dossierVersion": 1,
+  "rung": "models",
+  "alias": "statBadge",
+  "name": "Stat Badge",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": false,
+  "structureGaps": [
+    "editor: the generated C# property type, not the data type's editor alias.",
+    "icon: not recorded. The backoffice icon is not generated into a model.",
+    "mandatory: not recorded. Every property reads false; required flags are not generated.",
+    "options: not recorded. Every option list reads empty; an option list lives on the data type, which this rung does not read.",
+    "sortOrder: not recorded. Every property reads 0, and the unnamed bucket is in alias order.",
+    "tabs: not recorded. A generated model carries no tab or group structure, so every property is in the one unnamed bucket."
+  ],
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "",
+      "name": "",
+      "sortOrder": 0,
+      "properties": [
+        {
+          "alias": "badgeLabel",
+          "name": "Badge Label",
+          "description": "The number or word on the badge.",
+          "editor": "string",
+          "mandatory": false,
+          "sortOrder": 0,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "badgeTone",
+          "name": "Badge Tone",
+          "description": "Which tone the badge is drawn in.",
+          "editor": "string",
+          "mandatory": false,
+          "sortOrder": 0,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:statbadgereadfromthemodels"
+}
+EOF
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Stat Badge",
+  "source": {
+    "alias": "statBadge",
+    "kind": "element",
+    "signature": "sha256:statbadgereadearlier",
+    "rung": "models"
+  },
+  "fields": {}
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan statBadge --page page.json --dossier dossier.json --json" \
+  "contains: \"seeds\": null" \
+  "contains: \"basis\": \"notDerivable\"" \
+  "contains: this dossier declares structureAvailable: false" \
+  "not_contains: \"seeds\": []" \
+  "not_contains: would be created" \
+  "not_contains: nothing set — the CMS applies its own defaults"
+
+# --- the same component, already arranged ---------------------------------------
+#
+# The rule the whole ownership model exists for, and the sharp half of this behaviour: a page
+# already carrying an arrangement is REPORTED and never re-seeded. Both halves are asserted,
+# because either alone passes against an implementation that gets the other backwards -- the
+# arrangement comes back byte for byte in the left-alone list, AND the plan says the variant
+# set may have changed since it was seeded.
+#
+# The dossier is the enumerable case's, unchanged: same component, same three tones. Only the
+# page differs, and only in carrying `guideExamples`.
+C="$CASES/seed-variants-arranged"; mkdir -p "$C"
+cp "$CASES/seed-variants-enumerable/dossier.json" "$C/dossier.json"
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Stat Badge",
+  "source": {
+    "alias": "statBadge",
+    "kind": "element",
+    "signature": "sha256:statbadgebeforethetones",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a stat badge to put one number where an editor wants it noticed.",
+    "guideExamples": "<stat-badge>Neutral beside Positive, and a caption under both</stat-badge>"
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan statBadge --page page.json --dossier dossier.json" \
+  "contains: Live examples the source's variant set implies: 3" \
+  "contains: guideExamples (seeded-once)" \
+  "contains: <stat-badge>Neutral beside Positive, and a caption under both</stat-badge>" \
+  "contains: nothing above is seeded" \
+  "contains: the variant set may have changed" \
+  "not_contains: would be created"
+
+
+# --- one option list AND a toggle: enumerable and combinatorial at once ----------
+#
+# The hybrid, and the shape that caught the report contradicting itself. One option list means
+# the list IS the variant set, so three instances are seeded; a toggle beside it means the
+# source describes six combinations, so curation is still owed. Both facts are true here, and
+# the statement that reports the second must not deny the first -- the earlier wording printed
+# "so this plan seeds none of them" three lines under three seeds it had just listed.
+#
+# Every seeding case before this one was purely one basis or the other, which is why none of
+# them could land on the sentence.
+C="$CASES/seed-variants-enumerable-with-toggle"; mkdir -p "$C"
+seed_dossier "$C" statBadge "Stat Badge" "sha256:statbadgetonesandapin" '        {
+          "alias": "badgeTone",
+          "name": "Badge Tone",
+          "description": "Which tone the badge is drawn in.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": ["Neutral", "Positive", "Urgent"],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "badgePinned",
+          "name": "Badge Pinned",
+          "description": "Whether the badge stays put as the page scrolls.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }'
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Stat Badge",
+  "source": {
+    "alias": "statBadge",
+    "kind": "element",
+    "signature": "sha256:statbadgebeforethepin",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a stat badge to put one number where an editor wants it noticed."
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan statBadge --page page.json --dossier dossier.json" \
+  "contains: Live examples the source's variant set implies: 3" \
+  "contains: Neutral — sets badgeTone (Badge Tone) to \"Neutral\"" \
+  "contains: badgePinned (Badge Pinned)" \
+  "contains: Independent toggles, which multiply the set rather than enumerating it" \
+  "contains: describe 6 combinations in total, against the 3 instances" \
+  "contains: this plan proposes no others" \
+  "not_contains: seeds none of them" \
+  "not_contains: nothing set — the CMS applies its own defaults"
+
+# --- an arrangement, and a component that records no variation at all -----------
+#
+# The one silence this section is allowed. A component with no option list and no toggle has no
+# variant set, and a page already carrying an arrangement has nothing that could be seeded into
+# it -- so a heading with a nought under it would be a reader's time spent to learn nothing.
+#
+# The stored signature is NOT COMPARABLE here, and that is the only way to reach the silence
+# worth testing: a matched signature makes the whole run a no-op and suppresses this section
+# upstream, so a matched fixture would pass with the rule deleted. Not comparable reaches the
+# rule and leaves nothing that can honestly be said -- a comparison that failed says nothing
+# about whether the variant set moved, which is the same "no information read as a change"
+# line the rung test holds everywhere else.
+#
+# `seed-variants-axis-gone` below is this fixture with the comparison made to DIFFER, and it is
+# not silent. Having both is the point: one rule, two answers, and the pair is what says the
+# silence is a decision rather than a gap.
+C="$CASES/seed-variants-unvaried-arranged"; mkdir -p "$C"
+seed_dossier "$C" pullQuote "Pull Quote" "sha256:pullquotewithnovariation" '        {
+          "alias": "quoteText",
+          "name": "Quote Text",
+          "description": "The words being quoted.",
+          "editor": "Umbraco.TextArea",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "quoteAttribution",
+          "name": "Quote Attribution",
+          "description": "Who said it.",
+          "editor": "Umbraco.TextBox",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }'
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Pull Quote",
+  "source": {
+    "alias": "pullQuote",
+    "kind": "element",
+    "signature": "sha256:pullquotesignedatanotherrung",
+    "rung": "usync"
+  },
+  "fields": {
+    "guidePurpose": "Use a pull quote to lift one sentence out of a long page.",
+    "guideExamples": "<pull-quote>One quote, attributed</pull-quote>"
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan pullQuote --page page.json --dossier dossier.json" \
+  "contains: The stored signature cannot be compared with this read" \
+  "contains: guideExamples (seeded-once)" \
+  "contains: <pull-quote>One quote, attributed</pull-quote>" \
+  "not_contains: Live examples the source's variant set implies" \
+  "not_contains: records no variation axis now"
+
+# --- an arrangement built from a variant set the source no longer records --------
+#
+# The transition a silence here would hide, and the most consequential one in this section: the
+# page was seeded when there WAS a set to seed from, the signature says the schema has moved
+# since, and the component records no variation axis now. So the instances on the page may be
+# built from an option list that no longer exists -- and the arrangement is still left alone,
+# because seeded-once does not stop being the rule when the schema moves.
+#
+# The same component and the same arrangement as `seed-variants-unvaried-arranged`; only the
+# page's stored reference differs, and only enough to make the comparison DIFFER rather than
+# fail. Without this case the rule that keeps that one silent keeps this one silent too, and
+# the only surviving signal is a missing row in the property table two sections away.
+C="$CASES/seed-variants-axis-gone"; mkdir -p "$C"
+cp "$CASES/seed-variants-unvaried-arranged/dossier.json" "$C/dossier.json"
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Pull Quote",
+  "source": {
+    "alias": "pullQuote",
+    "kind": "element",
+    "signature": "sha256:pullquotebackwhenithadtones",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a pull quote to lift one sentence out of a long page.",
+    "guideExamples": "<pull-quote data-tone=\"Urgent\">One quote, attributed</pull-quote>"
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan pullQuote --page page.json --dossier dossier.json" \
+  "contains: Live examples the source's variant set implies: 1" \
+  "contains: This component records no variation axis now" \
+  "contains: nothing above is seeded" \
+  "not_contains: would be created" \
+  "not_contains: so the variant set may have changed since this page was seeded"
+
+# --- two options that differ only in case are two options ------------------------
+#
+# Duplicates are dropped because two identical options are one variant, and a data type CAN
+# list a value twice. Case is not duplication: "Neutral" and "neutral" are two distinct values
+# written to the property, and a seed set that folded them would drop a variant from a guide
+# page SILENTLY -- while keeping both puts a near-duplicate in front of a person who can delete
+# one. Visible over silent, which is this module's line everywhere else.
+#
+# The count is the assertion, because the runner's substring checks are case-insensitive and so
+# cannot tell the two values apart: three declared options collapsing to two is exact-match
+# dedup, one is a case fold, and three is no dedup at all.
+C="$CASES/seed-variants-repeated-options"; mkdir -p "$C"
+seed_dossier "$C" toneChip "Tone Chip" "sha256:tonechipwitharepeatedoption" '        {
+          "alias": "chipTone",
+          "name": "Chip Tone",
+          "description": "Which tone the chip is drawn in.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": ["Neutral", "Neutral", "neutral"],
+          "inheritedFrom": null
+        }'
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Tone Chip",
+  "source": {
+    "alias": "toneChip",
+    "kind": "element",
+    "signature": "sha256:tonechipbefore",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a tone chip to label one thing without drawing the eye."
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan toneChip --page page.json --dossier dossier.json" \
+  "contains: Live examples the source's variant set implies: 2" \
+  "contains: Exactly one property on this component carries an option list" \
+  "not_contains: Live examples the source's variant set implies: 1" \
+  "not_contains: Live examples the source's variant set implies: 3"
+
+# --- structureAvailable as neither true nor false --------------------------------
+#
+# The seed set turns on this one field: a truthy string would read as "read in full" from a
+# document saying the opposite, and the option lists behind it would be believed. The refusal
+# was written and nothing ran it, which is the same gap that shipped `plan-dossier-bad-leaf`'s
+# TypeError as a traceback.
+C="$CASES/plan-dossier-structure-type"; mkdir -p "$C"
+cp "$CASES/seed-variants-enumerable/page.json" "$C/page.json"
+python3 - "$C" <<'PYX'
+import json, os, sys
+root = sys.argv[1]
+d = json.load(open(os.path.join(root, "..", "seed-variants-enumerable", "dossier.json")))
+d["structureAvailable"] = "yes"
+json.dump(d, open(os.path.join(root, "dossier.json"), "w"), indent=2)
+PYX
+expect "$C" \
+  "exit: 1" \
+  "args: plan statBadge --page page.json --dossier dossier.json" \
+  "contains: declares 'structureAvailable' as 'yes'" \
+  "contains: and it is true or false" \
+  "not_contains: Traceback" \
+  "not_contains: Live examples the source's variant set implies"
+
+
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

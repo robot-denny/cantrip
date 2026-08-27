@@ -96,6 +96,38 @@ line: the tooling supplies no markup, no class names, no view conventions. The r
 deterministic half — the half the degradation order promises works with no model at all — and
 the rendering is read from the project's own components by the spell.
 
+## The live examples: a set derived, never invented
+
+A guide page carries live instances of the component it documents, and `seeding` says which
+ones. The set comes out of the source: where exactly one property carries an option list, that
+list IS the variant set and there is one instance per option. Where the variations are
+combinations instead — several option lists, or independent toggles — the set is a product
+rather than a list, so **one** instance is seeded and the plan says in words that curating the
+rest is a person's job. `BASIS_ENUMERATED` holds the four answers and the reasoning behind
+each; the rule that picked one is printed beside the number it produced, which is the
+convention `inventory` set for its determiner and for the same reason.
+
+Two things this stage refuses to do, and both refusals are the point:
+
+    it does not choose the variant property  Which property carries "the" variation is
+                                             recorded nowhere. Several option lists are
+                                             named as candidates and the set stays
+                                             combinatorial.
+    it does not supply a default             There is no recorded default for an option list
+                                             (measured on two real projects) and nowhere in a
+                                             dossier for a toggle's. So a seed with no
+                                             variant sets NOTHING, the CMS applies its own
+                                             defaults, and the plan says so — a plan implying
+                                             this script picked the values would be worse
+                                             than the gap it is covering for.
+
+**Every seed is seeded-once**, which is what makes the reporting half of this the whole point.
+On a page already carrying an arrangement nothing is seeded and nothing is proposed: the
+derived set is printed to be read beside what is on the page, and where the stored signature no
+longer matches, the plan says the variant set may have changed with it. It never says which
+variants the arrangement holds — an arrangement is markup or a block list, and reading one is
+not something this script can do.
+
 ## Why this stage emits a report and a document both
 
 Same split as `inventory`, and the same reason: a person and a consumer want opposite things
@@ -130,6 +162,9 @@ crashing with a traceback.
                                               would report a page's whole content as absent
     `fields` is not an object                refused
     `fields` names the reference field too   refused: two copies of one value can disagree
+    `structureAvailable` is not a boolean    refused: it is what says whether the option
+                                             lists were read in full, and the seed set is
+                                             derived from those lists
     a supplied dossier declares another alias  refused, naming both
     a supplied dossier's property tree is malformed  refused, naming the tab, group or row
 
@@ -217,6 +252,10 @@ COMPARISON_NO_REFERENCE = "noReference"
 # states it once, structurally, as `source`.
 FIELD_SOURCE = "guideSource"
 FIELD_PROPERTIES = "guideProperties"
+# Named for the same reason, one line further on: the seed derivation below and the register
+# both speak about this one field, and two spellings of it would let a plan seed instances
+# into a field the register classifies under the other name.
+FIELD_EXAMPLES = "guideExamples"
 
 REGISTER = (
     {
@@ -250,7 +289,7 @@ REGISTER = (
                "call about a project, which is the spell's half of this capability.",
     },
     {
-        "field": "guideExamples",
+        "field": FIELD_EXAMPLES,
         "ownership": SEEDED_ONCE,
         "proposal": None,
         "why": "live instances of the component, seeded at creation from the option lists. An "
@@ -447,6 +486,184 @@ REASON_NO_CURRENT = "this read produced no signature of its own"
 
 
 # ---------------------------------------------------------------------------
+# Live examples: the seed set, derived from the source's own variation axis
+# ---------------------------------------------------------------------------
+#
+# A guide page carries live instances of the component it documents, and the set of them comes
+# out of the source rather than out of a judgment made here. Four answers, and the rule that
+# picked between them is printed beside the number it produced -- the same convention
+# `inventory` follows with its determiner, and for the same reason: a wrong rule has to be
+# visible next to its count or nobody can tell it is wrong.
+#
+#   enumerated       exactly one property carries an option list, so that list IS the variant
+#                    set. One instance per option, nothing else on the instance set.
+#   combinatorial    several option lists, or independent toggles: the set is a product, not a
+#                    list, and which combinations are worth showing is a person's judgment.
+#                    One instance, and the plan says the curating is somebody's job.
+#   unvaried         no option list and no toggle: the source records no variation at all, so
+#                    there is one instance of the component itself and nothing to enumerate.
+#   notDerivable     the dossier does not report its option lists in full. `"options": []`
+#                    cannot be told from a component with no choices, so one instance reported
+#                    as the whole set would be a guess dressed as an answer.
+#
+# **Where several properties carry option lists, this script does not pick one.** Which
+# property is "the variant property" is recorded nowhere -- not in either serialization format,
+# not in a dossier -- and a `style` list beside a `size` list is a product either way. So the
+# lists are named in the output as candidates and the set is left combinatorial, which is this
+# codebase's standing preference: say what cannot be decided rather than deciding it quietly.
+#
+# **"One instance at the default values" cannot mean values this script supplies.** Step 6
+# measured two real projects and found no dropdown carrying a default, which is why an option
+# is a plain string in a dossier with no marker among them; a toggle's default is a real value
+# with nowhere in the dossier to hold it, recorded in `guidelib/dossier.py` as a known gap. So
+# a seed with no variant sets NOTHING, the CMS applies its own defaults, and the plan says so
+# in those words. A plan implying this script chose the values would be worse than the gap.
+#
+# **Every seed is seeded-once**, which is what makes the reporting half of this the point. On a
+# page that already carries an arrangement nothing is seeded and nothing is proposed: the
+# derived set is printed to be read beside what is on the page, and where the stored signature
+# no longer matches, the plan says the variant set may have changed with it. It never says
+# which variants the arrangement holds -- an arrangement is markup or a block list, and reading
+# one is not something this script can do or should claim to.
+
+BASIS_ENUMERATED = "enumerated"
+BASIS_COMBINATORIAL = "combinatorial"
+BASIS_UNVARIED = "unvaried"
+BASIS_NOT_DERIVABLE = "notDerivable"
+
+# What the plan would do with the set, said as a value rather than left to be inferred from
+# whether the page carries examples. `reportOnly` is the arrangement-preserving answer.
+SEED_CREATE = "create"
+SEED_REPORT_ONLY = "reportOnly"
+
+# The editors whose values are a pair rather than a list. The alias is the CMS's own, not a
+# project's, so naming it here is not a project fact leaking into the script -- and it is the
+# one editor two measured projects recorded a `default` on, which is exactly why a toggle's
+# variations are the combinatorial case rather than the enumerable one.
+#
+# Folded before matching: a dossier can arrive through `--dossier` from the live rung, whose
+# spelling of an editor alias is not something this script controls.
+TOGGLE_EDITORS = ("umbraco.truefalse",)
+
+CAPTION_SEEDS = "Live examples the source's variant set implies"
+# Printed where the count goes when there is no set to count. Not `0`: a nought under this
+# caption reads as "this component needs no live examples", which is the one thing a dossier
+# that cannot report its option lists is unable to say.
+SEEDS_NOT_DERIVABLE = "not derivable from this dossier"
+
+RULE_SEEDING = (
+    "Seeded once, when the page is created, and never re-seeded: an editor arranges these",
+    "instances, and an arrangement is a person's work rather than a value to overwrite. The",
+    "set is derived from the source's own variation axis, and the rule that derived it is",
+    "printed with it — a wrong rule has to be visible beside the number it produced.",
+)
+
+RULE_BASIS = {
+    BASIS_ENUMERATED: (
+        "Exactly one property on this component carries an option list, so that list IS the",
+        "variant set: one instance per option, with nothing else on the instance set.",
+    ),
+    BASIS_COMBINATORIAL: (
+        "This component's variations are combinations rather than one list — several option",
+        "lists, or independent toggles — so the set is a product and not enumerable from the",
+        "schema. One instance is seeded and no combination is chosen here.",
+    ),
+    BASIS_UNVARIED: (
+        "No property on this component carries an option list and none of them is a toggle,",
+        "so the source records no variation to enumerate: one instance of the component",
+        "itself, which is the least a guide page can show an editor.",
+    ),
+    BASIS_NOT_DERIVABLE: (
+        "The set is derived from the source's option lists, and this dossier does not report",
+        "them in full — so it cannot be derived here. An option list read as empty cannot be",
+        "told from a component with no choices, and one instance reported as the whole set",
+        "would be a guess dressed as an answer. What is missing:",
+    ),
+}
+
+# Why the option lists could not be read, wrapped into the not-derivable rule above. Two
+# reasons rather than one, because a dossier declaring itself thin and a dossier declaring
+# nothing are different facts about the producer, and the second is a document to go and fix.
+REASON_SEED_STRUCTURE_INCOMPLETE = (
+    "this dossier declares structureAvailable: false, so the read behind it could not report "
+    "every field, and an option list is one of the fields a thin rung leaves empty")
+REASON_SEED_STRUCTURE_UNDECLARED = (
+    "this dossier does not declare structureAvailable at all, so nothing in it says whether "
+    "its option lists were read in full or left empty")
+
+# Printed where a seed sets no value, which is every seed but an enumerated one.
+#
+# Said of the instance rather than of a creation, because this prints on both paths: an
+# already-arranged page lists the set without proposing any of it, and "is created" there names
+# a write nothing in the plan is proposing. The old wording only escaped notice because no
+# fixture reached a valueless seed on an arranged page.
+STATEMENT_SEED_NO_VALUES = (
+    "The instance above sets nothing, so its values are whatever the CMS applies. This",
+    "script records no default for an option list or a toggle — two real projects carry",
+    "none — so it has none to apply and does not invent one: the values that instance",
+    "ends up with are the CMS's, not this plan's.",
+)
+# Both numbers are the fixture's own arithmetic over the dossier, which is what makes the
+# refusal to enumerate assertable: a plan that multiplied the toggles out would print the
+# product as its count instead of beside it.
+#
+# **"None of them" is the remaining combinations, and the sentence has to say so.** This
+# statement prints wherever the source describes more combinations than the plan lists, which
+# includes the shape that is enumerable AND combinatorial at once -- one option list beside a
+# toggle. There it sits directly under the instances the option list enumerated, so a bare
+# "this plan seeds none of them" denies the three seeds a reader can see, and contradicts the
+# count in its own first clause. It also prints on an already-arranged page, where nothing is
+# seeded by anything: "listed above" is true on both paths where "seeded here" is true on one.
+STATEMENT_SEED_COMBINATIONS = (
+    "The properties above describe %d combinations in total, against the %d %s",
+    "listed above. Which of the remaining combinations are worth showing is",
+    "a person's judgment, so this plan proposes no others — curating them is somebody's",
+    "job rather than a set a script can derive.",
+)
+STATEMENT_SEED_CREATE = (
+    "This page carries no live examples, so every instance above would be created — after",
+    "approval, in the spell, like every other write this plan proposes.",
+)
+STATEMENT_SEED_KEPT = (
+    "This page already carries an arrangement, so nothing above is seeded and nothing",
+    "above is proposed: the set is listed to be read beside what is on the page. Which",
+    "variants that arrangement holds is not something this script can read — an",
+    "arrangement is markup or a block list, and it is a person's work either way.",
+)
+# Printed where a page already arranged meets a component recording no variation axis and a
+# signature that no longer matches. **The one transition a silence here would hide**: the
+# arrangement was built when there was a set to build it from, and there is not one now, so the
+# instances on the page may show an option list the component no longer carries.
+#
+# Hedged because a hedge is the whole truth available. Nothing records the shape the source had
+# when the page was seeded -- only a hash of it -- so "the axis was removed" cannot be told
+# from "the axis never existed and something else moved". Both are worth a person's look and
+# neither is worth a write, which is what makes the hedge actionable rather than evasive.
+STATEMENT_SEED_AXIS_GONE = (
+    "This component records no variation axis now, and the stored signature says its schema",
+    "moved since this page was seeded — so the arrangement on the page may be built from an",
+    "option list the component no longer carries. Which of those it is cannot be read here,",
+    "and the arrangement is left alone either way — this prints so a person goes and looks.",
+)
+STATEMENT_SEED_CHANGED = (
+    "The stored signature no longer matches, and the signature covers every option list, so",
+    "the variant set may have changed since this page was seeded. That is reported here and",
+    "acted on nowhere: a changed set is a thing for a person to look at, never a reason to",
+    "replace an arrangement.",
+)
+
+# The two lists a reader needs named rather than counted. The first is the whole of "this
+# script does not choose the variant property"; the second is what turns a list into a product.
+CAPTION_SEED_CANDIDATES = (
+    "Option lists on this component, any of which could be the variant property. Nothing",
+    "records which one it is, so this plan does not choose:",
+)
+CAPTION_SEED_TOGGLES = (
+    "Independent toggles, which multiply the set rather than enumerating it:",
+)
+
+
+# ---------------------------------------------------------------------------
 # The page file
 # ---------------------------------------------------------------------------
 
@@ -555,6 +772,17 @@ def load_dossier(path, alias):
     signature = doc.get("sourceSignature")
     if signature is not None and not isinstance(signature, str):
         raise GuideError("%s has a non-string 'sourceSignature': %r." % (path, signature))
+
+    # Typed because the seed set turns on it, and a truthy string would read as "read in full"
+    # from a document saying the opposite. Absence is not refused: it is answered, by declining
+    # to derive a set from option lists nothing vouches for.
+    available = doc.get("structureAvailable")
+    if available is not None and not isinstance(available, bool):
+        raise GuideError(
+            "%s declares 'structureAvailable' as %r, and it is true or false.\n"
+            "  It is what says whether this dossier's option lists were read in full, and the "
+            "live-example seed set is derived from those lists — so a value that is neither "
+            "would decide it by accident." % (path, available))
 
     _check_tabs(path, doc)
     return doc
@@ -727,7 +955,13 @@ def run(page, dossier_doc):
         statements.append(_joined(STATEMENT_NO_MODEL_NEEDED))
     statements.append(_joined(STATEMENT_NOTHING_WRITTEN))
 
-    return {
+    # A no-op derives no seed set, and the key is absent rather than null. The source has not
+    # changed shape since this page was generated, so the set is the set the page was seeded
+    # with and there is nothing about it to report -- the same reason the two lists above are
+    # empty on this path rather than full.
+    seeding = None if noop else _seeding(page, dossier_doc, comparison)
+
+    doc = {
         "planVersion": PLAN_VERSION,
         "alias": dossier_doc["alias"].strip(),
         "name": dossier_doc.get("name") or "",
@@ -748,6 +982,11 @@ def run(page, dossier_doc):
         "machineOwned": machine_owned,
         "leftAlone": left_alone,
     }
+    # Absent, not null, where there is nothing to say: a null under a key a consumer walks is
+    # one more shape it has to recognize, and `seeding` is the whole answer or it is not there.
+    if seeding is not None:
+        doc["seeding"] = seeding
+    return doc
 
 
 def _adoption(page, dossier_doc):
@@ -768,6 +1007,12 @@ def _adoption(page, dossier_doc):
     **`noop` is false, always.** There is no stored signature, so nothing was compared and
     nothing could be: an adoption is a proposal every time it is asked for, and reporting one
     as a no-op would be reporting a page as up to date with a source it never claimed.
+
+    **No seed set is derived here, and `seeding` is absent.** A seed is an instance created on
+    a page, and on this path nothing is created: the offer is the property table and the stored
+    reference, and adding live examples to a page somebody wrote by hand is a write like any
+    other. Once the reference is approved the page has a provenance, and the next run derives
+    the set on the regeneration branch where it belongs.
     """
     current = dossier_doc.get("sourceSignature")
     offered = _offered(page, dossier_doc, current)
@@ -1176,6 +1421,285 @@ def _page_row(prop, tab, group):
     }
 
 
+def _seeding(page, dossier_doc, comparison):
+    """The live-example seed set, or None where there is nothing about seeding to say.
+
+    Derived, never chosen: the option list on the source carries the variant set already, and
+    where the variations are combinations instead of a list this returns ONE instance and says
+    that curating the rest is a person's job. The four bases and the reasoning behind each are
+    written down beside `BASIS_ENUMERATED`.
+
+    **None means the section is absent, and the silence is narrow.** A page already carrying an
+    arrangement, for a component whose schema records no variation axis, AND a comparison that
+    did not find a difference: there is no set to seed and nothing saying anything moved, so a
+    heading with a nought under it would be a reader's time spent to learn nothing.
+
+    **A comparison that DIFFERS breaks the silence, and that is the whole of this rule.** "No
+    variation axis now" is not the same fact as "no variation axis ever": where the signature
+    says the schema moved, the arrangement on the page may have been built from an option list
+    the source has since dropped, and that is the most consequential thing this section can
+    report. Reading it as "nothing could have changed" cost the report exactly that case — the
+    stale arrangement printed under `Left alone` and nothing anywhere said why to look at it.
+    Every other combination prints — including a set that cannot be derived, which is a finding
+    rather than a silence.
+
+    A matched comparison never reaches here: the whole run is a no-op and the caller skips this
+    stage. So in practice the silence is the not-comparable one, where a failed comparison says
+    nothing about whether the variant set moved and claiming it had would be the same "no
+    information read as a change" mistake the rung test exists to prevent.
+
+    **A page carrying the field EMPTY counts as arranged**, and that is the deliberate reading
+    rather than a shortcut. This module already holds that a field the page does not carry and
+    a field carrying an empty value are different facts — one has nothing yet, the other was
+    emptied by somebody — and for a seeded-once field the second is a decision: an editor who
+    removed every instance is a person who chose to, and re-seeding them would be replacing an
+    arrangement with the set they just rejected. The consequence belongs in the spell's hands:
+    a page created with an empty `guideExamples` will never be offered seeds again, so a
+    creation should either seed the set or leave the field off the page entirely.
+    """
+    already = FIELD_EXAMPLES in page["fields"]
+    derivable, reason = _structure_read(dossier_doc)
+    option_props, toggles = _variation_axis(dossier_doc)
+
+    if not derivable:
+        basis = BASIS_NOT_DERIVABLE
+    elif len(option_props) == 1:
+        basis = BASIS_ENUMERATED
+    elif option_props or toggles:
+        basis = BASIS_COMBINATORIAL
+    else:
+        basis = BASIS_UNVARIED
+
+    if already and basis == BASIS_UNVARIED and comparison != COMPARISON_DIFFERS:
+        return None
+
+    seeds = _seeds(basis, option_props)
+    combinations = _combinations(option_props, toggles) if derivable else None
+    # Curation is owed wherever the source describes more combinations than this plan seeds.
+    # Stated as arithmetic rather than as a basis test, so the one case that is enumerable AND
+    # combinatorial -- a single option list beside a toggle -- is not silently treated as
+    # settled: the options are enumerated, and the toggles are still somebody's judgment.
+    curation = bool(seeds and combinations is not None and combinations > len(seeds))
+
+    seeding = {
+        "field": FIELD_EXAMPLES,
+        # The register's class, and here it is the finding rather than bookkeeping: seeded-once
+        # is why a changed set is reported instead of applied.
+        "ownership": SEEDED_ONCE,
+        "basis": basis,
+        "rule": _joined(RULE_SEEDING),
+        # The reason a set could not be derived is part of the rule it qualifies rather than a
+        # statement of its own: the rule's last line is "What is missing:", and an explanation
+        # printed twice teaches a reader to skip explanations.
+        "basisRule": _joined(RULE_BASIS[basis] + (_wrapped(reason) if reason else ())),
+        "derivable": derivable,
+        "notDerivableReason": reason,
+        # `None` rather than `[]` where the set cannot be derived. An empty list reads as "no
+        # seeds needed", which is exactly the claim a dossier that cannot report its option
+        # lists is unable to make -- the same trap as an empty `options`.
+        "seeds": seeds,
+        # A copy, its option list included: the same entry is in `optionProperties` below, and
+        # two keys of one document sharing a list is a shape a consumer can edit by accident.
+        "variantProperty": (_copied(option_props[0]) if basis == BASIS_ENUMERATED else None),
+        "optionProperties": option_props,
+        "toggleProperties": toggles,
+        "combinations": combinations,
+        "curationNeeded": curation,
+        "alreadySeeded": already,
+        # `None` where there is no set: "create" beside `"seeds": null` would name an action
+        # against nothing, and a consumer walking for work to do would find a verb and no
+        # object. What to do about a set that could not be derived is in the rule.
+        "action": None if seeds is None else (SEED_REPORT_ONLY if already else SEED_CREATE),
+    }
+    # Built from the document rather than beside it, so the report and the document cannot
+    # select different statements -- the same shape `_statement_lines` uses for the plan's own
+    # three. `comparison` is the one fact the section needs and does not hold: it belongs to
+    # the plan, and copying it in would put two answers to one question in one document.
+    seeding["statements"] = [_joined(lines)
+                            for lines in _seed_statement_lines(seeding, comparison)]
+    return seeding
+
+
+def _seed_statement_lines(seeding, comparison):
+    """Which statements this seed set owes its reader, as the lines a report prints.
+
+    One selection, read by both renderings. The not-derivable basis owes none of these: its
+    whole finding is in the rule, which names what was missing and stops there rather than
+    going on to say what would have happened to a set nobody has.
+    """
+    if seeding["seeds"] is None:
+        # The rule carries the whole finding here — what was missing, and why one instance
+        # reported as the set would be a guess. There is no set for anything to happen to, so
+        # neither "these would be created" nor "these are kept" would be a true thing to add,
+        # and the report and the document would then disagree about which is which.
+        return []
+
+    statements = []
+    # Every seed but an enumerated one sets nothing, and that has to be said in words: "one
+    # instance at the defaults" read as "this script chose the defaults" is the one misreading
+    # of this section that would put invented values into a project.
+    if any(not seed["values"] for seed in seeding["seeds"]):
+        statements.append(STATEMENT_SEED_NO_VALUES)
+    if seeding["curationNeeded"]:
+        statements.append(_combination_statement(seeding["combinations"],
+                                                 len(seeding["seeds"])))
+    if seeding["alreadySeeded"]:
+        statements.append(STATEMENT_SEED_KEPT)
+        # Only where the comparison actually found a difference. A signature that could not be
+        # compared says nothing about whether the variant set moved, and claiming it had is the
+        # same "no information read as a change" mistake the rung test exists to prevent.
+        #
+        # One drift statement, and the more specific one wins. Where the component records no
+        # variation axis at all, "the variant set may have changed" understates what the reader
+        # needs: the set is not merely different, there is none, so the instances on the page
+        # answer to nothing in the source. Printing both would say it twice and make the
+        # weaker sentence the one a skimming reader stops at.
+        if comparison == COMPARISON_DIFFERS:
+            statements.append(STATEMENT_SEED_AXIS_GONE
+                              if seeding["basis"] == BASIS_UNVARIED
+                              else STATEMENT_SEED_CHANGED)
+    else:
+        statements.append(STATEMENT_SEED_CREATE)
+    return statements
+
+
+def _structure_read(dossier_doc):
+    """Whether this dossier's option lists can be believed, and why not where they cannot.
+
+    Derivability turns on the dossier's own `structureAvailable`, which is the one field that
+    already means "everything here was read in full". The models rung sets it false and names
+    `options` among its gaps, and there `"options": []` is on every property whether the
+    component has choices or not -- so a seed set derived from it would report one instance for
+    every component in a project and look like an answer.
+    """
+    if "structureAvailable" not in dossier_doc:
+        return False, REASON_SEED_STRUCTURE_UNDECLARED
+    if not dossier_doc["structureAvailable"]:
+        return False, REASON_SEED_STRUCTURE_INCOMPLETE
+    return True, None
+
+
+def _variation_axis(dossier_doc):
+    """The properties a variation could live on: the option lists, and the toggles.
+
+    Both in the editor's own order, tabs before groups, so a report's lines do not move between
+    runs. Inherited properties are counted like any other: a `spacing` list arriving from a
+    composition varies the rendering exactly as much as one declared here, and where the
+    variant property is inherited that is a fact about the project rather than a reason to
+    ignore it.
+    """
+    option_props, toggles = [], []
+    for prop in _properties(dossier_doc):
+        entry = {"alias": prop["alias"], "name": prop.get("name") or ""}
+        options = _unique(prop.get("options") or [])
+        if options:
+            entry["options"] = options
+            option_props.append(entry)
+        elif (prop.get("editor") or "").strip().lower() in TOGGLE_EDITORS:
+            toggles.append(entry)
+    return option_props, toggles
+
+
+def _properties(dossier_doc):
+    """Every property on the component, tab level then group level, tab by tab.
+
+    The same walk `proposed_rows` makes, kept separate because that one is building rows for a
+    page and this one is reading a schema. Sharing it would tie the seed set's order to the
+    property table's shape.
+    """
+    for tab in dossier_doc.get("tabs") or []:
+        for prop in tab.get("properties") or []:
+            yield prop
+        for group in tab.get("groups") or []:
+            for prop in group.get("properties") or []:
+                yield prop
+
+
+def _unique(options):
+    """An option list with its duplicates dropped, in the order it declared them.
+
+    Two identical options are one variant: seeding two instances of the same value would put a
+    duplicate on a guide page and count it as coverage. A data type CAN list a value twice --
+    nothing in either format stops it -- so this is a real shape rather than a defensive
+    flourish.
+
+    **Matched exactly, never case-folded.** An option's text IS the value written to the
+    property, so "Neutral" and "neutral" are two values and two variants, however unlikely a
+    pair. Folding them drops a variant from a guide page and says nothing; keeping them puts a
+    near-duplicate in front of a person, who can delete one. Visible over silent, which is the
+    line this module holds everywhere else — and the reason a fold cannot be justified by the
+    duplicate rule above is that exact matching already covers every case that rule describes.
+    """
+    seen, kept = set(), []
+    for option in options:
+        # Exact as the key, and only the empty test looks past the exact text: an option that
+        # is nothing but whitespace is no variant to seed, while two options differing by
+        # whitespace are two strings the CMS would write.
+        if option.strip() and option not in seen:
+            seen.add(option)
+            kept.append(option)
+    return kept
+
+
+def _seeds(basis, option_props):
+    """The instances the basis implies, each carrying what it sets and what it is called.
+
+    An enumerated seed sets exactly one value: the variant property's option, and nothing else.
+    Every other seed sets **nothing at all**, and `values` is empty rather than filled with a
+    default this script does not have -- see `STATEMENT_SEED_NO_VALUES`, which is printed
+    beside it so no reader takes the empty instance for a chosen one.
+    """
+    if basis == BASIS_NOT_DERIVABLE:
+        return None
+    if basis == BASIS_ENUMERATED:
+        prop = option_props[0]
+        return [{"variant": option,
+                 "property": prop["alias"],
+                 "name": prop["name"],
+                 "values": {prop["alias"]: option}} for option in prop["options"]]
+    return [{"variant": None, "property": None, "name": None, "values": {}}]
+
+
+def _copied(prop):
+    """One property entry, deep enough that its option list is its own."""
+    entry = dict(prop)
+    if "options" in entry:
+        entry["options"] = list(entry["options"])
+    return entry
+
+
+def _combinations(option_props, toggles):
+    """How many distinct instances the source's variation axis actually describes.
+
+    Printed beside the number seeded, never as it. This is the arithmetic that makes "not
+    enumerable" a measurement rather than an opinion: four independent toggles are sixteen
+    combinations, and sixteen live instances on a page an editor reads is not documentation.
+    """
+    total = 1
+    for prop in option_props:
+        total *= len(prop["options"])
+    return total * (2 ** len(toggles))
+
+
+def _combination_statement(combinations, seeded):
+    return (STATEMENT_SEED_COMBINATIONS[0]
+            % (combinations, seeded, rpt.plural(seeded, "instance", "instances")),
+            ) + STATEMENT_SEED_COMBINATIONS[1:]
+
+
+# Two columns narrower than the report's width, because these lines are printed two columns
+# in. The joined sentence a document carries is the same string whatever width the lines were
+# wrapped at, so wrapping for the rendering costs the document nothing.
+SEED_REASON_WIDTH = rpt.WRAP_WIDTH - 2
+
+
+def _wrapped(reason):
+    """A reason as report lines, at the width the hand-authored lines around it were written
+    for. The same treatment `STATEMENT_NOT_COMPARABLE`'s reason gets, and the same reason: the
+    text names things this module does not choose, so its length is not knowable here."""
+    return tuple(textwrap.wrap("%s." % reason, SEED_REASON_WIDTH) or ["%s." % reason])
+
+
 def _comparison_statement(comparison, reason):
     """What the signature comparison found, as the lines a report prints.
 
@@ -1284,6 +1808,13 @@ def report(doc):
         for entry in doc["leftAlone"]:
             lines.append("    %s (%s)" % (entry["field"], entry["ownership"]))
             lines.extend(_value_lines(entry["current"], True, "      "))
+
+    # After the two field sections and before the closing statement, which is the order the
+    # plan itself names them in: what would be written, what would not, and what would be
+    # created beside them.
+    if doc.get("seeding"):
+        lines.append("")
+        lines.extend(_seed_section_lines(doc["seeding"], doc["comparison"]))
 
     lines.append("")
     lines.extend(_statement_lines(doc, 2))
@@ -1516,6 +2047,58 @@ def row_summary_lines(changes, indent):
     if not lines:
         lines.append("%s(the table matches the source; no row changes)" % indent)
     return lines
+
+
+def _seed_section_lines(seeding, comparison):
+    """The live-example set, as a person reads it: the count, the rule that produced it, the
+    instances, and what would happen to them.
+
+    The rule prints with the number for the reason `inventory` prints its determiner's rule
+    with its count: a set derived by the wrong rule is a plausible number, and the only thing
+    that makes it checkable is the rule sitting next to it.
+    """
+    if seeding["seeds"] is None:
+        lines = ["%s: %s" % (CAPTION_SEEDS, SEEDS_NOT_DERIVABLE)]
+    else:
+        lines = ["%s: %d" % (CAPTION_SEEDS, len(seeding["seeds"]))]
+    lines.extend("  " + line for line in RULE_SEEDING)
+    lines.extend("  " + line for line in RULE_BASIS[seeding["basis"]])
+
+    if seeding["seeds"] is None:
+        lines.extend("  " + line for line in _wrapped(seeding["notDerivableReason"]))
+        return lines
+
+    for seed in seeding["seeds"]:
+        lines.append("    %s" % _seed_line(seed))
+    # Named only where naming them is the finding. One option list needs no candidate list --
+    # the seeds above already name the property they set.
+    if len(seeding["optionProperties"]) > 1:
+        lines.extend("  " + line for line in CAPTION_SEED_CANDIDATES)
+        for prop in seeding["optionProperties"]:
+            lines.append("    %s: %s" % (rpt.item(prop), " | ".join(prop["options"])))
+    if seeding["toggleProperties"]:
+        lines.extend("  " + line for line in CAPTION_SEED_TOGGLES)
+        for prop in seeding["toggleProperties"]:
+            lines.append("    %s" % rpt.item(prop))
+    for statement in _seed_statement_lines(seeding, comparison):
+        lines.extend("  " + line for line in statement)
+    return lines
+
+
+def _seed_line(seed):
+    """One instance: what it is called, and what it sets.
+
+    The variant is printed as the seed's name AND as the value it sets, which is not a
+    repetition worth removing: the name is how a person refers to the instance on the page, and
+    the value is the write. A seed that sets nothing says so in the same place, because a blank
+    there would read as an instance whose values were chosen and not shown.
+    """
+    if not seed["values"]:
+        return "(one instance, nothing set — the CMS applies its own defaults)"
+    return "%s — sets %s to %s" % (
+        seed["variant"],
+        rpt.item({"alias": seed["property"], "name": seed["name"]}),
+        json.dumps(seed["values"][seed["property"]]))
 
 
 def _reference_lines(reference, indent):

@@ -104,6 +104,19 @@ Every extraction step should read it first.
   from a model reading the project's design-system knowledge, not from the schema. A structured
   option field could never carry it. So options stay in the prose, one fewer field, and the dossier
   is right not to invent a default.
+- **A vanished variation axis is reported as a hedge, and the hedge is the whole truth available.**
+  A page arranged when the component had an option list, read after that list is gone, is the one
+  transition the seeding section exists for — and the first implementation was silent on exactly it,
+  because "no variation axis now" was read as "nothing could have changed". Nothing records the shape
+  a page was seeded against, only a hash of it, so "the axis was removed" cannot be told from "the
+  axis never existed and something else moved". Both are worth a look and neither is worth a write,
+  so the plan prints the hedge wherever an arranged page meets no axis and a differing signature. The
+  accepted cost is a paragraph a reader sometimes does not need; `plan-ownership`'s golden carries
+  that case and its fixture comment says so.
+- **Option lists are matched exactly, never case-folded.** An option's text IS the value written to
+  the property, so two options differing only in case are two variants. Folding them drops a variant
+  from a guide page silently; keeping both puts a near-duplicate in front of a person who can delete
+  one. Visible over silent, the same line the rest of the module holds.
 - **Seeded-then-flag is a deferred enhancement, not this increment's rule.** Storing a hash of the
   seeded prose would let the tool offer a fresh note *as a diff* where nobody has edited one. That
   buys a convenience; the per-column split above already buys the safety property, so it is recorded

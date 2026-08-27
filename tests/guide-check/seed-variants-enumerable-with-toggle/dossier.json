@@ -1,0 +1,42 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "statBadge",
+  "name": "Stat Badge",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "badgeTone",
+          "name": "Badge Tone",
+          "description": "Which tone the badge is drawn in.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": ["Neutral", "Positive", "Urgent"],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "badgePinned",
+          "name": "Badge Pinned",
+          "description": "Whether the badge stays put as the page scrolls.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:statbadgetonesandapin"
+}

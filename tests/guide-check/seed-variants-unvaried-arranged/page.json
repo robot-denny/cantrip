@@ -1,0 +1,14 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Pull Quote",
+  "source": {
+    "alias": "pullQuote",
+    "kind": "element",
+    "signature": "sha256:pullquotesignedatanotherrung",
+    "rung": "usync"
+  },
+  "fields": {
+    "guidePurpose": "Use a pull quote to lift one sentence out of a long page.",
+    "guideExamples": "<pull-quote>One quote, attributed</pull-quote>"
+  }
+}

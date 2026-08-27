@@ -1,0 +1,50 @@
+{
+  "dossierVersion": 1,
+  "rung": "models",
+  "alias": "statBadge",
+  "name": "Stat Badge",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": false,
+  "structureGaps": [
+    "editor: the generated C# property type, not the data type's editor alias.",
+    "icon: not recorded. The backoffice icon is not generated into a model.",
+    "mandatory: not recorded. Every property reads false; required flags are not generated.",
+    "options: not recorded. Every option list reads empty; an option list lives on the data type, which this rung does not read.",
+    "sortOrder: not recorded. Every property reads 0, and the unnamed bucket is in alias order.",
+    "tabs: not recorded. A generated model carries no tab or group structure, so every property is in the one unnamed bucket."
+  ],
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "",
+      "name": "",
+      "sortOrder": 0,
+      "properties": [
+        {
+          "alias": "badgeLabel",
+          "name": "Badge Label",
+          "description": "The number or word on the badge.",
+          "editor": "string",
+          "mandatory": false,
+          "sortOrder": 0,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "badgeTone",
+          "name": "Badge Tone",
+          "description": "Which tone the badge is drawn in.",
+          "editor": "string",
+          "mandatory": false,
+          "sortOrder": 0,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:statbadgereadfromthemodels"
+}

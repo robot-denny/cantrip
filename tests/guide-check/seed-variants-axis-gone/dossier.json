@@ -1,0 +1,42 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "pullQuote",
+  "name": "Pull Quote",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "quoteText",
+          "name": "Quote Text",
+          "description": "The words being quoted.",
+          "editor": "Umbraco.TextArea",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "quoteAttribution",
+          "name": "Quote Attribution",
+          "description": "Who said it.",
+          "editor": "Umbraco.TextBox",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:pullquotewithnovariation"
+}

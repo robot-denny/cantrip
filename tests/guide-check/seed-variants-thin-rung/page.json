@@ -1,0 +1,11 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Stat Badge",
+  "source": {
+    "alias": "statBadge",
+    "kind": "element",
+    "signature": "sha256:statbadgereadearlier",
+    "rung": "models"
+  },
+  "fields": {}
+}

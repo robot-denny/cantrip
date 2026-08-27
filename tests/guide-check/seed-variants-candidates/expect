@@ -1,0 +1,11 @@
+exit: 0
+args: plan cardStack --page page.json --dossier dossier.json
+contains: Live examples the source's variant set implies: 1
+contains: stackTone (Stack Tone): Neutral | Positive | Urgent
+contains: stackColumns (Stack Columns): Two | Four
+contains: records which one it is, so this plan does not choose:
+contains: 12 combinations
+not_contains: Live examples the source's variant set implies: 3
+not_contains: sets stackTone
+not_contains: sets stackColumns
+not_contains: Exactly one property on this component carries an option list

@@ -88,6 +88,15 @@ costs a model call per actual change. Human text by default and `--json` for the
 same split `inventory` makes. `guidelib/changeplan.py` holds the ownership register and the
 reasoning behind every class in it.
 
+**Live examples are derived, not invented.** `seeding` says which instances of the component
+the page should carry, and the set comes from the source: one option list means one instance
+per option, while combinations of lists or toggles are a product rather than a set and get one
+instance plus the statement that curating the rest is a person's job. Nothing on that instance
+is set — there is no recorded default for an option list or a toggle, so the CMS applies its
+own, and the plan says so rather than implying this script chose them. Every seed is
+seeded-once: on a page that already carries an arrangement the set is reported for a person to
+read beside it, and never re-seeded over.
+
 **Ownership follows the page, not the field.** A page carrying no stored reference was written
 by a person, so it has no machine-owned fields at all, and `plan` against it is propose-only:
 the property table is offered as a difference, every word already there is kept, and the stored

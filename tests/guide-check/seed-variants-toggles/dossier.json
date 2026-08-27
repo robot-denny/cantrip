@@ -1,0 +1,72 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "noticeStrip",
+  "name": "Notice Strip",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "noticeMessage",
+          "name": "Notice Message",
+          "description": "The line an editor writes.",
+          "editor": "Umbraco.TextBox",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "noticeDismissible",
+          "name": "Notice Dismissible",
+          "description": "Whether a visitor can close it.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "noticeCompact",
+          "name": "Notice Compact",
+          "description": "Whether it is drawn in the shorter form.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 30,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "noticeShowIcon",
+          "name": "Notice Show Icon",
+          "description": "Whether the leading icon is drawn.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 40,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "noticePinned",
+          "name": "Notice Pinned",
+          "description": "Whether it stays at the top of the page.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 50,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:noticestripwithfourtoggles"
+}

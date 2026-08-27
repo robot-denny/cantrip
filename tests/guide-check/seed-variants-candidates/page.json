@@ -1,0 +1,13 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Card Stack",
+  "source": {
+    "alias": "cardStack",
+    "kind": "element",
+    "signature": "sha256:cardstackbeforethecolumns",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a card stack where several things of the same kind sit together."
+  }
+}
