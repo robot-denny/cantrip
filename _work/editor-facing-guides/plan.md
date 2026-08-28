@@ -126,6 +126,16 @@ Every extraction step should read it first.
   offered; and the write moves to page creation, so **Step 15's creation path must write it** — a
   seeded-once field absent from a created page is never offered again, the same trap the seeding
   section already documents for `guideExamples`.
+- **The when-to-use section is seeded-once too, so no prose on a guide page is ever regenerated.**
+  Decided 2026-08-28, completing the decision above. Step 14c moved the intro and left the
+  when-to-use block machine-owned, which put two adjacent prose blocks on one page in two classes:
+  a run protected an editor's rewritten intro byte-for-byte while offering model-written words over
+  their rewritten when-to-use text. The approval gate still held, but what an approver was saying
+  yes to was a replacement for something a person wrote — the exact thing the intro was moved out
+  of, and the report gave them no way to tell the two apart, because the per-field reasoning is
+  carried in the document and deliberately not printed. **The accepted cost:** after a schema
+  change, when-to-use guidance can go stale and nothing offers to refresh it. That is the same
+  trade the class makes everywhere else, and it is reported rather than silent.
 - **Seeded-then-flag is a deferred enhancement, not this increment's rule.** Storing a hash of the
   seeded prose would let the tool offer a fresh note *as a diff* where nobody has edited one. That
   buys a convenience; the per-column split above already buys the safety property, so it is recorded
@@ -751,6 +761,48 @@ new fixture: revert the register change and confirm the case fails.
   `bash tests/make-guide-fixtures.sh` leaves the fixture tree byte-identical.
 - [Manual]: print the `--json` document for an already-written page and for a page missing the field,
   and show that the first leaves the intro alone and the second does not claim to propose it.
+
+---
+
+### Step 14d — The register: no prose on a guide page is regenerated
+
+*Added 2026-08-28. Step 14c moved the intro to seeded-once and left the when-to-use block
+machine-owned; the user decided both move. The arithmetic is what makes this a step rather than a
+one-line edit — with no owed fields left, a sentence the report has always printed becomes wrong.*
+
+> **Prompt**: Implement Step 14d of `_work/editor-facing-guides/plan.md`. In
+> `skills/umbraco-17/spellbook/guide/scripts/guidelib/changeplan.py`, move `guideWhenToUse` from
+> `MACHINE_OWNED`/`PROPOSAL_OWED` to `SEEDED_ONCE` with no proposal, beside `guidePurpose`, and
+> update its `why`. **Then fix the model-call statement, which is the real work.** The owed count
+> drops to zero, and `_model_statement(0, 1)` currently renders "A model call is needed. 0
+> machine-owned fields need prose this script cannot write, and 1 carries content…" — a sentence
+> that reads as a bug in the tool. Decide between a no-prose-owed form of the statement and
+> removing prose from the arithmetic, implement one, and **write down which and why** beside the
+> constant. The recommendation, not binding: keep the count and add a form saying a model is needed
+> and not for prose — every prose field on the page is seeded once and left alone, and what remains
+> is the property table's markup, which comes from the project's own components. Check that
+> `STATEMENT_NO_MODEL_NEEDED`'s "unreachable" comment is still true and still describes the register
+> it now guards. Verify `PROPOSAL_OWED` is still referenced by something after the move — if nothing
+> uses it, say so in the report rather than deleting a constant the spell may read.
+
+**What to build**: the register change and the statement's new form in `guidelib/changeplan.py`,
+every golden the wording touches, and a fixture case landing on the new form.
+
+**Test first**: add the fixture case asserting the new sentence and confirm RED before touching the
+register — the wording does not exist yet, so it must fail for the right reason. The goldens carrying
+the old sentence will go RED on their own once the register moves, which is the signal the
+consequences were found rather than guessed. Author every golden by hand from the constants and the
+documented render order, never by capturing a run.
+
+**Validation**:
+- [Automated]: `tests/run.sh` — every case passes; `./scripts/check-contract.sh`; a second run of
+  `bash tests/make-guide-fixtures.sh` leaves the fixture tree byte-identical.
+- [Manual]: print the human report and the `--json` document for a page whose signature differs, and
+  show that no prose field is proposed, that both prose fields are accounted for, and that the
+  model-call sentence is true as printed.
+- Mutation-check: revert the register entry and confirm the new fixture fails; separately, revert
+  the statement's new form and confirm a case fails rather than the suite passing on wording nobody
+  asserts.
 
 ---
 
