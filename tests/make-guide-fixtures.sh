@@ -4639,7 +4639,97 @@ expect "$C" \
   "contains: \"noop\": false" \
   "contains: \"modelCallNeeded\": true" \
   "contains: two rungs sign one component differently by design" \
-  "not_contains: \"noop\": true"
+  "not_contains: \"noop\": true" \
+  "not_contains: \"consequence\"" \
+  "not_contains: machine-owned from that point on"
+
+# --- the page that does not exist yet: the reference write on the creation path ---
+#
+# The second cause of `notComparable`, and the only one that means "nothing has ever been
+# generated into this page". The spell's creation path declares the reference it is ABOUT to
+# write, with no signature yet, because `"source": null` would be read as somebody's
+# hand-written work and derive no seed set -- `plan-adoption` is that other path.
+#
+# What this case pins is the consequence text on the offered reference. Writing that reference
+# is the one approval on a guide page that editing cannot undo, and the adoption plan has
+# carried the sentence since it shipped -- so a creation reaching the spell without it left the
+# spell to say the same thing in its own words, which is two wordings for one irreversible fact.
+#
+# `plan-other-rung` above is the negative half, and the two sit together deliberately: both are
+# `notComparable`, and that page ALREADY carries a reference. Nothing irreversible happens
+# there, so the sentence must not appear -- a warning printed where it does not apply is the
+# explanation with nothing under it that this module refuses everywhere else.
+C="$CASES/plan-creation"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotileasread" ""
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": null,
+    "rung": "deploy"
+  },
+  "fields": {}
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: the page's stored reference records no signature" \
+  "contains: guideSource: computed here" \
+  "contains: not reversible by editing" \
+  "contains: writing this reference is what makes this page's machine-owned fields" \
+  "contains: since the moment it was approved" \
+  "contains: guidePurpose (seeded-once)" \
+  "contains: guideWhenToUse (seeded-once)" \
+  "not_contains: guideExamples (seeded-once)" \
+  "contains: created without it, and it stays empty until a person writes one" \
+  "not_contains: Traceback"
+
+# **The unwritten section's RULE is deliberately not asserted here, because it is wrong on this
+# path.** It reads "a run against a page that already exists has no occasion to write it" and
+# "the page was created without it" -- both false on a creation, where the page does not exist
+# yet and the spell's creation path is required to write both prose fields. The FIELD LIST is
+# right and is what this case pins: the plan proposes no prose, because a script cannot write
+# prose. The rule around it was authored for a regeneration and needs a creation form, which is
+# a change to what the section says rather than a wording tidy -- filed rather than smuggled in
+# here. The false sentence is asserted PRESENT on purpose, as a tripwire: whoever gives the
+# section a creation form will see this line fail and find this comment, which is a cheaper
+# handover than a note in a file nobody opens. A `not_contains` was the first instinct and was
+# wrong twice over -- it would have passed vacuously, since the phrase spans the report's wrap,
+# and a fixture that merely declines to mention a defect does not point at it.
+#
+# The same inputs read as the document the spell consumes. Both renderings are asserted,
+# because this step's whole finding was that the two had diverged: the consequence reached
+# `--json` and the report printed nothing, so a person reading the report was not warned about
+# the one write they cannot take back. A pair is what stops that recurring silently.
+#
+# **The report case asserts short fragments; this one asserts the text.** A report wraps the
+# consequence to fit its column, and the runner matches a substring within one line -- so a long
+# assertion there would pin the wrap width rather than the wording. The document carries the
+# string whole on one line, which is where the canonical text belongs under guard, and it is the
+# rendering the spell reads and is told to print verbatim.
+#
+# The TAIL of the consequence is asserted, not only its opening. Review proved the tail
+# unguarded: replacing every word of it after "from that point on" with arbitrary text left the
+# suite green, in a string the spell is told to print verbatim. `_machine_owned` and `_offered`
+# reach it by independent paths, so `plan-adoption-json` asserts the same tail.
+C="$CASES/plan-creation-json"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotileasread" ""
+cp "$CASES/plan-creation/page.json" "$C/page.json"
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"comparison\": \"notComparable\"" \
+  "contains: \"field\": \"guideSource\"" \
+  "contains: \"consequence\": \"writing this reference is what makes this page's machine-owned fields machine-owned from that point on" \
+  "contains: no later edit takes that consequence back" \
+  "contains: has been a generated page since the moment it was approved" \
+  "contains: no later edit takes that consequence back" \
+  "contains: has been a generated page since the moment it was approved" \
+  "not_contains: Traceback"
 
 # ==============================================================================
 # Live examples: the seed set, derived rather than invented

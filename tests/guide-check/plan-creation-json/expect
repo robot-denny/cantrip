@@ -1,0 +1,10 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json --json
+contains: "comparison": "notComparable"
+contains: "field": "guideSource"
+contains: "consequence": "writing this reference is what makes this page's machine-owned fields machine-owned from that point on
+contains: no later edit takes that consequence back
+contains: has been a generated page since the moment it was approved
+contains: no later edit takes that consequence back
+contains: has been a generated page since the moment it was approved
+not_contains: Traceback

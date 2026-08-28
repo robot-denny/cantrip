@@ -281,11 +281,19 @@ Say plainly which of these the person is agreeing to, because they are different
   goes with it, so name every such row individually
 - the stored reference being **written** on a page that had none — **not reversible by editing**
 
-**The reference gets its own question, on every path.** Where the plan carries `consequence` on the
-offered reference, print it verbatim; where it does not — a page being created, which reaches this
-step as `notComparable` — say the same thing in the plan's own terms: writing this reference is what
-makes the page's machine-owned columns machine-owned from then on, and no later edit undoes it. Ask
-about it separately from everything else, and treat silence about it as no.
+**The reference gets its own question, on every path.** The plan carries `consequence` on the
+reference entry wherever that write is a *first* write — offered on an adoption, and proposed on a
+page being created, which reaches this step as `notComparable`. **Print it verbatim.** Do not
+paraphrase it and do not supply wording of your own: the plan holds one canonical text for both
+paths precisely so an irreversible fact is never stated two ways. The report prints it too, under
+the reference's own line, so the person reading either rendering is warned.
+
+Where the entry carries **no** `consequence`, the page already holds a reference and this write is
+not the irreversible one — it belongs with the reversible rewrites above. **That is not the same as
+`notComparable` meaning a creation.** A signature stored at another rung, or with no rung recorded,
+also reads `notComparable`, and those pages already carry a reference: the absence of `consequence`
+is the answer, not a gap in the plan. Ask about the reference separately from everything else, and
+treat silence about it as no.
 
 Then ask about the rest. **No CMS write happens before an explicit yes.**
 

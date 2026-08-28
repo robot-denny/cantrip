@@ -1,0 +1,12 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json
+contains: the page's stored reference records no signature
+contains: guideSource: computed here
+contains: not reversible by editing
+contains: writing this reference is what makes this page's machine-owned fields
+contains: since the moment it was approved
+contains: guidePurpose (seeded-once)
+contains: guideWhenToUse (seeded-once)
+not_contains: guideExamples (seeded-once)
+contains: created without it, and it stays empty until a person writes one
+not_contains: Traceback

@@ -1,0 +1,32 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "promoTile",
+  "name": "Promo Tile",
+  "kind": "element",
+  "icon": "icon-brick color-blue",
+  "description": "A small tile that points at something worth noticing.",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "promoHeading",
+          "name": "Promo Heading",
+          "description": "The line an editor reads first.",
+          "editor": "Umbraco.TextBox",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:promotileasread"
+}

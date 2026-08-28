@@ -249,6 +249,14 @@ In `guide-check`, one pair of cases exists to keep a refusal from widening by ac
   differently by design, so a matching string across rungs is no information at all. "No
   information" read as "no change" is a guide that silently stops being regenerated the day a
   project gains a serialization format.
+- **`plan-creation`** is the other cause of `notComparable`, and the two cases sit together on
+  purpose. This page carries a reference with **no signature** — the shape the spell's creation
+  path sends for a page that does not exist yet — and the plan carries the reference write's
+  `consequence` on it, the one approval on a guide page that editing cannot undo. Its negative
+  half lives on `plan-other-rung`, which now asserts that same text is **absent**: that page
+  already holds a reference, so nothing irreversible happens there, and a warning printed where
+  it does not apply is what teaches a reader to skip warnings. Neither assertion means anything
+  without the other — the text reaching every regeneration passes the first and fails the second.
 - **`plan-project-read`** is the only `plan` case that reads a project off disk, since the three
   above all supply a dossier. Substrings rather than a golden: its claims are that the project was
   read at all, that a tab and a group both reach the property table, and that an inherited

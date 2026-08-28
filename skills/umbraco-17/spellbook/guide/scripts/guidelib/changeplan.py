@@ -348,10 +348,28 @@ KEPT_WHY = ("kept exactly as it stands. This page carries no stored reference, s
 # What the stored reference's consequence is, carried on its entry so a consumer that renders
 # one field at a time still says it. The one value on the page whose write changes what every
 # later run is allowed to do.
+#
+# **One constant for both paths, not one worded per path.** An adoption offers this reference on
+# a page somebody wrote by hand; a creation proposes it on a page that does not exist yet. The
+# fact is the same fact either way -- after the write, every later run compares this signature
+# and regenerates the machine-owned columns -- and it is the one approval on a guide page that
+# editing cannot undo. A second constant would be a second wording of that, which is precisely
+# the drift a canonical text exists to stop: the spell cites this rather than paraphrasing it,
+# and cannot then paraphrase it differently on one path than on the other.
+#
+# So the path-specific clause came OUT of it. It read "Pending approval, never proposed, and
+# never written here", which is true of an adoption's entry and false of a creation's -- that
+# one is keyed `proposed`, like every other machine-owned field on a regeneration, and a
+# sentence saying "never proposed" under a key called `proposed` teaches its reader to stop
+# trusting the sentence. What replaced it holds on both paths. Nothing was lost: "pending, not
+# proposed" is what an adoption entry's own `pendingApproval` and `proposedOnApproval` keys say
+# structurally, and what `RULE_OFFERED` says in words to the person reading the report.
 REFERENCE_WRITE_CONSEQUENCE = (
     "writing this reference is what makes this page's machine-owned fields machine-owned from "
-    "that point on: every later run compares its signature and regenerates them. Pending "
-    "approval, never proposed, and never written here.")
+    "that point on: every later run compares its signature and regenerates them. Nothing here "
+    "writes it, and no later edit takes that consequence back — the field itself can be changed "
+    "like any other, but the page has been a generated page since the moment it was approved. "
+    "Every other yes on a guide page is undone by a person changing a field back.")
 
 
 # --- the rules, one per class -------------------------------------------------
@@ -462,6 +480,10 @@ RULE_KEPT = (
 )
 
 CAPTION_MACHINE_OWNED = "Machine-owned, regenerated and proposed for approval"
+# Printed above the stored reference's consequence, on the one shape that carries it. The label
+# is the finding rather than a heading: a reader skimming a list of fields needs to know which
+# line is the one they cannot take back.
+CAPTION_CONSEQUENCE = "not reversible by editing —"
 CAPTION_LEFT_ALONE = "Left alone"
 # Printed only when a page is missing a seeded field, which is a state a report must not answer
 # with silence: nothing proposes it and nothing lists it, so a reader of an otherwise complete
@@ -1046,7 +1068,7 @@ def run(page, dossier_doc):
     # still unwritten, and the run that is not a no-op says so.
     machine_owned, left_alone, unwritten = [], [], []
     if not noop:
-        machine_owned = _machine_owned(page, dossier_doc, current)
+        machine_owned = _machine_owned(page, dossier_doc, current, reason)
         left_alone = _left_alone(page)
         unwritten = _unwritten(page)
 
@@ -1300,12 +1322,15 @@ def _compare(stored, stored_rung, current, read_rung):
     return COMPARISON_DIFFERS, None
 
 
-def _machine_owned(page, dossier_doc, current):
+def _machine_owned(page, dossier_doc, current, reason):
     """One entry per machine-owned field in the register, whether the page carries it or not.
 
     A regeneration proposes all of them: a field the page is missing entirely is exactly the
     field most in need of a value, and leaving it out of the plan because the page had nothing
     to diff against would hide it.
+
+    `reason` is `_compare`'s, and it is here for one field on one shape: the stored reference's
+    consequence, on the page that has no stored signature yet.
     """
     entries = []
     for spec in REGISTER:
@@ -1327,6 +1352,23 @@ def _machine_owned(page, dossier_doc, current):
             "onPage": present,
             "proposed": _proposed(spec, dossier_doc, current),
         }
+        # Only where this page has NO stored signature, which is the shape the spell's creation
+        # path sends: a page that does not exist yet, declaring the reference it is about to
+        # write. That write is a first write, and it is the same irreversible fact an adoption
+        # offers, so it carries the same text rather than being said again in the spell's words.
+        #
+        # `notComparable` has four causes and this is the only one that is a first write. A page
+        # stored at another rung, or with no rung recorded, already carries a reference: writing
+        # a new one over it changes which signature is compared and nothing about what the tool
+        # is allowed to do, so warning there would be an explanation with nothing under it --
+        # what `_class_rules` refuses to print for a class no field is in.
+        #
+        # Keyed on the reason rather than on `page["source"]["signature"]` being empty: that
+        # test is `_compare`'s first clause, and a second copy of it here is a second rule that
+        # could disagree with the first. The reason alone is the whole condition, because
+        # `REASON_NO_STORED` is returned beside `COMPARISON_NOT_COMPARABLE` and nowhere else.
+        if spec["field"] == FIELD_SOURCE and reason == REASON_NO_STORED:
+            entry["consequence"] = REFERENCE_WRITE_CONSEQUENCE
         if spec["field"] == FIELD_PROPERTIES:
             # The property table is the one field compared row by row. A page storing rows gets
             # a summary; a page storing one value says so rather than offering a comparison it
@@ -1933,6 +1975,22 @@ def report(doc):
         lines.extend("  " + line for line in RULE_VERBATIM)
         for entry in doc["machineOwned"]:
             lines.append("    %s: %s" % (entry["field"], PROPOSAL_LABEL[entry["proposal"]]))
+            # **Printed here, not left to `--json`.** The person reading this report is the
+            # person being asked, and a warning only a consumer can see is a warning they do not
+            # get. It reaches one entry on one shape -- the stored reference on a page that has
+            # none yet -- so it is attached to the field rather than stated for the section.
+            #
+            # The adoption report does not need this and does not get it: that whole report is
+            # about this one approval, and says so in `STATEMENT_ADOPTION` and `RULE_OFFERED`
+            # before any field is listed. Here the same write is one field among several in a
+            # regeneration, which is exactly why it has to be marked where it sits.
+            if entry.get("consequence"):
+                lines.append("      %s" % CAPTION_CONSEQUENCE)
+                # `break_on_hyphens=False`, or the wrap splits "machine-owned" across two
+                # lines in the one sentence whose subject is machine-owned fields.
+                lines.extend("        " + line for line in
+                             textwrap.wrap(entry["consequence"], rpt.WRAP_WIDTH - 8,
+                                           break_on_hyphens=False))
             # A property table is reported as what changed, never as two blocks of text set
             # against each other. The caster wants "these properties were added, these were
             # removed"; both sides printed in full is what turned approval into theatre.
