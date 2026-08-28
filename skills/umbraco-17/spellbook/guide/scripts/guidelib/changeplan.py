@@ -245,7 +245,9 @@ COMPARISON_NO_REFERENCE = "noReference"
 # classify a field the register does not name as one it does.
 #
 # Order is the order the plan lists them, chosen so a reader meets the bookkeeping first, then
-# the deterministic content, then the two fields a model owes.
+# the deterministic content, then the field a model owes, then the fields nothing here rewrites.
+# Grouped by class rather than by subject, because the plan prints the machine-owned fields and
+# the left-alone ones in two separate sections and each reads down in this order.
 #
 # The stored reference is named as a constant because two places have to agree about it: it is
 # the one register field whose current value does not come out of `fields`, since the page file
@@ -275,18 +277,20 @@ REGISTER = (
                "comes from the project's own components, so the spell renders these rows.",
     },
     {
-        "field": "guidePurpose",
-        "ownership": MACHINE_OWNED,
-        "proposal": PROPOSAL_OWED,
-        "why": "one sentence saying what this component is for. A script cannot write it, and "
-               "a template filled from the alias reads exactly like a template.",
-    },
-    {
         "field": "guideWhenToUse",
         "ownership": MACHINE_OWNED,
         "proposal": PROPOSAL_OWED,
         "why": "when to reach for this component and when to reach for another. A judgment "
                "call about a project, which is the spell's half of this capability.",
+    },
+    {
+        "field": "guidePurpose",
+        "ownership": SEEDED_ONCE,
+        "proposal": None,
+        "why": "one sentence saying what this component is for, written when the page is "
+               "created. A script cannot write it and a model only drafts it: the sentence an "
+               "editor reads first is the one they rewrite in their own words, and words "
+               "somebody chose are not a value to regenerate over.",
     },
     {
         "field": FIELD_EXAMPLES,
@@ -350,10 +354,28 @@ RULE_MACHINE_OWNED = (
     "current value, and written only after a person approves it. This script writes",
     "nothing.",
 )
+# Class-generic deliberately. This rule is the ONLY explanation a person reading the report
+# gets -- the per-field `why` is carried in the document and not printed (see the comment in the
+# renderer) -- so it has to describe every member. It named "an arrangement" while the class held
+# only the live-example field, and went wrong the moment a sentence of prose joined it.
 RULE_SEEDED_ONCE = (
     "Written when the page was created and never touched again. Reported when it may have",
-    "gone stale, never replaced: an arrangement is a person's work, not a value to",
+    "gone stale, never replaced: what somebody wrote is their work, not a value to",
     "overwrite.",
+)
+# The third answer this list needs and neither rule above gives. A seeded field the page does
+# not carry is not "left alone" -- there is no value to leave -- and it is not proposed, because
+# a seeded value's only write is at page creation and a plan run creates nothing.
+#
+# `_machine_owned` reaches the opposite conclusion from the same premise, and that is the point:
+# it proposes a machine-owned field the page is missing, on the grounds that a missing field is
+# exactly the field most in need of a value. The reasoning carries here and only the remedy
+# differs -- a machine-owned field can be proposed and a seeded one cannot -- so what is owed is
+# a report rather than a proposal.
+RULE_UNWRITTEN = (
+    "Written when a page is created and never again, so a run against a page that already",
+    "exists has no occasion to write it: this is reported and proposed nowhere. The page was",
+    "created without it, and it stays empty until a person writes one.",
 )
 RULE_NEVER_TOUCHED = (
     "The page's own name, address and visibility settings, the editorial levers, the media",
@@ -409,6 +431,10 @@ RULE_KEPT = (
 
 CAPTION_MACHINE_OWNED = "Machine-owned, regenerated and proposed for approval"
 CAPTION_LEFT_ALONE = "Left alone"
+# Printed only when a page is missing a seeded field, which is a state a report must not answer
+# with silence: nothing proposes it and nothing lists it, so a reader of an otherwise complete
+# plan would take an empty field for a finished one.
+CAPTION_UNWRITTEN = "Seeded once, and never written on this page"
 # Two captions the adoption path needs and the regeneration path has no use for. "Offered" and
 # "pending your approval" are both in the first deliberately: a caption is what a reader skims,
 # and "proposed" is the word this section must never be summarized with.
@@ -463,7 +489,7 @@ STATEMENT_MODEL_NEEDED = (
     "A model call is needed. %d machine-owned %s prose this script cannot write, and %d",
     "%s content the spell renders in the project's own markup.",
 )
-# Unreachable while the register holds two owed fields and one content field, and kept anyway:
+# Unreachable while the register holds one owed field and one content field, and kept anyway:
 # the register is a table someone will edit, and a plan that claimed a model call over a field
 # it had computed in full would send the spell to a model for nothing.
 STATEMENT_NO_MODEL_NEEDED = (
@@ -938,10 +964,15 @@ def run(page, dossier_doc):
     # survived a regeneration, and there is no regeneration here for anything to survive. A
     # no-op run that listed every field on the page would read as work done, on the one path
     # whose whole value is that no work is needed.
-    machine_owned, left_alone = [], []
+    # A no-op leaves this empty for the same reason as the other two: there is no regeneration
+    # for a field to be pending against, and a no-op that listed an unwritten field would be
+    # reporting work on the one path whose whole value is that no work is needed. The field is
+    # still unwritten, and the run that is not a no-op says so.
+    machine_owned, left_alone, unwritten = [], [], []
     if not noop:
         machine_owned = _machine_owned(page, dossier_doc, current)
         left_alone = _left_alone(page)
+        unwritten = _unwritten(page)
 
     owed = sum(1 for e in machine_owned if e["proposal"] == PROPOSAL_OWED)
     content = sum(1 for e in machine_owned if e["proposal"] == PROPOSAL_CONTENT)
@@ -978,9 +1009,14 @@ def run(page, dossier_doc):
             "machineOwned": _joined(RULE_MACHINE_OWNED),
             "seededOnce": _joined(RULE_SEEDED_ONCE),
             "neverTouched": _joined(RULE_NEVER_TOUCHED),
+            "unwritten": _joined(RULE_UNWRITTEN),
         },
         "machineOwned": machine_owned,
         "leftAlone": left_alone,
+        # Always present, empty where there is nothing pending -- unlike `seeding`, which is the
+        # whole answer or absent. A consumer walking for work to do reads a list either way, and
+        # an empty list is the answer "nothing is unwritten" rather than a shape to recognize.
+        "unwritten": unwritten,
     }
     # Absent, not null, where there is nothing to say: a null under a key a consumer walks is
     # one more shape it has to recognize, and `seeding` is the whole answer or it is not there.
@@ -1067,10 +1103,12 @@ OFFERED_FIELDS = (FIELD_SOURCE, FIELD_PROPERTIES)
 def _offered(page, dossier_doc, current):
     """What an adoption offers: the values this script can compute, and nothing else.
 
-    The owed fields are skipped deliberately and that is the rule, not an omission — prose is
-    what a person writes, and on a page they wrote there is nothing to improve on. So the offer
-    is the property table and the stored reference, and the plan says in words that no prose is
-    proposed rather than leaving a reader to notice two fields missing.
+    The prose is skipped deliberately and that is the rule, not an omission — prose is what a
+    person writes, and on a page they wrote there is nothing to improve on. The owed field is
+    skipped by the second clause of the test below; the seeded-once one never reaches that
+    clause, because a seeded value is written at creation and there is no creation here. So the
+    offer is the property table and the stored reference, and the plan says in words that no
+    prose is proposed rather than leaving a reader to notice the prose missing.
     """
     entries = []
     for spec in REGISTER:
@@ -1268,6 +1306,26 @@ def _left_alone(page):
             "current": page["fields"][field],
         })
     return entries
+
+
+def _unwritten(page):
+    """Seeded-once register fields the page carries no value for at all.
+
+    Reported because silence reads as completeness. A field here is in neither of the other two
+    lists by construction: `_left_alone` reproduces the value a field holds and this one holds
+    none, and the machine-owned sections propose values this script or a model can produce,
+    which a seeded value is not -- its only write is at page creation.
+
+    **The live-example field is excluded, and only because something else already answers for
+    it.** The seeding section reports an absent arrangement as a set that would be created, in
+    words, with the set beside it. Naming it here as well would give one field two answers in
+    one report, and the more detailed answer is the one already written.
+    """
+    return [{"field": spec["field"], "ownership": spec["ownership"], "why": spec["why"]}
+            for spec in REGISTER
+            if spec["ownership"] == SEEDED_ONCE
+            and spec["field"] != FIELD_EXAMPLES
+            and spec["field"] not in page["fields"]]
 
 
 def property_tables(dossier_doc):
@@ -1809,7 +1867,18 @@ def report(doc):
             lines.append("    %s (%s)" % (entry["field"], entry["ownership"]))
             lines.extend(_value_lines(entry["current"], True, "      "))
 
-    # After the two field sections and before the closing statement, which is the order the
+    # Printed only when there is one, and with no count in the caption. Every other section here
+    # heads with a number because a reader needs to know a nought was computed rather than
+    # skipped; this one is the exception, because a nought is the normal state and a section
+    # reading zero in every report is the line that teaches a reader to skip the ones above it.
+    if doc.get("unwritten"):
+        lines.append("")
+        lines.append("%s:" % CAPTION_UNWRITTEN)
+        lines.extend("  " + line for line in RULE_UNWRITTEN)
+        for entry in doc["unwritten"]:
+            lines.append("    %s (%s)" % (entry["field"], entry["ownership"]))
+
+    # After the field sections and before the closing statement, which is the order the
     # plan itself names them in: what would be written, what would not, and what would be
     # created beside them.
     if doc.get("seeding"):

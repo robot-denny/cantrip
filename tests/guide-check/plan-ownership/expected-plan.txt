@@ -6,10 +6,10 @@ Change plan for promoTile (Promo Tile), read at the deploy rung.
   changed shape after this guide was generated, so every machine-owned field is
   regenerated below.
 
-A model call is needed. 2 machine-owned fields need prose this script cannot write, and 1
+A model call is needed. 1 machine-owned field needs prose this script cannot write, and 1
 carries content the spell renders in the project's own markup.
 
-Machine-owned, regenerated and proposed for approval: 4
+Machine-owned, regenerated and proposed for approval: 3
   Regenerated when the source signature changes, shown as a difference against the
   current value, and written only after a person approves it. This script writes
   nothing.
@@ -39,25 +39,22 @@ Machine-owned, regenerated and proposed for approval: 4
         cannot be compared field by field and no summary of what changed is available here.
         The spell renders the table from the project's own components; a page rebuilt with a
         property row list gets an added/removed/changed summary instead of this note.
-    guidePurpose: owed by the spell, which is where the model is
-      current:
-        Use a promo tile to point at something an editor wants noticed.
-      proposed:
-        (none here — a model writes this one, in the spell)
     guideWhenToUse: owed by the spell, which is where the model is
       current:
         (the page carries no value for this field)
       proposed:
         (none here — a model writes this one, in the spell)
 
-Left alone: 4
+Left alone: 5
   Written when the page was created and never touched again. Reported when it may have
-  gone stale, never replaced: an arrangement is a person's work, not a value to
+  gone stale, never replaced: what somebody wrote is their work, not a value to
   overwrite.
   The page's own name, address and visibility settings, the editorial levers, the media
   a person uploaded, and every field this register does not name.
   Every value below is reproduced exactly as the page carries it, which is what "left
   alone" means here: this plan proposes no write against any of them.
+    guidePurpose (seeded-once)
+      Use a promo tile to point at something an editor wants noticed.
     guideExamples (seeded-once)
       <promo-tile>two instances an editor arranged</promo-tile>
     guideScreenshots (never-touched)

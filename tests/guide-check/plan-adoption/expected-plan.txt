@@ -43,10 +43,10 @@ Kept exactly as it stands, every field human-owned: 4
   proposes no write against any of them. Nothing is offered in their place: a page
   with no stored reference was written by a person, and their words are not a value
   to regenerate.
-    guidePurpose (human-owned)
-      Somebody wrote this page by hand. Use an alert banner when something is time-limited.
     guideWhenToUse (human-owned)
       Above the page content, and never two on one page.
+    guidePurpose (human-owned)
+      Somebody wrote this page by hand. Use an alert banner when something is time-limited.
     guideBlurb (human-owned)
       The banner that warns about something time-limited.
     name (human-owned)

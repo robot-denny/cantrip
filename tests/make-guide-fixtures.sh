@@ -2502,6 +2502,11 @@ expect "$C" \
 # claim has two halves: the report has to say "nothing here is a write" in words a person
 # reads, and the JSON has to say it in a key a consumer can branch on. An unasserted machine
 # contract is the half that breaks silently.
+#
+# The kept list below is REGISTER ORDER, then everything the register does not name in alias
+# order -- so `guideWhenToUse` precedes `guidePurpose` because that is where the two sit in the
+# register, the one a model owes ahead of the ones nothing here rewrites. The order is asserted
+# rather than incidental: a plan whose lines move between runs cannot be diffed.
 adoption_inputs() {  # adoption_inputs <case-root>
   cat > "$1/page.json" <<'EOF'
 {
@@ -2610,10 +2615,10 @@ Kept exactly as it stands, every field human-owned: 4
   proposes no write against any of them. Nothing is offered in their place: a page
   with no stored reference was written by a person, and their words are not a value
   to regenerate.
-    guidePurpose (human-owned)
-      Somebody wrote this page by hand. Use an alert banner when something is time-limited.
     guideWhenToUse (human-owned)
       Above the page content, and never two on one page.
+    guidePurpose (human-owned)
+      Somebody wrote this page by hand. Use an alert banner when something is time-limited.
     guideBlurb (human-owned)
       The banner that warns about something time-limited.
     name (human-owned)
@@ -4128,11 +4133,13 @@ cat > "$C/expected-plan.json" <<'EOF'
   ],
   "rule": {
     "machineOwned": "Regenerated when the source signature changes, shown as a difference against the current value, and written only after a person approves it. This script writes nothing.",
-    "seededOnce": "Written when the page was created and never touched again. Reported when it may have gone stale, never replaced: an arrangement is a person's work, not a value to overwrite.",
-    "neverTouched": "The page's own name, address and visibility settings, the editorial levers, the media a person uploaded, and every field this register does not name."
+    "seededOnce": "Written when the page was created and never touched again. Reported when it may have gone stale, never replaced: what somebody wrote is their work, not a value to overwrite.",
+    "neverTouched": "The page's own name, address and visibility settings, the editorial levers, the media a person uploaded, and every field this register does not name.",
+    "unwritten": "Written when a page is created and never again, so a run against a page that already exists has no occasion to write it: this is reported and proposed nowhere. The page was created without it, and it stays empty until a person writes one."
   },
   "machineOwned": [],
-  "leftAlone": []
+  "leftAlone": [],
+  "unwritten": []
 }
 EOF
 expect "$C" \
@@ -4148,8 +4155,13 @@ expect "$C" \
 # The other half of the behavior, and the half a first implementation gets wrong by writing
 # every field it CAN write. Three claims in one report, and only a whole document states all
 # three: the machine-owned fields are proposed, the seeded-once and never-touched fields are
-# reproduced BYTE FOR BYTE in the left-alone list, and the field the page does not carry at
-# all is proposed rather than skipped.
+# reproduced BYTE FOR BYTE in the left-alone list, and the machine-owned field the page does
+# not carry at all -- `guideWhenToUse` -- is proposed rather than skipped.
+#
+# The purpose sentence is in the left-alone list, not the proposed one, and that placement is
+# the claim `plan-purpose-unwritten` completes: it is seeded once at creation and thereafter a
+# person's, so a regeneration reports it and never offers a replacement. A register calling it
+# machine-owned would put it two sections higher with an empty proposal under it.
 #
 # Asserted as the human report, because the report is the rendering whose job is exactly this
 # -- field, current value, proposed value -- and a `contains` on a value cannot say which side
@@ -4210,10 +4222,10 @@ Change plan for promoTile (Promo Tile), read at the deploy rung.
   changed shape after this guide was generated, so every machine-owned field is
   regenerated below.
 
-A model call is needed. 2 machine-owned fields need prose this script cannot write, and 1
+A model call is needed. 1 machine-owned field needs prose this script cannot write, and 1
 carries content the spell renders in the project's own markup.
 
-Machine-owned, regenerated and proposed for approval: 4
+Machine-owned, regenerated and proposed for approval: 3
   Regenerated when the source signature changes, shown as a difference against the
   current value, and written only after a person approves it. This script writes
   nothing.
@@ -4243,25 +4255,22 @@ Machine-owned, regenerated and proposed for approval: 4
         cannot be compared field by field and no summary of what changed is available here.
         The spell renders the table from the project's own components; a page rebuilt with a
         property row list gets an added/removed/changed summary instead of this note.
-    guidePurpose: owed by the spell, which is where the model is
-      current:
-        Use a promo tile to point at something an editor wants noticed.
-      proposed:
-        (none here — a model writes this one, in the spell)
     guideWhenToUse: owed by the spell, which is where the model is
       current:
         (the page carries no value for this field)
       proposed:
         (none here — a model writes this one, in the spell)
 
-Left alone: 4
+Left alone: 5
   Written when the page was created and never touched again. Reported when it may have
-  gone stale, never replaced: an arrangement is a person's work, not a value to
+  gone stale, never replaced: what somebody wrote is their work, not a value to
   overwrite.
   The page's own name, address and visibility settings, the editorial levers, the media
   a person uploaded, and every field this register does not name.
   Every value below is reproduced exactly as the page carries it, which is what "left
   alone" means here: this plan proposes no write against any of them.
+    guidePurpose (seeded-once)
+      Use a promo tile to point at something an editor wants noticed.
     guideExamples (seeded-once)
       <promo-tile>two instances an editor arranged</promo-tile>
     guideScreenshots (never-touched)
@@ -4302,6 +4311,98 @@ expect "$C" \
   "stdout_matches: expected-plan.txt" \
   "contains: <promo-tile>two instances an editor arranged</promo-tile>" \
   "not_contains: No model call is needed"
+# --- the purpose sentence a page never got: seeded-once, so nothing proposes it ---
+#
+# The intro text block is SEEDED-ONCE, not machine-owned: it is written when the page is
+# created and thereafter a person's, so a regeneration reports it and never offers a
+# replacement. This page is the sharp end of that class -- it carries no purpose sentence at
+# all -- and the behavior asserted here is that the plan **invents no proposal for it**. A
+# register that still called it machine-owned would list it among the fields to write, with
+# "(none here -- a model writes this one, in the spell)" under it, and a caster approving that
+# plan would be approving a write over prose that class exists to protect.
+#
+# A missing seeded-once field is therefore NOT offered here, and that is not an oversight: it
+# is Step 15's, at page creation, which is where a seeded-once value is written and the only
+# place it ever can be. The plan records the trap in its own words -- a seeded-once field
+# absent from a created page is never offered again -- against `guideExamples` first and now
+# against this field too.
+#
+# **It is reported, though, and the report is what these two cases actually pin.** Review found
+# the first version of this pair asserting only absences: with the field missing from the page,
+# seeded-once and never-touched and not-in-the-register all rendered as nothing, so every
+# assertion here passed against a mutant with the field DELETED from the register outright. The
+# section it now asserts is the fix on both counts -- a person reading an otherwise complete
+# plan is told the field is empty rather than left to read silence as completeness, and the
+# assertion fails if the register stops naming the field at all.
+#
+# It is also the only case in the suite where the model-call arithmetic reaches ONE owed
+# field, so the singular of that sentence is exercised rather than assumed.
+#
+# Two cases over one pair of inputs, the same split `plan-adoption` uses: the report has to
+# say it in words a person reads, and the document has to say it in the keys the spell walks.
+# The `not_contains` is the whole claim in both, and it is exact -- the field's name appears
+# NOWHERE in either rendering, because there is nothing on the page to report and nothing
+# here to write.
+purpose_unwritten_inputs() {  # purpose_unwritten_inputs <case-root>
+  plan_dossier "$1" "sha256:promotilewithbody" ',
+        {
+          "alias": "promoBody",
+          "name": "Promo Body",
+          "description": "Two or three lines under the heading.",
+          "editor": "Umbraco.TextArea",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }'
+  cat > "$1/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotileasgenerated",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guideWhenToUse": "Reach for a promo tile when a page needs a pointer rather than a paragraph.",
+    "guideExamples": "<promo-tile>one instance an editor arranged</promo-tile>",
+    "name": "How to use a Promo Tile"
+  }
+}
+EOF
+}
+
+C="$CASES/plan-purpose-unwritten"; mkdir -p "$C"; purpose_unwritten_inputs "$C"
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: Machine-owned, regenerated and proposed for approval: 3" \
+  "contains: A model call is needed. 1 machine-owned field needs prose this script cannot write, and 1" \
+  "contains: guideWhenToUse: owed by the spell, which is where the model is" \
+  "contains: Left alone: 2" \
+  "contains: guideExamples (seeded-once)" \
+  "contains: Seeded once, and never written on this page:" \
+  "contains: created without it, and it stays empty until a person writes one" \
+  "contains: guidePurpose (seeded-once)" \
+  "not_contains: guidePurpose: owed" \
+  "not_contains: fields need prose" \
+  "not_contains: Traceback"
+
+C="$CASES/plan-purpose-unwritten-json"; mkdir -p "$C"; purpose_unwritten_inputs "$C"
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"modelCallNeeded\": true" \
+  "contains: \"field\": \"guideWhenToUse\"" \
+  "contains: \"proposal\": \"owed\"" \
+  "contains: \"ownership\": \"seeded-once\"" \
+  "contains: \"unwritten\": [" \
+  "contains: \"field\": \"guidePurpose\"" \
+  "not_contains: \"proposal\": \"owed\",\n      \"field\": \"guidePurpose\"" \
+  "not_contains: Traceback"
+
 
 # --- the same subcommand reading a project off disk ------------------------------
 #
@@ -4431,6 +4532,13 @@ EOF
 #
 # The page carries no live examples, so the set is a set to create. `seed-variants-arranged`
 # below is the same component on a page that already carries an arrangement.
+#
+# It is also the case that holds the live-example field OUT of the unwritten-field section. That
+# section reports a seeded field a page never got, and `guideExamples` is a seeded field this
+# page never got -- so without the exclusion one field would get two answers in one report, the
+# detailed one here and a bare "it is empty" further up. The two negatives below are that
+# exclusion: nothing in this report may name the field as unwritten, because the seeding section
+# above is already its answer.
 C="$CASES/seed-variants-enumerable"; mkdir -p "$C"
 seed_dossier "$C" statBadge "Stat Badge" "sha256:statbadgewiththreetones" '        {
           "alias": "badgeLabel",
@@ -4476,6 +4584,8 @@ expect "$C" \
   "contains: Urgent — sets badgeTone (Badge Tone) to \"Urgent\"" \
   "contains: Exactly one property on this component carries an option list" \
   "contains: This page carries no live examples, so every instance above would be" \
+  "not_contains: Seeded once, and never written on this page" \
+  "not_contains: guideExamples (seeded-once)" \
   "not_contains: combinatorial" \
   "not_contains: nothing set — the CMS applies its own defaults" \
   "not_contains: a person's judgment"

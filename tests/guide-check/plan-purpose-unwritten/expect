@@ -1,0 +1,13 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json
+contains: Machine-owned, regenerated and proposed for approval: 3
+contains: A model call is needed. 1 machine-owned field needs prose this script cannot write, and 1
+contains: guideWhenToUse: owed by the spell, which is where the model is
+contains: Left alone: 2
+contains: guideExamples (seeded-once)
+contains: Seeded once, and never written on this page:
+contains: created without it, and it stays empty until a person writes one
+contains: guidePurpose (seeded-once)
+not_contains: guidePurpose: owed
+not_contains: fields need prose
+not_contains: Traceback

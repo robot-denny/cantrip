@@ -1,0 +1,10 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json --json
+contains: "modelCallNeeded": true
+contains: "field": "guideWhenToUse"
+contains: "proposal": "owed"
+contains: "ownership": "seeded-once"
+contains: "unwritten": [
+contains: "field": "guidePurpose"
+not_contains: "proposal": "owed",\n      "field": "guidePurpose"
+not_contains: Traceback

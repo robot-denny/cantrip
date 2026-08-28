@@ -1,0 +1,15 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotileasgenerated",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guideWhenToUse": "Reach for a promo tile when a page needs a pointer rather than a paragraph.",
+    "guideExamples": "<promo-tile>one instance an editor arranged</promo-tile>",
+    "name": "How to use a Promo Tile"
+  }
+}
