@@ -40,7 +40,7 @@ Machine-owned, regenerated and proposed for approval: 2
         The spell renders the table from the project's own components; a page rebuilt with a
         property row list gets an added/removed/changed summary instead of this note.
 
-Left alone: 5
+Left alone: 4
   Written when the page was created and never touched again. Reported when it may have
   gone stale, never replaced: what somebody wrote is their work, not a value to
   overwrite.
@@ -49,21 +49,13 @@ Left alone: 5
   Every value below is reproduced exactly as the page carries it, which is what "left
   alone" means here: this plan proposes no write against any of them.
     guidePurpose (seeded-once)
-      Use a promo tile to point at something an editor wants noticed.
+      An editor rewrote this: a promo tile points at one thing worth noticing.
+    guideWhenToUse (seeded-once)
+      An editor rewrote this too: one per page, never where a call to action already sits.
     guideExamples (seeded-once)
       <promo-tile>two instances an editor arranged</promo-tile>
-    guideScreenshots (never-touched)
-      umb://media/aaaa1111aaaa1111aaaa111111111111
-    guideBlurb (never-touched)
-      The tile that points at something.
     name (never-touched)
       How to use a Promo Tile
-
-Seeded once, and never written on this page:
-  Written when a page is created and never again, so a run against a page that already
-  exists has no occasion to write it: this is reported and proposed nowhere. The page was
-  created without it, and it stays empty until a person writes one.
-    guideWhenToUse (seeded-once)
 
 Live examples the source's variant set implies: 1
   Seeded once, when the page is created, and never re-seeded: an editor arranges these

@@ -2,9 +2,10 @@ exit: 0
 args: plan promoTile --page page.json --dossier dossier.json --json
 contains: "modelCallNeeded": true
 contains: "field": "guideWhenToUse"
-contains: "proposal": "owed"
 contains: "ownership": "seeded-once"
+contains: a rewrite is not a value to regenerate over
 contains: "unwritten": [
 contains: "field": "guidePurpose"
-not_contains: "proposal": "owed",\n      "field": "guidePurpose"
+not_contains: "proposal": "owed"
+not_contains: which is the spell's half of this capability
 not_contains: Traceback

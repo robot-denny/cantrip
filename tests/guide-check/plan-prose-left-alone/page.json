@@ -1,0 +1,17 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotileasgenerated",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "An editor rewrote this: a promo tile points at one thing worth noticing.",
+    "guideWhenToUse": "An editor rewrote this too: one per page, never where a call to action already sits.",
+    "guideProperties": "<table><tr><td>Promo Heading</td></tr></table>",
+    "guideExamples": "<promo-tile>two instances an editor arranged</promo-tile>",
+    "name": "How to use a Promo Tile"
+  }
+}

@@ -6,7 +6,8 @@ contains: Positive — sets badgeTone (Badge Tone) to "Positive"
 contains: Urgent — sets badgeTone (Badge Tone) to "Urgent"
 contains: Exactly one property on this component carries an option list
 contains: This page carries no live examples, so every instance above would be
-not_contains: Seeded once, and never written on this page
+contains: Seeded once, and never written on this page:
+contains: guideWhenToUse (seeded-once)
 not_contains: guideExamples (seeded-once)
 not_contains: combinatorial
 not_contains: nothing set — the CMS applies its own defaults

@@ -91,6 +91,12 @@ truth. So every machine-owned entry declares which kind of proposal it carries.
     owed        prose a model writes. The script says so and carries no value, rather than
                 being silent about a field it knows has to change.
 
+**No register entry is `owed` today, and the kind is still declared.** Every prose field on a
+guide page is seeded once when the page is created — the purpose sentence and the when-to-use
+section both — so nothing left in the machine-owned class needs words. What a plan still needs
+a model for is the property table's markup, and `STATEMENT_MODEL_NEEDED_NO_PROSE` is the
+sentence that says so instead of printing a nought.
+
 The property tables are `content` and not `computed` for the reason the spec gives in one
 line: the tooling supplies no markup, no class names, no view conventions. The rows are the
 deterministic half — the half the degradation order promises works with no model at all — and
@@ -245,7 +251,9 @@ COMPARISON_NO_REFERENCE = "noReference"
 # classify a field the register does not name as one it does.
 #
 # Order is the order the plan lists them, chosen so a reader meets the bookkeeping first, then
-# the deterministic content, then the field a model owes, then the fields nothing here rewrites.
+# the deterministic content, then the prose in the order a guide page displays it, then the
+# fields nothing here rewrites. No entry names a field a model owes: every prose field on a
+# guide page is seeded once, which is what `STATEMENT_MODEL_NEEDED_NO_PROSE` reports.
 # Grouped by class rather than by subject, because the plan prints the machine-owned fields and
 # the left-alone ones in two separate sections and each reads down in this order.
 #
@@ -277,13 +285,6 @@ REGISTER = (
                "comes from the project's own components, so the spell renders these rows.",
     },
     {
-        "field": "guideWhenToUse",
-        "ownership": MACHINE_OWNED,
-        "proposal": PROPOSAL_OWED,
-        "why": "when to reach for this component and when to reach for another. A judgment "
-               "call about a project, which is the spell's half of this capability.",
-    },
-    {
         "field": "guidePurpose",
         "ownership": SEEDED_ONCE,
         "proposal": None,
@@ -291,6 +292,16 @@ REGISTER = (
                "created. A script cannot write it and a model only drafts it: the sentence an "
                "editor reads first is the one they rewrite in their own words, and words "
                "somebody chose are not a value to regenerate over.",
+    },
+    {
+        "field": "guideWhenToUse",
+        "ownership": SEEDED_ONCE,
+        "proposal": None,
+        "why": "when to reach for this component and when to reach for another, written when "
+               "the page is created. A judgment call about a project, so a model drafts it and "
+               "an editor rewrites it for the editors they know — and a rewrite is not a value "
+               "to regenerate over, which is the whole of why the prose on a guide page is "
+               "seeded rather than machine-owned.",
     },
     {
         "field": FIELD_EXAMPLES,
@@ -400,15 +411,36 @@ RULE_OFFERED = (
 
 # Printed inside the machine-owned section, because it is the section it qualifies, and once
 # rather than against each field.
-RULE_PROPOSALS = (
-    "Three kinds of proposal, named per field below:",
-    "  computed here — a value produced in full; write it as it stands.",
-    "  content computed here — the rows are deterministic and the markup is not, so the",
-    "    spell renders them from the project's own components. This toolkit ships no",
-    "    markup.",
-    "  owed by the spell — prose a model writes. This script cannot propose it and says so,",
-    "    because a field left silently out of a plan reads as \"no change needed\".",
-)
+#
+# **Split per kind, and only the kinds present are printed.** `_class_rules` already applies
+# this discipline to the ownership classes, for the reason written there: an explanation with
+# nothing under it teaches its reader to skip explanations. It was not applied here, and the
+# moment the register held no `owed` field the section explained a kind of proposal no field
+# below it could carry — a bullet about prose a model writes, printed on a plan that proposes no
+# prose at all. The caption counts what it is about to explain, so a reader can see the list is
+# a selection rather than a fixed three.
+CAPTION_PROPOSALS = "%s of proposal, named per field below:"
+RULE_PROPOSAL_KIND = {
+    PROPOSAL_COMPUTED: (
+        "  computed here — a value produced in full; write it as it stands.",
+    ),
+    PROPOSAL_CONTENT: (
+        "  content computed here — the rows are deterministic and the markup is not, so the",
+        "    spell renders them from the project's own components. This toolkit ships no",
+        "    markup.",
+    ),
+    PROPOSAL_OWED: (
+        "  owed by the spell — prose a model writes. This script cannot propose it and says so,",
+        "    because a field left silently out of a plan reads as \"no change needed\".",
+    ),
+}
+# The order the kinds are explained in, which is the register's own order rather than the
+# dictionary's: a reader meets the explanations in the order the fields below them appear.
+PROPOSAL_ORDER = (PROPOSAL_COMPUTED, PROPOSAL_CONTENT, PROPOSAL_OWED)
+# One phrase per possible number of kinds. A spelled number reads better than a digit mid-
+# sentence, and the set of kinds is closed at three, so the list is exhaustive by construction:
+# the caller selects from `PROPOSAL_ORDER` and returns early on none, which leaves 1, 2 or 3.
+PROPOSAL_COUNT_PHRASE = ("", "One kind", "Two kinds", "Three kinds")
 RULE_VERBATIM = (
     "Every value is printed as the page carries it, never wrapped and never shortened: a",
     "value nobody can read whole is a value nobody can approve.",
@@ -489,9 +521,53 @@ STATEMENT_MODEL_NEEDED = (
     "A model call is needed. %d machine-owned %s prose this script cannot write, and %d",
     "%s content the spell renders in the project's own markup.",
 )
-# Unreachable while the register holds one owed field and one content field, and kept anyway:
-# the register is a table someone will edit, and a plan that claimed a model call over a field
-# it had computed in full would send the spell to a model for nothing.
+# The form the register actually lands on, and the reason there are two forms rather than one
+# sentence with a nought in it.
+#
+# **The count stays in the arithmetic; the wording gets a second form.** With no owed field in
+# the register, the sentence above renders "0 machine-owned fields need prose this script
+# cannot write, and 1 carries content" -- true, and it reads as a bug in the tool, which is the
+# one thing a report whose whole job is to be believed cannot afford. The other way out was to
+# drop `owed` from the arithmetic and count content alone. That is rejected for the reason
+# `STATEMENT_NO_MODEL_NEEDED` below is kept unreachable: the register is a table someone will
+# edit, and a class it can be edited back into needs the count that reports it. Deleting the
+# count makes the next field that owes prose an arithmetic change instead of a register entry,
+# which is exactly the coupling the register exists to avoid.
+#
+# So the nought is not printed and the fact behind it is: a model is needed here, and not for
+# words. Every prose field on a guide page is seeded once when the page is created and left
+# alone from then on, so what is left for a model is the property table's markup -- which comes
+# from the project's own components, and is why that field is `content` and not `computed`.
+# Saying so is worth the second constant: "a model call is needed" with no prose owed invites
+# the reader to go looking for the prose it is needed for.
+# **"Left alone" is not available to this sentence**, and that is a rule rather than a word
+# choice. The left-alone section means a field whose value is on the page and stays there; a
+# seeded field the page never got is reported in a section of its own for exactly that reason
+# (see `RULE_UNWRITTEN`). This sentence prints above both, on a page that may carry either, so
+# it can state the policy and must not describe a value: the first wording said "every prose
+# field is written once when the page is created and left alone" fifty lines above a section
+# naming a prose field never written at all.
+STATEMENT_MODEL_NEEDED_NO_PROSE = (
+    "A model call is needed, and not for prose. %d machine-owned %s content the",
+    "spell renders in the project's own markup. No prose on a guide page is regenerated at",
+    "all: a prose field is written once, when the page is created, and this script never",
+    "rewrites one afterwards — so whether each one carries words yet is reported below.",
+)
+# The mirror of the form above, and unreachable for the mirror reason: no register entry can
+# leave `content` nought while something still owes prose. Written anyway, because "unreachable
+# today" is a fact about the register rather than about this function, and the register is a
+# table someone will edit -- which is the argument the form above already makes for keeping the
+# count. A guard on one direction and a nought on the other would be the same defect twice.
+STATEMENT_MODEL_NEEDED_NO_CONTENT = (
+    "A model call is needed, and only for prose. %d machine-owned %s words this script",
+    "cannot write. Nothing here needs the project's own markup: every value below this",
+    "script produced in full.",
+)
+# Unreachable while the register holds a content field -- the property table's, which every
+# plan that is not a no-op proposes -- and kept anyway: the register is a table someone will
+# edit, and a plan that claimed a model call over a field it had computed in full would send
+# the spell to a model for nothing. The owed field this comment used to name is gone, and its
+# absence does not reach here: `model_needed` is true on the strength of either count.
 STATEMENT_NO_MODEL_NEEDED = (
     "No model call is needed: every machine-owned field below is one this script computed in",
     "full.",
@@ -1104,11 +1180,12 @@ def _offered(page, dossier_doc, current):
     """What an adoption offers: the values this script can compute, and nothing else.
 
     The prose is skipped deliberately and that is the rule, not an omission — prose is what a
-    person writes, and on a page they wrote there is nothing to improve on. The owed field is
-    skipped by the second clause of the test below; the seeded-once one never reaches that
-    clause, because a seeded value is written at creation and there is no creation here. So the
-    offer is the property table and the stored reference, and the plan says in words that no
-    prose is proposed rather than leaving a reader to notice the prose missing.
+    person writes, and on a page they wrote there is nothing to improve on. Every prose field
+    in the register is seeded-once, so the first clause of the test below skips all of it; the
+    second clause is what would skip a machine-owned field owing prose, and the register names
+    none today. So the offer is the property table and the stored reference, and the plan says
+    in words that no prose is proposed rather than leaving a reader to notice the prose
+    missing.
     """
     entries = []
     for spec in REGISTER:
@@ -1201,12 +1278,14 @@ def _compare(stored, stored_rung, current, read_rung):
     one thing and the other said another has enough to chase already.
 
     **One limit, stated rather than guessed at.** A match is decided on the signature alone, so
-    a page whose signature was stamped at creation but whose owed prose was never written reads
-    as a no-op until the component's shape changes. Nothing here can tell that from a page
-    somebody deliberately left short, and the field register has no notion of "required to be
-    non-empty". Step 15 only runs `plan` against a page that already completed a write, so the
-    shape should not arise; if it ever does, the honest fix is a seeded-at marker rather than
-    guessing from emptiness.
+    a page whose signature was stamped at creation but whose prose was never written reads as a
+    no-op until the component's shape changes. Nothing here can tell that from a page somebody
+    deliberately left short, and the field register has no notion of "required to be
+    non-empty". Every prose field is seeded-once now, so the only write that could have filled
+    them was the creation that stamped the signature -- which makes this shape a creation that
+    stopped half way rather than a regeneration that skipped something. The honest fix, if it
+    ever arises, is a seeded-at marker rather than guessing from emptiness; the unwritten
+    section reports it meanwhile, on any run that is not a no-op.
     """
     if not stored:
         return COMPARISON_NOT_COMPARABLE, REASON_NO_STORED
@@ -1775,6 +1854,25 @@ def _comparison_statement(comparison, reason):
 
 
 def _model_statement(owed, content):
+    """The model-call sentence, in the form the two counts can honestly carry.
+
+    **Neither count is printed as a nought, and both directions are guarded.** The first form
+    was added when the register stopped owing prose; the mirror was left unguarded because no
+    register entry can make `content` nought today. That is the same "unreachable today" the
+    comment beside these constants refuses to rely on for the arithmetic, and relying on it for
+    the wording would have been the same bug facing the other way. Three forms, so a register
+    edit in either direction gets a true sentence rather than a nought in a sentence.
+
+    The reasoning for keeping both counts in the arithmetic sits beside the constants.
+    """
+    if not owed:
+        return (STATEMENT_MODEL_NEEDED_NO_PROSE[0]
+                % (content, rpt.plural(content, "field carries", "fields carry")),
+                ) + STATEMENT_MODEL_NEEDED_NO_PROSE[1:]
+    if not content:
+        return (STATEMENT_MODEL_NEEDED_NO_CONTENT[0]
+                % (owed, rpt.plural(owed, "field needs", "fields need")),
+                ) + STATEMENT_MODEL_NEEDED_NO_CONTENT[1:]
     return (STATEMENT_MODEL_NEEDED[0]
             % (owed, rpt.plural(owed, "field needs", "fields need"), content),
             STATEMENT_MODEL_NEEDED[1]
@@ -1831,7 +1929,7 @@ def report(doc):
     lines.append("%s: %d" % (CAPTION_MACHINE_OWNED, len(doc["machineOwned"])))
     if doc["machineOwned"]:
         lines.extend("  " + line for line in RULE_MACHINE_OWNED)
-        lines.extend("  " + line for line in RULE_PROPOSALS)
+        _proposal_rules(lines, doc["machineOwned"])
         lines.extend("  " + line for line in RULE_VERBATIM)
         for entry in doc["machineOwned"]:
             lines.append("    %s: %s" % (entry["field"], PROPOSAL_LABEL[entry["proposal"]]))
@@ -2025,6 +2123,23 @@ def _class_rules(lines, entries):
         lines.extend("  " + line for line in RULE_SEEDED_ONCE)
     if NEVER_TOUCHED in present:
         lines.extend("  " + line for line in RULE_NEVER_TOUCHED)
+
+
+def _proposal_rules(lines, entries):
+    """The explanation for each kind of proposal present below, and no others.
+
+    The same discipline `_class_rules` applies to the ownership classes, and the same reason: a
+    plan that proposes no prose should not carry a paragraph about prose a model writes. The
+    count is in the caption because a reader who has seen three kinds explained before needs to
+    know that two is a selection and not a field gone missing.
+    """
+    present = set(entry["proposal"] for entry in entries)
+    kinds = [kind for kind in PROPOSAL_ORDER if kind in present]
+    if not kinds:
+        return
+    lines.append("  " + CAPTION_PROPOSALS % PROPOSAL_COUNT_PHRASE[len(kinds)])
+    for kind in kinds:
+        lines.extend("  " + line for line in RULE_PROPOSAL_KIND[kind])
 
 
 def _value_lines(value, on_page, indent):

@@ -1,0 +1,9 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json
+stdout_matches: expected-plan.txt
+contains: A model call is needed, and not for prose.
+contains: An editor rewrote this too: one per page, never where a call to action already sits.
+not_contains: guideWhenToUse: owed by the spell
+not_contains: 0 machine-owned
+not_contains: Seeded once, and never written on this page
+not_contains: Traceback

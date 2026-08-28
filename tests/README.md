@@ -230,11 +230,20 @@ In `guide-check`, one pair of cases exists to keep a refusal from widening by ac
   supplies both sides.
 - **`plan-ownership`** is its twin at the other end, compared as the whole human report because
   "field, current value, proposed value" is a claim about *where* a value sits. Three things at
-  once: the four machine-owned fields are proposed (including the one the page does not carry at
-  all, which a plan that only diffed what it found would drop), the seeded-once example and the
-  never-touched blurb, screenshot and page name come back **byte for byte**, and the two prose
-  fields carry no proposed value while saying so — an absent proposal reads as "no change
-  needed", which is the opposite of the truth.
+  once: the machine-owned fields are proposed — the bookkeeping reference and the property table,
+  which is all the register leaves in that class; the seeded-once purpose sentence and example
+  and the never-touched blurb, screenshot and page name come back **byte for byte**; and the
+  when-to-use section this page never got is **reported** in a section of its own rather than
+  proposed, because a seeded field's only write is at page creation and an empty field left out
+  of a plan altogether reads as a finished one.
+- **`plan-prose-left-alone`** is that case's mirror, and the whole report again: the same
+  component, and a page carrying **both** prose blocks in an editor's own words. Neither is
+  proposed and neither is offered, so nothing in the report asks anybody to approve a
+  replacement for something a person wrote. It is also where the model-call sentence is pinned.
+  With every prose field on a guide page seeded once, the count of machine-owned fields owing
+  prose is nought — and the sentence that printed that nought read as a bug in the tool, so the
+  form asserted here says a model is needed and says what for: the property table's markup,
+  which comes from the project's own components.
 - **`plan-other-rung`** holds the two signatures **identical** and the rungs different. A plan
   that compares them without checking the rung reports a no-op, and two rungs sign one component
   differently by design, so a matching string across rungs is no information at all. "No

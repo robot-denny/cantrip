@@ -2504,9 +2504,11 @@ expect "$C" \
 # contract is the half that breaks silently.
 #
 # The kept list below is REGISTER ORDER, then everything the register does not name in alias
-# order -- so `guideWhenToUse` precedes `guidePurpose` because that is where the two sit in the
-# register, the one a model owes ahead of the ones nothing here rewrites. The order is asserted
-# rather than incidental: a plan whose lines move between runs cannot be diffed.
+# order -- so `guidePurpose` precedes `guideWhenToUse` because that is where the two sit in the
+# register, which is the order a guide page displays them in. The order is asserted rather than
+# incidental: a plan whose lines move between runs cannot be diffed. It moved once already,
+# when the when-to-use section joined the purpose sentence in the seeded-once class and the two
+# prose fields came to sit together, and this golden is what said so.
 adoption_inputs() {  # adoption_inputs <case-root>
   cat > "$1/page.json" <<'EOF'
 {
@@ -2615,10 +2617,10 @@ Kept exactly as it stands, every field human-owned: 4
   proposes no write against any of them. Nothing is offered in their place: a page
   with no stored reference was written by a person, and their words are not a value
   to regenerate.
-    guideWhenToUse (human-owned)
-      Above the page content, and never two on one page.
     guidePurpose (human-owned)
       Somebody wrote this page by hand. Use an alert banner when something is time-limited.
+    guideWhenToUse (human-owned)
+      Above the page content, and never two on one page.
     guideBlurb (human-owned)
       The banner that warns about something time-limited.
     name (human-owned)
@@ -4155,13 +4157,18 @@ expect "$C" \
 # The other half of the behavior, and the half a first implementation gets wrong by writing
 # every field it CAN write. Three claims in one report, and only a whole document states all
 # three: the machine-owned fields are proposed, the seeded-once and never-touched fields are
-# reproduced BYTE FOR BYTE in the left-alone list, and the machine-owned field the page does
-# not carry at all -- `guideWhenToUse` -- is proposed rather than skipped.
+# reproduced BYTE FOR BYTE in the left-alone list, and the seeded-once field the page does not
+# carry at all -- `guideWhenToUse` -- is REPORTED rather than proposed or skipped.
 #
 # The purpose sentence is in the left-alone list, not the proposed one, and that placement is
 # the claim `plan-purpose-unwritten` completes: it is seeded once at creation and thereafter a
 # person's, so a regeneration reports it and never offers a replacement. A register calling it
 # machine-owned would put it two sections higher with an empty proposal under it.
+#
+# The model-call sentence here is the no-prose form, and the count it does NOT print is what
+# makes this golden worth reading twice: with both prose fields seeded once, no machine-owned
+# field owes words, and the earlier wording rendered that as "0 machine-owned fields need prose
+# this script cannot write" -- true, and it reads as a bug in the tool.
 #
 # Asserted as the human report, because the report is the rendering whose job is exactly this
 # -- field, current value, proposed value -- and a `contains` on a value cannot say which side
@@ -4222,20 +4229,20 @@ Change plan for promoTile (Promo Tile), read at the deploy rung.
   changed shape after this guide was generated, so every machine-owned field is
   regenerated below.
 
-A model call is needed. 1 machine-owned field needs prose this script cannot write, and 1
-carries content the spell renders in the project's own markup.
+A model call is needed, and not for prose. 1 machine-owned field carries content the
+spell renders in the project's own markup. No prose on a guide page is regenerated at
+all: a prose field is written once, when the page is created, and this script never
+rewrites one afterwards — so whether each one carries words yet is reported below.
 
-Machine-owned, regenerated and proposed for approval: 3
+Machine-owned, regenerated and proposed for approval: 2
   Regenerated when the source signature changes, shown as a difference against the
   current value, and written only after a person approves it. This script writes
   nothing.
-  Three kinds of proposal, named per field below:
+  Two kinds of proposal, named per field below:
     computed here — a value produced in full; write it as it stands.
     content computed here — the rows are deterministic and the markup is not, so the
       spell renders them from the project's own components. This toolkit ships no
       markup.
-    owed by the spell — prose a model writes. This script cannot propose it and says so,
-      because a field left silently out of a plan reads as "no change needed".
   Every value is printed as the page carries it, never wrapped and never shortened: a
   value nobody can read whole is a value nobody can approve.
     guideSource: computed here
@@ -4255,11 +4262,6 @@ Machine-owned, regenerated and proposed for approval: 3
         cannot be compared field by field and no summary of what changed is available here.
         The spell renders the table from the project's own components; a page rebuilt with a
         property row list gets an added/removed/changed summary instead of this note.
-    guideWhenToUse: owed by the spell, which is where the model is
-      current:
-        (the page carries no value for this field)
-      proposed:
-        (none here — a model writes this one, in the spell)
 
 Left alone: 5
   Written when the page was created and never touched again. Reported when it may have
@@ -4279,6 +4281,12 @@ Left alone: 5
       The tile that points at something.
     name (never-touched)
       How to use a Promo Tile
+
+Seeded once, and never written on this page:
+  Written when a page is created and never again, so a run against a page that already
+  exists has no occasion to write it: this is reported and proposed nowhere. The page was
+  created without it, and it stays empty until a person writes one.
+    guideWhenToUse (seeded-once)
 
 Live examples the source's variant set implies: 1
   Seeded once, when the page is created, and never re-seeded: an editor arranges these
@@ -4311,6 +4319,152 @@ expect "$C" \
   "stdout_matches: expected-plan.txt" \
   "contains: <promo-tile>two instances an editor arranged</promo-tile>" \
   "not_contains: No model call is needed"
+
+# --- both prose blocks, written by a person, on a page whose source moved ---------
+#
+# The mirror of `plan-ownership`, and the case the no-prose model-call sentence is asserted
+# against. That page carried neither prose field; this one carries BOTH, rewritten in an
+# editor's own words, and the source has changed shape underneath them. So the claim is:
+#
+#   the purpose sentence and the when-to-use section are reproduced BYTE FOR BYTE in the
+#   left-alone list, with their class beside them -- neither is proposed, neither is offered,
+#   and no section of this report asks anybody to approve a replacement for either;
+#
+#   the model-call sentence says a model is needed and says what for. Every prose field on a
+#   guide page is seeded once, so the count of fields owing prose is nought -- and a sentence
+#   printing that nought reads as a broken tool. The form asserted here prints the fact
+#   instead: the property table's markup is what the spell's model renders.
+#
+# Asserted as a whole document, for `plan-ownership`'s reason: a `contains` on a value finds it
+# anywhere in the report and cannot say which section it landed in, and "which section" is the
+# entire claim. It is also the only plan case in the suite with no unwritten section at all --
+# every seeded field on this page has a value -- which is what makes the pair complete.
+C="$CASES/plan-prose-left-alone"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotilewithbody" ',
+        {
+          "alias": "promoBody",
+          "name": "Promo Body",
+          "description": "Two or three lines under the heading.",
+          "editor": "Umbraco.TextArea",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }'
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotileasgenerated",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "An editor rewrote this: a promo tile points at one thing worth noticing.",
+    "guideWhenToUse": "An editor rewrote this too: one per page, never where a call to action already sits.",
+    "guideProperties": "<table><tr><td>Promo Heading</td></tr></table>",
+    "guideExamples": "<promo-tile>two instances an editor arranged</promo-tile>",
+    "name": "How to use a Promo Tile"
+  }
+}
+EOF
+cat > "$C/expected-plan.txt" <<'EOF'
+Change plan for promoTile (Promo Tile), read at the deploy rung.
+  Guide page: How to use a Promo Tile
+  Stored signature: sha256:promotileasgenerated, recorded at the deploy rung.
+  Current signature: sha256:promotilewithbody
+  The stored signature differs from the source's current signature: the component
+  changed shape after this guide was generated, so every machine-owned field is
+  regenerated below.
+
+A model call is needed, and not for prose. 1 machine-owned field carries content the
+spell renders in the project's own markup. No prose on a guide page is regenerated at
+all: a prose field is written once, when the page is created, and this script never
+rewrites one afterwards — so whether each one carries words yet is reported below.
+
+Machine-owned, regenerated and proposed for approval: 2
+  Regenerated when the source signature changes, shown as a difference against the
+  current value, and written only after a person approves it. This script writes
+  nothing.
+  Two kinds of proposal, named per field below:
+    computed here — a value produced in full; write it as it stands.
+    content computed here — the rows are deterministic and the markup is not, so the
+      spell renders them from the project's own components. This toolkit ships no
+      markup.
+  Every value is printed as the page carries it, never wrapped and never shortened: a
+  value nobody can read whole is a value nobody can approve.
+    guideSource: computed here
+      current:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotileasgenerated
+        rung: deploy
+      proposed:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotilewithbody
+        rung: deploy
+    guideProperties: content computed here, markup rendered by the spell
+      changes:
+        This page stores its property table as one value rather than as rows, so the two sides
+        cannot be compared field by field and no summary of what changed is available here.
+        The spell renders the table from the project's own components; a page rebuilt with a
+        property row list gets an added/removed/changed summary instead of this note.
+
+Left alone: 4
+  Written when the page was created and never touched again. Reported when it may have
+  gone stale, never replaced: what somebody wrote is their work, not a value to
+  overwrite.
+  The page's own name, address and visibility settings, the editorial levers, the media
+  a person uploaded, and every field this register does not name.
+  Every value below is reproduced exactly as the page carries it, which is what "left
+  alone" means here: this plan proposes no write against any of them.
+    guidePurpose (seeded-once)
+      An editor rewrote this: a promo tile points at one thing worth noticing.
+    guideWhenToUse (seeded-once)
+      An editor rewrote this too: one per page, never where a call to action already sits.
+    guideExamples (seeded-once)
+      <promo-tile>two instances an editor arranged</promo-tile>
+    name (never-touched)
+      How to use a Promo Tile
+
+Live examples the source's variant set implies: 1
+  Seeded once, when the page is created, and never re-seeded: an editor arranges these
+  instances, and an arrangement is a person's work rather than a value to overwrite. The
+  set is derived from the source's own variation axis, and the rule that derived it is
+  printed with it — a wrong rule has to be visible beside the number it produced.
+  No property on this component carries an option list and none of them is a toggle,
+  so the source records no variation to enumerate: one instance of the component
+  itself, which is the least a guide page can show an editor.
+    (one instance, nothing set — the CMS applies its own defaults)
+  The instance above sets nothing, so its values are whatever the CMS applies. This
+  script records no default for an option list or a toggle — two real projects carry
+  none — so it has none to apply and does not invent one: the values that instance
+  ends up with are the CMS's, not this plan's.
+  This page already carries an arrangement, so nothing above is seeded and nothing
+  above is proposed: the set is listed to be read beside what is on the page. Which
+  variants that arrangement holds is not something this script can read — an
+  arrangement is markup or a block list, and it is a person's work either way.
+  This component records no variation axis now, and the stored signature says its schema
+  moved since this page was seeded — so the arrangement on the page may be built from an
+  option list the component no longer carries. Which of those it is cannot be read here,
+  and the arrangement is left alone either way — this prints so a person goes and looks.
+
+Nothing was written. This document is a proposal: every write happens in the spell,
+after a person approves it.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "stdout_matches: expected-plan.txt" \
+  "contains: A model call is needed, and not for prose." \
+  "contains: An editor rewrote this too: one per page, never where a call to action already sits." \
+  "not_contains: guideWhenToUse: owed by the spell" \
+  "not_contains: 0 machine-owned" \
+  "not_contains: Seeded once, and never written on this page" \
+  "not_contains: Traceback"
 # --- the purpose sentence a page never got: seeded-once, so nothing proposes it ---
 #
 # The intro text block is SEEDED-ONCE, not machine-owned: it is written when the page is
@@ -4335,8 +4489,11 @@ expect "$C" \
 # plan is told the field is empty rather than left to read silence as completeness, and the
 # assertion fails if the register stops naming the field at all.
 #
-# It is also the only case in the suite where the model-call arithmetic reaches ONE owed
-# field, so the singular of that sentence is exercised rather than assumed.
+# The page carries the when-to-use section and not the purpose sentence, which is the mirror of
+# `plan-prose-left-alone` -- and since the when-to-use block became seeded-once too, one page
+# now shows the class in both of its states at once: a value a person wrote, reproduced in the
+# left-alone list, and a value nobody wrote, reported in the section below it. Neither is
+# proposed, and the count of fields owing prose is nought in both directions.
 #
 # Two cases over one pair of inputs, the same split `plan-adoption` uses: the report has to
 # say it in words a person reads, and the document has to say it in the keys the spell walks.
@@ -4378,16 +4535,20 @@ C="$CASES/plan-purpose-unwritten"; mkdir -p "$C"; purpose_unwritten_inputs "$C"
 expect "$C" \
   "exit: 0" \
   "args: plan promoTile --page page.json --dossier dossier.json" \
-  "contains: Machine-owned, regenerated and proposed for approval: 3" \
-  "contains: A model call is needed. 1 machine-owned field needs prose this script cannot write, and 1" \
-  "contains: guideWhenToUse: owed by the spell, which is where the model is" \
-  "contains: Left alone: 2" \
+  "contains: Machine-owned, regenerated and proposed for approval: 2" \
+  "contains: A model call is needed, and not for prose. 1 machine-owned field carries content the" \
+  "contains: no prose on a guide page is regenerated" \
+  "contains: Left alone: 3" \
+  "contains: guideWhenToUse (seeded-once)" \
+  "contains: Reach for a promo tile when a page needs a pointer rather than a paragraph." \
   "contains: guideExamples (seeded-once)" \
   "contains: Seeded once, and never written on this page:" \
   "contains: created without it, and it stays empty until a person writes one" \
   "contains: guidePurpose (seeded-once)" \
   "not_contains: guidePurpose: owed" \
-  "not_contains: fields need prose" \
+  "not_contains: guideWhenToUse: owed" \
+  "not_contains: 0 machine-owned" \
+  "not_contains: needs prose this script cannot write" \
   "not_contains: Traceback"
 
 C="$CASES/plan-purpose-unwritten-json"; mkdir -p "$C"; purpose_unwritten_inputs "$C"
@@ -4396,11 +4557,12 @@ expect "$C" \
   "args: plan promoTile --page page.json --dossier dossier.json --json" \
   "contains: \"modelCallNeeded\": true" \
   "contains: \"field\": \"guideWhenToUse\"" \
-  "contains: \"proposal\": \"owed\"" \
   "contains: \"ownership\": \"seeded-once\"" \
+  "contains: a rewrite is not a value to regenerate over" \
   "contains: \"unwritten\": [" \
   "contains: \"field\": \"guidePurpose\"" \
-  "not_contains: \"proposal\": \"owed\",\n      \"field\": \"guidePurpose\"" \
+  "not_contains: \"proposal\": \"owed\"" \
+  "not_contains: which is the spell's half of this capability" \
   "not_contains: Traceback"
 
 
@@ -4437,7 +4599,7 @@ expect "$C" \
   "exit: 0" \
   "args: plan alertBanner --page page.json --adapter deploy" \
   "contains: Change plan for alertBanner (Alert Banner), read at the deploy rung." \
-  "contains: A model call is needed." \
+  "contains: A model call is needed, and not for prose." \
   "contains: [Content / Message]" \
   "contains: alertHeading (Alert Heading): Umbraco.TextBox, required" \
   "contains: alertSeverity (Alert Severity): Umbraco.DropDown.Flexible, optional, options: Info | Warning | Critical" \
@@ -4530,6 +4692,13 @@ EOF
 # the implementation computes, which is what makes them worth asserting -- an implementation
 # that seeded one instance regardless would satisfy every other assertion in this suite.
 #
+# The page carries no when-to-use section either, so the unwritten section prints and names it.
+# That is asserted rather than denied: this case used to claim no such section appeared, which
+# was true only while the when-to-use block was machine-owned. The live-example field is the
+# one still absent from it, and `not_contains: guideExamples (seeded-once)` is the claim -- the
+# seeding section below is the whole answer for that field, and one field with two answers in
+# one report is worse than either.
+#
 # The page carries no live examples, so the set is a set to create. `seed-variants-arranged`
 # below is the same component on a page that already carries an arrangement.
 #
@@ -4584,7 +4753,8 @@ expect "$C" \
   "contains: Urgent — sets badgeTone (Badge Tone) to \"Urgent\"" \
   "contains: Exactly one property on this component carries an option list" \
   "contains: This page carries no live examples, so every instance above would be" \
-  "not_contains: Seeded once, and never written on this page" \
+  "contains: Seeded once, and never written on this page:" \
+  "contains: guideWhenToUse (seeded-once)" \
   "not_contains: guideExamples (seeded-once)" \
   "not_contains: combinatorial" \
   "not_contains: nothing set — the CMS applies its own defaults" \
