@@ -856,6 +856,44 @@ anything the project does not supply. Do not write to the demo project.
 
 ---
 
+### Step 15b — The reference write's consequence, on the path that creates a page
+
+*Added 2026-08-28, after Step 15's review. The change plan carries a `consequence` string on the
+offered stored reference — the one approval on a guide page that editing cannot undo — but only on
+the adoption path. A page being created reaches `plan` as `notComparable` and carries none, so the
+spell has to say it in its own words there. Two wordings for one irreversible fact is the drift this
+increment keeps catching.*
+
+> **Prompt**: Implement Step 15b of `_work/editor-facing-guides/plan.md`. In
+> `skills/umbraco-17/spellbook/guide/scripts/guidelib/changeplan.py`, `_offered` sets
+> `entry["consequence"] = REFERENCE_WRITE_CONSEQUENCE` for `FIELD_SOURCE` on the adoption path.
+> Carry the same fact on the regeneration path **where the page has no stored signature yet** — the
+> creation shape, `comparison == "notComparable"` with `REASON_NO_STORED` — so one canonical text
+> covers both and the spell cites rather than paraphrases. Decide whether that is the same constant
+> or a second one worded for a creation (the adoption text says approving it makes the page's fields
+> machine-owned *from then on*, which is true either way), and **write down which and why**. Do not
+> put it on a regeneration whose page already carries a reference: nothing irreversible happens
+> there, and a warning printed where it does not apply is the "explanation with nothing under it"
+> this module refuses elsewhere. Then update the spell's Step 7 to cite the plan's text on both
+> paths instead of carrying its own fallback wording.
+
+**What to build**: the consequence on the creation shape in `guidelib/changeplan.py`, a fixture case
+landing on it, whatever goldens the wording touches, and the spell's Step 7 reduced to a citation.
+
+**Test first**: add the fixture asserting the consequence appears for a page with no stored signature
+and confirm RED — the text does not reach that path today. Assert also that it does **not** appear on
+a regeneration against a page that already carries a reference, which is the mistake the narrow
+condition exists to prevent.
+
+**Validation**:
+- [Automated]: `tests/run.sh`; `./scripts/check-contract.sh`; a second `bash
+  tests/make-guide-fixtures.sh` leaves the fixture tree byte-identical.
+- [Manual]: print the `--json` document for all three shapes — adoption, creation, and a regeneration
+  against a page that has a reference — and show the consequence present, present, absent.
+- Mutation-check: remove the new condition and confirm the new fixture fails.
+
+---
+
 ### Step 16 — The `/guide` spell: audit mode, and degradation
 
 > **Prompt**: Implement Step 16 of `_work/editor-facing-guides/plan.md`. Add to

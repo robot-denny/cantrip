@@ -8,6 +8,11 @@ _scratch/
 .claude/settings.local.json
 .claude/agent-memory/
 .claude/scheduled_tasks.lock
+# Unanchored, because the root-anchored rule above does not reach a copy written anywhere else:
+# two reviewers wrote their memory under tests/guide-check/<case>/.claude/ on 2026-08-28, where it
+# was untracked but not ignored, and a `git add -A` would have committed reviewer notes into a
+# generated fixture tree.
+**/.claude/agent-memory/
 
 # Secrets
 .env
