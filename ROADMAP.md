@@ -114,6 +114,25 @@ and says nothing about packs, so a pack could ship a dozen spells and nothing wo
 that is deliberate — a pack serves one stack and its spells arrive only with it — or a gap the
 ceiling implies, is unasked rather than answered.
 
+**The guide scaffolding reference is the largest unit in any pack, and the seam is known.**
+Measured 2026-08-28: 436 lines / ~28K, against `umbraco-17-feature-backfill` at 242 / 16K — 1.7x the
+next largest, with a frontmatter trigger broad enough that a schema-only task pays for the audit's
+report format and an audit task pays for the document types. The proposed seam is
+`## The audit's report shape`: it documents report output rather than schema, addresses the spell
+rather than someone creating document types, introduces and uses "documentable unit" entirely within
+itself, and would be roughly 110 lines alone. **Held rather than split**, because that section already
+says it is a candidate for extraction to the technology-agnostic layer, and splitting it into a second
+`umbraco-17` unit first means a unit name, two registry entries and a docs pass — then moving it
+again. Answer the core-extraction question and this falls out of it; split it sooner if a consumer
+reports the load cost first.
+
+**Nothing tells a project to cache a derived guides index.** `umbraco-17-review-rules` already treats
+a stable, expensive, frequently-rendered listing with no caching as a finding in its own right, and a
+guides index derived at render time is exactly that shape. The scaffolding reference scopes what the
+index may resolve per guide — the fix for the over-fetch — but says nothing about caching, on the
+grounds that it ships no template and caching sits a layer below a schema reference. That reasoning
+holds only until something ships that owns the render layer; whatever does, owes the caching sentence.
+
 **A pack conformance check.** `scripts/check-pack.sh` — could someone outside this repository ship a
 pack that works? Only worth building if third-party packs are ever a goal; noted so the question is
 asked deliberately rather than answered by drift.
