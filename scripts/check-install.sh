@@ -55,7 +55,7 @@ ROSTER_CORE=(
 # check 13 now compares it against every SKILL.md outside skills/core.
 ROSTER_PACK=(
   umbraco-17-planning umbraco-17-feature-backfill umbraco-17-review-rules
-  umbraco-17-starter-facts umbraco-17-audit-patterns
+  umbraco-17-starter-facts umbraco-17-audit-patterns umbraco-17-guide-scaffolding
   block umbraco-edit
   check-uda umbraco-deploy-facts
   dotnet-conventions dotnet-review-rules codebase-audit
@@ -78,6 +78,7 @@ PACK_SOURCE=(
   "umbraco-17-review-rules|umbraco-17"
   "umbraco-17-starter-facts|umbraco-17"
   "umbraco-17-audit-patterns|umbraco-17"
+  "umbraco-17-guide-scaffolding|umbraco-17"
   "block|umbraco-17"
   "umbraco-edit|umbraco-17"
   "check-uda|umbraco-cloud"

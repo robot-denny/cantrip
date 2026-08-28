@@ -117,6 +117,15 @@ Every extraction step should read it first.
   the property, so two options differing only in case are two variants. Folding them drops a variant
   from a guide page silently; keeping both puts a near-duplicate in front of a person who can delete
   one. Visible over silent, the same line the rest of the module holds.
+- **The purpose sentence is seeded-once, not regenerated.** Decided 2026-08-27: the intro text block
+  that displays first on a guide page is written once and thereafter a person's. `REGISTER` shipped it
+  as machine-owned with an `owed` proposal — regenerated and offered as a diff on every signature
+  change — which is the wrong class for prose somebody edits. Step 14c makes the register agree.
+  Consequences, all of them Step 14c's or Step 15's: the field leaves the model-owed count so a
+  regeneration needs a model for one field fewer; a page already carrying it is left alone rather than
+  offered; and the write moves to page creation, so **Step 15's creation path must write it** — a
+  seeded-once field absent from a created page is never offered again, the same trap the seeding
+  section already documents for `guideExamples`.
 - **Seeded-then-flag is a deferred enhancement, not this increment's rule.** Storing a hash of the
   seeded prose would let the tool offer a fresh note *as a diff* where nobody has edited one. That
   buys a convenience; the per-column split above already buys the safety property, so it is recorded
@@ -180,7 +189,10 @@ Every extraction step should read it first.
   `.config`, so a leaked alias in either would pass silently. Step 2 extends both lists in
   `scripts/check-contract.sh` before the first fixture is committed.
 - **Two registries no gate covers.** `ROSTER_PACK` in `scripts/check-install.sh` *is* gated (check
-  13) and will fail the build until the two new units are listed. `PACK_SLOTS` in the same file is
+  13) and will fail the build until the two new units are listed — and it fails at the *commit* that
+  adds a unit, not at Step 17, because the pre-commit hook runs the gate. So each unit registers
+  itself in `ROSTER_PACK` and `PACK_SOURCE` as it lands (`umbraco-17-guide-scaffolding` did so on
+  2026-08-28); Step 17 keeps `PACK_SLOTS`, the README, the changelog and the roadmap. `PACK_SLOTS` in the same file is
   **not** gated — a new slot absent from it is surveyed nowhere and reported to no consumer. Both are
   handled in Step 17. Worth recording in the empty slot afterwards.
 - **Frontmatter rules that fail the gate**: a spell needs `disable-model-invocation: true`, a
@@ -676,7 +688,12 @@ and which column of which field may the tooling write" from this file alone.
 > matched by name); the **index page type** whose list is derived at render time and which carries no
 > machine-owned fields; the editorial levers that live on the guide page rather than on the index;
 > and that guides are located by the **stored key** of the guides node, never by route, with
-> detection on document type rather than on name. Declare the two new slots here and nowhere else:
+> detection on document type rather than on name. State what the index's per-guide read is scoped
+> to — name, URL, and the blurb-or-purpose line, explicitly **not** the property rows or the live
+> examples: a derived index built the obvious way resolves every listed guide's whole content model
+> to render a teaser, which on forty guides of twenty rows is eight hundred row objects per render of
+> a public page. One sentence there is the difference between an index costing one read per guide and
+> one costing a guide's entire shape. Declare the two new slots here and nowhere else:
 > `.agents/config/stack.md` → `## Schema serialization` (which adapter runs, with a `**Detect:**`
 > recipe after the fallback) and `.agents/config/conventions.md` → `## Editor guides` (the guides
 > node key and the document type aliases used). Every alias is a slot with a default, not a constant.
@@ -699,6 +716,41 @@ print" from this file alone.
   aliases).
 - [Manual]: confirm the audit section states the report shape the script actually prints, checked
   against a real run rather than from memory.
+
+---
+
+### Step 14c — The register: the purpose sentence is seeded, not regenerated
+
+*Added 2026-08-27, after Step 14's review. `REGISTER` classifies the guide page's intro as
+machine-owned with an `owed` proposal; the decision above makes it seeded-once. A docs step is the
+wrong place for a behaviour change, so it gets its own.*
+
+> **Prompt**: Implement Step 14c of `_work/editor-facing-guides/plan.md`. In
+> `skills/umbraco-17/spellbook/guide/scripts/guidelib/changeplan.py`, move `guidePurpose` from
+> `MACHINE_OWNED`/`PROPOSAL_OWED` to `SEEDED_ONCE` with no proposal, and update its `why` to say why
+> prose an editor writes is not a value to regenerate. Check every consequence rather than only the
+> constant: the `owed` count in the model-call arithmetic, `modelCallNeeded`, the model statement's
+> wording and its plural, the left-alone list, and the adoption path — on a hand-authored page the
+> intro must now be left alone rather than offered. Two hand-authored goldens carry the old shape
+> (`tests/guide-check/plan-ownership/expected-plan.txt` and `plan-adoption/expected-plan.txt`);
+> update them **by hand from the constants and the documented render order**, never by capturing a
+> run. Add a fixture case proving a page missing the field is not silently skipped, or — if the
+> honest answer is that a missing seeded-once field is Step 15's to write at creation — say so in the
+> report and state where the plan records it, rather than inventing a proposal for it here.
+
+**What to build**: the register change in `guidelib/changeplan.py`, its consequences, two updated
+goldens, and at least one new fixture case in `tests/make-guide-fixtures.sh`.
+
+**Test first**: change a fixture's expectation to the intended behaviour and confirm RED before
+touching the register — the two goldens will go RED on their own, which is the signal that the
+consequences were found rather than guessed. Then implement, then confirm GREEN. Mutation-check the
+new fixture: revert the register change and confirm the case fails.
+
+**Validation**:
+- [Automated]: `tests/run.sh` — every case passes; `./scripts/check-contract.sh`; a second run of
+  `bash tests/make-guide-fixtures.sh` leaves the fixture tree byte-identical.
+- [Manual]: print the `--json` document for an already-written page and for a page missing the field,
+  and show that the first leaves the intro alone and the second does not claim to propose it.
 
 ---
 
