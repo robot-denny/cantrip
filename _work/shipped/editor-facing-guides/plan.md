@@ -1,6 +1,6 @@
 # Plan: Editor-Facing Guides
 
-**Spec**: `_work/editor-facing-guides/spec.md`
+**Spec**: `_work/shipped/editor-facing-guides/spec.md`
 **Branch**: `editor-facing-guides`
 **Work type**: `new-capability` — copied verbatim from the spec's `**Work type**:` line; this decides
 how the final step records behavior
@@ -223,7 +223,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — Parameterize the test harness
 
-> **Prompt**: Implement Step 1 of `_work/editor-facing-guides/plan.md`. `tests/run.sh` hardcodes one
+> **Prompt**: Implement Step 1 of `_work/shipped/editor-facing-guides/plan.md`. `tests/run.sh` hardcodes one
 > subject (`scripts/check-install.sh`) and one cases directory (`tests/install-check`). Generalize it
 > to suites: a suite is a directory under `tests/` containing a `subject` file (one line, a
 > repo-relative path to an executable) plus one directory per case. Usage becomes
@@ -255,7 +255,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 2 — The guide-check suite: fixtures and the RED apparatus
 
-> **Prompt**: Implement Step 2 of `_work/editor-facing-guides/plan.md`. First, extend contract check
+> **Prompt**: Implement Step 2 of `_work/shipped/editor-facing-guides/plan.md`. First, extend contract check
 > 1's scanned-extension allow-list in `scripts/check-contract.sh` — both the `git ls-files` branch
 > and the `find` branch — to include `uda` and `config`, since this increment's fixtures use those
 > extensions and would otherwise be unscanned for client-identifying content. Then create
@@ -293,7 +293,7 @@ not exist — read one failure and confirm it names a missing subject rather tha
 
 ### Step 3 — The dossier and the Deploy adapter (rung 1)
 
-> **Prompt**: Implement Step 3 of `_work/editor-facing-guides/plan.md`. Create
+> **Prompt**: Implement Step 3 of `_work/shipped/editor-facing-guides/plan.md`. Create
 > `skills/umbraco-17/spellbook/guide/scripts/guide.py` (executable, `#!/usr/bin/env python3`, stdlib
 > only) with an `extract <alias>` subcommand, plus `guidelib/dossier.py` and `guidelib/deploy.py`.
 > The dossier is JSON on stdout: `dossierVersion`, `rung`, `alias`, `name`, `kind`
@@ -330,7 +330,7 @@ it printed.
 
 ### Step 4 — The uSync adapter (rung 2), and format-blindness
 
-> **Prompt**: Implement Step 4 of `_work/editor-facing-guides/plan.md`. Add `guidelib/usync.py` and a
+> **Prompt**: Implement Step 4 of `_work/shipped/editor-facing-guides/plan.md`. Add `guidelib/usync.py` and a
 > `signature <alias>` subcommand to `skills/umbraco-17/spellbook/guide/scripts/guide.py` that prints
 > the dossier's `sourceSignature` alone. Follow
 > `skills/umbraco-17/reference/umbraco-17-feature-backfill/SKILL.md` exactly for uSync: the alias is
@@ -362,7 +362,7 @@ immediately, check that both cases are really reading different serializations).
 
 ### Step 5 — A read that finds nothing fails loudly
 
-> **Prompt**: Implement Step 5 of `_work/editor-facing-guides/plan.md`. Add the `deploy-missing-alias`
+> **Prompt**: Implement Step 5 of `_work/shipped/editor-facing-guides/plan.md`. Add the `deploy-missing-alias`
 > case to `tests/make-guide-fixtures.sh`: a serialization folder that exists and is readable but
 > holds no artifact for the requested alias. `extract alertBanner` must exit non-zero, name the alias
 > and the folder it searched, and say the export is partial — never print a dossier with no
@@ -386,7 +386,7 @@ silent-empty shape this asserts against.
 
 ### Step 6 — Version refusal, in the two shapes the formats force
 
-> **Prompt**: Implement Step 6 of `_work/editor-facing-guides/plan.md`. The two on-disk formats
+> **Prompt**: Implement Step 6 of `_work/shipped/editor-facing-guides/plan.md`. The two on-disk formats
 > declare their format version differently, so refusal takes two shapes — this is one rule stated
 > twice, and implementing either alone encodes the wrong single rule. Add two fixture cases to
 > `tests/make-guide-fixtures.sh`: `usync-format-refused` (a `usync.config` whose `format` attribute
@@ -441,7 +441,7 @@ whole read or reading the stale artifact silently.
 
 ### Step 7 — The generated-models rung, and recording the rung
 
-> **Prompt**: Implement Step 7 of `_work/editor-facing-guides/plan.md`. Add `guidelib/models.py`, the
+> **Prompt**: Implement Step 7 of `_work/shipped/editor-facing-guides/plan.md`. Add `guidelib/models.py`, the
 > lowest rung: read committed `*.generated.cs` model classes for aliases, names, and any XML doc
 > comments, producing a dossier with `structureAvailable: false`, no tabs or groups (properties
 > flattened into a single unnamed bucket), no required flags, and no option lists — with the gap
@@ -465,7 +465,7 @@ with neither serialization format.
 
 ### Step 8 — The inventory determiner
 
-> **Prompt**: Implement Step 8 of `_work/editor-facing-guides/plan.md`. Add `guidelib/inventory.py`
+> **Prompt**: Implement Step 8 of `_work/shipped/editor-facing-guides/plan.md`. Add `guidelib/inventory.py`
 > and an `inventory` subcommand (human text by default, `--json` for machine use). A documentable
 > unit is **a component an editor can place from a block editor's palette**, read from the project's
 > own block-editor data types — Deploy's `Configuration.blocks[]`, uSync's `<Config>` payload — not
@@ -497,7 +497,7 @@ than a backlog.
 
 ### Step 9 — The audit's arithmetic and report
 
-> **Prompt**: Implement Step 9 of `_work/editor-facing-guides/plan.md`. Add `guidelib/audit.py` and
+> **Prompt**: Implement Step 9 of `_work/shipped/editor-facing-guides/plan.md`. Add `guidelib/audit.py` and
 > an `audit --guides <file>` subcommand. The guides file is JSON the spell produces from the CMS: one
 > entry per published guide page, carrying its stored reference (`alias`, `kind`, `signature`,
 > `rung`) or explicitly none. The report has three counted sections, each naming items as
@@ -525,7 +525,7 @@ items and counts, which come from the fixture's construction rather than from a 
 
 ### Step 10 — Rung-relative completeness, and exit-code discipline
 
-> **Prompt**: Implement Step 10 of `_work/editor-facing-guides/plan.md`. Two behaviors on the audit,
+> **Prompt**: Implement Step 10 of `_work/shipped/editor-facing-guides/plan.md`. Two behaviors on the audit,
 > both one-liners whose absence is expensive. First: completeness is judged relative to the rung the
 > dossier was read at, and thinness is reported **once as a report-level statement** naming what is
 > missing — never as a finding per guide. Second: **the audit always exits zero**, whatever it found;
@@ -551,7 +551,7 @@ audit in early — confirm it goes RED on the exit code before implementing.
 
 ### Step 11 — The change plan: signature no-op and ownership classes
 
-> **Prompt**: Implement Step 11 of `_work/editor-facing-guides/plan.md`. Add `guidelib/changeplan.py`
+> **Prompt**: Implement Step 11 of `_work/shipped/editor-facing-guides/plan.md`. Add `guidelib/changeplan.py`
 > and a `plan <alias> --page <file>` subcommand. The page file is JSON the spell reads from the CMS:
 > the guide page's stored reference and its current field values. The change plan classifies every
 > field the tooling can write as exactly one of machine-owned (regenerate, present as a diff, write
@@ -592,7 +592,7 @@ loop that costs a model call on every run.
 
 ### Step 12 — The change plan: provenance decides ownership (the adoption path)
 
-> **Prompt**: Implement Step 12 of `_work/editor-facing-guides/plan.md`. Extend
+> **Prompt**: Implement Step 12 of `_work/shipped/editor-facing-guides/plan.md`. Extend
 > `guidelib/changeplan.py`: ownership is a property of the page's **provenance**, not of a field's
 > declaration. A page carrying no stored reference has **no** machine-owned fields — every field on
 > it is human-owned — so `plan` against it is propose-only: the property tables are offered as a
@@ -616,7 +616,7 @@ asserts against.
 
 ### Step 13 — The change plan: variant seeding derived, not invented
 
-> **Prompt**: Implement Step 13 of `_work/editor-facing-guides/plan.md`. Extend
+> **Prompt**: Implement Step 13 of `_work/shipped/editor-facing-guides/plan.md`. Extend
 > `guidelib/changeplan.py` to derive the live-example seed set from the dossier. Where a variation is
 > a value of a variant or style property, the option list already carries the set, so seed one
 > instance per option. Where variations are combinations of independent toggles, the set is
@@ -646,7 +646,7 @@ a full guide-page field set to what this file had to define, and one step defini
 a page type, two container types, the index, two slots, and the audit's report shape would sprawl.
 Step 14 is the schema; Step 14b is the report shape and the slots.*
 
-> **Prompt**: Implement Step 14 of `_work/editor-facing-guides/plan.md`. Create
+> **Prompt**: Implement Step 14 of `_work/shipped/editor-facing-guides/plan.md`. Create
 > `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md` — a model-invoked reference
 > (no `disable-model-invocation`), `name: umbraco-17-guide-scaffolding`, description over 40
 > characters. **This step is the schema half**; Step 14b adds the slots, the index and the report
@@ -691,7 +691,7 @@ and which column of which field may the tooling write" from this file alone.
 
 ### Step 14b — The scaffolding reference: slots, the index, and the report shape
 
-> **Prompt**: Implement Step 14b of `_work/editor-facing-guides/plan.md`, continuing the reference
+> **Prompt**: Implement Step 14b of `_work/shipped/editor-facing-guides/plan.md`, continuing the reference
 > Step 14 started at
 > `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md`. Add: the **kind containers**
 > (`editorGuideGroup` carrying a `guideKind`, found as children of the one guides pointer, never
@@ -735,7 +735,7 @@ print" from this file alone.
 machine-owned with an `owed` proposal; the decision above makes it seeded-once. A docs step is the
 wrong place for a behaviour change, so it gets its own.*
 
-> **Prompt**: Implement Step 14c of `_work/editor-facing-guides/plan.md`. In
+> **Prompt**: Implement Step 14c of `_work/shipped/editor-facing-guides/plan.md`. In
 > `skills/umbraco-17/spellbook/guide/scripts/guidelib/changeplan.py`, move `guidePurpose` from
 > `MACHINE_OWNED`/`PROPOSAL_OWED` to `SEEDED_ONCE` with no proposal, and update its `why` to say why
 > prose an editor writes is not a value to regenerate. Check every consequence rather than only the
@@ -770,7 +770,7 @@ new fixture: revert the register change and confirm the case fails.
 machine-owned; the user decided both move. The arithmetic is what makes this a step rather than a
 one-line edit — with no owed fields left, a sentence the report has always printed becomes wrong.*
 
-> **Prompt**: Implement Step 14d of `_work/editor-facing-guides/plan.md`. In
+> **Prompt**: Implement Step 14d of `_work/shipped/editor-facing-guides/plan.md`. In
 > `skills/umbraco-17/spellbook/guide/scripts/guidelib/changeplan.py`, move `guideWhenToUse` from
 > `MACHINE_OWNED`/`PROPOSAL_OWED` to `SEEDED_ONCE` with no proposal, beside `guidePurpose`, and
 > update its `why`. **Then fix the model-call statement, which is the real work.** The owed count
@@ -808,7 +808,7 @@ documented render order, never by capturing a run.
 
 ### Step 15 — The `/guide` spell: the generate path
 
-> **Prompt**: Implement Step 15 of `_work/editor-facing-guides/plan.md`. Create
+> **Prompt**: Implement Step 15 of `_work/shipped/editor-facing-guides/plan.md`. Create
 > `skills/umbraco-17/spellbook/guide/SKILL.md` — a spell, so `disable-model-invocation: true`,
 > `name: guide`, `argument-hint` for a component alias, `allowed-tools` in the style of
 > `skills/umbraco-17/spellbook/block/SKILL.md`. It takes a component alias — a block or a page type,
@@ -864,7 +864,7 @@ the adoption path. A page being created reaches `plan` as `notComparable` and ca
 spell has to say it in its own words there. Two wordings for one irreversible fact is the drift this
 increment keeps catching.*
 
-> **Prompt**: Implement Step 15b of `_work/editor-facing-guides/plan.md`. In
+> **Prompt**: Implement Step 15b of `_work/shipped/editor-facing-guides/plan.md`. In
 > `skills/umbraco-17/spellbook/guide/scripts/guidelib/changeplan.py`, `_offered` sets
 > `entry["consequence"] = REFERENCE_WRITE_CONSEQUENCE` for `FIELD_SOURCE` on the adoption path.
 > Carry the same fact on the regeneration path **where the page has no stored signature yet** — the
@@ -896,7 +896,7 @@ condition exists to prevent.
 
 ### Step 16 — The `/guide` spell: audit mode, and degradation
 
-> **Prompt**: Implement Step 16 of `_work/editor-facing-guides/plan.md`. Add to
+> **Prompt**: Implement Step 16 of `_work/shipped/editor-facing-guides/plan.md`. Add to
 > `skills/umbraco-17/spellbook/guide/SKILL.md`: `--audit` as a **mode on this spell**, not a separate
 > spell. It reads the guide set from the CMS, hands it to the script's `audit --guides`, and reports
 > what came back — reporting the inventory and the rule that produced it **before** acting on it, so
@@ -927,7 +927,7 @@ check is that the spell's stated exit behavior matches the script's actual behav
 
 ### Step 17 — Register the units, and document them
 
-> **Prompt**: Implement Step 17 of `_work/editor-facing-guides/plan.md`. Register the two new units
+> **Prompt**: Implement Step 17 of `_work/shipped/editor-facing-guides/plan.md`. Register the two new units
 > so nothing reports a clean install while they are absent. In `scripts/check-install.sh`: add
 > `guide` and `umbraco-17-guide-scaffolding` to `ROSTER_PACK` (contract check 13 fails until this is
 > done), and add `PACK_SLOTS` entries for the two new slots —

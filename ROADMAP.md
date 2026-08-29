@@ -10,9 +10,9 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Nothing in flight.** The editor-facing guides increment closed on 2026-08-29 and is recorded
-under Recently shipped; the pack-boundary split closed on 2026-08-17 and is archived under
-`_work/shipped/pack-boundaries-and-succession/`. Of what Next now holds, the **pack-authoring
+**Nothing in flight.** The editor-facing guides increment closed on 2026-08-29 and is archived
+under `_work/shipped/editor-facing-guides/`; the pack-boundary split closed on 2026-08-17 and is
+archived under `_work/shipped/pack-boundaries-and-succession/`. Of what Next now holds, the **pack-authoring
 meta-skill** is the highest-leverage item, because every other pack-related cost is paid per pack
 until it exists.
 
@@ -34,7 +34,7 @@ machinery and the gap-report shape stays with its own caller, so that increment 
 shape local while writing it as a self-contained section, extractable later if the shapes converge.
 
 **Two questions the guides increment left open**, both stated the same way in
-`_work/editor-facing-guides/spec.md` under *Still open*, and repeated here because neither belongs
+`_work/shipped/editor-facing-guides/spec.md` under *Still open*, and repeated here because neither belongs
 to the increment that raised them. The spec's bullet on the second one carried a half that has
 since closed — whether the report shape survived the inventory determiner, which it did — and was
 corrected on 2026-08-29 rather than left to disagree with this entry.
@@ -229,7 +229,7 @@ on both sides.
   flag rather than the block palettes over-counts by 1.5x to 2.4x on the two projects measured. Two
   new slots, `stack.md → ## Schema serialization` and `conventions.md → ## Editor guides`, both
   declared in the reference and nowhere else. Ships an 80-case test suite, taking the harness to 97
-  across two suites (`_work/editor-facing-guides/spec.md`, `_features/editor-guides.md`)
+  across two suites (`_work/shipped/editor-facing-guides/spec.md`, `_features/editor-guides.md`)
 - **2026-08-24** — The uSync rung in schema extraction: four pack files across `umbraco-17` and
   `umbraco-cloud` stopped sending a uSync project to a live API for schema already in its repository,
   a Deploy-to-uSync field mapping and the normalize-on-the-alias rule landed in

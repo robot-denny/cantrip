@@ -39,7 +39,7 @@ the other three share one dossier and one audit; discovery named it as the cut l
 since has argued otherwise. What was already decided about it is carried forward in
 `notes/deferred-styleguide.md` so its spec starts from those decisions rather than re-deriving them.
 
-Discovery is at `_work/editor-facing-guides/discovery.md` and its framing is not repeated here. Four
+Discovery is at `_work/shipped/editor-facing-guides/discovery.md` and its framing is not repeated here. Four
 of its findings govern this spec:
 
 - **Skills define what a guide must show; the codebase defines how it renders.** This toolkit ships

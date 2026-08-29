@@ -1,7 +1,7 @@
 # Intended revisions to `spec.md`
 
 _Captured 2026-08-24 from a review conversation held after the spec was written. **Not a new spec** —
-a change list for revising `_work/editor-facing-guides/spec.md` and the draft feature doc at
+a change list for revising `_work/shipped/editor-facing-guides/spec.md` and the draft feature doc at
 `_features/editor-guides.md`._
 
 Read `spec.md` and `discovery.md` first. Everything here either changes something in them or closes

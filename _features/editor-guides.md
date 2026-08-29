@@ -7,11 +7,8 @@ showing the site's colors, type, and common elements is the capability's next in
 pass is derived from what the codebase already knows, an audit reports anything built but
 undocumented, and everything a person writes or arranges afterwards is left alone.
 
-**Source**: `_work/editor-facing-guides/spec.md`
-**Last verified**: —
-
-> **Draft** — These scenarios have not yet been verified against an implementation. They will be
-> refined during planning and verified after implementation.
+**Source**: `_work/shipped/editor-facing-guides/spec.md`
+**Last verified**: 2026-08-29
 
 ---
 
@@ -31,11 +28,13 @@ increment.
       types, new views, and a pre-existing design system, and the only one whose rendering has no
       exemplar to copy in a typical project. Earns its own spec; the decisions already made about
       it, and the three scenarios drafted before the cut, are carried in
-      `_work/editor-facing-guides/notes/deferred-styleguide.md`
-- [ ] 2026-08-24 — The capability's first increment, scoped to stories 2–4: the dossier and its
-      extraction ladder, one guide page per component or page type, the derived index, the guide
-      spell and its audit mode, and provenance-based content ownership
-      (`_work/editor-facing-guides/spec.md`, no plan yet)
+      `_work/shipped/editor-facing-guides/notes/deferred-styleguide.md`
+- [x] **Shipped 2026-08-29** — the capability's first increment, scoped to stories 2–4: the dossier
+      and its extraction ladder (Deploy artifacts, uSync exports, generated models, and a live
+      instance through the spell), one guide page per component or page type, the derived index, the
+      `/guide` spell with its generate path and audit mode, and provenance-based content ownership.
+      Three units in the `umbraco-17` pack: the spell, its script, and the
+      `umbraco-17-guide-scaffolding` reference they share (`_work/shipped/editor-facing-guides/spec.md`)
 - [x] **Prerequisite, landed 2026-08-24**: schema is read from on-disk serialization rather than a
       live instance, and a partial export reports itself instead of reading as an empty schema. It
       shipped as a direct amendment to the extraction guidance with no increment bundle, so its
@@ -94,7 +93,7 @@ Scenario: A block with tabs and required fields
   When a guide page is generated for it
   Then the guide lists the Content tab before the Settings tab, in the order the editor sees them
   And "Heading" is marked required and "Dismissible" is marked optional
-  And the Severity options are listed with Info marked as the default
+  And the Severity options are listed as Info, Warning, and Critical
 ```
 
 ```scenario
@@ -157,12 +156,29 @@ Scenario: An editor's screenshot survives a regeneration
 ```
 
 ```scenario
-Scenario: Rewriting machine-owned prose requires approval
-  Given a guide page's description was generated three weeks ago
-  And the block's properties have since changed
+Scenario: An editor's rewritten description is never regenerated over
+  Given an editor rewrote the purpose sentence on the "Alert Banner" guide in their own words
+  And the block has since gained a "Dismissible" toggle
   When the guide is regenerated
-  Then the proposed new description is shown as a difference against the current one
+  Then the purpose sentence is left exactly as the editor wrote it
+  And no replacement for it is proposed
+```
+
+```scenario
+Scenario: A changed property table is shown as a difference before anything is written
+  Given a guide page for "Alert Banner" was generated three weeks ago
+  And the block has since gained a "Dismissible" toggle
+  When the guide is regenerated
+  Then the added and removed rows are named rather than the whole table being replaced
   And nothing is written until a person approves it
+```
+
+```scenario
+Scenario: A guide page missing a field nobody wrote says so
+  Given a guide page for "Alert Banner" carries no purpose sentence at all
+  When the guide is regenerated
+  Then the report names the purpose sentence as written when the page was created and never since
+  And it is not proposed, because only a creation writes it
 ```
 
 ```scenario
@@ -191,6 +207,17 @@ Scenario: The tooling reaches a component a person already documented
   Then the property tables are offered as a difference against the existing page
   And the QA's prose is left unchanged
   And the stored reference is written only after a person approves
+```
+
+### Rule: Approving the stored reference is the one choice editing cannot undo
+
+```scenario
+Scenario: The reference write is asked about on its own
+  Given a guide page is about to be created for "Alert Banner"
+  When the change is presented for approval
+  Then the stored reference is asked about separately from the rest
+  And the report says approving it is what makes the page's generated fields generated from then on
+  And silence about it is treated as no
 ```
 
 ### Rule: The audit reports what is undocumented
@@ -267,6 +294,16 @@ Scenario: A block whose look comes from independent toggles gets one example
   And the guide says that further combinations worth showing are a person's to add
 ```
 
+### Rule: No option is marked as the default, because no source records one
+
+```scenario
+Scenario: A dropdown's options are listed without one being called the default
+  Given the "Alert Banner" block has a "Severity" dropdown offering Info, Warning, and Critical
+  When a guide page is generated for it
+  Then all three options are listed
+  And none is marked as the default, because the schema records no default to read
+```
+
 ### Rule: Guides with no code source are never reported as orphans
 
 ```scenario
@@ -275,6 +312,17 @@ Scenario: A hand-written standards guide is left alone
   When a QA runs the audit
   Then that guide is not reported as an orphan
   And it is not reported as undocumented
+```
+
+### Rule: An arrangement outliving the choices it was built from is reported
+
+```scenario
+Scenario: A component loses the property its examples were arranged around
+  Given the "Stat Badge" guide page carries examples an editor arranged around a "Tone" dropdown
+  And the Tone property has since been removed from the block
+  When the guide is regenerated
+  Then the arrangement is left exactly as it stands
+  And the report says the examples may show choices the block no longer offers
 ```
 
 ### Rule: A read that finds nothing fails loudly
@@ -326,32 +374,36 @@ Scenario: A project readable only from generated models reports thinness once
 | Publishing a guide adds it to the index | — | Not covered |
 | Guides are grouped by kind rather than listed as one flat set of siblings | — | Not covered |
 | Two projects with different front-end conventions each get conforming output | — | Not covered |
-| A block with tabs and required fields | — | Not covered |
-| A page type is documented the same way as a block | — | Not covered |
-| Inherited properties appear alongside the component's own | — | Not covered |
-| One live example is seeded per enumerable variation | — | Not covered |
-| A block's settings model is not counted as a component | — | Not covered |
-| A composition is read but never documented on its own | — | Not covered |
-| The rule that produced the inventory is stated with it | — | Not covered |
-| An editor's screenshot survives a regeneration | — | Not covered |
-| Rewriting machine-owned prose requires approval | — | Not covered |
-| A live example an editor arranged is never replaced | — | Not covered |
-| Nothing changes when the source has not changed | — | Not covered |
-| The tooling reaches a component a person already documented | — | Not covered |
-| A newly added block has no guide yet | — | Not covered |
-| A healthy project produces a short report | — | Not covered |
-| The first run on an existing site is the backlog | — | Not covered |
-| A removed block leaves an orphaned guide | — | Not covered |
-| Undocumented blocks do not fail a build | — | Not covered |
-| A team that wants a gate asks for one | — | Not covered |
+| A block with tabs and required fields | `tests/guide-check/deploy-dossier/expect` | Covered |
+| A page type is documented the same way as a block | `tests/guide-check/deploy-page-type/expect` | Covered |
+| Inherited properties appear alongside the component's own | `tests/guide-check/deploy-dossier/expect` | Covered |
+| One live example is seeded per enumerable variation | `tests/guide-check/seed-variants-enumerable/expect` | Covered |
+| A block's settings model is not counted as a component | `tests/guide-check/inventory-palette/expect` | Covered |
+| A composition is read but never documented on its own | `tests/guide-check/inventory-palette/expect` | Covered |
+| The rule that produced the inventory is stated with it | `tests/guide-check/inventory-singular/expect` | Covered |
+| An editor's screenshot survives a regeneration | `tests/guide-check/plan-ownership/expect` | Covered |
+| An editor's rewritten description is never regenerated over | `tests/guide-check/plan-prose-left-alone/expect` | Covered |
+| A changed property table is shown as a difference before anything is written | `tests/guide-check/plan-property-rows/expect` | Covered |
+| A guide page missing a field nobody wrote says so | `tests/guide-check/plan-purpose-unwritten/expect` | Covered |
+| A live example an editor arranged is never replaced | `tests/guide-check/seed-variants-arranged/expect` | Covered |
+| Nothing changes when the source has not changed | `tests/guide-check/plan-noop/expect` | Covered |
+| The tooling reaches a component a person already documented | `tests/guide-check/plan-adoption/expect` | Covered |
+| The reference write is asked about on its own | `tests/guide-check/plan-creation/expect` | Covered |
+| A newly added block has no guide yet | `tests/guide-check/audit-undocumented/expect` | Covered |
+| A healthy project produces a short report | `tests/guide-check/audit-strict-clean/expect` | Covered |
+| The first run on an existing site is the backlog | `tests/guide-check/audit-undocumented/expect` | Covered |
+| A removed block leaves an orphaned guide | `tests/guide-check/audit-orphan-and-sourceless/expect` | Covered |
+| Undocumented blocks do not fail a build | `tests/guide-check/audit-strict-exit/expect` | Covered |
+| A team that wants a gate asks for one | `tests/guide-check/audit-strict-exit-gated/expect` | Covered |
 | A greenfield project stops rather than inventing conventions | — | Not covered |
-| A block whose look comes from independent toggles gets one example | — | Not covered |
-| A hand-written standards guide is left alone | — | Not covered |
-| A partial export is reported rather than read as empty | — | Not covered |
-| An export declaring an unrecognized format version is refused whole | — | Not covered |
-| One unreadable artifact does not stop the rest of the read | — | Not covered |
-| A project readable only from generated models reports thinness once | — | Not covered |
-
+| A block whose look comes from independent toggles gets one example | `tests/guide-check/seed-variants-toggles/expect` | Covered |
+| A dropdown's options are listed without one being called the default | `tests/guide-check/deploy-dossier/expect` | Covered |
+| A hand-written standards guide is left alone | `tests/guide-check/audit-orphan-and-sourceless/expect` | Covered |
+| A component loses the property its examples were arranged around | `tests/guide-check/seed-variants-axis-gone/expect` | Covered |
+| A partial export is reported rather than read as empty | `tests/guide-check/deploy-missing-alias/expect` | Covered |
+| An export declaring an unrecognized format version is refused whole | `tests/guide-check/usync-format-refused/expect` | Covered |
+| One unreadable artifact does not stop the rest of the read | `tests/guide-check/deploy-mixed-versions/expect` | Covered |
+| A project readable only from generated models reports thinness once | `tests/guide-check/audit-rung-statement/expect` | Covered |
 <!-- Covered: a test asserts it. Not covered: specified, untested. Not covered (code-derived):
      inferred from reading the code, never specified and never tested — the weakest claim here.
      Keeping the third distinct is what lets a reader tell verified behavior from inferred. -->
@@ -361,19 +413,33 @@ Scenario: A project readable only from generated models reports thinness once
 ## Revision Notes
 
 - 2026-08-24: Draft scenarios from initial spec
-- 2026-08-25: Revised from `_work/editor-facing-guides/notes/spec-revisions.md`. The component guide
+- 2026-08-25: Revised from `_work/shipped/editor-facing-guides/notes/spec-revisions.md`. The component guide
   and the how-to guide merged into one guide page per component, with a derived index replacing the
   single large page — so "The purpose sentence is identical in both places" was removed as obsolete
   rather than failing. Added scenarios for the derived index, grouping by kind, per-variant example
   seeding, non-enumerable variations, and adopting a hand-written guide. Page types moved from the
   parking lot into scope
+- 2026-08-29: Verified against the shipped first increment; draft banner removed and every scenario
+  mapped to a fixture where one asserts it — 29 of 33 covered. **Two scenarios were aspiration the
+  implementation reversed, and were rewritten rather than left to fail.** A guide's prose is no
+  longer regenerated at all: the purpose sentence and the when-to-use section are written once when
+  the page is created and never rewritten, so "Rewriting machine-owned prose requires approval"
+  became "An editor's rewritten description is never regenerated over", and the diff-and-approve
+  behaviour it described moved to the property table, which is what a regeneration actually
+  changes. And no serialization format records which dropdown option is the default — measured
+  across two projects, 37 option lists, none carrying one — so the claim that Info is "marked as
+  the default" was cut, with its own Rule added saying why none is marked. Four scenarios stay
+  uncovered on purpose: three describe CMS-side rendering the script cannot reach, and one
+  describes the spell stopping on a greenfield project. Added Rules for the irreversible reference
+  write, for a seeded field a page never got, and for an arrangement outliving the choices it was
+  built from
 - 2026-08-25: Amended after verifying both serialization formats against real projects. The two
   formats declare their version differently and need opposite refusal rules, so the single refusal
   scenario split into two. Added the inventory determiner: a component is one an editor can place
   from a block editor's palette, which excludes settings models and compositions — the element-type
   flag over-counted by roughly two and a half times on a measured project
 - 2026-08-25: Scoped to stories 2–4. The styleguide was cut to its own increment, so its rule and
-  two scenarios moved to `_work/editor-facing-guides/notes/deferred-styleguide.md`, and the
+  two scenarios moved to `_work/shipped/editor-facing-guides/notes/deferred-styleguide.md`, and the
   greenfield scenario was retargeted from the styleguide to the guides section itself. Added the
   opt-in gating scenario: the audit always exits successfully, and only an explicit opt-in makes it
   fail a build
