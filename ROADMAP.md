@@ -10,34 +10,15 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Nothing in flight.** The pack-boundary split closed on 2026-08-17 and is archived under
-`_work/shipped/pack-boundaries-and-succession/`. The uSync rung that Next opened with closed on
-2026-08-24, so the guides work no longer has a prerequisite ahead of it and is the natural next
-pickup.
+**Nothing in flight.** The editor-facing guides increment closed on 2026-08-29 and is recorded
+under Recently shipped; the pack-boundary split closed on 2026-08-17 and is archived under
+`_work/shipped/pack-boundaries-and-succession/`. Of what Next now holds, the **pack-authoring
+meta-skill** is the highest-leverage item, because every other pack-related cost is paid per pack
+until it exists.
 
 ---
 
 ## Next
-
-**Editor-facing guides for a CMS project.** A styleguide, a component guide, and per-component
-how-to guides are what a client actually receives, and they cost enough per project to be first
-against the wall when scope tightens — which is the argument for automating them rather than for
-cutting them. The shape that makes them cheap: one extraction producing a structured dossier per
-component, two renderings from it (a short entry for the component guide, the full property tables
-for the how-to guide), and an inventory audit reconciling what exists in code against what is
-documented. The audit is the half that survives contact with a real project — on a new site the
-report stays short, and on an existing one its first run is the backlog. Extraction is an adapter
-seam rather than a Deploy requirement, per [ADR 0006](adr/0006-no-unguarded-preconditions.md):
-`.uda`, uSync, live API, then a degraded read from generated models, with an adapter that finds no
-properties failing loudly rather than reporting an empty set — a silent-empty read is what makes an
-audit report no drift on a project it could not parse. The first two rungs and the fail-loudly rule
-landed on 2026-08-24 as guidance; what remains here is an adapter that implements them — **claimed
-by the `editor-facing-guides` increment on 2026-08-25**, which decided to ship the deterministic
-half of that capability as a script and so builds the adapter rather than consuming one. Which
-adapter runs is a `stack.md` slot with a `**Detect:**` recipe
-([ADR 0014](adr/0014-dotnet-pack-and-the-detection-line.md)). Property tables
-are a deterministic transform and must never depend on a model; only purpose, when-to-use, and
-warnings need one, which is what lets the whole thing degrade to files when an AI service is absent.
 
 **A spell for tests.** The gap the spell budget was raised for. A feature doc already carries a Test
 Coverage table mapping each scenario to a test file and a status, which is the contract such a spell
@@ -51,6 +32,30 @@ one under ADR 0010's ceiling of ten. The decision was forced by an unrelated inc
 belonged in core or in a pack depended on this answer. A separate spell means the two share no
 machinery and the gap-report shape stays with its own caller, so that increment keeps its report
 shape local while writing it as a self-contained section, extractable later if the shapes converge.
+
+**Two questions the guides increment left open**, both stated the same way in
+`_work/editor-facing-guides/spec.md` under *Still open*, and repeated here because neither belongs
+to the increment that raised them. The spec's bullet on the second one carried a half that has
+since closed — whether the report shape survived the inventory determiner, which it did — and was
+corrected on 2026-08-29 rather than left to disagree with this entry.
+
+- **Which format-version values a schema adapter accepts.** Where a version lives and how refusal
+  works are settled and verified in both on-disk formats — one stamps a version per artifact and so
+  skips per file, the other declares one per export and so gates the whole read. The **accepted set
+  itself** is the open part: the evidence base is three projects, all on one CMS major, two of them
+  on one host, which is narrow for a claim about portability. It widens by meeting a project that
+  refuses, and the refusal names the version it found, so the cost of being wrong is a report rather
+  than a silent misread. Both sets sit in `guidelib/__init__.py`, one place, with a comment recording
+  how narrow the evidence is.
+- **Whether the audit's report shape belongs in core.** The shape shipped and survived contact with
+  the inventory determiner, which was the open half — the determiner's count and rule went into the
+  report header, ahead of the findings, so a wrong determiner is visible before a hundred guides are
+  proposed. It is written as a self-contained section of `umbraco-17-guide-scaffolding` naming no
+  CMS, no serialization format and no file, so extraction is a move rather than a rewrite. What
+  stays open is whether a second caller ever arrives: the planned test spell was the candidate, and
+  the decision above to make it a separate spell means the two share no machinery. **Answer this and
+  the scaffolding reference's size entry in Later falls out of it** — the same section is the seam
+  both questions point at.
 
 **Pack-authoring meta-skill.** The direct parallel to `design-system-authoring`: a model-invoked
 reference that fires when someone sets out to add a pack, turning [ADR
@@ -76,8 +81,10 @@ sibling pack's file path, duplicating its own project-owned list across two unit
 shared severity scale. Each is deterministic and cheap, and each currently depends on a reviewer
 happening to think of it. As checks they run on every commit and cost nothing per additional pack.
 A fifth candidate arrived with the uSync rung: no shipped file should route to a live API for schema
-without first naming the on-disk formats. It was not built as a one-off, because the guides item's
-ladder grows a fourth rung that would force the check to be rewritten. Check 9 is not a substitute
+without first naming the on-disk formats. It was not built as a one-off, because the guides work was
+about to grow the ladder a fourth rung and would have forced the check to be rewritten — that rung
+shipped on 2026-08-29, so the reason for waiting has expired and the check is now buildable against a
+settled ladder. Check 9 is not a substitute
 for it, and the rung proved so: the first fix was applied to the four gated fallbacks and missed an
 ungated prose paragraph eighteen lines from one of them, which review caught and no gate would
 have.
@@ -207,6 +214,22 @@ on both sides.
 
 ## Recently shipped
 
+- **2026-08-29** — Editor-facing guides: `/guide` writes a guide page per component from the schema
+  the component already declares and audits which components have none, with
+  `umbraco-17-guide-scaffolding` describing the document types a guides section needs. **The
+  extraction adapter this item was waiting on was built here**, rather than consumed from elsewhere:
+  the increment decided to ship the deterministic half — extraction, the dossier, the inventory
+  determiner, the audit's arithmetic, the change plan — as a Python script inside the spell, leaving
+  the spell the prose, the diff-and-approve conversation, and every CMS write. Four rungs, Deploy →
+  uSync → live instance → generated models, with a read that finds nothing failing loudly and the
+  same component read through two adapters producing the same signature. Property tables never
+  depend on a model, which is what lets the whole thing degrade to files. The audit warns and never
+  blocks — exit zero whatever it found, `--strict` the only opt-in — and it reports the inventory
+  and the rule that produced it before acting on it, because a determiner reading the element-type
+  flag rather than the block palettes over-counts by 1.5x to 2.4x on the two projects measured. Two
+  new slots, `stack.md → ## Schema serialization` and `conventions.md → ## Editor guides`, both
+  declared in the reference and nowhere else. Ships an 80-case test suite, taking the harness to 97
+  across two suites (`_work/editor-facing-guides/spec.md`, `_features/editor-guides.md`)
 - **2026-08-24** — The uSync rung in schema extraction: four pack files across `umbraco-17` and
   `umbraco-cloud` stopped sending a uSync project to a live API for schema already in its repository,
   a Deploy-to-uSync field mapping and the normalize-on-the-alias rule landed in

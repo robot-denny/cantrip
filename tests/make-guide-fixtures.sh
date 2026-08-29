@@ -4544,6 +4544,8 @@ expect "$C" \
   "contains: guideExamples (seeded-once)" \
   "contains: Seeded once, and never written on this page:" \
   "contains: created without it, and it stays empty until a person writes one" \
+  "not_contains: Seeded once, and this creation's to write" \
+  "not_contains: this plan is for that creation" \
   "contains: guidePurpose (seeded-once)" \
   "not_contains: guidePurpose: owed" \
   "not_contains: guideWhenToUse: owed" \
@@ -4685,21 +4687,29 @@ expect "$C" \
   "contains: guidePurpose (seeded-once)" \
   "contains: guideWhenToUse (seeded-once)" \
   "not_contains: guideExamples (seeded-once)" \
-  "contains: created without it, and it stays empty until a person writes one" \
+  "contains: Seeded once, and this creation's to write:" \
+  "contains: Written when the page is created and never again, and this plan is for that creation:" \
+  "contains: these are the fields the creation must write" \
+  "not_contains: this run is that creation" \
+  "contains: never offered again, because nothing proposes it later and it stays empty" \
+  "not_contains: exists has no occasion to write it" \
+  "not_contains: Seeded once, and never written on this page" \
   "not_contains: Traceback"
 
-# **The unwritten section's RULE is deliberately not asserted here, because it is wrong on this
-# path.** It reads "a run against a page that already exists has no occasion to write it" and
-# "the page was created without it" -- both false on a creation, where the page does not exist
-# yet and the spell's creation path is required to write both prose fields. The FIELD LIST is
-# right and is what this case pins: the plan proposes no prose, because a script cannot write
-# prose. The rule around it was authored for a regeneration and needs a creation form, which is
-# a change to what the section says rather than a wording tidy -- filed rather than smuggled in
-# here. The false sentence is asserted PRESENT on purpose, as a tripwire: whoever gives the
-# section a creation form will see this line fail and find this comment, which is a cheaper
-# handover than a note in a file nobody opens. A `not_contains` was the first instinct and was
-# wrong twice over -- it would have passed vacuously, since the phrase spans the report's wrap,
-# and a fixture that merely declines to mention a defect does not point at it.
+# **The unwritten section's RULE is asserted here in its CREATION form**, which replaced a
+# tripwire that pinned the regeneration form as present-though-wrong. The regeneration rule
+# reads "a run against a page that already exists has no occasion to write it" and "the page was
+# created without it" -- both false here, where the page does not exist yet and the spell's
+# creation path is required to write both prose fields. `_unwritten_texts` now selects on
+# `REASON_NO_STORED`, and the reasoning for a second text rather than one sits beside
+# `RULE_UNWRITTEN_CREATION`.
+#
+# The two `not_contains` lines are the half that keeps the branch real: without them the fix
+# collapses back to one text the moment somebody edits the constant, and the suite stays green.
+# `plan-purpose-unwritten` holds the mirror pair on the regeneration path, so neither form can
+# be made to serve both. Each assertion is a substring of ONE report line, because the runner
+# matches within a line -- which is why the rule is pinned by its second and third lines rather
+# than by a sentence that spans the wrap.
 #
 # The same inputs read as the document the spell consumes. Both renderings are asserted,
 # because this step's whole finding was that the two had diverged: the consequence reached
@@ -4724,6 +4734,9 @@ expect "$C" \
   "args: plan promoTile --page page.json --dossier dossier.json --json" \
   "contains: \"comparison\": \"notComparable\"" \
   "contains: \"field\": \"guideSource\"" \
+  "contains: \"unwritten\": \"Written when the page is created and never again, and this plan is for that creation: these are the fields the creation must write." \
+  "not_contains: this run is that creation" \
+  "not_contains: has no occasion to write it" \
   "contains: \"consequence\": \"writing this reference is what makes this page's machine-owned fields machine-owned from that point on" \
   "contains: no later edit takes that consequence back" \
   "contains: has been a generated page since the moment it was approved" \

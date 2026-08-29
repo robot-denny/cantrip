@@ -148,7 +148,9 @@ the options, the constraints, and what counts as good practice.
 | `umbraco-17-review-rules` | reference | CMS-specific review surfaces — rendering security, alias traps, per-request cost, editor-authored accessibility |
 | `umbraco-17-feature-backfill` | reference | Reverse-engineering behavioral docs from Umbraco code when no spec exists |
 | `umbraco-17-audit-patterns` | reference | Whether an existing Umbraco solution is idiomatic — composition, schema-as-code discipline, block and content-access patterns, decoupled-frontend readiness |
+| `umbraco-17-guide-scaffolding` | reference | The document types an editor-facing guides section needs, which field the tooling may write and which stay a person's, and what the guide audit prints — **you create the document types; nothing here does it for you** |
 | `/block` | spell | Creates a block through a test-first workflow — failing test, element type, view, palette membership |
+| `/guide` | spell | Writes editor-facing guide pages from the schema a component already declares, and audits which components have none. Reads schema from Deploy artifacts, uSync, or a live instance — **it proposes and never writes until you approve** |
 | `/umbraco-edit` | spell | Edits content through the Management API from outside the backoffice |
 
 ### `umbraco-cloud` pack

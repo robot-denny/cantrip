@@ -8,5 +8,11 @@ contains: since the moment it was approved
 contains: guidePurpose (seeded-once)
 contains: guideWhenToUse (seeded-once)
 not_contains: guideExamples (seeded-once)
-contains: created without it, and it stays empty until a person writes one
+contains: Seeded once, and this creation's to write:
+contains: Written when the page is created and never again, and this plan is for that creation:
+contains: these are the fields the creation must write
+not_contains: this run is that creation
+contains: never offered again, because nothing proposes it later and it stays empty
+not_contains: exists has no occasion to write it
+not_contains: Seeded once, and never written on this page
 not_contains: Traceback

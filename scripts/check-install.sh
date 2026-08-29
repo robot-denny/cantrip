@@ -321,6 +321,10 @@ PACK_SLOTS=(
   "stack.md|Local URL|umbraco-edit"
   "conventions.md|Block palette parity|check-uda"
   "conventions.md|.NET style decisions|dotnet-conventions"
+  "stack.md|Schema serialization|umbraco-17-guide-scaffolding"
+  "stack.md|Schema serialization|guide"
+  "conventions.md|Editor guides|umbraco-17-guide-scaffolding"
+  "conventions.md|Editor guides|guide"
 )
 for entry in "${PACK_SLOTS[@]}"; do
   IFS='|' read -r pf ph pskill <<<"$entry"

@@ -674,6 +674,27 @@ Scenario: A team that wants a gate asks for one
   pack already has a document-editing workflow for exactly that, so the deferral is cheap rather
   than free. It is recorded in the feature doc's Increments as expected, not as a parking-lot maybe.
 
+### Resolved in this increment
+
+- **How voice and tone guidance is discovered — a four-rung ladder in the spell, and no new slot.**
+  Settled 2026-08-29 by Step 16. Rung 1 is the project's own editor-facing writing where it is
+  discoverable — published guides, backoffice help text, an editorial style guide, a design-system
+  skill's writing section — taken by the same find-the-closest-exemplar rule the rest of the spell
+  uses. Rung 2 is a reference somebody points at, when nothing is discoverable. Rung 3 is the
+  platform's own AI contexts, which on Umbraco are real records that serialize alongside the rest of
+  the schema, and it is **read regardless of whether an earlier rung answered**, because it is the
+  only rung that says what *not* to write. Rung 4 is a generic descriptor shipped with the spell,
+  and a run that reaches it says in its report that the voice was read from nowhere. No slot,
+  because every rung is a discovery the spell can make, and a slot would only record an answer the
+  project already carries in its own writing.
+- **Where degraded file output lands — temporal by default, and the question is asked rather than
+  assumed.** Settled 2026-08-29 by Step 16, per the `workflow` skill's durable-or-temporal
+  convention. Guides rendered to files are a staging artifact — they exist to become CMS content —
+  so they default to a git-ignored scratch location, and where the answer is durable the run must
+  say what makes it so. The audit's report goes the other way and defaults durable, to a dated file
+  in the project's audit directory, because a backlog is read again later. In both cases the
+  location carries the answer, so commit status is not a separate decision.
+
 ### Still open
 
 Carried from discovery:
@@ -682,21 +703,22 @@ Carried from discovery:
   are now settled and verified in both formats, and the extraction guidance carries the specifics.
   What remains is the accepted set itself — the evidence base is three projects, all on one CMS
   major, two of them on one host, which is narrow for a portability claim.
-- **The audit's exact output contract** — its categories, and how the rung statement renders. Exit
-  behavior is now settled, and prior art supplies a verified starting shape: three counted sections
-  naming each item as `alias (Display Name)`. What remains is whether that shape survives contact
-  with the inventory determiner, which adds a stated count and rule to the same report.
-- **How voice and tone guidance is discovered.** The rungs are agreed; the discovery mechanism is
-  not specified.
+- **Whether the audit's report shape belongs in core.** The output contract itself is settled and
+  shipped — three counted sections, `alias (Display Name)` items, the report-level rung statement,
+  exit zero with `--strict` as the only opt-in — written as a self-contained section of
+  `umbraco-17-guide-scaffolding` that names no CMS, no serialization format and no file. **The half
+  this bullet used to carry is closed**: the shape did survive contact with the inventory
+  determiner, whose count and rule went into the report header ahead of the findings, so a wrong
+  determiner is visible before a hundred guides are proposed. What remains is placement, which
+  needs a second caller to answer: the planned test spell was the candidate, and the decision to
+  make it a separate spell means the two share no machinery. Recorded in `ROADMAP.md`, which states
+  it the same way.
 
 Raised by this spec:
 
 - **Where the shared guide-page scaffolding reference lives** relative to the spell that cites it,
   given the rule against a unit restating what it could cite. The deferred styleguide increment is
   its second caller, so the placement should anticipate that rather than assume a single consumer.
-- **Where degraded file output lands** when there is no CMS connection to write to. The workspace
-  layout forces a durable-versus-temporal choice, and guides rendered to files sit awkwardly between
-  them, being a staging artifact.
 - **Whether creating a document type is confirmed rather than silent.** Proposed on the same
   reasoning as never creating a public URL without confirmation, but not yet agreed.
 

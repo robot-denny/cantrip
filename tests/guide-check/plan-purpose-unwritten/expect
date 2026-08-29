@@ -9,6 +9,8 @@ contains: Reach for a promo tile when a page needs a pointer rather than a parag
 contains: guideExamples (seeded-once)
 contains: Seeded once, and never written on this page:
 contains: created without it, and it stays empty until a person writes one
+not_contains: Seeded once, and this creation's to write
+not_contains: this plan is for that creation
 contains: guidePurpose (seeded-once)
 not_contains: guidePurpose: owed
 not_contains: guideWhenToUse: owed

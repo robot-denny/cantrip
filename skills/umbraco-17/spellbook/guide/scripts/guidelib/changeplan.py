@@ -406,6 +406,37 @@ RULE_UNWRITTEN = (
     "exists has no occasion to write it: this is reported and proposed nowhere. The page was",
     "created without it, and it stays empty until a person writes one.",
 )
+# **A second text, not one text covering both paths, and the difference from
+# `REFERENCE_WRITE_CONSEQUENCE` is what decides it.** That constant says one thing that is true
+# on an adoption and true on a creation, so one wording serves both and the spell cites rather
+# than paraphrases. This section cannot do that: the rule above says the run "has no occasion to
+# write it" and that "the page was created without it", and on a creation the page does not
+# exist yet and the spell's creation path is REQUIRED to write both prose fields. One text
+# cannot be true on both paths, so a second text is the only honest option -- and the wrong one
+# was not merely dull, it told the caster the opposite of what the spell tells them two steps
+# later.
+#
+# **"This plan is for that creation", never "this run is that creation".** The first draft of this
+# text said the second, and it put the same defect back in the replacement sentence: everything
+# else this document says about "this run" says it writes nothing -- `STATEMENT_NOT_COMPARABLE`
+# is "this run cannot prove ... nothing is written either way", and every report closes on
+# "Nothing was written". A run that is the creation and must write the fields is the one reading
+# a person must not take away, because the write is the spell's, after an approval that has not
+# happened yet. The fields are the creation's to write; the plan is what names them.
+#
+# Keyed on `REASON_NO_STORED`, which is the condition `_machine_owned` already established as
+# "a page that does not exist yet, declaring the reference it is about to write" -- the only one
+# of `notComparable`'s four causes that is a first write. Reusing it rather than adding a second
+# test means the two cannot drift into disagreeing about what a creation is.
+# ASCII only, for the reason `RUNG_GAPS` states: this text reaches `--json` through
+# `json.dumps` at its default `ensure_ascii`, so a dash or a curly quote arrives as an escape
+# sequence in the document the spell reads.
+RULE_UNWRITTEN_CREATION = (
+    "Written when the page is created and never again, and this plan is for that creation:",
+    "these are the fields the creation must write. A seeded field a creation leaves out is",
+    "never offered again, because nothing proposes it later and it stays empty until a person",
+    "writes one.",
+)
 RULE_NEVER_TOUCHED = (
     "The page's own name, address and visibility settings, the editorial levers, the media",
     "a person uploaded, and every field this register does not name.",
@@ -489,6 +520,10 @@ CAPTION_LEFT_ALONE = "Left alone"
 # with silence: nothing proposes it and nothing lists it, so a reader of an otherwise complete
 # plan would take an empty field for a finished one.
 CAPTION_UNWRITTEN = "Seeded once, and never written on this page"
+# The creation form of the caption above, and it exists because the regeneration form is wrong
+# rather than merely dull on a page that does not exist yet. See `RULE_UNWRITTEN_CREATION` for
+# why there are two texts here where `REFERENCE_WRITE_CONSEQUENCE` needed only one.
+CAPTION_UNWRITTEN_CREATION = "Seeded once, and this creation's to write"
 # Two captions the adoption path needs and the regeneration path has no use for. "Offered" and
 # "pending your approval" are both in the first deliberately: a caption is what a reader skims,
 # and "proposed" is the word this section must never be summarized with.
@@ -1107,7 +1142,7 @@ def run(page, dossier_doc):
             "machineOwned": _joined(RULE_MACHINE_OWNED),
             "seededOnce": _joined(RULE_SEEDED_ONCE),
             "neverTouched": _joined(RULE_NEVER_TOUCHED),
-            "unwritten": _joined(RULE_UNWRITTEN),
+            "unwritten": _joined(_unwritten_texts(reason)[1]),
         },
         "machineOwned": machine_owned,
         "leftAlone": left_alone,
@@ -2028,9 +2063,10 @@ def report(doc):
     # skipped; this one is the exception, because a nought is the normal state and a section
     # reading zero in every report is the line that teaches a reader to skip the ones above it.
     if doc.get("unwritten"):
+        caption, rule = _unwritten_texts(_reason(doc))
         lines.append("")
-        lines.append("%s:" % CAPTION_UNWRITTEN)
-        lines.extend("  " + line for line in RULE_UNWRITTEN)
+        lines.append("%s:" % caption)
+        lines.extend("  " + line for line in rule)
         for entry in doc["unwritten"]:
             lines.append("    %s (%s)" % (entry["field"], entry["ownership"]))
 
@@ -2167,6 +2203,21 @@ def _reason(doc):
     if doc["storedRung"] != doc["rung"]:
         return REASON_OTHER_RUNG % (doc["storedRung"], doc["rung"])
     return REASON_NO_CURRENT
+
+
+def _unwritten_texts(reason):
+    """The caption and rule for the unwritten section, in the form this run's shape makes true.
+
+    Two forms because the section describes a different fact on each path -- a regeneration
+    reports a field it has no occasion to write, a creation names a field it must write. The
+    reasoning for a second text rather than one is written beside `RULE_UNWRITTEN_CREATION`.
+
+    Read from the reason rather than from a flag on the document, so the report and `--json`
+    select from the same fact and cannot render different rules for one plan.
+    """
+    if reason == REASON_NO_STORED:
+        return CAPTION_UNWRITTEN_CREATION, RULE_UNWRITTEN_CREATION
+    return CAPTION_UNWRITTEN, RULE_UNWRITTEN
 
 
 def _class_rules(lines, entries):
