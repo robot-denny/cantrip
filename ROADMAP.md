@@ -138,6 +138,24 @@ says it is a candidate for extraction to the technology-agnostic layer, and spli
 again. Answer the core-extraction question and this falls out of it; split it sooner if a consumer
 reports the load cost first.
 
+**The `/guide` spell serves two modes from one load unit, and the seam is known.** Measured
+2026-08-29 at 564 lines / 36K — the largest unit in any pack, past the guide scaffolding reference
+below it. Of that, 300 lines are the generate path, 103 are audit mode, and 116 are cross-cutting
+(the script's surface, the degradation order, voice and tone, artifact disposition). So a
+`/guide --audit` cast loads the whole file to use roughly two fifths of it, and a generate cast
+carries audit mode it never reads — the shape [ADR 0001](adr/0001-layer-contract-and-slots.md)
+rejected for a combined slot file, recurring at the spell layer. The seam is the mode boundary,
+which the file already dispatches on.
+
+**Held on 2026-08-29, deliberately**, and the reasoning is worth more than the measurement. A spell
+is a unit: splitting means a name, two registry entries, a README and changelog pass, and a fourth
+spell in a pack ADR 0015 describes as carrying three. Against that, the load cost is paid only by
+someone who cast `/guide` on purpose — `disable-model-invocation: true` means nobody else pays
+anything. And the 116 cross-cutting lines have no clean home: duplicating them is debt this repo
+already tracks, and hoisting them into the scaffolding reference grows the file directly below this
+entry to roughly 490 lines, trading one outlier for a worse one. **Revisit when audit mode next
+grows**, which is the trigger that would tip it — not the line count on its own.
+
 **Nothing tells a project to cache a derived guides index.** `umbraco-17-review-rules` already treats
 a stable, expensive, frequently-rendered listing with no caching as a finding in its own right, and a
 guides index derived at render time is exactly that shape. The scaffolding reference scopes what the

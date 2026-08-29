@@ -1,12 +1,13 @@
 ---
 name: guide
-description: Generate or refresh an editor-facing guide page for one Umbraco component — read the component's schema from the project, plan what a regeneration would change, show it as a difference, and write only what a person approves. Use when asked to document a block or a page type for editors, to create a guide page for a component, or to refresh one after its schema changed.
+description: Generate or refresh an editor-facing guide page for one Umbraco component — read the component's schema from the project, plan what a regeneration would change, show it as a difference, and write only what a person approves. Use when asked to document a block or a page type for editors, to create a guide page for a component, or to refresh one after its schema changed. Pass --audit instead of an alias to report which components have no guide, which guides name a component the project no longer holds, and which have gone stale.
 disable-model-invocation: true
-argument-hint: "[component alias — a block or a page type]"
+argument-hint: "[component alias — a block or a page type | --audit]"
 allowed-tools: Read, Write, Glob, Grep, Bash(python3:*), mcp__umbraco-mcp__*
 ---
 
-The user wants a guide for the component: **$ARGUMENTS**
+The user's argument: **$ARGUMENTS** — a component alias to document, or `--audit` for the mode
+below, which answers about the whole guide set rather than about one component.
 
 **The script computes; this spell writes.** `scripts/guide.py`, shipped beside this file, owns every
 deterministic step — reading the component's shape, signing it, transforming it into property rows,
@@ -16,6 +17,10 @@ diff-and-approve conversation, the rendering decisions read from the project's o
 **every write**.
 
 So the shape of a run is: read, plan, show, ask, write. Nothing reaches the CMS before the ask.
+
+**Two modes, and the argument decides.** `--audit` in `$ARGUMENTS` asks about the whole guide set
+rather than about one component: run **Audit mode** below and none of Steps 1–9. Anything else is a
+component alias, and Steps 1–9 are that run end to end.
 
 ## What this spell does not decide
 
@@ -357,6 +362,216 @@ Seeded: <live examples seeded, or "none — page already arranged">
 Awaiting a person: <screenshots, curated example combinations, publishing>
 Next: /guide <nextAlias>   (document the next component)
 ```
+
+## Audit mode — `/guide --audit`
+
+**One question, about the whole guide set rather than about one component**: what the guides do not
+cover, and what has gone stale. The script does the arithmetic and this spell supplies the guide
+set, because the guides live in the CMS and the script has no connection to it.
+
+The report's shape — the three counted sections, the header and its rung statement, how an item is
+named to a person, the closing line — is declared in `umbraco-17-guide-scaffolding`, in *The
+audit's report shape*. **That is the authority, and none of it is restated here.** Read it before
+rendering or relaying anything.
+
+### A1 — Resolve the locations, the adapter, and the guides node
+
+Exactly as Step 1, including the guides node from the `## Editor guides` slot. An audit writes
+nothing, so an unrecorded node blocks nothing — but it is still the difference between "this
+project has no guides" and "the guides were never found", and reporting the first when the second
+is true sends a team to write pages that already exist. Where the slot carries no key, say so and
+ask, exactly as Step 1 does.
+
+**A key that no longer resolves is the same mistake wearing a configuration.** A recorded key whose
+node the CMS cannot return is not an empty guides section, and walking it yields zero pages exactly
+as a real empty section does — so the two are indistinguishable in the count and opposite in what
+they mean. Stop rather than audit: report the key, say it did not resolve, and ask whether the node
+moved, was deleted, or belongs to another environment. An audit against a node that is not there
+reports every component in the project as undocumented, which is a report nobody should act on.
+
+### A2 — Read the guide set out of the CMS
+
+Walk from the guides node through the kind containers to every guide page — matched on document
+type, never on name, as the reference describes. Then write one file:
+
+```json
+{
+  "guidesVersion": 1,
+  "guides": [
+    { "page": "<the page's own name>",
+      "source": { "alias": "…", "kind": "…", "signature": "…", "rung": "…" } },
+    { "page": "<a guide nobody generated>", "source": null }
+  ]
+}
+```
+
+The rules are Step 3's, applied to many pages instead of one, and two are worth naming again here:
+
+- **`"source": null` and an absent `source` key are opposite facts**, and the script refuses the
+  whole file over an absent one. Never omit the key to mean null.
+- **Translate the property names** through the `## Editor guides` slot, the same as Step 3.
+
+Two rules of its own:
+
+- **Include the pages that claim no source.** A hand-written guide is neither orphaned nor stale
+  and closes no gap, so it appears in none of the three sections — but the header counts it, and a
+  guide set that leaves it out understates what was read.
+- **No `fields` key.** An audit reads references and nothing else; a page's prose is not its
+  business.
+
+A refusal is a bug on this side of the seam. The script refuses a whole guides file rather than
+skipping one entry, because a dropped entry moves a documented component into the undocumented
+list and nothing in the report would say so.
+
+**Where the project holds none of the three on-disk formats**, the inventory is this spell's to
+read, as in Step 2 — build the document `inventory --json` emits and pass it as `--inventory`. Same
+seam as `--dossier`, for the same reason.
+
+**An audit cannot degrade to files.** The generate path has a lower rung to fall to; this mode does
+not, because the guide set exists nowhere but the CMS. Where it cannot be read, say that no audit
+was performed — an audit run against a guide set you could not read would report every documented
+component as undocumented.
+
+### A3 — Run it, and lead with the inventory and the rule
+
+```bash
+python3 scripts/guide.py audit --guides guides.json --project-root "<project root>"
+```
+
+**Relay the report in the order it came, and lead with the header** — the documentable count and
+the determiner's rule beside it, before a single finding and before a single guide is proposed. The
+determiner is where this capability is most plausibly wrong: counted from the element-type flag
+instead of from the project's own block-editor palettes, it over-counts by half again on one
+measured project and by 2.4x on another, and every over-count becomes a page somebody is told to
+write. Stated first, a wrong rule costs one line to spot. Stated after the findings, it is a
+hundred items nobody can tell from real work.
+
+So where the count does not match what the team believes it has, **stop and run `inventory` for the
+rule in full** — the audit's header says as much itself — and settle the count before proposing
+anything.
+
+Then relay the sections and the closing line as the script printed them. **Do not re-derive a
+count, re-sort a list, or summarize a section away**: the report is the interface, and a second
+rendering of it is a second answer that can disagree.
+
+### A4 — Warns, never blocks
+
+**A completed audit exits 0 whatever it found.** Findings are a backlog, not a gate. `--strict` is
+the only path to a non-zero exit, and the whole of it *is* the exit code: the report is computed
+and printed first and is identical either way, so a team that gates its build reads exactly what a
+team that does not reads. Findings under `--strict` exit **3** — never 1, which means the read
+failed. Pass it only when the caster asked for a gate, and never to make a run look decisive.
+
+**This is not a defect to fix, and nobody should "correct" it.** An audit that failed a build by
+default would fail it hardest in the projects that wired the audit in early, which is how guides
+get cut from scope again — the outcome this whole capability exists to prevent. A team that wants
+the gate passes `--strict`. A run that exits non-zero without it did not complete, and the message
+says why.
+
+**An audit proposes nothing and writes nothing.** The remedy for an undocumented item is a
+`/guide <alias>` run of its own, with its own approval conversation; for an orphan, a person
+deciding whether the page goes; for a stale guide, a refresh that shows its diff. Close with the
+first one as the `Next:` line and let a person cast it.
+
+**Say in your own words that findings are work to schedule, and say it whenever there are any.**
+The script writes that reassurance into `Findings: none.` and into nothing else — a clean result
+carries two sentences explaining what it means, and `Findings: 39 undocumented, 0 orphaned, 0
+stale.` carries none. So the branch that already reads as good news is the only one the report
+comforts, and the branch a person is likely to meet on a first run is the one that reads like a
+failure. Close that gap yourself: one sentence, phrased however the conversation warrants.
+
+Two things it must do and one it must not. It must say the count is a backlog rather than a fault
+— on a project that never had guides, thirty-nine undocumented components is the expected reading
+of a healthy codebase, not a problem discovered. It must say nothing has been written and nothing
+will be without a separate cast. And it must **never call a finding an error, a failure, or a
+problem**: the exit code is zero because that is what the result means, and prose that contradicts
+it teaches a reader to distrust one or the other.
+
+## The degradation order
+
+**What degrades is the prose, never the table.** The property rows, the machine-owned values, the
+signature, the seed set and every count are a deterministic transform that needs no model service
+anywhere in reach. So the capability has three rungs rather than an on/off switch:
+
+| What is available | What a run produces |
+|---|---|
+| a model service and a writable CMS | full generation — Steps 1–9, and audit mode, as written |
+| a model service, no writable CMS | every field rendered to files instead — files written, no page created and no reference stored; audit mode still runs, since it only reads |
+| no model service at all | the script alone: property rows, machine-owned values, and a named gap where each prose field would go |
+
+**The middle rung is a staged write, and it must say so.** Render the rows in the project's markup
+and draft the prose as Steps 5 and 6 describe, then write files rather than pages. Say plainly that
+no page was created and no reference was written, so the component is still undocumented and the
+audit will still report it — that is accurate, not a bug to work around.
+
+**The bottom rung is the script on its own**, run by a person or a scheduled job: `extract`,
+`inventory`, `plan` and `audit` all work with no model in the picture, and their output is a real
+deliverable. What it cannot produce is a sentence. `plan` names those fields under `unwritten` and
+proposes them nowhere, and the dossier's `gaps` name the columns the rung could not fill.
+
+**One trap at that rung, and it is one-way.** Every prose field on a guide page is seeded once, at
+creation (Step 5). A page created by hand from the script's output — table filled in, reference
+written, prose left empty — has spent the only occasion the tooling had to write words: a later run
+reads the page as existing and offers nothing, and an adopted page's prose is a person's by
+definition. So where the intent is for a model-capable run to write the prose later, **keep the
+rendered files and do not create the page yet.** Where somebody wants the page anyway, say that
+sentence to them first and name the fields that will stay theirs.
+
+## Voice and tone
+
+Every sentence Step 5 asks for is written **as the project writes**, and the project is the
+authority on that. Resolve it by ladder, taking the first rung that answers **and reading rung 3
+regardless** — it is the only one that says what not to write, which no other rung supplies and no
+later rung can be reached to correct:
+
+1. **The project's own editor-facing writing, where it is discoverable.** Guides already published,
+   backoffice help text, an editorial style guide, a design-system skill with a writing section.
+   **Find the closest existing piece of writing aimed at the same reader and follow it** — its
+   person, its tense, its tolerance for jargon, how it names what an editor sees on screen.
+2. **A reference somebody points at.** Where nothing is discoverable, ask whether another codebase,
+   a documentation site, or a published page is the reference; if one is named, read it and say in
+   the report which conventions you took from it.
+3. **The platform's own AI contexts, where the platform provides them.** On Umbraco AI these are
+   real records rather than a hope: a context's `Resources` carry either a `brand-voice` entry —
+   tone description, target audience, style guidelines, patterns to avoid — or a `text` entry whose
+   settings hold the guidance verbatim. They serialize alongside the rest of the schema, so look
+   for them where Step 1 resolved that: on Deploy they are `umbraco-ai-context__*.uda` artifacts in
+   the same revision directory, and a running instance answers for them through MCP. **This rung is
+   cheap and structured — read it even when rung 1 answered**, because it is the only one that
+   states what *not* to write; where the two disagree, say so rather than blending them.
+4. **Otherwise the descriptor below** — this spell's fallback, and nothing more.
+
+**If the project has no editor-facing writing, no AI context, and nothing named** — a greenfield
+build — use the descriptor and **say in the report that the voice was read from nowhere**, so the
+first editor to see a guide corrects it once rather than forty times:
+
+> Second person, present tense, one idea per sentence. Say what the editor does and what happens
+> when they do it. Name things exactly as the backoffice labels them, and where a technical term is
+> unavoidable, define it the first time. No marketing language, and no "simply" or "just" — an
+> editor reading a guide is stuck, and a sentence implying the answer is obvious makes that worse.
+> A warning states the consequence before the instruction.
+
+## Where a report or a rendered file lands
+
+Both file outputs above follow the toolkit's artifact-disposition convention: **ask whether the
+output is durable or temporal**, and let the location carry the answer, so commit status is not a
+second decision to remember. The `workflow` skill is the authority on the layout and on what a
+project has overridden.
+
+- **The audit's report** — durable → the project's audit directory, dated:
+  `docs/audits/<YYYY-MM-DD>-guide-audit.md` by default. Temporal → a git-ignored scratch location.
+  **Date the filename either way.** An audit is a point-in-time snapshot against a schema that
+  moves, and an undated one gets read as current truth. Write the report as the script printed it,
+  not a rewrite of it — the same rule A3 states for relaying it.
+- **Guides rendered to files** — a staging artifact, so **temporal by default**: they exist to be
+  written into the CMS, and a committed copy is a second source of truth for something the CMS
+  owns. Where the answer is durable, say what makes it so — a project publishing its guides from
+  files rather than from the CMS is a different capability, not a staged write.
+
+**Print first, write only when asked.** An audit belongs in the conversation; a spell that leaves a
+file behind on every cast trains its user to ignore the files. Where a file *is* wanted — and for a
+scheduled or repeated audit it usually is — ask the durable-or-temporal question rather than
+choosing for them.
 
 ## Conventions
 
