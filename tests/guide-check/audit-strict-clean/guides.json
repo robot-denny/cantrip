@@ -1,0 +1,9 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element", "signature": null, "rung": "deploy" }
+    }
+  ]
+}

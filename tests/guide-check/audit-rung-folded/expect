@@ -1,0 +1,4 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json
+contains: Structure unavailable from this source
+not_contains: Structure completeness unknown

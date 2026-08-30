@@ -1,0 +1,52 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "cardStack",
+  "name": "Card Stack",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "stackTone",
+          "name": "Stack Tone",
+          "description": "Which tone the cards are drawn in.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": ["Neutral", "Positive", "Urgent"],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "stackColumns",
+          "name": "Stack Columns",
+          "description": "How many cards sit across the row.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": ["Two", "Four"],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "stackCompact",
+          "name": "Stack Compact",
+          "description": "Whether the cards are drawn in the shorter form.",
+          "editor": "Umbraco.TrueFalse",
+          "mandatory": false,
+          "sortOrder": 30,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:cardstackwithtwolists"
+}

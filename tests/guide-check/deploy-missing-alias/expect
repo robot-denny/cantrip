@@ -1,0 +1,9 @@
+exit: 1
+args: extract alertBanner
+contains: alertBanner
+contains: 1 component
+contains: the export is partial
+contains: re-export
+contains: --project-root
+not_contains: "dossierVersion"
+contains: Deploy/Revision

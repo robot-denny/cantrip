@@ -1,0 +1,38 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotilebeforethechange",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guideProperties": [
+      {
+        "alias": "promoHeading",
+        "label": "Promo Heading",
+        "required": false,
+        "tab": "Content",
+        "group": "",
+        "information": "<p>The line a visitor reads first.</p>"
+      },
+      {
+        "alias": "promoLegacyStyle",
+        "label": "Promo Legacy Style",
+        "required": false,
+        "tab": "Content",
+        "group": "",
+        "information": "<p>Left over from the old build. Ask before using it.</p>"
+      },
+      {
+        "alias": "promoSpacing",
+        "label": "Promo Spacing",
+        "required": false,
+        "tab": "Settings",
+        "group": "",
+        "information": ""
+      }
+    ]
+  }
+}

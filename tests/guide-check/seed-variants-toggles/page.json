@@ -1,0 +1,13 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Notice Strip",
+  "source": {
+    "alias": "noticeStrip",
+    "kind": "element",
+    "signature": "sha256:noticestripbeforethepin",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a notice strip for something time-limited that every visitor should see."
+  }
+}

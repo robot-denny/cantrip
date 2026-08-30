@@ -1,0 +1,6 @@
+exit: 0
+args: extract alertBanner
+stdout_matches: expected-dossier.json
+mask: "sourceSignature":
+contains: "rung": "models"
+not_contains: declare the same

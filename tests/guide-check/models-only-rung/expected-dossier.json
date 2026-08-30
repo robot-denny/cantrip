@@ -1,0 +1,84 @@
+{
+  "dossierVersion": 1,
+  "rung": "models",
+  "alias": "alertBanner",
+  "name": "Alert Banner",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": false,
+  "structureGaps": [
+    "description (component): not recorded. A generated model's class summary carries the display name and nothing else.",
+    "description (property): recorded, but as ModelsBuilder escaped it: line breaks collapsed to spaces, and angle brackets rewritten as braces.",
+    "editor: the generated C# property type, not the data type's editor alias.",
+    "icon: not recorded. The backoffice icon is not generated into a model.",
+    "mandatory: not recorded. Every property reads false; required flags are not generated.",
+    "options: not recorded. Every option list reads empty; an option list lives on the data type, which this rung does not read.",
+    "sortOrder: not recorded. Every property reads 0, and the unnamed bucket is in alias order.",
+    "tabs: not recorded. A generated model carries no tab or group structure, so every property is in the one unnamed bucket."
+  ],
+  "compositions": [
+    "baseSettings"
+  ],
+  "tabs": [
+    {
+      "alias": "",
+      "name": "",
+      "sortOrder": 0,
+      "properties": [
+        {
+          "alias": "alertDismissible",
+          "name": "Alert Dismissible",
+          "description": "Let a visitor close the banner for the rest of the session.",
+          "editor": "bool",
+          "mandatory": false,
+          "sortOrder": 0,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "alertHeading",
+          "name": "Alert Heading",
+          "description": "The line an editor reads first.",
+          "editor": "string",
+          "mandatory": false,
+          "sortOrder": 0,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "alertSeverity",
+          "name": "Alert Severity",
+          "description": "How loudly the banner presents itself.",
+          "editor": "string",
+          "mandatory": false,
+          "sortOrder": 0,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "metaDescription",
+          "name": "Meta Description",
+          "description": "Summary used by search engines.",
+          "editor": "string",
+          "mandatory": false,
+          "sortOrder": 0,
+          "options": [],
+          "inheritedFrom": "baseSettings"
+        },
+        {
+          "alias": "metaKeywords",
+          "name": "Meta Keywords",
+          "description": "Terms this page should be found by.",
+          "editor": "string",
+          "mandatory": false,
+          "sortOrder": 0,
+          "options": [],
+          "inheritedFrom": "baseSettings"
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "<computed>"
+}

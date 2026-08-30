@@ -1,0 +1,10 @@
+exit: 0
+args: plan alertBanner --page page.json --adapter deploy
+contains: Change plan for alertBanner (Alert Banner), read at the deploy rung.
+contains: A model call is needed, and not for prose.
+contains: [Content / Message]
+contains: alertHeading (Alert Heading): Umbraco.TextBox, required
+contains: alertSeverity (Alert Severity): Umbraco.DropDown.Flexible, optional, options: Info | Warning | Critical
+contains: metaKeywords (Meta Keywords): Umbraco.TextBox, optional, inherited from baseSettings
+contains: <alert-banner>one instance, severity Info</alert-banner>
+not_contains: No model call is needed

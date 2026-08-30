@@ -1,0 +1,84 @@
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "contentTypesRead": 6,
+  "elementFlagged": 6,
+  "documentTypesRead": 0,
+  "palettesRead": 2,
+  "rule": {
+    "components": "A content type named as a palette entry's content block, in one of the project's block-editor data types. Read from the palette, never from the element-type flag.",
+    "settingsModels": "An element type named only as a palette entry's settings model and never as a content block. The settings half of a block already counted, not a block of its own.",
+    "unpalettedElementTypes": "An element type no palette offers. Read into an owning component's property table as a composition, never documented on its own.",
+    "unresolvedPaletteEntries": "A palette offers a content type this export does not hold, so its name and its fields cannot be read and it is counted here rather than among the components. An element type is a database row, never a class, so a package that creates one at boot can legitimately leave it out: the export may ignore that package's schema deliberately, the environment may not be a schema source at all, or the type may exist only where nobody booted locally. Re-export from an environment that holds it to document these.",
+    "pageTypesProposed": "PROPOSED, not decided. No flag separates a page type from a folder, a container, or an abstract base, so a document type is proposed when it carries a template or matches the project's own page-naming convention. Tree reachability is read as evidence and is not a gate, because a folder is reachable by definition."
+  },
+  "namingConvention": {
+    "suffix": null,
+    "templated": 0,
+    "matched": 0,
+    "why": "not derived. 0 document types carry a template, and at least 2 are needed to measure a shared suffix."
+  },
+  "palettes": [
+    {
+      "name": "[BlockGrid] Hero Slides",
+      "editor": "Umbraco.BlockGrid",
+      "contentBlocks": 2,
+      "settingsModels": 1
+    },
+    {
+      "name": "[BlockList] Page Body",
+      "editor": "Umbraco.BlockList",
+      "contentBlocks": 2,
+      "settingsModels": 1
+    }
+  ],
+  "components": [
+    {
+      "alias": "heroSlide",
+      "name": "Hero Slide",
+      "kind": "element",
+      "palettes": [
+        "[BlockGrid] Hero Slides"
+      ],
+      "signature": "sha256:<computed>"
+    },
+    {
+      "alias": "mediaRow",
+      "name": "Media Row",
+      "kind": "element",
+      "palettes": [
+        "[BlockGrid] Hero Slides",
+        "[BlockList] Page Body"
+      ],
+      "signature": "sha256:<computed>"
+    },
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar",
+      "kind": "element",
+      "palettes": [
+        "[BlockList] Page Body"
+      ],
+      "signature": "sha256:<computed>"
+    }
+  ],
+  "settingsModels": [
+    {
+      "alias": "mediaRowSettings",
+      "name": "Media Row Settings"
+    }
+  ],
+  "unpalettedElementTypes": [
+    {
+      "alias": "sharedFooter",
+      "name": "Shared Footer"
+    },
+    {
+      "alias": "spacingProperties",
+      "name": "Spacing Properties"
+    }
+  ],
+  "unresolvedPaletteEntries": 0,
+  "pageTypesProposed": [],
+  "notProposed": []
+}

@@ -1,0 +1,43 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "alertBanner",
+  "name": "Alert Banner",
+  "kind": "element",
+  "icon": "icon-alert color-red",
+  "description": "A banner that warns a visitor about something time-limited.",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "alertMessage",
+          "name": "Alert Message",
+          "description": "The sentence a visitor reads.",
+          "editor": "Umbraco.TextArea",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "alertTone",
+          "name": "Alert Tone",
+          "description": "How loud the banner looks.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": ["Information", "Warning"],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "structureGaps": [],
+  "sourceSignature": "sha256:alertbannerasread"
+}

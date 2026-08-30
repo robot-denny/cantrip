@@ -1,0 +1,8 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json
+stdout_matches: expected-report.txt
+contains: tabs: not recorded.
+contains: mandatory: not recorded.
+contains: options: not recorded.
+contains: Findings: none.
+not_contains: modelBlock

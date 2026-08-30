@@ -1,0 +1,5 @@
+exit: 1
+args: extract alertBanner
+contains: alertBanner
+contains: AlertBannerLegacy
+not_contains: "dossierVersion"

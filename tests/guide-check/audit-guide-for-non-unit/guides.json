@@ -1,0 +1,14 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Spacing Properties",
+      "source": {
+        "alias": "spacingProperties",
+        "kind": "element",
+        "signature": "sha256:whatever",
+        "rung": "deploy"
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+exit: 0
+args: extract articlePage
+contains: "rung": "models"
+contains: "kind": "document"
+not_contains: "kind": "element"
+contains: "alias": "articleHeading"
+contains: "alias": "pageTitle"
+contains: "inheritedFrom": "sitePageBase"
+contains: "compositions"

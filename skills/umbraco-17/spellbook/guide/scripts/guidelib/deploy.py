@@ -1,0 +1,509 @@
+"""Rung 1 — Umbraco Deploy artifacts (`*.uda`, JSON) read from the repository.
+
+The highest-fidelity rung available without a running instance: Deploy serializes the whole
+content type, so tabs, groups, sort order, mandatory flags, compositions and data-type
+configuration are all on disk.
+
+The mapping comes from `umbraco-17-feature-backfill`, which was verified against real Deploy
+projects. Four of its rules are the ones an implementation gets wrong:
+
+- **The kind is a truthiness test, not a field.** `Permissions.IsElementType` is emitted only
+  when true, so a reader that treats it as a boolean it can read and trust finds no element
+  types at all on a project full of blocks.
+- **`"Type": 1` marks a tab.** A group without `Type` is a group, and its `Alias` is the
+  `tabAlias/groupAlias` path naming its owner.
+- **Compositions carry properties.** `CompositionContentTypes` holds UDIs, resolved
+  recursively, and every property they contribute is marked with the alias of the type that
+  declared it — so a guide can say which fields are inherited rather than presenting a
+  composed type's fields as its own.
+- **`__version` is per artifact, and one project holds a mix.** Deploy stamps the package
+  version at the moment an artifact was last serialized, so a project's spread is its edit
+  history: the demo project carries three versions across 68 document types. The version
+  check therefore skips the one artifact and names it, and never refuses the read — the
+  opposite shape from uSync, which declares one format for a whole export and so refuses up
+  front. Same rule, and the format decides what obeying it looks like.
+
+Two more things this adapter has to do that the reference does not spell out. There is no
+`element-type__*.uda`, so aliases are found by reading artifacts rather than by filename. And
+a property's editor is reachable only by resolving its `DataType` UDI to the data-type
+artifact, which is also where an option list lives.
+"""
+
+import json
+import os
+
+from guidelib import ACCEPTED_DEPLOY_VERSIONS
+from guidelib import GuideError
+from guidelib import dossier
+from guidelib import missing_alias_error
+from guidelib import note
+from guidelib import unread_artifacts_note
+from guidelib import version_recognized
+
+RUNG = "deploy"
+
+ARTIFACT_EXTENSION = ".uda"
+
+# `__type` is the reliable discriminator: the filename prefix set is open, and packages
+# contribute their own prefixes. Matched as a substring of the fully-qualified type name.
+TYPE_DOCUMENT = "DocumentTypeArtifact"
+TYPE_DATA = "DataTypeArtifact"
+
+# The serialization version, stamped on every artifact. The accepted set lives in
+# `guidelib/__init__.py`, beside uSync's, because the two sets share one body of evidence.
+VERSION_KEY = "__version"
+
+# A palette names an element type by a bare GUID, not by a UDI. Wrapping it here lets one
+# normalizer serve both spellings rather than adding a second key-folding rule.
+DOCUMENT_TYPE_UDI_PREFIX = "umb://document-type/"
+
+# Build output and tooling directories can hold copies of a revision folder. Reading them
+# would double every artifact and let a stale copy win a lookup.
+SKIP_DIRS = {"bin", "obj", "node_modules", "packages", "TestResults"}
+
+
+def present(project_root):
+    """Whether this project carries Deploy artifacts at all — the adapter's detect probe."""
+    for _ in _artifact_files(project_root):
+        return True
+    return False
+
+
+def searched_locations(project_root):
+    """The directories artifacts were found in, for an error message that names where it looked."""
+    found = sorted({os.path.dirname(p) for p in _artifact_files(project_root)})
+    return found or [os.path.abspath(project_root)]
+
+
+def extract(project_root, alias, catalog=None):
+    """Read one content type and everything it composes into a dossier.
+
+    `catalog` lets a caller reading several components share one parsed corpus. A Catalog
+    parses the project once per instance, so building a fresh one per component re-walks and
+    re-parses everything unchanged: measured at 3.03s across one project's 68 content types
+    against 0.045s sharing a single instance. The inventory determiner classifies every
+    component in the project, so it is the caller that needs this; a lone `extract` passes
+    nothing and behaves exactly as before.
+    """
+    catalog = catalog or Catalog(project_root)
+    artifact = catalog.document(alias)
+    if artifact is None:
+        raise missing_alias_error(
+            "Deploy artifact", alias, searched_locations(project_root),
+            catalog.document_count())
+
+    schema = dossier.Schema()
+    compositions = []
+    _collect(artifact, catalog, schema, compositions, set(), inherited_from=None)
+
+    permissions = artifact.get("Permissions") or {}
+    return dossier.build(
+        rung=RUNG,
+        alias=artifact.get("Alias") or alias,
+        name=_text(artifact.get("Name")),
+        # Emitted only when true, so truthiness is the whole test.
+        kind=dossier.KIND_ELEMENT if permissions.get("IsElementType") else dossier.KIND_DOCUMENT,
+        icon=_text(artifact.get("Icon")),
+        description=_text(artifact.get("Description")),
+        structure_available=True,
+        compositions=sorted(set(compositions)),
+        tabs=schema.tabs(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# The whole-project accessors the inventory determiner reads
+# ---------------------------------------------------------------------------
+#
+# Narrow on purpose. `guidelib/inventory.py` classifies every component in a project, which
+# needs two things no dossier carries -- the block-editor palettes, and the tree/template
+# signals that separate a page type from a folder -- and it must not reach into an adapter's
+# artifact shapes to get them. So each adapter answers both questions in format-blind terms
+# and keeps its own `Udi`, key-normalizing and truthiness rules to itself.
+
+
+def palettes(catalog):
+    """Every block-editor palette in the project, its entries resolved to aliases.
+
+    Each palette is `{"name", "editor", "entries": [{"content": alias|None,
+    "settings": alias|None}]}`, in the order the data type declared them.
+
+    **An entry naming an element type no artifact declares raises.** The alternative is
+    silently dropping a block an editor can place, which would under-count the inventory with
+    nothing in the output to say so -- the same silent-empty failure the missing-data-type
+    refusal exists to prevent, arriving one level up. Measured across both source projects,
+    every one of the 120 palette entries resolved, so this refusal is a guard rather than a
+    routine path.
+    """
+    found = []
+    for artifact in catalog.data_types():
+        config = artifact.get("Configuration")
+        entries = dossier.palette_entries_from_config(config)
+        if not entries:
+            continue
+        resolved = []
+        for content_key, settings_key in entries:
+            resolved.append({
+                "content": _palette_alias(catalog, artifact, content_key),
+                "settings": _palette_alias(catalog, artifact, settings_key),
+            })
+        found.append({
+            "name": _text(artifact.get("Name")),
+            "editor": _text(artifact.get("EditorAlias")),
+            "entries": resolved,
+        })
+    return found
+
+
+# A palette key that resolves to nothing is REPORTED, not fatal. It was a refusal first, and
+# that was wrong: an element type is always a database row rather than a class, so a package
+# that creates one at boot can legitimately leave it out of a project's own export. Four ways
+# that happens, none of them a broken project:
+#
+#   1. A package migration creates the type independently on each environment. If its
+#      package.xml pins no GUIDs, each environment gets its own copy — which reads as missing
+#      schema and is really duplicate schema.
+#   2. Deploy or uSync is configured to ignore the package's schema on purpose, so the
+#      migration stays the owner in every environment. The honest in-the-backoffice,
+#      absent-from-the-export case.
+#   3. The environment is not a schema source. A read-only Cloud production site writes no
+#      artifacts, so a type created there by a boot migration has no local file.
+#   4. The type exists only on an environment nobody booted locally.
+#
+# Refusing would take the whole inventory down over any of those. Dropping it silently would
+# under-count the thing this command exists to count. So it lands in its own category, with
+# the causes named, and the operator decides which they have.
+def _palette_alias(catalog, palette, key):
+    """One palette key resolved to a content-type alias, or None where none was declared.
+
+    The key is a dashed GUID while a document-type `Udi` is undashed, so it is wrapped as a UDI
+    and folded by the normalizer both references already share.
+    """
+    if not key:
+        return None
+    artifact = catalog.by_udi(DOCUMENT_TYPE_UDI_PREFIX + key)
+    if artifact is None or TYPE_DOCUMENT not in (artifact.get("__type") or ""):
+        # Reported by the determiner, not fatal -- see the note above.
+        return dossier.PALETTE_UNRESOLVED
+    return _text(artifact.get("Alias"))
+
+
+def components(catalog):
+    """Every content type in the project with the signals the page-type judgment needs.
+
+    Each entry is `{"alias", "name", "kind", "hasTemplate", "allowAtRoot", "children"}`, where
+    `children` holds the aliases this type allows beneath it. Reachability itself is computed
+    by the caller, because it is a property of the whole graph rather than of one type.
+
+    **`Permissions.AllowedAtRoot` is emitted only when true**, exactly like
+    `Permissions.IsElementType`, so it is a truthiness test here — and exactly unlike uSync,
+    which always writes `<AllowAtRoot>`. That is the same asymmetry the kind flag has, in a
+    second field, and a reader that assumes the two formats agree finds no root-level types on
+    one of them. One of the demo project's 68 artifacts carries the key.
+    """
+    listed = []
+    for artifact in catalog.documents():
+        permissions = artifact.get("Permissions") or {}
+        children = []
+        for udi in permissions.get("AllowedChildContentTypes") or []:
+            child = catalog.by_udi(udi if isinstance(udi, str) else "")
+            # Unresolved children are dropped rather than refused, unlike a palette entry: a
+            # child this project does not export costs a reachability signal on one type,
+            # never a whole component missing from the inventory. The signals are evidence for
+            # a human to confirm, and the report says so.
+            if child is not None:
+                children.append(_text(child.get("Alias")))
+        listed.append({
+            "alias": _text(artifact.get("Alias")),
+            "name": _text(artifact.get("Name")),
+            "kind": (dossier.KIND_ELEMENT if permissions.get("IsElementType")
+                     else dossier.KIND_DOCUMENT),
+            "hasTemplate": bool(artifact.get("AllowedTemplates")
+                                or _text(artifact.get("DefaultTemplate")).strip()),
+            "allowAtRoot": bool(permissions.get("AllowedAtRoot")),
+            "children": sorted(set(children)),
+        })
+    return listed
+
+
+# ---------------------------------------------------------------------------
+# Reading the revision directory
+# ---------------------------------------------------------------------------
+
+def _artifact_files(project_root):
+    """Every `*.uda` under the project, in a stable order.
+
+    The location is searched for rather than configured, per the `paths.md → ## Umbraco`
+    slot's fallback: the Deploy revision directory is identified by its `*.uda` files. A
+    project may hold more than one revision folder, so all of them are read — a lookup that
+    silently picked the first would depend on directory order.
+    """
+    for dirpath, dirnames, filenames in os.walk(project_root):
+        dirnames[:] = sorted(d for d in dirnames
+                             if d not in SKIP_DIRS and not d.startswith("."))
+        for name in sorted(filenames):
+            if name.endswith(ARTIFACT_EXTENSION):
+                yield os.path.join(dirpath, name)
+
+
+def _load(path):
+    try:
+        with open(path, "r", encoding="utf-8-sig") as handle:
+            return json.load(handle)
+    except (OSError, ValueError) as exc:
+        # Loud, and named. A skipped artifact is how a component goes missing from a guide
+        # with nothing in the output to say so.
+        raise GuideError("cannot read Deploy artifact %s: %s" % (path, exc))
+
+
+def _normalize_udi(udi):
+    """Fold the two spellings of the same reference.
+
+    Deploy writes `umb://document-type/<guid-with-dashes-stripped>`; other sources write the
+    canonical dashed form. Only the identifier is folded — the entity-type half of the UDI
+    contains a dash of its own.
+    """
+    text = (udi or "").strip().lower()
+    head, sep, tail = text.rpartition("/")
+    if not sep:
+        return text
+    return head + "/" + tail.replace("-", "")
+
+
+class Catalog:
+    """Every artifact in the project, indexed the two ways a read needs.
+
+    By UDI, because that is how a content type names a composition and how a property names
+    its data type. By alias, because that is what an operator asks for. Both indexes cover
+    every artifact regardless of `__type`, since a reference may point at a type this adapter
+    does not otherwise care about.
+    """
+
+    def __init__(self, project_root):
+        self.project_root = project_root
+        self._by_udi = {}
+        self._documents = {}      # lowercased alias -> artifact
+        self._data_types = []     # every data-type artifact, in read order
+        self._loaded = False
+
+    def _load_all(self):
+        if self._loaded:
+            return
+        self._loaded = True
+        unread = []
+        for path in _artifact_files(self.project_root):
+            artifact = _load(path)
+            if not isinstance(artifact, dict):
+                raise GuideError("Deploy artifact %s is not a JSON object" % path)
+            declared = dossier.text(artifact.get(VERSION_KEY))
+            if not version_recognized(declared, ACCEPTED_DEPLOY_VERSIONS):
+                # Skipped, not refused, and this is where the two formats' one rule takes
+                # its Deploy shape. An unread artifact is simply absent from both indexes,
+                # so it cannot be returned as a component and cannot resolve a reference —
+                # which means a component that *depended* on it fails loudly through the
+                # partial-export refusals rather than being reported from a shape nobody
+                # verified. Everything else reads exactly as before.
+                unread.append((path, declared))
+                continue
+            artifact["__path"] = path
+            udi = _normalize_udi(artifact.get("Udi"))
+            if udi:
+                self._claim(self._by_udi, udi, artifact, "UDI")
+            alias = artifact.get("Alias")
+            if alias and TYPE_DOCUMENT in (artifact.get("__type") or ""):
+                self._claim(self._documents, alias.lower(), artifact, "alias")
+            # Collected as a list rather than indexed: a data type is looked up by UDI through
+            # `_by_udi`, and the only caller that wants all of them wants to scan for palettes.
+            if TYPE_DATA in (artifact.get("__type") or ""):
+                self._data_types.append(artifact)
+        # One note for the whole corpus rather than one per file. The operator's next action
+        # is the same for all of them, and a per-file line ahead of every dossier would train
+        # a reader to skip it.
+        if unread:
+            note(unread_artifacts_note(unread, ACCEPTED_DEPLOY_VERSIONS))
+
+    @staticmethod
+    def _claim(index, key, artifact, what):
+        """Index an artifact, refusing a second claim on the same key.
+
+        Two artifacts declaring one alias is not a preference to resolve — it is a question
+        with no correct answer, and answering it by directory-walk order picks whichever
+        sorts first. That reliably produced the emptier of the two in testing: a stale
+        revision folder holding a property-less copy silently won over the real schema, and
+        the dossier came out with no tabs, `structureAvailable` true, and exit 0. The
+        silent-empty read is what this whole ladder's fail-loudly rule exists to prevent, so
+        it fails here instead, naming both files so a human can delete the right one.
+
+        This is why SKIP_DIRS is not enough on its own. It prunes build output, which is the
+        common duplication and the one worth pruning silently; a second revision folder is
+        legitimate input that happens to be ambiguous.
+        """
+        first = index.get(key)
+        if first is None:
+            index[key] = artifact
+            return
+        if first is artifact or first.get("__path") == artifact.get("__path"):
+            return
+        raise GuideError(
+            "two Deploy artifacts declare the same %s '%s' — the export is ambiguous:\n"
+            "  %s\n  %s\n"
+            "Remove or exclude whichever is stale; reading either one silently would make "
+            "the result depend on directory order."
+            % (what, key, first.get("__path"), artifact.get("__path")))
+
+    def document(self, alias):
+        """The document-type artifact for an alias, matched case-insensitively."""
+        self._load_all()
+        return self._documents.get((alias or "").lower())
+
+    def document_count(self):
+        """How many document types the export actually holds.
+
+        Reported when a lookup misses, because a folder that yielded components and a folder
+        that yielded none call for different responses from the operator.
+        """
+        self._load_all()
+        return len(self._documents)
+
+    def documents(self):
+        """Every document-type artifact, in alias order.
+
+        Ordered here rather than by the caller so a whole-project read does not depend on
+        directory-walk order — the same reason the dossier sorts its tabs.
+        """
+        self._load_all()
+        return [self._documents[key] for key in sorted(self._documents)]
+
+    def data_types(self):
+        """Every data-type artifact, in path order — the palette scan's corpus."""
+        self._load_all()
+        return list(self._data_types)
+
+    def by_udi(self, udi):
+        self._load_all()
+        return self._by_udi.get(_normalize_udi(udi))
+
+    def editor_and_options(self, udi):
+        """A property's editor alias and option list, resolved through its data type.
+
+        The option list itself is read by `dossier.options_from_config`: an artifact's
+        `Configuration` object holds the same JSON payload uSync writes into a `<Config>`
+        block, so normalizing it belongs in one place rather than once per adapter — and the
+        note on why an option is a plain string rather than a marked one lives there too.
+        """
+        self._load_all()
+        artifact = self.by_udi(udi)
+        if artifact is None or TYPE_DATA not in (artifact.get("__type") or ""):
+            # A partial export, and the same condition a dangling composition raises on.
+            # An earlier version degraded here instead, returning an empty editor — but that
+            # leaves `structureAvailable` claiming true while a field's type is unknown, and
+            # a guide's property table exists to say what an editor types into a field. The
+            # two readings of "partial export" have to agree, or the fail-loudly rule holds
+            # only wherever it was remembered.
+            raise GuideError(
+                "the data type %s, used by a property, is not among the exported artifacts "
+                "under %s — the export is partial"
+                % (udi, ", ".join(searched_locations(self.project_root))))
+        config = artifact.get("Configuration")
+        if not isinstance(config, dict):
+            config = {}
+        return _text(artifact.get("EditorAlias")), dossier.options_from_config(config)
+
+
+def _text(value):
+    """Deploy's absent-field normalization — `dossier.text`, shared with every other adapter.
+
+    Kept as a local name because it is used on nearly every line of the mapping below, and
+    because a second adapter normalizing absence differently is one of the two ways the
+    cross-format signature equality can break quietly.
+    """
+    return dossier.text(value)
+
+
+# ---------------------------------------------------------------------------
+# Walking a content type and its compositions
+# ---------------------------------------------------------------------------
+
+def _collect(artifact, catalog, schema, compositions, seen, inherited_from):
+    """Add one content type's structure, then recurse into what it composes.
+
+    Own structure first, so the first-wins declaration in `Schema` gives the nearest type's
+    caption and sort order for a tab two types both name. `seen` guards the diamond: two
+    compositions sharing a base would otherwise contribute its properties twice.
+    """
+    # Identity for the diamond guard. Deploy always writes `Udi`, but falling back to the
+    # alias keeps a missing one from making every subsequent artifact look already-visited.
+    key = _normalize_udi(artifact.get("Udi")) or "alias:" + _text(artifact.get("Alias"))
+    if key in seen:
+        return
+    seen.add(key)
+
+    _collect_groups(artifact, catalog, schema, inherited_from)
+
+    for composition_udi in artifact.get("CompositionContentTypes") or []:
+        composed = catalog.by_udi(composition_udi)
+        if composed is None:
+            raise GuideError(
+                "%s composes %s, which no artifact under %s declares — the export is partial"
+                % (artifact.get("Alias") or artifact.get("__path"), composition_udi,
+                   ", ".join(searched_locations(catalog.project_root))))
+        composed_alias = composed.get("Alias") or ""
+        compositions.append(composed_alias)
+        _collect(composed, catalog, schema, compositions, seen,
+                 inherited_from=composed_alias)
+
+
+def _collect_groups(artifact, catalog, schema, inherited_from):
+    """Declare an artifact's tabs and groups, and file its properties under them."""
+    # `or []` treats a MISSING key exactly like an empty one, and that is deliberate: a
+    # truncated export whose artifact declares nothing is not distinguishable from a
+    # genuinely property-less component by reading the artifact. Tightening this into a
+    # refusal would reject real components -- two of the demo project's 68 have no fields
+    # legitimately. The reasoning and the one weak signal that was deliberately NOT used
+    # are in guide.py's note_if_propertyless docstring; read it before changing this.
+    for group in artifact.get("PropertyGroups") or []:
+        alias = _text(group.get("Alias"))
+        name = _text(group.get("Name"))
+        sort_order = _int(group.get("SortOrder"))
+
+        if group.get("Type") == 1:
+            schema.declare_tab(alias, name, sort_order)
+            owner = {"tab_alias": alias}
+        else:
+            # A group's alias is the `tabAlias/groupAlias` path. A bare alias means a group
+            # with no tab — the pre-tabs layout — which lands in the unnamed bucket.
+            head, sep, _tail = alias.partition("/")
+            schema.declare_group(alias, name, sort_order, head if sep else None)
+            owner = {"group_alias": alias}
+
+        for property_type in group.get("PropertyTypes") or []:
+            schema.add_property(_property(property_type, catalog, inherited_from), **owner)
+
+    # Root-level `PropertyTypes` — a property on the content type belonging to no group at
+    # all. Empty on all 68 artifacts of the demo project, but the key is real, so it is read
+    # and merged as the unnamed bucket rather than assumed away.
+    for property_type in artifact.get("PropertyTypes") or []:
+        schema.add_property(_property(property_type, catalog, inherited_from))
+
+
+def _property(property_type, catalog, inherited_from):
+    editor, options = catalog.editor_and_options(property_type.get("DataType"))
+    return dossier.make_property(
+        alias=_text(property_type.get("Alias")),
+        name=_text(property_type.get("Name")),
+        editor=editor,
+        description=_text(property_type.get("Description")),
+        # Emitted only when it has something to say, so absence normalizes to an explicit
+        # false — the dossier states "optional" rather than "not recorded".
+        mandatory=bool(property_type.get("Mandatory")),
+        sort_order=_int(property_type.get("SortOrder")),
+        options=options,
+        inherited_from=inherited_from,
+    )
+
+
+def _int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0

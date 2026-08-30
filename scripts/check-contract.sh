@@ -73,15 +73,22 @@ begin() {
 # and the gate reported success. Two lessons in that. Keep the two lists below in step, since
 # only the second runs outside a git checkout. And when adding a fixture in a new format,
 # check it is scanned before assuming it is.
+#
+# `.uda` (Deploy) and `.config` (uSync) were added when the guide-check suite arrived, ahead
+# of its first committed fixture: those fixtures carry document-type aliases, property names,
+# and folder paths, which is exactly the content check 1 exists to catch. `.cs` followed for
+# the generated-models rung, whose fixtures are C# model classes carrying the same aliases and
+# property names -- the same hole, found by looking for it this time rather than after a leak.
 repo_md_files() {
   if git rev-parse --git-dir >/dev/null 2>&1; then
     { git ls-files; git ls-files --others --exclude-standard; } 2>/dev/null \
-      | grep -E '\.(md|json|sh|py|txt|diff)$|(^|/)LICENSE$' \
+      | grep -E '\.(md|json|sh|py|txt|diff|uda|config|cs)$|(^|/)LICENSE$' \
       | grep -vE '^scripts/check-contract\.sh$'
   else
     find . \( "${PRUNE[@]}" \) -prune -o -type f \
       \( -name '*.md' -o -name '*.json' -o -name '*.sh' -o -name '*.py' -o -name '*.txt' \
-         -o -name '*.diff' -o -name 'LICENSE' \) \
+         -o -name '*.diff' -o -name '*.uda' -o -name '*.config' -o -name '*.cs' \
+         -o -name 'LICENSE' \) \
       -print 2>/dev/null
   fi
 }
@@ -136,6 +143,14 @@ CLIENT_PATTERN+='|UmbAI_Search|openai-embeddings|text-embedding-3-small'
 CLIENT_PATTERN+='|claude/(feature|fix)/|migrate-ai-search|remove-seotoolkit|fix-e2e-dev-only'
 CLIENT_PATTERN+='|ai-search-editor-content|blockParity|_umbracoApi'
 CLIENT_PATTERN+='|\bcounty\b|\bdepartment\b'
+# Third extraction source, added 2026-08-25: the uSync reference project. Org and solution names,
+# plus the block aliases distinctive enough to identify it if they were ever copied verbatim.
+# Deliberately excludes its generic aliases (articlePage, category, location, quoteBlock) — those
+# collide with this repo's own synthetic examples, and a pattern that fires on our own worked
+# examples gets deleted rather than obeyed.
+CLIENT_PATTERN+='|Houlihan|Lokey'
+CLIENT_PATTERN+='|twoColumn2575|mNTPCategorySelector|globalBlockSelectorComposition'
+CLIENT_PATTERN+='|headingLabelSectionComposition|calloutWithTableBlock|blankHTMLTemplate'
 hits=$(while IFS= read -r f; do [[ -n "$f" ]] && grep_unexempted "$f" "$CLIENT_PATTERN"; done < <(repo_md_files))
 if [[ -n "$hits" ]]; then
   report_fail "$CURRENT" \

@@ -1,0 +1,47 @@
+{
+  "Name": "Article Page",
+  "Alias": "articlePage",
+  "AllowedTemplates": [
+    "umb://template/eeee1111eeee1111eeee111111111111"
+  ],
+  "DefaultTemplate": "umb://template/eeee1111eeee1111eeee111111111111",
+  "HistoryCleanup": {},
+  "Icon": "icon-article color-blue",
+  "Thumbnail": "folder.png",
+  "Description": "A page carrying one article.",
+  "Permissions": {
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [
+    {
+      "Key": "eeee1111-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": [
+        {
+          "Key": "eeee1111-0101-4000-8000-000000000101",
+          "Alias": "articleHeading",
+          "DataType": "umb://data-type/dddd1111dddd1111dddd111111111111",
+          "ValueType": "System.String",
+          "Mandatory": true,
+          "Description": "The headline.",
+          "Name": "Article Heading",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/eeee1111eeee1111eeee111111111111",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/dddd1111dddd1111dddd111111111111",
+      "Ordering": true
+    }
+  ],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "17.2.0"
+}

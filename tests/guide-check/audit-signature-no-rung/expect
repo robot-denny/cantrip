@@ -1,0 +1,5 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json
+contains: stored at another rung, or at none this read can name
+contains: Stale, whose stored signature no longer matches its source: 0
+not_contains: noticeBar (Notice Bar)

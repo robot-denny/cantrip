@@ -1,0 +1,37 @@
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "contentTypesRead": 3,
+  "elementFlagged": 2,
+  "documentTypesRead": 1,
+  "palettesRead": 1,
+  "components": [
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar",
+      "kind": "element",
+      "palettes": ["[BlockList] Page Body"],
+      "signature": "sha256:currentnoticebar"
+    },
+    {
+      "alias": "mediaRow",
+      "name": "Media Row",
+      "kind": "element",
+      "palettes": ["[BlockList] Page Body"],
+      "signature": "sha256:currentmediarow"
+    }
+  ],
+  "settingsModels": [],
+  "unpalettedElementTypes": [],
+  "unresolvedPaletteEntries": 0,
+  "pageTypesProposed": [
+    {
+      "alias": "articlePage",
+      "name": "Article Page",
+      "kind": "document",
+      "signals": ["template", "reachable"],
+      "signature": "sha256:currentarticlepage"
+    }
+  ],
+  "notProposed": []
+}

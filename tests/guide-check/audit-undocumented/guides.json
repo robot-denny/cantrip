@@ -1,0 +1,57 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Block 01",
+      "source": { "alias": "block01", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 02",
+      "source": { "alias": "block02", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 03",
+      "source": { "alias": "block03", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 04",
+      "source": { "alias": "block04", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 05",
+      "source": { "alias": "block05", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 06",
+      "source": { "alias": "block06", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 07",
+      "source": { "alias": "block07", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 08",
+      "source": { "alias": "block08", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 09",
+      "source": { "alias": "block09", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 10",
+      "source": { "alias": "block10", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 11",
+      "source": { "alias": "block11", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 12",
+      "source": { "alias": "block12", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Block 13",
+      "source": { "alias": "block13", "kind": "element", "signature": null, "rung": "deploy" }
+    }
+  ]
+}

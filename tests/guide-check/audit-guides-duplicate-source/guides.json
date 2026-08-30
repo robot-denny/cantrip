@@ -1,0 +1,13 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Notice Bar (old)",
+      "source": { "alias": "noticebar", "kind": "element", "signature": null, "rung": "deploy" }
+    }
+  ]
+}

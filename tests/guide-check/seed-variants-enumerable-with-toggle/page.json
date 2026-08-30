@@ -1,0 +1,13 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Stat Badge",
+  "source": {
+    "alias": "statBadge",
+    "kind": "element",
+    "signature": "sha256:statbadgebeforethepin",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a stat badge to put one number where an editor wants it noticed."
+  }
+}

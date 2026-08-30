@@ -1,0 +1,4 @@
+exit: 3
+args: audit --guides guides.json --inventory inventory.json --strict
+same_stdout_as: audit-strict-exit
+contains: Findings: 1 undocumented, 0 orphaned, 0 stale.

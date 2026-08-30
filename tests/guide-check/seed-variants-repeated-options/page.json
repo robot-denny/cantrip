@@ -1,0 +1,13 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Tone Chip",
+  "source": {
+    "alias": "toneChip",
+    "kind": "element",
+    "signature": "sha256:tonechipbefore",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a tone chip to label one thing without drawing the eye."
+  }
+}

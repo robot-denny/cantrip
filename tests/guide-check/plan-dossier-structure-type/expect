@@ -1,0 +1,6 @@
+exit: 1
+args: plan statBadge --page page.json --dossier dossier.json
+contains: declares 'structureAvailable' as 'yes'
+contains: and it is true or false
+not_contains: Traceback
+not_contains: Live examples the source's variant set implies

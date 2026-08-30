@@ -1,0 +1,20 @@
+{
+  "Name": "Alert Banner",
+  "Alias": "alertBanner",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-alert color-red",
+  "Thumbnail": "folder.png",
+  "Description": "A banner that announces something time-sensitive at the top of a page.",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/aaaa1111aaaa1111aaaa111111111111",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "17.2.0"
+}

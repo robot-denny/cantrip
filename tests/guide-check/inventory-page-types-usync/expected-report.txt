@@ -1,0 +1,27 @@
+Inventory of documentable units, read at the usync rung.
+  3 content types read: 0 carry the element-type flag, 3 do not.
+  0 block-editor data types carry a block list.
+
+Components an editor can place: 0
+  A content type named as a palette entry's content block, in one of the project's
+  block-editor data types. Read from the palette, never from the element-type flag.
+
+Page types PROPOSED for a human to confirm: 1 of 3 document types
+  PROPOSED, not decided. No flag separates a page type from a folder, a container, or an
+  abstract base, so a document type is proposed when it carries a template or matches the
+  project's own page-naming convention. Tree reachability is read as evidence and is not a
+  gate, because a folder is reachable by definition.
+  Naming convention: not derived.
+    1 document type carries a template, and at least 2 are needed to measure a shared
+    suffix.
+    articlePage (Article Page): template, reachable
+
+  Not proposed, a folder or a container: 1
+    Reachable in the content tree, but carries no template and matches no naming convention.
+      topicFolder (Topic Folder)
+
+  Not proposed, an abstract base or a composition: 1
+    Neither reachable in the content tree nor carrying a template.
+      pageBase (Page Base)
+
+Documentable: 0 components + 1 proposed page type = 1.

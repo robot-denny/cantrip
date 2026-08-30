@@ -1,0 +1,20 @@
+Guide audit, read at the deploy rung.
+  3 documentable units: 3 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  5 guide pages read: 4 claim a source, 1 claims none.
+  Not compared: 3 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 0
+
+Orphaned, claiming a source this project no longer holds: 1
+  A guide whose stored reference names an alias no content type in this read declares. A
+  guide claiming no source at all is never an orphan, because a hand-written guide
+  documents something that was never in the schema. Each is named as alias (the guide
+  page's own name), since the source it claims has no name left to print.
+    testimonialSlider (Testimonial Slider)
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: 0 undocumented, 1 orphaned, 0 stale.

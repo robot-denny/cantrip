@@ -1,0 +1,5 @@
+exit: 1
+args: extract alertBanner
+contains: declare the same alias
+contains: second-export
+not_contains: "dossierVersion"

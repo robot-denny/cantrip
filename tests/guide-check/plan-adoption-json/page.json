@@ -1,0 +1,11 @@
+{
+  "pageVersion": 1,
+  "page": "How to use the alert banner",
+  "source": null,
+  "fields": {
+    "guidePurpose": "Somebody wrote this page by hand. Use an alert banner when something is time-limited.",
+    "guideWhenToUse": "Above the page content, and never two on one page.",
+    "guideBlurb": "The banner that warns about something time-limited.",
+    "name": "How to use the alert banner"
+  }
+}

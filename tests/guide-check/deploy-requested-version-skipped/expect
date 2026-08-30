@@ -1,0 +1,7 @@
+exit: 1
+args: extract alertBanner
+contains: was not read
+contains: 16.4.0
+contains: document-type__aaaa1111aaaa1111aaaa111111111111.uda
+contains: declares the alias
+not_contains: "dossierVersion"

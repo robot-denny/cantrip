@@ -1,0 +1,4 @@
+exit: 0
+stdout_matches: expected-inventory.json
+mask: "signature":
+args: inventory --json --adapter usync

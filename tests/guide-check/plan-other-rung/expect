@@ -1,0 +1,9 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json --json
+contains: "comparison": "notComparable"
+contains: "noop": false
+contains: "modelCallNeeded": true
+contains: two rungs sign one component differently by design
+not_contains: "noop": true
+not_contains: "consequence"
+not_contains: machine-owned from that point on

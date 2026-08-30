@@ -8,6 +8,11 @@ _scratch/
 .claude/settings.local.json
 .claude/agent-memory/
 .claude/scheduled_tasks.lock
+# Unanchored, because the root-anchored rule above does not reach a copy written anywhere else:
+# two reviewers wrote their memory under tests/guide-check/<case>/.claude/ on 2026-08-28, where it
+# was untracked but not ignored, and a `git add -A` would have committed reviewer notes into a
+# generated fixture tree.
+**/.claude/agent-memory/
 
 # Secrets
 .env
@@ -17,3 +22,10 @@ _scratch/
 # Node (for tooling / plugin packaging later)
 node_modules/
 npm-debug.log*
+
+# Python bytecode. The pack scripts are stdlib Python run in place, and `python3 -m
+# py_compile <file>` -- this repo's compile gate -- writes a cache beside them. guide.py
+# also sets sys.dont_write_bytecode, so a consuming project's installed skill directory
+# stays clean; this covers the gate's own output.
+__pycache__/
+*.pyc

@@ -1,0 +1,12 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": {
+        "kind": "element",
+        "signature": "sha256:whatever"
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotilebeforethechange",
+    "rung": "deploy"
+  }
+}

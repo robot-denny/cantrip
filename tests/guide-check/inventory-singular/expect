@@ -1,0 +1,6 @@
+exit: 0
+args: inventory --adapter deploy
+contains: 1 content type read:
+contains: 1 does not.
+not_contains: 1 content types read
+not_contains: 1 do not.

@@ -1,0 +1,4 @@
+exit: 1
+args: audit --guides guides.json --inventory inventory.json
+contains: is str, not an object
+not_contains: Guide audit

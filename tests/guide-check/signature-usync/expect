@@ -1,0 +1,5 @@
+exit: 0
+args: signature alertBanner --adapter usync
+contains: sha256:
+not_contains: dossierVersion
+same_stdout_as: signature-deploy

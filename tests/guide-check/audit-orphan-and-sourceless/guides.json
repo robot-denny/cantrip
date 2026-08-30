@@ -1,0 +1,30 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Hero Slide",
+      "source": { "alias": "heroSlide", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Media Row",
+      "source": { "alias": "mediaRow", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Testimonial Slider",
+      "source": {
+        "alias": "testimonialSlider",
+        "kind": "element",
+        "signature": null,
+        "rung": "deploy"
+      }
+    },
+    {
+      "page": "Image Sizing Standards",
+      "source": null
+    }
+  ]
+}

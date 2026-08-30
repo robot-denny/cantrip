@@ -1,0 +1,109 @@
+{
+  "dossierVersion": 1,
+  "rung": "usync",
+  "alias": "alertBanner",
+  "name": "Alert Banner",
+  "kind": "element",
+  "icon": "icon-alert color-red",
+  "description": "A banner that announces something time-sensitive at the top of a page.",
+  "structureAvailable": true,
+  "compositions": [
+    "baseSettings"
+  ],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [],
+      "groups": [
+        {
+          "alias": "content/message",
+          "name": "Message",
+          "sortOrder": 10,
+          "properties": [
+            {
+              "alias": "alertHeading",
+              "name": "Alert Heading",
+              "description": "The line an editor reads first.",
+              "editor": "Umbraco.TextBox",
+              "mandatory": true,
+              "sortOrder": 10,
+              "options": [],
+              "inheritedFrom": null
+            },
+            {
+              "alias": "alertDismissible",
+              "name": "Alert Dismissible",
+              "description": "Let a visitor close the banner for the rest of the session.",
+              "editor": "Umbraco.TrueFalse",
+              "mandatory": false,
+              "sortOrder": 20,
+              "options": [],
+              "inheritedFrom": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "settings",
+      "name": "Settings",
+      "sortOrder": 20,
+      "properties": [
+        {
+          "alias": "alertSeverity",
+          "name": "Alert Severity",
+          "description": "How loudly the banner presents itself.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": [
+            "Info",
+            "Warning",
+            "Critical"
+          ],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    },
+    {
+      "alias": "seo",
+      "name": "SEO",
+      "sortOrder": 100,
+      "properties": [
+        {
+          "alias": "metaDescription",
+          "name": "Meta Description",
+          "description": "Summary used by search engines.",
+          "editor": "Umbraco.TextArea",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": "baseSettings"
+        }
+      ],
+      "groups": [
+        {
+          "alias": "seo/social",
+          "name": "Social",
+          "sortOrder": 20,
+          "properties": [
+            {
+              "alias": "metaKeywords",
+              "name": "Meta Keywords",
+              "description": "Terms this page should be found by.",
+              "editor": "Umbraco.TextBox",
+              "mandatory": false,
+              "sortOrder": 10,
+              "options": [],
+              "inheritedFrom": "baseSettings"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "sourceSignature": "<computed>"
+}

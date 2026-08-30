@@ -1,0 +1,18 @@
+{
+  "Name": "Ghost Palette",
+  "EditorAlias": "Umbraco.BlockList",
+  "EditorUiAlias": "Umb.PropertyEditorUi.BlockList",
+  "DatabaseType": null,
+  "Configuration": {
+    "blocks": [
+      {
+        "contentElementTypeKey": "99999999-9999-9999-9999-999999999999"
+      }
+    ],
+    "useLiveEditing": false
+  },
+  "Udi": "umb://data-type/eeee7777eeee7777eeee777777777777",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact",
+  "__version": "17.2.0"
+}

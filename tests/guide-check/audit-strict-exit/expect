@@ -1,0 +1,5 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json
+contains: Undocumented, present in code with no guide page: 1
+contains: noticeBar (Notice Bar)
+contains: Findings: 1 undocumented, 0 orphaned, 0 stale.

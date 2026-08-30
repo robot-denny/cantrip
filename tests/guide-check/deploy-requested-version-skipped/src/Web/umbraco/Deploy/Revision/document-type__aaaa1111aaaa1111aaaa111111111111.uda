@@ -1,0 +1,93 @@
+{
+  "Name": "Alert Banner",
+  "Alias": "alertBanner",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-alert color-red",
+  "Thumbnail": "folder.png",
+  "Description": "A banner that announces something time-sensitive at the top of a page.",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [
+    "umb://document-type/bbbb2222bbbb2222bbbb222222222222"
+  ],
+  "PropertyGroups": [
+    {
+      "Key": "aaaa1111-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": []
+    },
+    {
+      "Key": "aaaa1111-0002-4000-8000-000000000002",
+      "Name": "Message",
+      "SortOrder": 10,
+      "Alias": "content/message",
+      "PropertyTypes": [
+        {
+          "Key": "aaaa1111-0101-4000-8000-000000000101",
+          "Alias": "alertHeading",
+          "DataType": "umb://data-type/dddd1111dddd1111dddd111111111111",
+          "ValueType": "System.String",
+          "Mandatory": true,
+          "Description": "The line an editor reads first.",
+          "Name": "Alert Heading",
+          "SortOrder": 10
+        },
+        {
+          "Key": "aaaa1111-0102-4000-8000-000000000102",
+          "Alias": "alertDismissible",
+          "DataType": "umb://data-type/dddd2222dddd2222dddd222222222222",
+          "ValueType": "System.Boolean",
+          "Description": "Let a visitor close the banner for the rest of the session.",
+          "Name": "Alert Dismissible",
+          "SortOrder": 20
+        }
+      ]
+    },
+    {
+      "Key": "aaaa1111-0003-4000-8000-000000000003",
+      "Name": "Settings",
+      "SortOrder": 20,
+      "Type": 1,
+      "Alias": "settings",
+      "PropertyTypes": [
+        {
+          "Key": "aaaa1111-0103-4000-8000-000000000103",
+          "Alias": "alertSeverity",
+          "DataType": "umb://data-type/dddd3333dddd3333dddd333333333333",
+          "ValueType": "System.String",
+          "Description": "How loudly the banner presents itself.",
+          "Name": "Alert Severity",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/aaaa1111aaaa1111aaaa111111111111",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/dddd1111dddd1111dddd111111111111",
+      "Ordering": true
+    },
+    {
+      "Udi": "umb://data-type/dddd2222dddd2222dddd222222222222",
+      "Ordering": true
+    },
+    {
+      "Udi": "umb://data-type/dddd3333dddd3333dddd333333333333",
+      "Ordering": true
+    },
+    {
+      "Udi": "umb://document-type/bbbb2222bbbb2222bbbb222222222222",
+      "Ordering": true
+    }
+  ],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "16.4.0"
+}

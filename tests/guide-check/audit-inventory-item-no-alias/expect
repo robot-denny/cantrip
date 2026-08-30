@@ -1,0 +1,6 @@
+exit: 1
+args: audit --guides guides.json --inventory inventory.json
+contains: names no alias
+contains: components[0]
+not_contains: Traceback
+not_contains: Guide audit

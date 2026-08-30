@@ -1,0 +1,8 @@
+exit: 0
+args: plan statBadge --page page.json --dossier dossier.json --json
+contains: "seeds": null
+contains: "basis": "notDerivable"
+contains: this dossier declares structureAvailable: false
+not_contains: "seeds": []
+not_contains: would be created
+not_contains: nothing set — the CMS applies its own defaults

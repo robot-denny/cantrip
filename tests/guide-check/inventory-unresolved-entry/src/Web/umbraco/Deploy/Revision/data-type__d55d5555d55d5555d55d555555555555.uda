@@ -1,0 +1,22 @@
+{
+  "Name": "[BlockList] Page Body",
+  "EditorAlias": "Umbraco.BlockList",
+  "EditorUiAlias": "Umb.PropertyEditorUi.BlockList",
+  "DatabaseType": null,
+  "Configuration": {
+    "blocks": [
+      {
+        "contentElementTypeKey": "a11a1111-a11a-1111-a11a-111111111111"
+      },
+      {
+        "contentElementTypeKey": "a22a2222-a22a-2222-a22a-222222222222",
+        "settingsElementTypeKey": "a33a3333-a33a-3333-a33a-333333333333"
+      }
+    ],
+    "useLiveEditing": false
+  },
+  "Udi": "umb://data-type/d55d5555d55d5555d55d555555555555",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact",
+  "__version": "17.2.0"
+}

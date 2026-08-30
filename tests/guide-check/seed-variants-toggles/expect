@@ -1,0 +1,11 @@
+exit: 0
+args: plan noticeStrip --page page.json --dossier dossier.json
+contains: Live examples the source's variant set implies: 1
+contains: one instance, nothing set — the CMS applies its own defaults
+contains: 16 combinations
+contains: a person's judgment
+contains: records no default for an option list or a toggle
+contains: noticeDismissible (Notice Dismissible)
+not_contains: Live examples the source's variant set implies: 16
+not_contains: sets notice
+not_contains: Exactly one property on this component carries an option list

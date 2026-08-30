@@ -1,0 +1,6 @@
+exit: 1
+args: plan promoTile --page page.json --dossier dossier.json
+contains: pageVersion
+contains: 99
+not_contains: Traceback
+not_contains: Change plan for

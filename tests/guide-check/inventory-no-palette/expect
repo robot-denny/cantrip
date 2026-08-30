@@ -1,0 +1,6 @@
+exit: 0
+args: inventory --adapter deploy
+contains: no block-editor data type in this project declares a blocks[] palette
+contains: not as 'this project has none'
+contains: Components an editor can place: 0
+contains: Excluded, offered by no palette: 2

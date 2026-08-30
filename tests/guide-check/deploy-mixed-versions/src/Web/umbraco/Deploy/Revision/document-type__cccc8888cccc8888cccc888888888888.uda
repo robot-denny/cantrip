@@ -1,0 +1,20 @@
+{
+  "Name": "Legacy Promo",
+  "Alias": "legacyPromo",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-bullhorn color-yellow",
+  "Thumbnail": "folder.png",
+  "Description": "A component last serialized by a version of the package this adapter does not know.",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/cccc8888cccc8888cccc888888888888",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "16.4.0"
+}

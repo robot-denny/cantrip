@@ -1,0 +1,17 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotileasgenerated",
+    "rung": "deploy"
+  },
+  "fields": {
+    "guidePurpose": "Use a promo tile to point at something an editor wants noticed.",
+    "guideProperties": "<table><tr><td>Promo Heading</td></tr></table>",
+    "guideExamples": "<promo-tile>two instances an editor arranged</promo-tile>",
+    "guideBlurb": "The tile that points at something.",
+    "name": "How to use a Promo Tile"
+  }
+}

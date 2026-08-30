@@ -1,0 +1,5 @@
+exit: 1
+args: audit --guides guides.json --inventory inventory.json
+contains: not readable JSON
+contains: guides.json
+not_contains: Guide audit

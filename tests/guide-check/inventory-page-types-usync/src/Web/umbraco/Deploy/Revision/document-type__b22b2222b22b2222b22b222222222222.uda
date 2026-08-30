@@ -1,0 +1,37 @@
+{
+  "Name": "Page Base",
+  "Alias": "pageBase",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-settings color-black",
+  "Thumbnail": "folder.png",
+  "Permissions": {
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [
+    {
+      "Key": "b22b2222-0001-4000-8000-000000000001",
+      "Name": "SEO",
+      "SortOrder": 100,
+      "Type": 1,
+      "Alias": "seo",
+      "PropertyTypes": [
+        {
+          "Key": "b22b2222-0101-4000-8000-000000000101",
+          "Alias": "metaDescription",
+          "DataType": "umb://data-type/dddd1111dddd1111dddd111111111111",
+          "ValueType": "System.String",
+          "Description": "",
+          "Name": "Meta Description",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/b22b2222b22b2222b22b222222222222",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "17.2.0"
+}

@@ -1,0 +1,6 @@
+exit: 1
+args: plan someOtherThing --page page.json --dossier dossier.json
+contains: someOtherThing
+contains: promoTile
+not_contains: Traceback
+not_contains: Change plan for

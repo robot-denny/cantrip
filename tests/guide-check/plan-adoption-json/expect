@@ -1,0 +1,15 @@
+exit: 0
+args: plan alertBanner --page page.json --dossier dossier.json --json
+contains: "provenance": "hand-written"
+contains: "proposeOnly": true
+contains: "comparison": "noReference"
+contains: "noop": false
+contains: "machineOwned": []
+contains: "pendingApproval": true
+contains: "proposedOnApproval"
+contains: "ownership": "human-owned"
+not_contains: "proposed":
+not_contains: "ownership": "machine-owned"
+contains: "consequence"
+contains: makes this page's machine-owned fields machine-owned from
+contains: "modelCallNeeded": true

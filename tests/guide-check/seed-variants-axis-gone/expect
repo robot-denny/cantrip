@@ -1,0 +1,7 @@
+exit: 0
+args: plan pullQuote --page page.json --dossier dossier.json
+contains: Live examples the source's variant set implies: 1
+contains: This component records no variation axis now
+contains: nothing above is seeded
+not_contains: would be created
+not_contains: so the variant set may have changed since this page was seeded

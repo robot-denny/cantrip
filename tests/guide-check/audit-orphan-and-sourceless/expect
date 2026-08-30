@@ -1,0 +1,6 @@
+exit: 0
+args: audit --guides guides.json --adapter deploy
+stdout_matches: expected-report.txt
+contains: testimonialSlider (Testimonial Slider)
+contains: 1 claims none.
+not_contains: Image Sizing

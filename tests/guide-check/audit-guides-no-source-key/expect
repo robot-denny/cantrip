@@ -1,0 +1,6 @@
+exit: 1
+args: audit --guides guides.json --inventory inventory.json
+contains: has no 'source' key
+contains: Notice Bar
+contains: cannot be told from a reference the producer failed to read
+not_contains: Guide audit

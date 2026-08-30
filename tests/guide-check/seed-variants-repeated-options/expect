@@ -1,0 +1,6 @@
+exit: 0
+args: plan toneChip --page page.json --dossier dossier.json
+contains: Live examples the source's variant set implies: 2
+contains: Exactly one property on this component carries an option list
+not_contains: Live examples the source's variant set implies: 1
+not_contains: Live examples the source's variant set implies: 3

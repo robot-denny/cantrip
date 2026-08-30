@@ -1,0 +1,32 @@
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "toneChip",
+  "name": "Tone Chip",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "chipTone",
+          "name": "Chip Tone",
+          "description": "Which tone the chip is drawn in.",
+          "editor": "Umbraco.DropDown.Flexible",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": ["Neutral", "Neutral", "neutral"],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:tonechipwitharepeatedoption"
+}

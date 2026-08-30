@@ -1,0 +1,5 @@
+exit: 1
+args: extract alertBanner
+contains: the export is partial
+contains: dddd3333dddd3333dddd333333333333
+not_contains: "dossierVersion"

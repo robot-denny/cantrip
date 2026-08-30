@@ -1,0 +1,65 @@
+{
+  "Name": "Base Settings",
+  "Alias": "baseSettings",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-settings color-black",
+  "Thumbnail": "folder.png",
+  "Description": "Fields every block carries.",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [
+    {
+      "Key": "bbbb2222-0001-4000-8000-000000000001",
+      "Name": "SEO",
+      "SortOrder": 100,
+      "Type": 1,
+      "Alias": "seo",
+      "PropertyTypes": [
+        {
+          "Key": "bbbb2222-0101-4000-8000-000000000101",
+          "Alias": "metaDescription",
+          "DataType": "umb://data-type/dddd4444dddd4444dddd444444444444",
+          "ValueType": "System.String",
+          "Description": "Summary used by search engines.",
+          "Name": "Meta Description",
+          "SortOrder": 10
+        }
+      ]
+    },
+    {
+      "Key": "bbbb2222-0002-4000-8000-000000000002",
+      "Name": "Social",
+      "SortOrder": 20,
+      "Alias": "seo/social",
+      "PropertyTypes": [
+        {
+          "Key": "bbbb2222-0102-4000-8000-000000000102",
+          "Alias": "metaKeywords",
+          "DataType": "umb://data-type/dddd1111dddd1111dddd111111111111",
+          "ValueType": "System.String",
+          "Description": "Terms this page should be found by.",
+          "Name": "Meta Keywords",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/bbbb2222bbbb2222bbbb222222222222",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/dddd4444dddd4444dddd444444444444",
+      "Ordering": true
+    },
+    {
+      "Udi": "umb://data-type/dddd1111dddd1111dddd111111111111",
+      "Ordering": true
+    }
+  ],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "17.2.1"
+}

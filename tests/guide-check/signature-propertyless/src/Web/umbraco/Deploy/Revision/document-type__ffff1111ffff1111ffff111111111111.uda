@@ -1,0 +1,19 @@
+{
+  "Name": "Topic Tag",
+  "Alias": "topicTag",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-tag color-blue",
+  "Thumbnail": "folder.png",
+  "Description": "A tag an editor picks when classifying an article.",
+  "Permissions": {
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/ffff1111ffff1111ffff111111111111",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "17.2.0"
+}

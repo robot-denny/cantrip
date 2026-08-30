@@ -1,0 +1,5 @@
+exit: 1
+args: inventory --adapter models
+contains: carries no block-editor palette
+not_contains: "components"
+not_contains: Components an editor can place

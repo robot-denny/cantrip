@@ -1,0 +1,14 @@
+exit: 0
+args: plan statBadge --page page.json --dossier dossier.json
+contains: Live examples the source's variant set implies: 3
+contains: Neutral — sets badgeTone (Badge Tone) to "Neutral"
+contains: Positive — sets badgeTone (Badge Tone) to "Positive"
+contains: Urgent — sets badgeTone (Badge Tone) to "Urgent"
+contains: Exactly one property on this component carries an option list
+contains: This page carries no live examples, so every instance above would be
+contains: Seeded once, and never written on this page:
+contains: guideWhenToUse (seeded-once)
+not_contains: guideExamples (seeded-once)
+not_contains: combinatorial
+not_contains: nothing set — the CMS applies its own defaults
+not_contains: a person's judgment

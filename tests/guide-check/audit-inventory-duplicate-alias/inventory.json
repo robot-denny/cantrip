@@ -1,0 +1,15 @@
+{
+  "inventoryVersion": 1,
+  "rung": "deploy",
+  "components": [
+    {
+      "alias": "noticeBar",
+      "name": "Notice Bar"
+    },
+    {
+      "alias": "noticebar",
+      "name": "Notice Bar Again"
+    }
+  ],
+  "pageTypesProposed": []
+}

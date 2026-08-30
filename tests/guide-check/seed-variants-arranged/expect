@@ -1,0 +1,8 @@
+exit: 0
+args: plan statBadge --page page.json --dossier dossier.json
+contains: Live examples the source's variant set implies: 3
+contains: guideExamples (seeded-once)
+contains: <stat-badge>Neutral beside Positive, and a caption under both</stat-badge>
+contains: nothing above is seeded
+contains: the variant set may have changed
+not_contains: would be created

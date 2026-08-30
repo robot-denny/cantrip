@@ -1,0 +1,10 @@
+exit: 0
+args: plan statBadge --page page.json --dossier dossier.json
+contains: Live examples the source's variant set implies: 3
+contains: Neutral — sets badgeTone (Badge Tone) to "Neutral"
+contains: badgePinned (Badge Pinned)
+contains: Independent toggles, which multiply the set rather than enumerating it
+contains: describe 6 combinations in total, against the 3 instances
+contains: this plan proposes no others
+not_contains: seeds none of them
+not_contains: nothing set — the CMS applies its own defaults
