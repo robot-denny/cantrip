@@ -20,6 +20,29 @@ until it exists.
 
 ## Next
 
+**The styleguide, cut from the guides increment on 2026-08-25 and still owed a spec.** Story 1 of
+discovery's four: a page whose showcase sections read the project's design tokens live, so it
+reflects current styles without a regeneration. It was the cut line because stories 2–4 share one
+dossier and one audit while this one shares only the guide-page scaffolding — and because it is the
+only story that has to *invent* rendering rather than copy it. Every other story reads a structure a
+typical project already demonstrates; the token-reading swatch blocks have no analogue anywhere in
+one.
+
+**The groundwork is done, which is what makes this the cheapest thing in Next.** The guides
+increment shipped the guide page type, its containers, the derived index, and the shared
+`umbraco-17-guide-scaffolding` reference whose second caller this was always meant to be — so the
+styleguide inherits a working section rather than standing one up, and inherits provenance-based
+content ownership unchanged.
+
+**Do not re-derive what was already settled.** Five decisions, three drafted scenarios and the
+acceptance criterion they proved are carried verbatim in
+`_work/shipped/editor-facing-guides/notes/deferred-styleguide.md`, written as carry-forward material
+rather than as a spec. The load-bearing ones: it is a **spell, not a reference**, with the case
+against it recorded and answered; it **states its design-system precondition** instead of producing
+plausible output from nothing; and greenfield refusal matters more here than anywhere else in the
+capability, because a styleguide scaffolded at project setup makes a color-swatch view the exemplar
+every real block is later copied from. Start its spec from that file.
+
 **A spell for tests.** The gap the spell budget was raised for. A feature doc already carries a Test
 Coverage table mapping each scenario to a test file and a status, which is the contract such a spell
 would serve: read the scenarios, find what is uncovered, write and run, update the table. That makes
