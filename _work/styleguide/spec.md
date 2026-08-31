@@ -115,6 +115,36 @@ Five, from the deferred note. Re-deriving them is the specific waste that file e
 - The spell **reads token names and groupings, never their values**, into anything it writes. A
   literal value written into a page is the staleness this increment exists to prevent.
 
+### Styles an editor can apply are part of the system, not a system beside it
+
+**Stated as an assumption because it governs what the showcase covers**, and because the shape a
+CMS uses to expose these styles makes it easy to model them as something separate.
+
+A rich-text editor offers editors a menu of named styles — a lead paragraph, a pull quote, an
+overline, a caption. Those are **the design system's styles, exposed to the people who apply
+them.** They are not a parallel set with its own source of truth, and the styleguide does not get
+a separate section for them: they belong in the common-elements showcase alongside headings,
+lists, blockquotes and tables, because that is what they are.
+
+**So the assumption this increment builds on: where such a style exists, a developer has mapped it
+back to the system** — a token, a global class, a shared rule. Where that is not true, the right
+answer is to report drift, not to document a second system as though it were legitimate.
+
+**The mechanism makes this easy to get wrong, and the reason is worth writing down.** A CMS
+typically loads the editor's stylesheet into an isolated frame that does not see the site's own
+stylesheet — so a custom property declared for the site resolves to nothing there, and the
+tempting fix is to paste the literal value in and keep the two in step by hand. That is a choice
+rather than a constraint: an editor stylesheet that declares or imports the token layer itself can
+read the tokens normally, after which nothing needs keeping in step. Measured on the demo project:
+its editor stylesheet hardcodes two hex values and carries three "keep in sync" comments, while the
+site stylesheet beside it declares both as tokens.
+
+**Detecting that drift is a candidate increment rather than this one's work**, and it is cheaper
+than it looks: reading a project's stylesheets already collects every declared token and its value,
+so a literal that equals a declared token's value is a comparison over data already in hand. What
+is missing is only that the reader reports declarations and not literal usages. It earns its own
+acceptance criteria, so it earns its own spec.
+
 ### The showcase element types
 
 - The spell scaffolds **element types whose views render a token rather than a value** — at minimum a

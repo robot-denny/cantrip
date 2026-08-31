@@ -485,7 +485,14 @@ new `tests/guide-check/` cases.
 > `tokens` and present the colors and the unclassified properties for a person to group; scaffold the
 > showcase element types and their palette, recording the palette name in the slot so Step 7's
 > exclusion applies; **delegate view authoring to `/block`** by suggestion only — this spell never
-> invokes another. Add one instruction about **themes**: ask whether the project themes its blocks,
+> invokes another. Add one instruction about **the styles an editor can apply**: the
+> common-elements showcase should cover them, and where the CMS exposes a menu of named styles to
+> editors, that menu is how the agent knows which ones matter — they are the system's styles shown
+> to the people who apply them, not a separate set earning a section of their own. Say that a
+> literal value in an editor-facing stylesheet which does not trace back to a token is **drift to
+> report, not a style to showcase**, and that reporting it is a later increment rather than this
+> spell's job. **State this without naming a CMS mechanism, a file, or a property editor** — the
+> shape differs between versions and this is an L1 file. Add one instruction about **themes**: ask whether the project themes its blocks,
 > and where it does, decide from the project's own mechanism how the showcase should demonstrate the
 > theme set — one section per theme, a switcher, or a representative with the set named alongside.
 > **Do not prescribe one.** State that the showcase element itself needs no theme property, because a

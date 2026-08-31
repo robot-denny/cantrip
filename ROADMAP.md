@@ -122,6 +122,22 @@ that goes — a template and a checklist, or a conformance script, or an accepte
 
 ## Later
 
+**A conformance rule for `design-system-authoring`: an editor-facing stylesheet imports the token
+layer, it never mirrors its values.** Raised 2026-08-31 while specifying the styleguide, and noted
+here rather than folded into that increment because it applies to every project rather than to the
+ones running a styleguide.
+
+The shape is the one that skill already teaches — *name what breaks and when*, not "use tokens".
+A CMS commonly loads the rich-text editor's stylesheet into an isolated frame that cannot see the
+site's own, so a token declared for the site resolves to nothing there and the values get pasted in
+and kept in step by hand. Measured on the demo project: two hardcoded hex values mirroring two
+declared tokens, and three comments saying to keep them in sync. **That is a choice, not a
+constraint** — a stylesheet that declares or imports the token layer itself reads the tokens
+normally — which is exactly what makes it a rule worth stating rather than a limitation to accept.
+
+It pairs with the drift check on `_features/editor-guides.md`'s Increments list: the rule says what
+must be true, and that check finds where it is not. Neither needs the other to ship.
+
 **Resolve the content evals.** `dotnet-review-rules` ships eight cases describing what a review of a
 planted defect should produce, and nothing runs them. Their value is highest while authoring a pack
 and lowest as regression protection, so the answer probably falls out of the authoring skill above

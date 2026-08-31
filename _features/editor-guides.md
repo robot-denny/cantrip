@@ -39,6 +39,16 @@ increment.
       live instance, and a partial export reports itself instead of reading as an empty schema. It
       shipped as a direct amendment to the extraction guidance with no increment bundle, so its
       behavior belongs to that guidance rather than to this doc (see `CHANGELOG.md`, 2026-08-24)
+- [ ] **Candidate increment, raised 2026-08-31**: reporting a literal value that should have been a
+      token. A stylesheet loaded into an editor's own frame cannot see the site's stylesheet, so
+      the values it needs get pasted in and kept in step by hand — measured on the demo project,
+      two hardcoded hex values mirroring two declared tokens, with three "keep in sync" comments
+      saying so. **Both halves of the check already exist**: reading a project's stylesheets
+      collects every declared token and its value, so a literal equal to one is a comparison over
+      data already in hand. What is missing is that the reader reports declarations rather than
+      literal usages. Earns its own spec because it earns its own acceptance criteria — and note
+      the remedy is one import in the editor stylesheet, so the finding is actionable rather than
+      merely true
 - [ ] Parking lot: detecting staleness in human-authored prose — deliberately rejected for the first
       increment because it would put a model call in the audit path, which must stay cheap
 - [ ] **Known gap**: the supported serialization format versions are unsettled, and one format's
