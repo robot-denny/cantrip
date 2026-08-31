@@ -309,6 +309,12 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
     a public page.
   - **A `guide-check` test suite of 80 cases**, and `tests/run.sh` generalized to suites so a second
     subject was possible at all. Taking the harness to 97 cases across two suites.
+- **A spell-card cheatsheet** ([docs/spell-cards.md](docs/spell-cards.md)) — one card's worth of
+  content for every unit in the toolkit: 30 cards, 14 spells and 16 references, each with its
+  invocation or trigger, its prerequisites, what it leaves behind, and the one thing newcomers get
+  wrong about it. Repository documentation rather than an installable unit, written for building a
+  printed or on-screen deck, and for reading straight as a cheatsheet. It is a snapshot of the
+  spellbook and says so — a new spell means a missing card.
 
 ### Changed
 
