@@ -1,6 +1,10 @@
 {
-  "tokensVersion": 1,
-  "layer": "custom-properties",
+  "tokensVersion": 2,
+  "declarationsFrom": "custom-properties",
+  "authoritativeLayer": "custom-properties",
+  "layers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 4, "names": 4}
+  ],
   "stylesheetsRead": [
     "src/Web/wwwroot/css/site.css"
   ],
@@ -14,6 +18,7 @@
   "byFile": [
     {"file": "src/Web/wwwroot/css/site.css", "declarations": 4, "names": 4}
   ],
+  "byPreprocessorFile": [],
   "declarations": [
     {"name": "--brand-primary", "value": "#0B5FFF", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 2},
     {"name": "--brand-ink", "value": "#101828", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 3},

@@ -1,0 +1,21 @@
+{
+  "tokensVersion": 2,
+  "declarationsFrom": null,
+  "authoritativeLayer": "preprocessor-variables",
+  "layers": [
+    {"layer": "preprocessor-variables", "runtimeResolvable": false, "files": 1, "declarations": 2, "names": 2}
+  ],
+  "stylesheetsRead": [],
+  "counts": {
+    "declarations": 0,
+    "names": 0,
+    "color": 0,
+    "unclassified": 0,
+    "aliases": 0
+  },
+  "byFile": [],
+  "byPreprocessorFile": [
+    {"file": "src/Web/wwwroot/scss/_tokens.scss", "declarations": 2, "names": 2}
+  ],
+  "declarations": []
+}

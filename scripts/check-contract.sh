@@ -84,16 +84,20 @@ begin() {
 # name is as identifying as a block alias -- a project's palette is named after the project --
 # and the hole was demonstrated before it was filled: a client term planted in a fixture
 # stylesheet passed all 17 checks, and fails check 1 once the extension is listed here.
+#
+# `.scss` followed in the same suite once a fixture needed a preprocessor source: a `$` variable
+# is named after the project exactly as a custom property is, and the hole was demonstrated the
+# same way before it was filled.
 repo_md_files() {
   if git rev-parse --git-dir >/dev/null 2>&1; then
     { git ls-files; git ls-files --others --exclude-standard; } 2>/dev/null \
-      | grep -E '\.(md|json|sh|py|txt|diff|uda|config|cs|css)$|(^|/)LICENSE$' \
+      | grep -E '\.(md|json|sh|py|txt|diff|uda|config|cs|css|scss)$|(^|/)LICENSE$' \
       | grep -vE '^scripts/check-contract\.sh$'
   else
     find . \( "${PRUNE[@]}" \) -prune -o -type f \
       \( -name '*.md' -o -name '*.json' -o -name '*.sh' -o -name '*.py' -o -name '*.txt' \
          -o -name '*.diff' -o -name '*.uda' -o -name '*.config' -o -name '*.cs' \
-         -o -name '*.css' -o -name 'LICENSE' \) \
+         -o -name '*.css' -o -name '*.scss' -o -name 'LICENSE' \) \
       -print 2>/dev/null
   fi
 }

@@ -1,0 +1,16 @@
+$brand-primary: #1F7A5C;
+$brand-ink: #1D2939;
+
+/* Named arguments, one per line, at two call sites. Not declarations — a caller passing a
+   value is not a place a palette is defined, and counting these would report a palette
+   larger than the one a person can edit. */
+@include button-variant(
+  $background: $brand-primary,
+  $border: $brand-ink
+);
+
+.card {
+  @include shadow(
+    $color: $brand-ink
+  );
+}

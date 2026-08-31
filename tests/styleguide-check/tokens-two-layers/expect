@@ -1,0 +1,9 @@
+exit: 0
+args: tokens
+stdout_matches: expected-tokens.json
+contains: {"layer": "custom-properties", "runtimeResolvable": true
+contains: {"layer": "preprocessor-variables", "runtimeResolvable": false
+contains: "authoritativeLayer": "custom-properties"
+not_contains: $brand-primary
+not_contains: $legacy-slate
+not_contains: #475467

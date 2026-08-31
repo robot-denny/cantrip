@@ -1,6 +1,8 @@
 {
-  "tokensVersion": 1,
-  "layer": "custom-properties",
+  "tokensVersion": 2,
+  "declarationsFrom": null,
+  "authoritativeLayer": null,
+  "layers": [],
   "stylesheetsRead": [
     "src/Web/wwwroot/css/site.css"
   ],
@@ -12,5 +14,6 @@
     "aliases": 0
   },
   "byFile": [],
+  "byPreprocessorFile": [],
   "declarations": []
 }

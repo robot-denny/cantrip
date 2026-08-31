@@ -44,6 +44,16 @@ stylesheet() {  # stylesheet <case-root> <name>  — reads the body from stdin
   cat > "$dir/$2"
 }
 
+# A preprocessor source, in a sibling folder to the compiled stylesheets. Sibling rather than
+# nested, because a project that commits both keeps them apart, and a case that only passed
+# because the .scss sat under the css/ folder would be testing the folder name rather than the
+# suffix — the same trap the header note above describes for src/Web/wwwroot/css/ itself.
+preprocessor() {  # preprocessor <case-root> <name>  — reads the body from stdin
+  local dir="$1/src/Web/wwwroot/scss"
+  mkdir -p "$dir"
+  cat > "$dir/$2"
+}
+
 # ==============================================================================
 # The two fixtures are one claim seen from both sides
 # ==============================================================================
@@ -150,8 +160,12 @@ EOF
 # machine-independent, and it is what tokens-none leans on to say the read happened at all.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 1,
-  "layer": "custom-properties",
+  "tokensVersion": 2,
+  "declarationsFrom": "custom-properties",
+  "authoritativeLayer": "custom-properties",
+  "layers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 4, "names": 4}
+  ],
   "stylesheetsRead": [
     "src/Web/wwwroot/css/site.css"
   ],
@@ -165,6 +179,7 @@ cat > "$C/expected-tokens.json" <<'EOF'
   "byFile": [
     {"file": "src/Web/wwwroot/css/site.css", "declarations": 4, "names": 4}
   ],
+  "byPreprocessorFile": [],
   "declarations": [
     {"name": "--brand-primary", "value": "#0B5FFF", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 2},
     {"name": "--brand-ink", "value": "#101828", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 3},
@@ -228,10 +243,20 @@ stylesheet "$C" site.css <<'EOF'
   padding-block: 0.75rem;
 }
 EOF
+# `layers: []` with `authoritativeLayer: null` is the third statement this case makes, added in
+# Step 3: this project holds no token layer at all. It is a different answer from a project whose
+# only layer is build-time, and from Step 4 onward the two have different exit codes — so a
+# fixture asserting the empty one is what keeps the layer report from treating "nothing here" and
+# "nothing readable" as the same finding.
+# `declarationsFrom` is null here for the same reason `authoritativeLayer` is: there are no
+# declarations, so there is no layer they came from. `stylesheetsRead` is what says the file was
+# opened — the two keys answer different questions and only one of them has an answer here.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 1,
-  "layer": "custom-properties",
+  "tokensVersion": 2,
+  "declarationsFrom": null,
+  "authoritativeLayer": null,
+  "layers": [],
   "stylesheetsRead": [
     "src/Web/wwwroot/css/site.css"
   ],
@@ -243,6 +268,7 @@ cat > "$C/expected-tokens.json" <<'EOF'
     "aliases": 0
   },
   "byFile": [],
+  "byPreprocessorFile": [],
   "declarations": []
 }
 EOF
@@ -300,8 +326,12 @@ EOF
 # 10 and `--spacing` on line 11. `byFile` carries one entry because one file declared something.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 1,
-  "layer": "custom-properties",
+  "tokensVersion": 2,
+  "declarationsFrom": "custom-properties",
+  "authoritativeLayer": "custom-properties",
+  "layers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 2, "names": 2}
+  ],
   "stylesheetsRead": [
     "src/Web/wwwroot/css/site.css"
   ],
@@ -315,6 +345,7 @@ cat > "$C/expected-tokens.json" <<'EOF'
   "byFile": [
     {"file": "src/Web/wwwroot/css/site.css", "declarations": 2, "names": 2}
   ],
+  "byPreprocessorFile": [],
   "declarations": [
     {"name": "--real", "value": "#00AA00", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 10},
     {"name": "--spacing", "value": "1rem", "group": "unclassified", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 11}
@@ -366,8 +397,12 @@ EOF
 # reports nothing at all, which is why `declarations` being 1 rather than 0 is the whole claim.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 1,
-  "layer": "custom-properties",
+  "tokensVersion": 2,
+  "declarationsFrom": "custom-properties",
+  "authoritativeLayer": "custom-properties",
+  "layers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 1, "names": 1}
+  ],
   "stylesheetsRead": [
     "src/Web/wwwroot/css/site.css"
   ],
@@ -381,6 +416,7 @@ cat > "$C/expected-tokens.json" <<'EOF'
   "byFile": [
     {"file": "src/Web/wwwroot/css/site.css", "declarations": 1, "names": 1}
   ],
+  "byPreprocessorFile": [],
   "declarations": [
     {"name": "--after-escape", "value": "#445566", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 6}
   ]
@@ -392,5 +428,214 @@ expect "$C" \
   "stdout_matches: expected-tokens.json" \
   "not_contains: --fake-token" \
   "contains: {\"name\": \"--after-escape\", \"value\": \"#445566\", \"group\": \"color\""
+
+# --- tokens-two-layers ----------------------------------------------------------
+#
+# A project holding TWO token layers: an SCSS source whose `$` variables are the palette the
+# build reads, and the compiled `:root` block those variables emit. Both are real, and only one
+# of them survives to the browser.
+#
+# The claim is the one `umbraco-17-guide-scaffolding`'s `## Schema serialization` recipe already
+# makes about serialization formats — "record every format found and which one is authoritative"
+# — applied to token layers. Stopping at the first layer found reads a fallback as the whole
+# answer, and here it would be worse than that in one direction and worse in the other:
+#
+#   stop at the SCSS   the report names a build-time palette as the project's tokens, and every
+#                      swatch built from it is a value the browser never sees
+#   stop at the CSS    the report is right about what it read and silent about the fact that a
+#                      person editing the palette edits the SCSS, not the stylesheet
+#
+# So both are reported, and `authoritativeLayer` says which one the swatches come from — stated
+# as its own key rather than left to be inferred from the order of the table, because an order is
+# a convention a reader has to be told and a key is not.
+#
+# **The `not_contains:` lines are the case.** A reader that merged the two layers — treating
+# `$brand-primary: #1F7A5C` as a token because it looks like one — satisfies every `contains:`
+# line here, since the compiled custom properties would still be reported alongside. Only the
+# absence of the SCSS names says the layers were kept apart.
+#
+# Two probes, and they fail differently:
+#
+#   $brand-primary    a variable whose value the compiled CSS DOES carry, under a different
+#                     name. A merging reader reports it as a second token with the same value.
+#   $legacy-slate     declared, and emitted nowhere. Its value #475467 appears in no committed
+#                     stylesheet, so a report carrying that hex could only have got it by
+#                     reading the SCSS — which makes it the sharper of the two.
+#
+# The `:root` block INSIDE the .scss is the third trap, and it is why the golden matters here
+# beyond the substring lines. A reader that simply widened its glob to `.scss` would find three
+# more declarations there, with `#{$brand-primary}` as their values — six declarations over two
+# files rather than three over one. Every `contains:` line still passes; `byFile` and `counts` do
+# not.
+C="$CASES/tokens-two-layers"; mkdir -p "$C"
+preprocessor "$C" _tokens.scss <<'EOF'
+/* The build's palette. None of these names survive compilation — a stylesheet can hold a
+   var(--brand-primary) that follows a re-theme, and no markup can read a preprocessor
+   variable at all. */
+$brand-primary: #1F7A5C;
+$brand-ink: #1D2939;
+$space-4: 1.25rem;
+$legacy-slate: #475467;
+
+/* The bridge to the layer that does survive, and the trap for a reader that widened its glob
+   instead of discovering a layer: read as CSS, this block declares three more tokens whose
+   values are interpolation syntax no browser ever sees. */
+:root {
+  --brand-primary: #{$brand-primary};
+  --brand-ink: #{$brand-ink};
+  --space-4: #{$space-4};
+}
+EOF
+stylesheet "$C" site.css <<'EOF'
+:root {
+  --brand-primary: #1F7A5C;
+  --brand-ink: #1D2939;
+  --space-4: 1.25rem;
+}
+
+.site-header {
+  color: var(--brand-ink);
+  background-color: var(--brand-primary);
+  padding-block: var(--space-4);
+}
+EOF
+# Hand-authored from the two fixture files above, counted by hand.
+#
+# `layers` holds one row per layer FOUND, and a layer is found when it holds at least one
+# declaration — a `.scss` file that only emits custom properties declares no `$` and is not a
+# preprocessor layer, which is the distinction the module docstring calls layer discovery.
+#
+# The preprocessor row carries counts and nothing else. That is deliberate and not an omission:
+# knowing a build-time layer is present and roughly how large it is, is what decides whether the
+# palette can be read at render time; knowing what is IN it would need a second parser for a
+# second syntax, to report values this script has already said it will not use.
+#
+# The four `$` declarations sit on lines 4 through 7 of the .scss. The comments above them are
+# written `/* */` rather than `//` deliberately: `//` is not CSS, so a reader that had merely
+# widened its glob to `.scss` would stall on the first one and find nothing in the file at all —
+# which would leave this case's `not_contains:` lines passing against the very implementation
+# they exist to fail. A CSS-style comment is stripped by such a reader, so the trap below is
+# reachable. That was checked by building that reader and watching the case fail, not assumed.
+#
+# `declarationsFrom` states which layer the `declarations` table below was read from. Without it
+# a consumer holding a two-row `layers` table and a `declarations` table has no way to tell a
+# report that kept the layers apart from one that merged them.
+cat > "$C/expected-tokens.json" <<'EOF'
+{
+  "tokensVersion": 2,
+  "declarationsFrom": "custom-properties",
+  "authoritativeLayer": "custom-properties",
+  "layers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 3, "names": 3},
+    {"layer": "preprocessor-variables", "runtimeResolvable": false, "files": 1, "declarations": 4, "names": 4}
+  ],
+  "stylesheetsRead": [
+    "src/Web/wwwroot/css/site.css"
+  ],
+  "counts": {
+    "declarations": 3,
+    "names": 3,
+    "color": 2,
+    "unclassified": 1,
+    "aliases": 0
+  },
+  "byFile": [
+    {"file": "src/Web/wwwroot/css/site.css", "declarations": 3, "names": 3}
+  ],
+  "byPreprocessorFile": [
+    {"file": "src/Web/wwwroot/scss/_tokens.scss", "declarations": 4, "names": 4}
+  ],
+  "declarations": [
+    {"name": "--brand-primary", "value": "#1F7A5C", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 2},
+    {"name": "--brand-ink", "value": "#1D2939", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 3},
+    {"name": "--space-4", "value": "1.25rem", "group": "unclassified", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 4}
+  ]
+}
+EOF
+# The substring lines say what a failure means. The two layer rows are "both layers reported",
+# `authoritativeLayer` is the manual check the plan asks for — named, not inferred — and the
+# three not_contains lines are the claim the golden alone would state less legibly.
+expect "$C" \
+  "exit: 0" \
+  "args: tokens" \
+  "stdout_matches: expected-tokens.json" \
+  "contains: {\"layer\": \"custom-properties\", \"runtimeResolvable\": true" \
+  "contains: {\"layer\": \"preprocessor-variables\", \"runtimeResolvable\": false" \
+  "contains: \"authoritativeLayer\": \"custom-properties\"" \
+  "not_contains: \$brand-primary" \
+  "not_contains: \$legacy-slate" \
+  "not_contains: #475467"
+
+# --- tokens-preprocessor-only ---------------------------------------------------
+#
+# A project whose only token layer is build-time: `.scss` variables, no `.css` anywhere. Three
+# claims in one case, because they are one situation rather than three.
+#
+# **A named argument at a call site is not a declaration.** The counting pattern is anchored to
+# the start of a line, and review found that anchor insufficient: the idiomatic multi-line
+# mixin call puts each named argument alone on its own line, so `$background:` below looks
+# exactly like a declaration to a line-anchored pattern. Three of them here, and the file
+# declares two variables — a reader that cannot tell them apart says five.
+#
+# **`not_contains:` cannot state this claim, and adding those lines would be theatre.** The
+# preprocessor layer reports counts only — never a variable's name — so `$background` is absent
+# from the output whether the count is right or wrong, and an assertion that it is absent passes
+# against the bug it was written for. The count in the golden and in the `contains:` line below
+# is the only thing that catches it.
+#
+# **A project with no runtime layer still reports a completed read**, naming the build-time layer
+# as authoritative because it is the only one there. `declarationsFrom` is null: no layer was
+# parsed for values, and saying `custom-properties` here would name a read that did not happen.
+# Step 4 turns this state into a refusal; this case only fixes what the report says about it.
+C="$CASES/tokens-preprocessor-only"; mkdir -p "$C"
+preprocessor "$C" _tokens.scss <<'EOF'
+$brand-primary: #1F7A5C;
+$brand-ink: #1D2939;
+
+/* Named arguments, one per line, at two call sites. Not declarations — a caller passing a
+   value is not a place a palette is defined, and counting these would report a palette
+   larger than the one a person can edit. */
+@include button-variant(
+  $background: $brand-primary,
+  $border: $brand-ink
+);
+
+.card {
+  @include shadow(
+    $color: $brand-ink
+  );
+}
+EOF
+# Hand-authored: two declarations, two names, one file. Five would be the bug.
+cat > "$C/expected-tokens.json" <<'EOF'
+{
+  "tokensVersion": 2,
+  "declarationsFrom": null,
+  "authoritativeLayer": "preprocessor-variables",
+  "layers": [
+    {"layer": "preprocessor-variables", "runtimeResolvable": false, "files": 1, "declarations": 2, "names": 2}
+  ],
+  "stylesheetsRead": [],
+  "counts": {
+    "declarations": 0,
+    "names": 0,
+    "color": 0,
+    "unclassified": 0,
+    "aliases": 0
+  },
+  "byFile": [],
+  "byPreprocessorFile": [
+    {"file": "src/Web/wwwroot/scss/_tokens.scss", "declarations": 2, "names": 2}
+  ],
+  "declarations": []
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: tokens" \
+  "stdout_matches: expected-tokens.json" \
+  "contains: {\"layer\": \"preprocessor-variables\", \"runtimeResolvable\": false, \"files\": 1, \"declarations\": 2, \"names\": 2}" \
+  "contains: \"declarationsFrom\": null" \
+  "contains: {\"file\": \"src/Web/wwwroot/scss/_tokens.scss\", \"declarations\": 2, \"names\": 2}"
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

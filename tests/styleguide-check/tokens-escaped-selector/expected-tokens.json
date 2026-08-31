@@ -1,6 +1,10 @@
 {
-  "tokensVersion": 1,
-  "layer": "custom-properties",
+  "tokensVersion": 2,
+  "declarationsFrom": "custom-properties",
+  "authoritativeLayer": "custom-properties",
+  "layers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 1, "names": 1}
+  ],
   "stylesheetsRead": [
     "src/Web/wwwroot/css/site.css"
   ],
@@ -14,6 +18,7 @@
   "byFile": [
     {"file": "src/Web/wwwroot/css/site.css", "declarations": 1, "names": 1}
   ],
+  "byPreprocessorFile": [],
   "declarations": [
     {"name": "--after-escape", "value": "#445566", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 6}
   ]

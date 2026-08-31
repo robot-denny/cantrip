@@ -1,0 +1,6 @@
+exit: 0
+args: tokens
+stdout_matches: expected-tokens.json
+contains: {"layer": "preprocessor-variables", "runtimeResolvable": false, "files": 1, "declarations": 2, "names": 2}
+contains: "declarationsFrom": null
+contains: {"file": "src/Web/wwwroot/scss/_tokens.scss", "declarations": 2, "names": 2}

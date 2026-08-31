@@ -19,23 +19,83 @@ under which "reads the project's design tokens live, without regeneration" can b
 styleguide page that renders a swatch from `var(--brand-primary)` follows a re-theme by itself;
 one that renders a hex the build inlined three months ago does not, and looks identical.
 
-So in practice: **CSS custom properties**. Everything else is a different layer, and reporting
-which layers a project holds, and which of them is authoritative, is a separate question this
-script does not yet answer.
+So in practice: **CSS custom properties**. Everything else is a different layer — real design
+tokens by any normal usage, and still not ones a page can read — which makes "what layers does
+this project hold, and which of them is authoritative" a question with an answer of its own,
+below.
+
+## The layers a project holds, and which one is authoritative
+
+**Every layer found is recorded, and the authoritative one is named.** That is the rule
+`umbraco-17-guide-scaffolding`'s `## Schema serialization` recipe already states about
+serialization formats, kept here for the reason it gives: a project can hold more than one, and
+stopping at the first reads a fallback as the whole answer.
+
+Two layers are recognized:
+
+    custom-properties        `--name:` declarations in a `.css` file      runtime-resolvable
+    preprocessor-variables   `$name:` in `.scss`/`.sass`, `@name:`        build-time only
+                             in `.less`
+
+**Custom properties are authoritative whenever present**, because they are the only layer whose
+values survive to the browser. The common shape — a `.scss` holding the palette and emitting a
+`:root` block from it — holds both, is read from the custom properties, and is told the other
+layer is there, because that is where a person edits the palette.
+
+The authoritative layer is named in its own key rather than left to be inferred from the order of
+the table. An order is a convention a reader has to be told; a key is not.
+
+**Finding a preprocessor layer is not parsing one.** Its counts come from one anchored regular
+expression per sigil, applied to lines that begin outside any paren group and with `/* */`
+comments blanked first. No value is read, and no `@import` is followed. What the report needs is
+that the layer is *present* and roughly how large, because that is what decides whether a palette
+can be read at render time; what is *in* it would need a second parser for a second syntax, to
+produce values this script has already promised not to use. A `.scss` declaring no `$` is not a
+preprocessor layer at all — a file that merely emits custom properties is the bridge between the
+layers, not a layer of its own.
+
+**The count is still approximate, and it errs in both directions.** Stating that precisely matters
+more than the error does, because a number documented as wrong in one direction gets trusted in
+the other:
+
+- **Under**, by design: a declaration written mid-line after a `;` — `color: red; $foo: bar;` — is
+  not counted, because the pattern is anchored to the start of a line. Closing that would mean
+  finding statement boundaries inside a line, which is the second parser this section refuses, for
+  a shape almost nothing writes.
+- **Over**, in one narrow case: a `//` line comment is not stripped, so a `$name:` reached through
+  one — which takes a `/*` block opening mid-line — can still be counted.
+
+Neither moves the answer this number exists to give. A project is over or under by a few on a count
+whose only job is "is this layer here, and is it big", and the shapes that fool it are shapes that
+still mark a project holding a preprocessor palette.
+
+### Why a utility framework's theme configuration is not a third layer
+
+It is absent deliberately, not pending.
+
+A utility framework's theme now commonly lives in an `@theme { }` block *inside a `.css` file*,
+declaring ordinary custom properties that ship to the browser — so the scan below already reports
+it, correctly, as part of the runtime layer. Counting it again as build-time would say the
+opposite of what is true.
+
+The older shape — a theme in a JavaScript config that never reaches the browser — cannot be told
+from the newer one by looking at the filesystem, because a project may keep that config and have
+its values compiled into custom properties regardless. Detecting it would take a list of framework
+config filenames, which is the kind of list `SKIP_DIRS` below refuses for going stale, and the
+list would be wrong about runtime-resolvability on exactly the projects that migrated. So what
+gets reported is the layer a person can act on, and a framework config emitting nothing readable
+reports as no layer — which is what is on disk.
 
 ## What it reads, and what it does not
 
-`.css` files only, walked from `--project-root`, skipping build output and dependency trees
-(`SKIP_DIRS`). Two consequences worth stating plainly rather than discovering:
+Walked from `--project-root`, skipping build output and dependency trees (`SKIP_DIRS`). Two
+consequences worth stating plainly rather than discovering:
 
-- **A `.scss` or `.less` source is not read**, even though a custom property declared in one
-  survives compilation perfectly well. Those files are the preprocessor layer, and which layer
-  a project's tokens actually live in is a question with its own answer — a project whose
-  `.scss` holds `$brand-primary` has a build-time-only palette that no markup can read at
-  render time, and telling it apart from one whose `.scss` merely *emits* custom properties is
-  layer discovery, not scanning. Reading both here would collapse the two into one number.
-  Scanning one syntax also keeps the parser to one syntax: `//` line comments are not CSS, and
-  a scanner that stripped them would have to tell a comment from the `//` in a `url(https://…)`.
+- **A `.scss` or `.less` source is never read for values**, even though a custom property
+  declared in one survives compilation perfectly well. Those files are counted for layer
+  discovery and nothing more. Reading them for values here would collapse two layers into one
+  number, and it would take a second parser besides: `//` line comments are not CSS, and a
+  scanner that stripped them would have to tell a comment from the `//` in a `url(https://…)`.
 
 - **A committed vendor stylesheet contributes its properties**, because it is a stylesheet in
   the project and its properties do resolve at render time. Every declaration carries the file
@@ -103,9 +163,10 @@ question and not this script's.
 current directory. No path, host, or version is hardcoded; the spell reads the project's slots
 and passes what it finds.
 
-The document is two-space-indented JSON with **one line per declaration**, because a token list
-is a table: a row per line keeps a token's name, value, group, and origin legible together, and
-a diff of two reports points at the token that changed rather than at a field three tokens away.
+The document is two-space-indented JSON with **one line per row** in each of its tables —
+`layers`, `byFile`, `declarations` — because each of those is a table: a row per line keeps a
+token's name, value, group, and origin legible together, and a diff of two reports points at the
+token that changed rather than at a field three tokens away.
 
 Exit: 0 on a completed read — including a read that found nothing, which is the common starting
 state and not an error — 1 when the read could not be completed, and 2 on a usage error.
@@ -126,23 +187,63 @@ PROG = "styleguide.py"
 
 # Bumped when the document's shape changes in a way a consumer has to notice. A consumer reads
 # it rather than sniffing for keys, the same way a dossier carries `dossierVersion`.
-TOKENS_VERSION = 1
+#
+# 2 replaced the singular `layer` key with `declarationsFrom`, `authoritativeLayer` and the
+# `layers` table. A consumer of version 1 read one layer name and could not have known there was
+# anything else to ask about, which is precisely the notice this number exists to give.
+TOKENS_VERSION = 2
 
-# The layer this subcommand reads. Named in the document rather than left implicit, because it
-# is one layer of several a project may hold and a report that did not say which layer it read
-# would be indistinguishable from one claiming to have read them all.
-LAYER = "custom-properties"
+# The layer the `declarations` table is read from — the only layer this script parses values out
+# of. Named in the document rather than left implicit: a consumer holding a two-row `layers`
+# table and a `declarations` table has no other way to tell a report that kept the layers apart
+# from one that merged them.
+LAYER_CUSTOM_PROPERTIES = "custom-properties"
+LAYER_PREPROCESSOR = "preprocessor-variables"
+
+# Fidelity order, and the whole of the authoritative-layer rule: the first of these a project
+# holds is the authoritative one. Custom properties come first because they are the only layer
+# whose values survive to the browser, which is this script's definition of a design token.
+#
+# Written as a lookup over the layers found rather than as "the first row of the table", so the
+# rule survives someone reordering the report for readability.
+LAYERS_BY_FIDELITY = (LAYER_CUSTOM_PROPERTIES, LAYER_PREPROCESSOR)
 
 GROUP_COLOR = "color"
 GROUP_UNCLASSIFIED = "unclassified"
 
 # Document keys whose value is a list of uniform rows, rendered one row per line. See `render`
 # for why; the set exists so a second table does not get a second copy of that branch.
-TABLE_KEYS = frozenset(("byFile", "declarations"))
+TABLE_KEYS = frozenset(("layers", "byFile", "byPreprocessorFile", "declarations"))
 
-# `.css` and nothing else — see the module docstring on why a preprocessor source is a
-# different question rather than a wider glob.
+# `.css` and nothing else is read for VALUES — see the module docstring on why a preprocessor
+# source is a different layer rather than a wider glob.
 STYLESHEET_SUFFIXES = (".css",)
+
+# The preprocessor syntaxes, and the sigil a variable declaration carries in each. `.scss` and
+# `.sass` are one language in two syntaxes and share `$`; Less uses `@`, which is also its
+# at-rule sigil — hence the colon the pattern below insists on, since `@media (min-width: 40em)`
+# has no colon where a declaration would put one.
+PREPROCESSOR_SIGILS = {
+    ".scss": "$",
+    ".sass": "$",
+    ".less": "@",
+}
+
+# Anchored to the start of a line, which is where a variable declaration sits in every one of
+# these syntaxes and is also what excludes the two shapes that would otherwise be miscounted: a
+# `//` line comment (the `//` is not leading whitespace, so the pattern never reaches the sigil)
+# and a USE of a variable inside a value, which always has a property name in front of it.
+#
+# Deliberately not a parser. It counts declarations; it does not read their values, and nothing
+# downstream may treat what it finds as a token.
+_PREPROCESSOR_DECLARATION = {
+    "$": re.compile(r"^[ \t]*\$([A-Za-z_-][\w-]*)[ \t]*:", re.MULTILINE),
+    "@": re.compile(r"^[ \t]*@([A-Za-z_-][\w-]*)[ \t]*:", re.MULTILINE),
+}
+
+# Every suffix the walk collects, in one tuple so the tree is walked once. `.scss` does not end
+# with `.css`, so bucketing by suffix needs no ordering care.
+SOURCE_SUFFIXES = STYLESHEET_SUFFIXES + tuple(sorted(PREPROCESSOR_SIGILS))
 
 # Directory names that hold build output, dependency trees, or version-control internals. A
 # vendor token under node_modules is not this project's palette and there may be thousands of
@@ -159,6 +260,15 @@ SKIP_DIRS = frozenset((
 ))
 
 
+def note_unreadable(rel, exc):
+    """One file this script could not open, named on stderr and otherwise skipped.
+
+    One file should never cost a project its whole report, and a silent skip would make a
+    permissions problem look like a project with fewer tokens than it has.
+    """
+    print("%s: note: could not read %s: %s" % (PROG, rel, exc), file=sys.stderr)
+
+
 class StyleguideError(Exception):
     """A read that could not be completed, with a message for the operator.
 
@@ -171,23 +281,35 @@ class StyleguideError(Exception):
 # Finding the stylesheets
 # ---------------------------------------------------------------------------
 
-def find_stylesheets(root):
-    """Every stylesheet under `root`, as paths relative to it, in sorted order.
+def find_sources(root):
+    """Every file under `root` this script may open, bucketed by suffix.
 
-    Sorted, and with `/` as the separator whatever the platform uses, because the report is
-    compared byte for byte by its tests and read side by side across machines by people. Walk
-    order is neither stable nor meaningful.
+    One walk for every suffix rather than one per layer: a project's tree is walked once and
+    the buckets decide what each file is for. A `.scss` in the preprocessor bucket is counted,
+    never parsed — the buckets are what keeps that distinction structural instead of a rule
+    somebody has to remember.
+
+    Each bucket is sorted, with `/` as the separator whatever the platform uses, because the
+    report is compared byte for byte by its tests and read side by side across machines by
+    people. Walk order is neither stable nor meaningful.
     """
-    found = []
+    found = dict((suffix, []) for suffix in SOURCE_SUFFIXES)
     for dirpath, dirnames, filenames in os.walk(root):
         # In place, which is what prunes the walk rather than merely filtering the listing.
         dirnames[:] = [d for d in dirnames
                        if d not in SKIP_DIRS and not d.startswith(".")]
         for name in filenames:
-            if name.lower().endswith(STYLESHEET_SUFFIXES):
-                rel = os.path.relpath(os.path.join(dirpath, name), root)
-                found.append(rel.replace(os.sep, "/"))
-    return sorted(found)
+            lowered = name.lower()
+            # One C-level check against the whole tuple before the per-suffix loop, which then
+            # only runs for a file that is going to land in some bucket.
+            if not lowered.endswith(SOURCE_SUFFIXES):
+                continue
+            for suffix in SOURCE_SUFFIXES:
+                if lowered.endswith(suffix):
+                    rel = os.path.relpath(os.path.join(dirpath, name), root)
+                    found[suffix].append(rel.replace(os.sep, "/"))
+                    break
+    return dict((suffix, sorted(paths)) for suffix, paths in found.items())
 
 
 def read_text(path):
@@ -491,12 +613,128 @@ def alias_target(value):
 
 
 # ---------------------------------------------------------------------------
+# Layer discovery
+# ---------------------------------------------------------------------------
+
+def declarations_at_top_level(text, pattern):
+    """Variable names declared at paren depth zero, with comments removed first.
+
+    Two shapes this excludes, and the second is why the line anchor alone was not enough:
+
+        // $muted: #ccc                  a line comment — the anchor already rejects it
+        /* $muted: #ccc; */              a block comment — `strip_comments` blanks it
+        @include button-variant(
+          $background: $primary,         a named ARGUMENT at a call site, alone on its line
+        );                               and therefore anchored exactly like a declaration
+
+    A caller passing a value is not a place a palette is defined. Counting those reports a
+    palette larger than the one a person can edit, and on a file holding only such a call it
+    reports a build-time layer that is not there at all — which would send Step 4's refusal to a
+    project whose real answer is "no token layer", a different problem with a different remedy.
+
+    **Depth resets at every statement boundary**, and that is correctness before it is caution: a
+    paren group cannot span a `;`, `{` or `}` in any of these syntaxes, so a call's parens have
+    closed by the time its statement ends. It also bounds the damage from a paren this line-level
+    count cannot see — one inside a string, or inside a `//` comment — to the statement it sits
+    in, rather than pegging the depth and silently dropping every declaration in the rest of the
+    file. That failure mode has already been paid for once in this script's CSS scanner.
+    """
+    names = []
+    depth = 0
+    for line in strip_comments(text).splitlines():
+        if depth == 0:
+            match = pattern.match(line)
+            if match:
+                names.append(match.group(1))
+        depth = max(0, depth + line.count("(") - line.count(")"))
+        if line.rstrip().endswith((";", "{", "}")):
+            depth = 0
+    return names
+
+
+def count_preprocessor_variables(root, sources):
+    """`(rows, declarations, names)` for the preprocessor layer — counted, never parsed.
+
+    `rows` carries one entry per file that declared something, in the shape `byFile` uses for
+    stylesheets. That provenance is not decoration: a vendored `.scss` bundle sitting beside a
+    project's own palette inflates this layer exactly the way a vendored icon font inflated the
+    custom-property one, and a consumer handed a total with no files behind it cannot tell the
+    two apart. The paths cost nothing extra — they are already in hand here.
+
+    A file contributes only if it declares at least one variable, so a `.scss` that holds no
+    `$` and merely emits a `:root` block is not a preprocessor layer. That file is the bridge
+    between the two layers, and counting it as a layer of its own would report a build-time
+    palette in a project that has already lifted its palette out of one.
+
+    Names are kept sigil-and-all. A project mixing syntaxes is unusual, but `$brand` in a
+    `.scss` and `@brand` in a `.less` are two declarations in two languages, and folding them
+    into one name would undercount the layer for the sake of a collision nobody meant.
+    """
+    rows = []
+    declarations = 0
+    names = set()
+    for suffix in sorted(PREPROCESSOR_SIGILS):
+        sigil = PREPROCESSOR_SIGILS[suffix]
+        pattern = _PREPROCESSOR_DECLARATION[sigil]
+        for rel in sources.get(suffix, ()):
+            try:
+                text = read_text(os.path.join(root, rel))
+            except OSError as exc:
+                note_unreadable(rel, exc)
+                continue
+            found = declarations_at_top_level(text, pattern)
+            if not found:
+                continue
+            here = set(sigil + name for name in found)
+            rows.append({
+                "file": rel,
+                "declarations": len(found),
+                "names": len(here),
+            })
+            declarations += len(found)
+            names.update(here)
+    rows.sort(key=lambda row: row["file"])
+    return rows, declarations, names
+
+
+def layer_row(name, runtime_resolvable, files, declarations, names):
+    """One row of the `layers` table.
+
+    Uniform across layers on purpose. The row says how much of a layer there is and whether its
+    values reach the browser, and it says nothing about what is in it — the counts are what
+    decides whether a palette can be read at render time, and only the authoritative layer's
+    contents are reported anywhere in this document.
+    """
+    return {
+        "layer": name,
+        "runtimeResolvable": runtime_resolvable,
+        "files": files,
+        "declarations": declarations,
+        "names": names,
+    }
+
+
+def authoritative_layer(layers):
+    """The name of the authoritative layer among those found, or None when none were.
+
+    A lookup over `LAYERS_BY_FIDELITY` rather than `layers[0]`, so the rule is stated where it
+    can be read and does not quietly depend on the order the table happens to be built in.
+    """
+    found = set(row["layer"] for row in layers)
+    for name in LAYERS_BY_FIDELITY:
+        if name in found:
+            return name
+    return None
+
+
+# ---------------------------------------------------------------------------
 # The document
 # ---------------------------------------------------------------------------
 
 def read_tokens(root):
     """Every custom-property declaration under `root`, classified, as a report document."""
-    stylesheets = find_stylesheets(root)
+    sources = find_sources(root)
+    stylesheets = sources[".css"]
 
     scanned = []
     rows = []
@@ -504,10 +742,9 @@ def read_tokens(root):
         try:
             text = read_text(os.path.join(root, rel))
         except OSError as exc:
-            # Named and skipped rather than fatal, and excluded from `stylesheetsRead` so the
-            # document never claims a file it could not open. One unreadable sheet should not
-            # cost a project every token in the others.
-            print("%s: note: could not read %s: %s" % (PROG, rel, exc), file=sys.stderr)
+            # Excluded from `stylesheetsRead` too, so the document never claims a file it
+            # could not open.
+            note_unreadable(rel, exc)
             continue
         scanned.append(rel)
         for name, value, line in declarations_in(text):
@@ -580,22 +817,56 @@ def read_tokens(root):
                 "names": len(set(d["name"] for d in rows_here)),
             })
 
+    # The layers the project holds, in fidelity order, one row each — and only for layers that
+    # actually hold something. An empty `layers` is a project with no token layer at all, which
+    # is a different answer from a project whose only layer cannot be read at render time, and
+    # the two must not collapse into one.
+    #
+    # The custom-property row is counted from what was already read: `files` is the number of
+    # files that declared something, matching what the preprocessor row counts, so the two rows
+    # mean the same thing by the same name.
+    distinct_names = set(d["name"] for d in declarations)
+
+    layers = []
+    if declarations:
+        layers.append(layer_row(
+            LAYER_CUSTOM_PROPERTIES, True,
+            files=len(by_file),
+            declarations=len(declarations),
+            names=len(distinct_names),
+        ))
+    by_preprocessor_file, pre_declarations, pre_names = count_preprocessor_variables(root, sources)
+    if pre_declarations:
+        layers.append(layer_row(
+            LAYER_PREPROCESSOR, False,
+            files=len(by_preprocessor_file),
+            declarations=pre_declarations,
+            names=len(pre_names),
+        ))
+
     return {
         "tokensVersion": TOKENS_VERSION,
-        "layer": LAYER,
+        # Null when nothing was parsed for values. The constant would otherwise sit beside an
+        # `authoritativeLayer` naming a different layer and an empty `declarations` table, which
+        # reads as a claim about a read that did not happen — and a schema fact a consumer
+        # cannot see the reasoning for is indistinguishable from a per-run answer.
+        "declarationsFrom": LAYER_CUSTOM_PROPERTIES if declarations else None,
+        "authoritativeLayer": authoritative_layer(layers),
+        "layers": layers,
         "stylesheetsRead": scanned,
         "counts": {
             # Declarations and names are both reported because they answer different
             # questions: 40 declarations over 30 names means ten are re-declared, which is a
             # theme or a media query and is worth seeing before anyone builds a swatch grid.
             "declarations": len(declarations),
-            "names": len(set(d["name"] for d in declarations)),
+            "names": len(distinct_names),
             GROUP_COLOR: sum(1 for d in declarations if d["group"] == GROUP_COLOR),
             GROUP_UNCLASSIFIED: sum(1 for d in declarations
                                     if d["group"] == GROUP_UNCLASSIFIED),
             "aliases": sum(1 for d in declarations if d["aliasOf"] is not None),
         },
         "byFile": by_file,
+        "byPreprocessorFile": by_preprocessor_file,
         "declarations": declarations,
     }
 
@@ -643,7 +914,8 @@ def build_parser():
 
     tokens_cmd = subparsers.add_parser(
         "tokens",
-        help="report every CSS custom property the project declares, and its group")
+        help="report the token layers the project holds, which one is authoritative, and every "
+             "CSS custom property it declares with its group")
     tokens_cmd.set_defaults(handler=cmd_tokens)
 
     for sub in (tokens_cmd,):
