@@ -389,7 +389,14 @@ alias rule, JSON output).
   assertion and leaves the caster unable to tell "no tokens" from "nothing here at all".
 
 **Validation**:
-- [Automated]: `tests/run.sh styleguide-check` 7/7.
+- [Automated]: `tests/run.sh` fully green, and `styleguide-check` gained exactly the three
+  `precheck-*` cases this step names — no more and no less.
+
+  <!-- Stated as a condition rather than a count on purpose. Steps 2, 3 and 4 each named a
+       number (2/2, 3/3, 4/4) and every one of them was stale by the time the step ran,
+       because review kept adding fixtures the plan did not anticipate — the suite was 6 when
+       Step 4 expected 4. A count is a claim about the whole suite; what a step can actually
+       promise is what IT added. Steps 6 onward already read this way. -->
 - [Manual]: run `precheck` against one of the read-only source repos in
   `.claude/settings.local.json` and confirm the answer matches what is actually there. Report the
   outcome in the step's notes; **do not commit anything derived from it** — per `AGENTS.md`, nothing
@@ -623,7 +630,14 @@ a spell.
 | Create | `skills/umbraco-17/spellbook/styleguide/scripts/styleguide.py` |
 | Create | `tests/make-styleguide-fixtures.sh` |
 | Create | `tests/styleguide-check/subject` |
-| Create | `tests/styleguide-check/tokens-custom-properties/`, `tokens-none/`, `tokens-two-layers/`, `tokens-build-time-only/`, `precheck-both/`, `precheck-no-tokens/`, `precheck-greenfield/` |
+| Create | `tests/styleguide-check/tokens-custom-properties/`, `tokens-none/`, `tokens-two-layers/`, `tokens-preprocessor-only/`, `tokens-string-terminator/`, `tokens-escaped-selector/`, `precheck-both/`, `precheck-no-tokens/`, `precheck-greenfield/` |
+
+<!-- Three of those fixtures were not in the plan when it was written. `tokens-string-terminator`
+     and `tokens-escaped-selector` came out of Step 2's review, and `tokens-preprocessor-only`
+     out of Step 3's — it is also the case Step 4 describes as `tokens-build-time-only`, which
+     was never created because that fixture already existed under the earlier name. Corrected
+     here rather than in Step 4's prose: the prose is what was planned, this table is what
+     someone reconciles against the tree. -->
 | Create | `tests/guide-check/inventory-excluded-palette/`, `tests/guide-check/audit-styleguide-silent/` |
 | Modify | `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md` |
 | Modify | `skills/umbraco-17/spellbook/guide/scripts/guide.py` |

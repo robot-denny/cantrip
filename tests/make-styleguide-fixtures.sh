@@ -160,9 +160,10 @@ EOF
 # machine-independent, and it is what tokens-none leans on to say the read happened at all.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 2,
+  "tokensVersion": 3,
   "declarationsFrom": "custom-properties",
   "authoritativeLayer": "custom-properties",
+  "refusal": null,
   "layers": [
     {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 4, "names": 4}
   ],
@@ -245,17 +246,25 @@ stylesheet "$C" site.css <<'EOF'
 EOF
 # `layers: []` with `authoritativeLayer: null` is the third statement this case makes, added in
 # Step 3: this project holds no token layer at all. It is a different answer from a project whose
-# only layer is build-time, and from Step 4 onward the two have different exit codes — so a
-# fixture asserting the empty one is what keeps the layer report from treating "nothing here" and
+# only layer is build-time, and since Step 4 the two have different exit codes — so a fixture
+# asserting the empty one is what keeps the layer report from treating "nothing here" and
 # "nothing readable" as the same finding.
+#
+# **This case is one of the two that hold the refusal gate's boundary.** A project writing every
+# color where it is used is the commonest starting state and the one this capability most needs to
+# be able to talk to, so it must stay `exit: 0` with `refusal: null`. A gate written as "is there
+# a runtime-resolvable layer" rather than "are there layers of which none is runtime-resolvable"
+# refuses this project too, and passes every assertion in tokens-preprocessor-only while doing it.
+# tokens-two-layers holds the other boundary: a build-time layer PRESENT is not a refusal either.
 # `declarationsFrom` is null here for the same reason `authoritativeLayer` is: there are no
 # declarations, so there is no layer they came from. `stylesheetsRead` is what says the file was
 # opened — the two keys answer different questions and only one of them has an answer here.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 2,
+  "tokensVersion": 3,
   "declarationsFrom": null,
   "authoritativeLayer": null,
+  "refusal": null,
   "layers": [],
   "stylesheetsRead": [
     "src/Web/wwwroot/css/site.css"
@@ -276,6 +285,7 @@ expect "$C" \
   "exit: 0" \
   "args: tokens" \
   "stdout_matches: expected-tokens.json" \
+  "contains: \"refusal\": null" \
   "not_contains: #0B5FFF" \
   "not_contains: #101828" \
   "not_contains: 0.75rem" \
@@ -326,9 +336,10 @@ EOF
 # 10 and `--spacing` on line 11. `byFile` carries one entry because one file declared something.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 2,
+  "tokensVersion": 3,
   "declarationsFrom": "custom-properties",
   "authoritativeLayer": "custom-properties",
+  "refusal": null,
   "layers": [
     {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 2, "names": 2}
   ],
@@ -397,9 +408,10 @@ EOF
 # reports nothing at all, which is why `declarations` being 1 rather than 0 is the whole claim.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 2,
+  "tokensVersion": 3,
   "declarationsFrom": "custom-properties",
   "authoritativeLayer": "custom-properties",
+  "refusal": null,
   "layers": [
     {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 1, "names": 1}
   ],
@@ -522,9 +534,10 @@ EOF
 # report that kept the layers apart from one that merged them.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 2,
+  "tokensVersion": 3,
   "declarationsFrom": "custom-properties",
   "authoritativeLayer": "custom-properties",
+  "refusal": null,
   "layers": [
     {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 3, "names": 3},
     {"layer": "preprocessor-variables", "runtimeResolvable": false, "files": 1, "declarations": 4, "names": 4}
@@ -555,6 +568,12 @@ EOF
 # The substring lines say what a failure means. The two layer rows are "both layers reported",
 # `authoritativeLayer` is the manual check the plan asks for — named, not inferred — and the
 # three not_contains lines are the claim the golden alone would state less legibly.
+#
+# `exit: 0` with `refusal: null` is this case's second job, added in Step 4: it holds the other
+# side of the refusal gate's boundary. This project carries the same build-time layer that gets
+# tokens-preprocessor-only refused, and it is not refused, because it also carries a layer that
+# survives to the browser. A gate that fired on the PRESENCE of a build-time layer rather than on
+# the absence of a runtime one would refuse the commonest good shape a project can have.
 expect "$C" \
   "exit: 0" \
   "args: tokens" \
@@ -562,6 +581,7 @@ expect "$C" \
   "contains: {\"layer\": \"custom-properties\", \"runtimeResolvable\": true" \
   "contains: {\"layer\": \"preprocessor-variables\", \"runtimeResolvable\": false" \
   "contains: \"authoritativeLayer\": \"custom-properties\"" \
+  "contains: \"refusal\": null" \
   "not_contains: \$brand-primary" \
   "not_contains: \$legacy-slate" \
   "not_contains: #475467"
@@ -583,10 +603,26 @@ expect "$C" \
 # against the bug it was written for. The count in the golden and in the `contains:` line below
 # is the only thing that catches it.
 #
-# **A project with no runtime layer still reports a completed read**, naming the build-time layer
-# as authoritative because it is the only one there. `declarationsFrom` is null: no layer was
-# parsed for values, and saying `custom-properties` here would name a read that did not happen.
-# Step 4 turns this state into a refusal; this case only fixes what the report says about it.
+# **A project whose only layer is build-time is REFUSED — exit 3.** The read completed and the
+# answer is negative: the palette cannot be read at render time, so there is nothing here a
+# swatch could follow through a re-theme. The build-time layer is still named authoritative,
+# because it is the only one there and it is where a person edits the palette; `declarationsFrom`
+# is null, because no layer was parsed for values and saying `custom-properties` here would name
+# a read that did not happen.
+#
+# The refusal is unconditional — no flag turns it into a warning. `guide.py`'s exit 3 is gated
+# behind `--strict` because its findings are a backlog someone works through; this one is a
+# stop, and a caller that carries on produces a styleguide of invented values.
+#
+# **The three `not_contains:` lines are a guard, not this case's test, and the difference is
+# worth saying plainly because the plan's step text got it wrong.** The preprocessor layer has
+# been counts-only since Step 3: it reports `files`, `declarations` and `names` and never a
+# variable's name or value. So `#1F7A5C` was already absent from this case's output before the
+# refusal existed, and an assertion that it is absent could never have gone RED — it passes
+# against the very bug it reads as being written for. What actually went RED here was the exit
+# code and the refusal text. The lines stay anyway, as a standing guard: they are what fails if
+# a later implementation decides to be helpful and prints the values it has just refused to
+# trust, which is the staleness this whole capability exists to refuse.
 C="$CASES/tokens-preprocessor-only"; mkdir -p "$C"
 preprocessor "$C" _tokens.scss <<'EOF'
 $brand-primary: #1F7A5C;
@@ -607,11 +643,22 @@ $brand-ink: #1D2939;
 }
 EOF
 # Hand-authored: two declarations, two names, one file. Five would be the bug.
+#
+# `refusal` carries the whole of the negative answer, and every other case in this suite carries
+# it as null — a key a consumer reads rather than a shape it has to sniff for. Its `message`
+# names the layers found, which the `layers` table below states again; that is a formatting of
+# the same fact rather than a second entry of it, so a relayed one-line refusal stands on its own
+# without the table beside it.
 cat > "$C/expected-tokens.json" <<'EOF'
 {
-  "tokensVersion": 2,
+  "tokensVersion": 3,
   "declarationsFrom": null,
   "authoritativeLayer": "preprocessor-variables",
+  "refusal": {
+    "reason": "no-runtime-resolvable-layer",
+    "message": "The palette cannot be read at render time. The only token layer this project holds is preprocessor-variables, whose values the build resolves and discards, so nothing in the rendered page can read them. A page built from this layer shows the palette as it stood at the last build, and does not follow a re-theme.",
+    "remedy": "Add a custom-property layer that the existing variables feed: one :root block declaring a custom property for each palette entry, with that entry's existing variable as its value. The palette stays defined where it is defined today; the block only makes those values readable at render time. Re-run afterwards: the custom-property layer becomes authoritative, and every token reported is one a page can follow through a re-theme."
+  },
   "layers": [
     {"layer": "preprocessor-variables", "runtimeResolvable": false, "files": 1, "declarations": 2, "names": 2}
   ],
@@ -630,12 +677,24 @@ cat > "$C/expected-tokens.json" <<'EOF'
   "declarations": []
 }
 EOF
+# The exit code and the three refusal lines are what went RED. Each states a separate half of
+# what the plan asks the refusal to say: that the palette cannot be read at render time, which
+# layers were found, and what to do about it. A refusal naming no remedy would satisfy an
+# `exit: 3` assertion and leave the project no way forward, which is the failure this pairing
+# guards against.
 expect "$C" \
-  "exit: 0" \
+  "exit: 3" \
   "args: tokens" \
   "stdout_matches: expected-tokens.json" \
+  "contains: \"reason\": \"no-runtime-resolvable-layer\"" \
+  "contains: The palette cannot be read at render time." \
+  "contains: The only token layer this project holds is preprocessor-variables" \
+  "contains: Add a custom-property layer that the existing variables feed" \
   "contains: {\"layer\": \"preprocessor-variables\", \"runtimeResolvable\": false, \"files\": 1, \"declarations\": 2, \"names\": 2}" \
   "contains: \"declarationsFrom\": null" \
-  "contains: {\"file\": \"src/Web/wwwroot/scss/_tokens.scss\", \"declarations\": 2, \"names\": 2}"
+  "contains: {\"file\": \"src/Web/wwwroot/scss/_tokens.scss\", \"declarations\": 2, \"names\": 2}" \
+  "not_contains: #1F7A5C" \
+  "not_contains: #1D2939" \
+  "not_contains: \$brand-primary"
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

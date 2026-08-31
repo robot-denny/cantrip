@@ -1,6 +1,7 @@
 exit: 0
 args: tokens
 stdout_matches: expected-tokens.json
+contains: "refusal": null
 not_contains: #0B5FFF
 not_contains: #101828
 not_contains: 0.75rem

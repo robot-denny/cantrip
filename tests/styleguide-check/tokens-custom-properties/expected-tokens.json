@@ -1,7 +1,8 @@
 {
-  "tokensVersion": 2,
+  "tokensVersion": 3,
   "declarationsFrom": "custom-properties",
   "authoritativeLayer": "custom-properties",
+  "refusal": null,
   "layers": [
     {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 4, "names": 4}
   ],

@@ -69,6 +69,34 @@ Neither moves the answer this number exists to give. A project is over or under 
 whose only job is "is this layer here, and is it big", and the shapes that fool it are shapes that
 still mark a project holding a preprocessor palette.
 
+### A layer that cannot be read at render time is refused, not baked
+
+A project holding layers of which **none is runtime-resolvable** — a preprocessor palette with no
+custom-property layer anywhere — gets a `refusal` in its report and **exit 3**. The read
+completed; the answer is negative.
+
+**The alternative was a clearly-labelled baked snapshot, and it is worse than useless.** Reading
+the preprocessor values and emitting them would produce a report that looks exactly like a good
+one, and a page built from it would be right on the day it shipped and silently wrong from the
+first palette edit onward. That is the failure this capability exists to refuse, and a label
+saying "these values may be stale" does not survive being copied into a swatch. So the refusal
+carries **no token value at all** — the message is built from the layer names and the counts,
+which is why nothing here ever opens a preprocessor file for a value.
+
+**What it gives instead is the remedy**, stated concretely enough to act on: a custom-property
+layer that the existing variables feed. That is an afternoon of front-end work, it moves no
+palette entry out of the file it lives in today, and after it every claim this script makes about
+a project becomes true. Naming it is the difference between a refusal and a dead end.
+
+Two adjacent states are deliberately **not** this refusal:
+
+- **No layers at all** — a project writing every color where it is used — is a completed read
+  reporting nothing, exit 0. That is the common starting state, and the project this capability
+  most needs to be able to talk to.
+- **A build-time layer beside a runtime one** is exit 0 as well. The gate fires on the absence of
+  something readable, never on the presence of something build-time; the commonest good shape in
+  the wild is a preprocessor palette that emits a `:root` block.
+
 ### Why a utility framework's theme configuration is not a third layer
 
 It is absent deliberately, not pending.
@@ -169,7 +197,15 @@ token's name, value, group, and origin legible together, and a diff of two repor
 token that changed rather than at a field three tokens away.
 
 Exit: 0 on a completed read — including a read that found nothing, which is the common starting
-state and not an error — 1 when the read could not be completed, and 2 on a usage error.
+state and not an error — 1 when the read could not be completed, 2 on a usage error, and 3 when
+the read completed and the answer is negative: the project holds token layers and none of them
+can be read at render time. The document is printed in every one of those cases except the usage
+error, so a caller stopping on 3 has the refusal and its remedy in hand.
+
+**3 is unconditional here**, unlike `guide.py`'s, which is gated behind `--strict`. The asymmetry
+is deliberate: an audit's findings are a backlog someone works through, and failing a build on
+one would fail it in exactly the projects that wired the audit in early. This is a stop. A caller
+that ignored it would build a styleguide out of values it invented or baked.
 """
 
 import argparse
@@ -191,7 +227,12 @@ PROG = "styleguide.py"
 # 2 replaced the singular `layer` key with `declarationsFrom`, `authoritativeLayer` and the
 # `layers` table. A consumer of version 1 read one layer name and could not have known there was
 # anything else to ask about, which is precisely the notice this number exists to give.
-TOKENS_VERSION = 2
+#
+# 3 added `refusal`, and with it an exit code a project can now receive where it previously got
+# 0. A consumer of version 2 reading a build-time-only project was told a completed read with an
+# empty `declarations` table, which is indistinguishable from a project that simply declares
+# nothing — the two are now different answers, and the notice is what says so.
+TOKENS_VERSION = 3
 
 # The layer the `declarations` table is read from — the only layer this script parses values out
 # of. Named in the document rather than left implicit: a consumer holding a two-row `layers`
@@ -210,6 +251,44 @@ LAYERS_BY_FIDELITY = (LAYER_CUSTOM_PROPERTIES, LAYER_PREPROCESSOR)
 
 GROUP_COLOR = "color"
 GROUP_UNCLASSIFIED = "unclassified"
+
+# The exit code for a read that completed and whose answer is negative. Its own code rather than
+# 1, for the reason guide.py gives about its own 3: 1 means the read could not be completed, and
+# a caller that cannot tell "this project's palette is unreadable" from "this script broke" will
+# treat the second as the first and go looking for a stylesheet to fix.
+#
+# **Unconditional, and deliberately not behind a flag.** guide.py gates its 3 behind `--strict`
+# because an audit's findings are a backlog someone works through; this one is a stop. A caller
+# that carried on would produce a page of values it invented or baked, which is the whole failure
+# this script exists to refuse.
+EXIT_REFUSED = 3
+
+REFUSAL_NO_RUNTIME_LAYER = "no-runtime-resolvable-layer"
+
+# The refusal's two halves, held as constants so the text has one home and the code below reads
+# as the rule rather than as the wording.
+#
+# `%s` is the layers found, phrased in `layers_found_phrase`. The message names them even though
+# the `layers` table states them again: a refusal gets relayed as a line on its own, and one that
+# says a palette is unreadable without saying what it found instead is a line nobody can act on.
+# That is a formatting of a fact held once, not a second entry of it.
+REFUSAL_MESSAGE = (
+    "The palette cannot be read at render time. %s, whose values the build resolves and "
+    "discards, so nothing in the rendered page can read them. A page built from this layer "
+    "shows the palette as it stood at the last build, and does not follow a re-theme."
+)
+
+# Concrete on purpose, and specific to nothing. It names a CSS language feature and a shape of
+# edit, so a project can act on it without this pack knowing a single thing about that project —
+# no CMS, no framework, no build tool, no path. The remedy is an afternoon of front-end work,
+# after which this command's answer flips and every value reported is one a page can follow.
+REFUSAL_REMEDY = (
+    "Add a custom-property layer that the existing variables feed: one :root block declaring a "
+    "custom property for each palette entry, with that entry's existing variable as its value. "
+    "The palette stays defined where it is defined today; the block only makes those values "
+    "readable at render time. Re-run afterwards: the custom-property layer becomes "
+    "authoritative, and every token reported is one a page can follow through a re-theme."
+)
 
 # Document keys whose value is a list of uniform rows, rendered one row per line. See `render`
 # for why; the set exists so a second table does not get a second copy of that branch.
@@ -727,6 +806,58 @@ def authoritative_layer(layers):
     return None
 
 
+def layers_found_phrase(layers):
+    """The layers found, as the subject of a sentence.
+
+    Written from the layer names the report already carries rather than from a table of prose,
+    so a layer added later needs no wording of its own.
+
+    **The plural branch is unreachable today, and is written anyway.** Only a refusal calls this,
+    a refusal needs every layer found to be build-time, and `custom-properties` — the only other
+    layer recognized — is runtime-resolvable by definition. So one layer is the only count that
+    can arrive here while two layers exist. A third build-time layer would reach it, and the
+    alternative to writing it now is a function that emits a broken sentence on the day that
+    happens; the branch costs a line and the failure would cost a report nobody trusts.
+    """
+    names = [row["layer"] for row in layers]
+    if len(names) == 1:
+        return "The only token layer this project holds is %s" % names[0]
+    return ("The token layers this project holds are %s and %s"
+            % (", ".join(names[:-1]), names[-1]))
+
+
+def refusal(layers):
+    """The refusal for a project holding layers of which none is runtime-resolvable, or None.
+
+    **The gate is "layers exist and none of them is readable at render time."** Both halves are
+    load bearing, and the second is not the same test as "a build-time layer is present":
+
+    - **No layers at all is not a refusal.** A project that writes every color where it is used
+      holds no palette yet. That is the common starting state and the most useful project to
+      talk to, so it gets a completed read reporting nothing — refusing it would turn "you have
+      not started" into "you did something wrong".
+    - **A build-time layer beside a runtime one is not a refusal either.** The commonest good
+      shape is a preprocessor palette that emits a `:root` block, and the presence of the
+      build-time layer says nothing bad about it. What matters is only whether *something* here
+      survives to the browser.
+
+    And the refusal carries **no token value**, which is why it is built from the layer names and
+    the counts rather than from anything read out of a file. A baked value presented beside a
+    live-reading promise is the silent staleness this whole capability refuses: it would fail the
+    headline claim while looking exactly like it passed. So the answer to a project whose palette
+    cannot be read at render time is the remedy, and never a snapshot.
+    """
+    if not layers:
+        return None
+    if any(row["runtimeResolvable"] for row in layers):
+        return None
+    return {
+        "reason": REFUSAL_NO_RUNTIME_LAYER,
+        "message": REFUSAL_MESSAGE % layers_found_phrase(layers),
+        "remedy": REFUSAL_REMEDY,
+    }
+
+
 # ---------------------------------------------------------------------------
 # The document
 # ---------------------------------------------------------------------------
@@ -852,6 +983,11 @@ def read_tokens(root):
         # cannot see the reasoning for is indistinguishable from a per-run answer.
         "declarationsFrom": LAYER_CUSTOM_PROPERTIES if declarations else None,
         "authoritativeLayer": authoritative_layer(layers),
+        # The verdict on the three keys above, placed above every table so nobody reads a count
+        # before finding out the read was refused. Null on a completed positive read — a key a
+        # consumer reads rather than a shape it has to sniff for, the same choice
+        # `declarationsFrom` and `authoritativeLayer` already make.
+        "refusal": refusal(layers),
         "layers": layers,
         "stylesheetsRead": scanned,
         "counts": {
@@ -901,7 +1037,14 @@ def render(doc):
 # ---------------------------------------------------------------------------
 
 def cmd_tokens(args):
-    print(render(read_tokens(args.project_root)))
+    doc = read_tokens(args.project_root)
+    print(render(doc))
+    # After the document, never instead of it, for the reason guide.py gives about its own
+    # non-zero exit: the refusal a caller stops on is the one whose remedy someone has to read,
+    # and a script that swallowed the report to signal through a status code would leave them
+    # with a number and nothing to act on.
+    if doc["refusal"] is not None:
+        return EXIT_REFUSED
     return 0
 
 

@@ -1,7 +1,12 @@
 {
-  "tokensVersion": 2,
+  "tokensVersion": 3,
   "declarationsFrom": null,
   "authoritativeLayer": "preprocessor-variables",
+  "refusal": {
+    "reason": "no-runtime-resolvable-layer",
+    "message": "The palette cannot be read at render time. The only token layer this project holds is preprocessor-variables, whose values the build resolves and discards, so nothing in the rendered page can read them. A page built from this layer shows the palette as it stood at the last build, and does not follow a re-theme.",
+    "remedy": "Add a custom-property layer that the existing variables feed: one :root block declaring a custom property for each palette entry, with that entry's existing variable as its value. The palette stays defined where it is defined today; the block only makes those values readable at render time. Re-run afterwards: the custom-property layer becomes authoritative, and every token reported is one a page can follow through a re-theme."
+  },
   "layers": [
     {"layer": "preprocessor-variables", "runtimeResolvable": false, "files": 1, "declarations": 2, "names": 2}
   ],
