@@ -1,0 +1,7 @@
+exit: 0
+args: tokens
+stdout_matches: expected-tokens.json
+not_contains: --brand-fake
+not_contains: #FF00FF
+contains: {"name": "--real", "value": "#00AA00", "group": "color"
+contains: {"name": "--spacing", "value": "1rem", "group": "unclassified"

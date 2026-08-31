@@ -2,6 +2,7 @@
   --brand-primary: #0B5FFF;
   --brand-ink: #101828;
   --space-3: 0.75rem;
+  --role-primary: var(--brand-primary);
 }
 
 .site-header {
@@ -12,6 +13,7 @@
 
 .site-header__title {
   color: var(--brand-ink);
+  border-block-end-color: var(--role-primary);
 }
 
 /* Not a token: a literal this project never lifted into the palette. It must not be

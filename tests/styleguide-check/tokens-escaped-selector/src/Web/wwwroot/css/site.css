@@ -1,0 +1,7 @@
+.thumb-\(--fake-token\) {
+  color: #112233;
+}
+
+:where(.stack-2\.5 > :not(:last-child)) {
+  --after-escape: #445566;
+}

@@ -1,9 +1,11 @@
 exit: 0
 args: tokens
-contains: --brand-primary
+stdout_matches: expected-tokens.json
 contains: #0B5FFF
-contains: --brand-ink
 contains: #101828
-contains: --space-3
 contains: 0.75rem
+contains: {"name": "--brand-primary", "value": "#0B5FFF", "group": "color", "aliasOf": null
+contains: {"name": "--brand-ink", "value": "#101828", "group": "color", "aliasOf": null
+contains: {"name": "--space-3", "value": "0.75rem", "group": "unclassified", "aliasOf": null
+contains: {"name": "--role-primary", "value": "var(--brand-primary)", "group": "color", "aliasOf": "--brand-primary"
 not_contains: #C2410C

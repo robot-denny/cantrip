@@ -1,0 +1,20 @@
+{
+  "tokensVersion": 1,
+  "layer": "custom-properties",
+  "stylesheetsRead": [
+    "src/Web/wwwroot/css/site.css"
+  ],
+  "counts": {
+    "declarations": 1,
+    "names": 1,
+    "color": 1,
+    "unclassified": 0,
+    "aliases": 0
+  },
+  "byFile": [
+    {"file": "src/Web/wwwroot/css/site.css", "declarations": 1, "names": 1}
+  ],
+  "declarations": [
+    {"name": "--after-escape", "value": "#445566", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 6}
+  ]
+}
