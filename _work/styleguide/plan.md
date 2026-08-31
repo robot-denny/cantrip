@@ -278,6 +278,14 @@ alias rule, JSON output).
   `var(--brand-primary)` as its reported value. This is the one-hop rule's test, and all three
   assertions are needed: classification alone passes on an implementation that resolved the chain,
   and the verbatim-value assertion is what proves it did not.
+- **Add a `stdout_matches:` golden file to `tokens-custom-properties`, and it is required rather than
+  optional.** Step 1's review raised this as its one Major: `contains:`/`not_contains:` are presence
+  checks, so nothing in that grammar can assert **how many times** a token is reported, and the
+  fixture deliberately declares each name and then uses it through `var()`. A classifier that emits a
+  token once per occurrence rather than once per declaration therefore passes every `contains:` line
+  in the suite. The golden file is the only directive in the grammar that catches it, and it becomes
+  writable here because this step is where the report format first exists. Use `mask:` for anything
+  environment-dependent, as `guide-check`'s `deploy-dossier` case does for its signature.
 - GREEN is `tests/run.sh styleguide-check` at 2/2.
 
 **Validation**:
@@ -286,6 +294,11 @@ alias rule, JSON output).
   subcommand exits 2; with a nonexistent `--project-root` exits 1 with a message naming the path.
 - [Manual]: run `tokens` against this repo (which has no stylesheets) and confirm it exits 0
   reporting nothing found, rather than erroring.
+- [Automated]: **record the suite's wall time** — `time tests/run.sh styleguide-check`. Until this
+  step the two cases exit through the runner's fast subject-missing path at roughly 39ms; from here
+  each execs a Python subprocess against a real fixture tree, which is a different cost profile. The
+  plan adds about five more cases to this suite, so the number to watch is per-case cost, not the
+  total. Step 1's performance review flagged this as the thing to check here rather than there.
 
 ---
 

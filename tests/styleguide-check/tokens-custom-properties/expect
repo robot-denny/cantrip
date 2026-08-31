@@ -1,0 +1,9 @@
+exit: 0
+args: tokens
+contains: --brand-primary
+contains: #0B5FFF
+contains: --brand-ink
+contains: #101828
+contains: --space-3
+contains: 0.75rem
+not_contains: #C2410C

@@ -1,0 +1,21 @@
+:root {
+  --brand-primary: #0B5FFF;
+  --brand-ink: #101828;
+  --space-3: 0.75rem;
+}
+
+.site-header {
+  color: var(--brand-ink);
+  background-color: var(--brand-primary);
+  padding-block: var(--space-3);
+}
+
+.site-header__title {
+  color: var(--brand-ink);
+}
+
+/* Not a token: a literal this project never lifted into the palette. It must not be
+   reported, because a styleguide swatch for it could never follow a re-theme. */
+.legacy-callout {
+  border-color: #C2410C;
+}

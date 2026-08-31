@@ -1,0 +1,6 @@
+exit: 0
+args: tokens
+not_contains: #0B5FFF
+not_contains: #101828
+not_contains: 0.75rem
+not_contains: #C2410C
