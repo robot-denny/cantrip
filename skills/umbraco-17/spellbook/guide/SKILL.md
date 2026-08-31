@@ -27,16 +27,18 @@ component alias, and Steps 1–9 are that run end to end.
 `umbraco-17-guide-scaffolding` is the schema half of this capability and the authority on all of it.
 Read it before the first step. It states, and this file deliberately does not restate:
 
-- the four document types, the guide page's field set, and the property row's six columns
+- the document types a guides section needs — four of them, plus three more a styleguide adds that
+  this spell never touches — the guide page's field set, and the property row's six columns
 - the three ownership classes, and that ownership follows the **page's provenance** rather than a
   field's declaration
 - the stored reference, what its four values mean, and why every machine-populated field is optional
 - where guides live, how the guides node and the kind containers are found, and what the index reads
-- **the two slots a guides section needs**, in *The two slots a guides section needs* — which
+- **the slots a guides section needs**, in *The three slots a guides section needs* — which
   serialization adapter runs (`.agents/config/stack.md`), and the guides node's key plus the aliases
-  the project actually used (`.agents/config/conventions.md`). Both are declared there **and nowhere
-  else**, fallback and detection recipe included. Read them there and follow what they say; do not
-  re-declare them here or anywhere downstream.
+  the project actually used (`.agents/config/conventions.md`). Those two are this spell's; the third
+  is the styleguide's design-token slot, which this spell neither reads nor needs. All of them are
+  declared there **and nowhere else**, fallback and detection recipe included. Read them there and
+  follow what they say; do not re-declare them here or anywhere downstream.
 
 The field set is declared in exactly one place too, and it is not the reference either: `REGISTER` in
 `scripts/guidelib/changeplan.py`. Read it for what a field is **for**, never for permission to write

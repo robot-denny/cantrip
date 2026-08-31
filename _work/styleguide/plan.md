@@ -441,16 +441,29 @@ amendments), and its `description:` frontmatter if the added scope is not covere
 ### Step 7 — The inventory exclusion, and the audit's silence on a styleguide
 
 > **Prompt**: Implement Step 7 of `_work/styleguide/plan.md`. This is a change to **shipped**
-> behavior. Add an `--exclude-palette <name>` flag to the `inventory` subcommand of
-> `skills/umbraco-17/spellbook/guide/scripts/guide.py`, threaded into
+> behavior. Add an `--exclude-palette <name>` flag to **both** the `inventory` and the `audit`
+> subcommands of `skills/umbraco-17/spellbook/guide/scripts/guide.py`, threaded into
 > `scripts/guidelib/inventory.py`: a block-editor palette named by the flag contributes **no**
-> components to the documentable-unit count. Without the flag, behavior is exactly as today. The
+> components to the documentable-unit count. Without the flag, behavior is exactly as today.
+>
+> **Both subcommands, and this is the correction that matters.** `cmd_audit` calls
+> `inventory.determine()` itself rather than borrowing `cmd_inventory`'s result, so a flag wired
+> into the inventory alone leaves the audit reporting showcase elements as undocumented forever —
+> the whole of the problem this exclusion exists to solve — while every inventory test passes.
+> Where `audit` is handed a prepared inventory through `--inventory` it inherits whatever that
+> inventory excluded and needs nothing further; where it derives its own, it must be told the same
+> palette name. The scaffolding reference states this under *The showcase element types*: the
+> exclusion belongs to reading the project, not to one command.
+>
+> The
 > inventory report must **state that a palette was excluded and name it**, beside the determiner's
 > rule it already prints — an exclusion that changes a count silently is the one thing the audit's
-> report shape refuses. Add two `guide-check` cases via `tests/make-guide-fixtures.sh`:
+> report shape refuses. Add three `guide-check` cases via `tests/make-guide-fixtures.sh`:
 > `inventory-excluded-palette` (a project whose palettes include a styleguide showcase palette,
-> asserting the count drops by exactly the showcase entries and that the report names the exclusion)
-> and `audit-styleguide-silent` (a guides section holding one styleguide page carrying **no**
+> asserting the count drops by exactly the showcase entries and that the report names the exclusion),
+> `audit-excluded-palette` (the same project read through `audit`, asserting the same drop and the
+> same named exclusion — this is the case that fails if the flag reaches only one subcommand, and it
+> is why there are three new cases rather than two), and `audit-styleguide-silent` (a guides section holding one styleguide page carrying **no**
 > `guideSource` alongside N component guides, asserting all three audit counts are unaffected and
 > the styleguide is named in none of the three sections). Read
 > `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md` → *The audit's report shape*
@@ -638,7 +651,7 @@ a spell.
      was never created because that fixture already existed under the earlier name. Corrected
      here rather than in Step 4's prose: the prose is what was planned, this table is what
      someone reconciles against the tree. -->
-| Create | `tests/guide-check/inventory-excluded-palette/`, `tests/guide-check/audit-styleguide-silent/` |
+| Create | `tests/guide-check/inventory-excluded-palette/`, `tests/guide-check/audit-excluded-palette/`, `tests/guide-check/audit-styleguide-silent/` |
 | Modify | `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md` |
 | Modify | `skills/umbraco-17/spellbook/guide/scripts/guide.py` |
 | Modify | `skills/umbraco-17/spellbook/guide/scripts/guidelib/inventory.py` |
