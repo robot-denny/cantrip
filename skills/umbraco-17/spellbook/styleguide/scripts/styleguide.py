@@ -183,24 +183,75 @@ deliberate limit: the rule answers "what kind of thing is this", and each additi
 walked would be one step closer to answering "what color is this", which is the browser's
 question and not this script's.
 
+## The precondition, in two independent halves
+
+`precheck` answers one question — may a styleguide be generated for this project at all — and it
+answers it in **two halves reported separately**:
+
+    runtime-resolvable-token-layer   is there a palette a rendered page can read
+    exemplar-block-views             is there an existing view to copy conventions from
+
+**Both halves are always named, met or unmet.** A report listing only what failed leaves the
+caster unable to tell "this project has blocks and no tokens" from "this project has nothing at
+all", and those are different situations: the first is a front-end afternoon away from being
+ready, and the second is one where generating anything is actively harmful. Naming the met half
+costs a line and is the difference between a verdict and a diagnosis.
+
+The token half is `tokens`' own answer, not a second reading of it. It calls `read_tokens` and
+asks the `layers` table whether anything in it is runtime-resolvable — the same question, asked
+once. **Three states, and they are three answers rather than two:**
+
+- a runtime layer is present — met
+- layers exist and none of them is runtime-resolvable — unmet, and the statement and the remedy
+  are the ones `tokens` already refuses with, relayed rather than rewritten
+- no layer at all — unmet, with a remedy of its own. `tokens` calls this state a completed read
+  and exits 0, correctly: a project that writes every color where it is used has done nothing
+  wrong. It is `precheck` that turns it into a stop, because a styleguide generated with no
+  palette to read documents its own invented values back to the people who were meant to supply
+  them.
+
+The view half is answered from **views on disk**, and deliberately not by calling `guide.py`'s
+palette determiner. Two reasons: the exemplar a new view is copied from is a *view*, not a
+registration; and the two spells install separately, so under a selective install `/guide` may
+simply not be there.
+
+**What counts as a view, and why the rule is printed beside the count.** Every `*.cshtml` under
+the project root, except the two names ASP.NET Core reserves — `_ViewStart.cshtml` and
+`_ViewImports.cshtml`, which carry directives and no markup. Nothing else is excluded, and in
+particular **no attempt is made to tell a block view from a page template or a partial**: where a
+project keeps its block views is a project fact this pack does not hold, and `/block` Step 5 says
+as much in the other direction when it refuses to assume where views live. What this half needs is
+that *some* markup convention exists to copy, and any view is evidence of one. That is a weaker
+claim than "this project has blocks", and it is stated in the report rather than implied, because
+a count with no rule beside it is a number nobody can check. The remedy for a `.cshtml` that is
+only Razor plumbing is the two reserved names, which are a framework fact and not a project one.
+
+`examples` shows the first few paths in path order so the count can be spot-checked; `files` is
+the whole count.
+
+Exit **0** when both halves are met, **3** when either is unmet, **1** when the read failed.
+
 ## Usage
 
-    styleguide.py tokens [--project-root DIR]
+    styleguide.py tokens   [--project-root DIR]
+    styleguide.py precheck [--project-root DIR]
 
-`tokens` prints one JSON document on stdout and nothing else. `--project-root` defaults to the
+Each prints one JSON document on stdout and nothing else. `--project-root` defaults to the
 current directory. No path, host, or version is hardcoded; the spell reads the project's slots
 and passes what it finds.
 
-The document is two-space-indented JSON with **one line per row** in each of its tables —
-`layers`, `byFile`, `declarations` — because each of those is a table: a row per line keeps a
-token's name, value, group, and origin legible together, and a diff of two reports points at the
-token that changed rather than at a field three tokens away.
+Both documents are two-space-indented JSON with **one line per row** in each of their tables —
+`layers`, `byFile`, `declarations`, `halves` — because each of those is a table: a row per line
+keeps a token's name, value, group, and origin legible together, and a diff of two reports points
+at the token that changed rather than at a field three tokens away.
 
-Exit: 0 on a completed read — including a read that found nothing, which is the common starting
-state and not an error — 1 when the read could not be completed, 2 on a usage error, and 3 when
-the read completed and the answer is negative: the project holds token layers and none of them
-can be read at render time. The document is printed in every one of those cases except the usage
-error, so a caller stopping on 3 has the refusal and its remedy in hand.
+Exit: 0 on a completed read — including a read that found nothing, which for `tokens` is the
+common starting state and not an error — 1 when the read could not be completed, 2 on a usage
+error, and 3 when the read completed and the answer is negative. What "negative" means is the one
+thing the two commands do not share: for `tokens` it is a project holding token layers of which
+none can be read at render time, and for `precheck` it is either half of the precondition unmet.
+The document is printed in every one of those cases except the usage error, so a caller stopping
+on 3 has the finding and its remedy in hand.
 
 **3 is unconditional here**, unlike `guide.py`'s, which is gated behind `--strict`. The asymmetry
 is deliberate: an audit's findings are a backlog someone works through, and failing a build on
@@ -233,6 +284,10 @@ PROG = "styleguide.py"
 # empty `declarations` table, which is indistinguishable from a project that simply declares
 # nothing — the two are now different answers, and the notice is what says so.
 TOKENS_VERSION = 3
+
+# The same contract for `precheck`'s document, versioned separately because the two commands are
+# read by different callers for different reasons and a change to one is not news to the other.
+PRECHECK_VERSION = 1
 
 # The layer the `declarations` table is read from — the only layer this script parses values out
 # of. Named in the document rather than left implicit: a consumer holding a two-row `layers`
@@ -290,9 +345,117 @@ REFUSAL_REMEDY = (
     "authoritative, and every token reported is one a page can follow through a re-theme."
 )
 
+# --- the precondition's two halves, by name ---------------------------------
+#
+# Named rather than positional, because the report's whole job is to say WHICH half a project
+# failed. A caller reading `halves[0]` would be reading the order of a table; a caller reading
+# these names is reading the answer.
+HALF_TOKENS = "runtime-resolvable-token-layer"
+HALF_VIEWS = "exemplar-block-views"
+
+# `%s` is the layer's name, then its declaration and file counts. The counts are parenthesized
+# rather than written into the sentence to keep this string free of a plural it would have to
+# agree with: "1 files" in a report is a small thing that makes a reader distrust a big one.
+HALF_TOKENS_MET = (
+    "A token layer that resolves at render time is present: %s (declarations: %d, files: %d). "
+    "A swatch reading one of these names follows a re-theme with no regeneration."
+)
+
+# The state `tokens` reports as a completed read at exit 0, and `precheck` as a stop. Both are
+# right: nothing is wrong with a project that has not built a palette yet, and there is still
+# nothing here for a styleguide to read.
+HALF_TOKENS_NO_LAYERS = (
+    "This project holds no token layer at all: no custom properties, and no preprocessor "
+    "variables either. There is nothing to read, so every value a styleguide showed would be "
+    "one it invented."
+)
+
+# The remedy this state needs, which is not the refusal's remedy: there are no existing variables
+# to feed a new layer, so what is being asked for is the palette itself. Said plainly, because
+# "establish a design system first" is a real answer and a project that hears it can act on it.
+HALF_TOKENS_NO_LAYERS_REMEDY = (
+    "Establish the palette first, as a :root block declaring one custom property per entry, and "
+    "re-run. This is the precondition the spell states rather than assumes: a styleguide "
+    "generated before a design system exists documents its own invented values back to the "
+    "people who were meant to supply them."
+)
+
+# `%d` is the view count. What the exemplar is FOR is named — the four things `/block` Step 5
+# lists as carried over from an existing view rather than invented — so a caster reading this
+# knows what the half was asserting and can tell whether the view it found actually supplies it.
+HALF_VIEWS_MET = (
+    "Razor views on disk: %d. An existing block view is available to copy conventions from: "
+    "view location, model binding, settings handling and styling approach."
+)
+
+HALF_VIEWS_UNMET = "No Razor view is on disk, so there is no existing markup convention to copy."
+
+# The hazard is in the remedy rather than beside it, because a remedy nobody reads is one that
+# does not say why. The spell states this refusal at length; this is the one-line form a caller
+# relays.
+HALF_VIEWS_REMEDY = (
+    "Author at least one real block view before generating a styleguide, or take the conventions "
+    "from another codebase and say which. With nothing to copy, the styleguide's own showcase "
+    "view becomes the exemplar every later block is copied from, which sets the project's "
+    "conventions from a color-swatch page rather than from its content."
+)
+
+# How many view paths the report shows beside the count. A precondition report is read for its
+# verdict, and a project with four hundred views would bury that verdict under a listing nobody
+# asked for; a handful is enough to spot-check the rule against the tree.
+EXAMPLE_VIEWS = 5
+# What a Razor view is called. Nothing here is ever opened — `precheck` counts views, it does not
+# read them — so this is a suffix and not a parser.
+VIEW_SUFFIXES = (".cshtml",)
+
+# The two `.cshtml` names ASP.NET Core reserves, matched lowercased. Neither is a view to copy
+# conventions from: `_ViewImports.cshtml` carries `@using` and `@inject` directives and
+# `_ViewStart.cshtml` sets a layout, so both are Razor plumbing with no markup in them.
+#
+# **A framework fact, not a project one.** These names are fixed by ASP.NET Core, which this pack
+# already assumes; a project cannot rename them. That is what separates this exclusion from the
+# one this script must never make — a views directory, a naming convention, or a path, every one
+# of which a project chooses and this pack must not hold.
+#
+# It matters at exactly the moment the guard matters most. A freshly scaffolded project ships
+# these two files and no others, so a count of every `.cshtml` reports two views on the one
+# project that has none — which turns the greenfield refusal off precisely where it was needed.
+RAZOR_DIRECTIVE_FILE_NAMES = ("_ViewImports.cshtml", "_ViewStart.cshtml")
+
+# Case-folded for matching; the tuple above is what a person reads. One source, so the rule
+# printed in the report cannot drift from the set the walk actually excludes.
+RAZOR_DIRECTIVE_FILES = frozenset(n.lower() for n in RAZOR_DIRECTIVE_FILE_NAMES)
+
+
+# Printed beside the count, not instead of it. A count with no rule beside it is a number nobody
+# can check, and this one is deliberately generous — it says so, and says why being generous is
+# the honest choice here rather than a limitation being glossed.
+# Printed beside the count so a reader can check one against the other — the same reason the
+# audit prints its inventory determiner. Kept to the facts that make the number checkable: what
+# was walked, what was skipped, and how many examples are shown. The reasoning behind the rule —
+# why no attempt is made to tell a block view from a page template — is in the module docstring
+# under *The precondition, in two independent halves*, because it is an argument rather
+# than a fact, it does not change
+# between runs, and a consumer parsing this document on every call should not be handed a
+# paragraph to answer one yes-or-no question. It was 130 words in every report, hand-copied into
+# every golden, and four files had to move in step to reword it.
+EXEMPLAR_VIEW_RULE = (
+    "Counted: every *.cshtml under the project root, except %s (reserved by name) and anything "
+    "under a skipped directory. No other exclusion: a page template and a partial count as "
+    "readily as a block view. 'examples' lists the first %d in path order; 'files' is the total."
+) % (", ".join(RAZOR_DIRECTIVE_FILE_NAMES), EXAMPLE_VIEWS)
+
 # Document keys whose value is a list of uniform rows, rendered one row per line. See `render`
 # for why; the set exists so a second table does not get a second copy of that branch.
-TABLE_KEYS = frozenset(("layers", "byFile", "byPreprocessorFile", "declarations"))
+#
+# `halves` earns its place for the reason the token tables did: a row per line is what lets an
+# assertion — or a reader — bind a half's NAME to its met flag. Split across lines, "met": true
+# sits three lines from the name it belongs to, and a report with the two flags transposed reads
+# identically to a correct one.
+TABLE_KEYS = frozenset((
+    "layers", "byFile", "byPreprocessorFile", "declarations",
+    "halves", "tokenLayers",
+))
 
 # `.css` and nothing else is read for VALUES — see the module docstring on why a preprocessor
 # source is a different layer rather than a wider glob.
@@ -323,6 +486,8 @@ _PREPROCESSOR_DECLARATION = {
 # Every suffix the walk collects, in one tuple so the tree is walked once. `.scss` does not end
 # with `.css`, so bucketing by suffix needs no ordering care.
 SOURCE_SUFFIXES = STYLESHEET_SUFFIXES + tuple(sorted(PREPROCESSOR_SIGILS))
+
+
 
 # Directory names that hold build output, dependency trees, or version-control internals. A
 # vendor token under node_modules is not this project's palette and there may be thousands of
@@ -360,6 +525,29 @@ class StyleguideError(Exception):
 # Finding the stylesheets
 # ---------------------------------------------------------------------------
 
+def walk_files(root, suffixes):
+    """Yield the root-relative path of every file under `root` whose name ends with a suffix.
+
+    One prune rule for every question this script asks of a tree. Stylesheets and views are
+    found by different callers for different reasons, and a second walk written beside this one
+    would be a second copy of `SKIP_DIRS` — which is the copy that stops being updated.
+
+    `/` is the separator whatever the platform uses, because these paths are compared byte for
+    byte by the tests and read side by side across machines by people.
+    """
+    for dirpath, dirnames, filenames in os.walk(root):
+        # In place, which is what prunes the walk rather than merely filtering the listing.
+        dirnames[:] = [d for d in dirnames
+                       if d not in SKIP_DIRS and not d.startswith(".")]
+        for name in filenames:
+            # One C-level check against the whole tuple, so the caller's own matching only runs
+            # for a file that is going to interest it.
+            if not name.lower().endswith(suffixes):
+                continue
+            rel = os.path.relpath(os.path.join(dirpath, name), root)
+            yield rel.replace(os.sep, "/")
+
+
 def find_sources(root):
     """Every file under `root` this script may open, bucketed by suffix.
 
@@ -368,27 +556,46 @@ def find_sources(root):
     never parsed — the buckets are what keeps that distinction structural instead of a rule
     somebody has to remember.
 
-    Each bucket is sorted, with `/` as the separator whatever the platform uses, because the
-    report is compared byte for byte by its tests and read side by side across machines by
-    people. Walk order is neither stable nor meaningful.
+    Each bucket is sorted, because the report is compared byte for byte by its tests. Walk order
+    is neither stable nor meaningful.
     """
     found = dict((suffix, []) for suffix in SOURCE_SUFFIXES)
-    for dirpath, dirnames, filenames in os.walk(root):
-        # In place, which is what prunes the walk rather than merely filtering the listing.
-        dirnames[:] = [d for d in dirnames
-                       if d not in SKIP_DIRS and not d.startswith(".")]
-        for name in filenames:
-            lowered = name.lower()
-            # One C-level check against the whole tuple before the per-suffix loop, which then
-            # only runs for a file that is going to land in some bucket.
-            if not lowered.endswith(SOURCE_SUFFIXES):
-                continue
-            for suffix in SOURCE_SUFFIXES:
-                if lowered.endswith(suffix):
-                    rel = os.path.relpath(os.path.join(dirpath, name), root)
-                    found[suffix].append(rel.replace(os.sep, "/"))
-                    break
+    for rel in walk_files(root, SOURCE_SUFFIXES):
+        lowered = rel.lower()
+        for suffix in SOURCE_SUFFIXES:
+            if lowered.endswith(suffix):
+                found[suffix].append(rel)
+                break
     return dict((suffix, sorted(paths)) for suffix, paths in found.items())
+
+
+def find_sources_and_views(root):
+    """`(sources, views)` from a single walk of the tree.
+
+    `precheck` needs both, and asking for them separately walked the project twice. Measured on a
+    real tree whose backoffice static-asset directory `SKIP_DIRS` does not prune by name: 1,281
+    directories, and the second `scandir` over them cost 30-40ms — a quarter of the whole run, for
+    an answer the first walk had already passed by.
+
+    The parse is a different question from the traversal, and only the parse was ever worth
+    repeating: `precheck` reuses `read_tokens` wholesale so there is one implementation of "is any
+    layer runtime-resolvable", and that argument is about not having two answers, not about
+    walking twice to get one.
+    """
+    buckets = dict((suffix, []) for suffix in SOURCE_SUFFIXES)
+    views = []
+    for rel in walk_files(root, SOURCE_SUFFIXES + VIEW_SUFFIXES):
+        name = rel.rsplit("/", 1)[-1].lower()
+        if name.endswith(VIEW_SUFFIXES):
+            if name not in RAZOR_DIRECTIVE_FILES:
+                views.append(rel)
+            continue
+        for suffix in SOURCE_SUFFIXES:
+            if name.endswith(suffix):
+                buckets[suffix].append(rel)
+                break
+    return (dict((suffix, sorted(paths)) for suffix, paths in buckets.items()),
+            sorted(views))
 
 
 def read_text(path):
@@ -862,9 +1069,12 @@ def refusal(layers):
 # The document
 # ---------------------------------------------------------------------------
 
-def read_tokens(root):
+def read_tokens(root, sources=None):
     """Every custom-property declaration under `root`, classified, as a report document."""
-    sources = find_sources(root)
+    # `sources` is passed in by `read_precheck`, which needs the views from the same walk.
+    # The default keeps `tokens` a one-argument call for every other caller.
+    if sources is None:
+        sources = find_sources(root)
     stylesheets = sources[".css"]
 
     scanned = []
@@ -1007,6 +1217,111 @@ def read_tokens(root):
     }
 
 
+def half_row(name, met, statement, remedy):
+    """One row of the `halves` table.
+
+    Uniform across halves, including `remedy: null` on a met one. A met half carrying three keys
+    where an unmet one carries four would make a consumer sniff for the shape to find out what it
+    was told; a null is an answer.
+    """
+    return {
+        "half": name,
+        "met": met,
+        "statement": statement,
+        "remedy": remedy,
+    }
+
+
+def token_half(doc):
+    """The token half of the precondition, read off `tokens`' own report.
+
+    **Three states, not two**, and the middle one is the reason this is a function rather than a
+    boolean:
+
+    - a runtime-resolvable layer is present — met, and the layer is named with its counts so the
+      caster can see what will be read
+    - layers exist and none is runtime-resolvable — unmet, and the statement and remedy are
+      `tokens`' existing refusal, relayed verbatim. Writing a second wording for this state would
+      be two texts to keep in step, and the day they diverged the caster would get a different
+      remedy depending on which command they happened to run.
+    - no layer at all — unmet, with the only wording this module writes for a half, because
+      `tokens` has none: that state is a completed read at exit 0 there, and it is `precheck` that
+      turns it into a stop.
+
+    Collapsing the last two into one "no tokens" answer is the failure this shape exists to
+    avoid. They differ in what the project must do next — one is a `:root` block over variables
+    that already exist, the other is a design system — and a report that said only "unmet" would
+    send both projects to the same wrong place.
+    """
+    for row in doc["layers"]:
+        if row["runtimeResolvable"]:
+            return half_row(
+                HALF_TOKENS, True,
+                HALF_TOKENS_MET % (row["layer"], row["declarations"], row["files"]),
+                None)
+    refused = doc.get("refusal")
+    if refused is not None:
+        # Read rather than indexed. This half relays wording `tokens` owns, so the shape of that
+        # wording is a contract between two parts of one file — and a contract nothing checks is
+        # one a rename breaks silently. Indexing raised `KeyError`, which is not `StyleguideError`
+        # and so escaped the handler in `main` as a traceback: the least helpful failure available,
+        # on the one path a project reaches when its palette exists but cannot be read.
+        message = refused.get("message")
+        remedy = refused.get("remedy")
+        if message is None or remedy is None:
+            raise StyleguideError(
+                "the token read refused this project but its refusal carried no %s; this is a "
+                "defect in this script rather than anything about the project"
+                % ("message" if message is None else "remedy"))
+        return half_row(HALF_TOKENS, False, message, remedy)
+    return half_row(HALF_TOKENS, False,
+                    HALF_TOKENS_NO_LAYERS, HALF_TOKENS_NO_LAYERS_REMEDY)
+
+
+def views_half(views):
+    """The exemplar half of the precondition, from the views found on disk.
+
+    One view is enough. The claim is not that this project has a mature block library — it is
+    that somebody has already made the decisions a new view would otherwise make by accident,
+    and the first view in a project is where those decisions were made whether or not anyone
+    meant to.
+    """
+    if views:
+        return half_row(HALF_VIEWS, True, HALF_VIEWS_MET % len(views), None)
+    return half_row(HALF_VIEWS, False, HALF_VIEWS_UNMET, HALF_VIEWS_REMEDY)
+
+
+def read_precheck(root):
+    """Whether a styleguide may be generated for `root`, as a report document.
+
+    The token half comes from `read_tokens` rather than from a reading of its own. That costs a
+    full parse of every stylesheet to answer a question a count would have settled, and it is
+    still the right trade: a second implementation of layer discovery would answer this question
+    slightly differently from the command whose refusal the spell relays, and the disagreement
+    would surface as a project that `precheck` cleared and `tokens` refused.
+
+    The evidence is carried below the verdict — the layers found, and a sample of the views —
+    because a stop nobody can check is a stop somebody works around.
+    """
+    sources, views = find_sources_and_views(root)
+    doc = read_tokens(root, sources=sources)
+    halves = [token_half(doc), views_half(views)]
+    return {
+        "precheckVersion": PRECHECK_VERSION,
+        # The verdict first, and `all` rather than a count: a half added later is a half this
+        # line already requires, which is the point of naming the halves in a table.
+        "preconditionMet": all(row["met"] for row in halves),
+        "halves": halves,
+        "tokenLayers": doc["layers"],
+        "authoritativeLayer": doc["authoritativeLayer"],
+        "exemplarViews": {
+            "rule": EXEMPLAR_VIEW_RULE,
+            "files": len(views),
+            "examples": views[:EXAMPLE_VIEWS],
+        },
+    }
+
+
 def render(doc):
     """The document as JSON, with one line per row in each of its tables.
 
@@ -1048,6 +1363,21 @@ def cmd_tokens(args):
     return 0
 
 
+def cmd_precheck(args):
+    doc = read_precheck(args.project_root)
+    print(render(doc))
+    # After the document, for the reason `cmd_tokens` gives: the caller stopping on this code is
+    # the one who needs the half names and the remedy, and a status code with no report behind it
+    # is a stop with nowhere to go.
+    #
+    # **3 is unconditional**, matching this script's other 3 and unlike guide.py's gated one. An
+    # audit's findings are a backlog; an unmet precondition is a stop, and a caller that carried
+    # on would produce the invented-conventions output this whole increment exists to refuse.
+    if not doc["preconditionMet"]:
+        return EXIT_REFUSED
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog=PROG,
@@ -1061,7 +1391,13 @@ def build_parser():
              "CSS custom property it declares with its group")
     tokens_cmd.set_defaults(handler=cmd_tokens)
 
-    for sub in (tokens_cmd,):
+    precheck_cmd = subparsers.add_parser(
+        "precheck",
+        help="report whether both halves of the spell's precondition are met — a token layer "
+             "that resolves at render time, and an existing block view to copy conventions from")
+    precheck_cmd.set_defaults(handler=cmd_precheck)
+
+    for sub in (tokens_cmd, precheck_cmd):
         sub.add_argument(
             "--project-root", default=".", metavar="DIR",
             help="the project to read (default: the current directory)")

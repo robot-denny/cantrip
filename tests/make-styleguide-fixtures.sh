@@ -54,6 +54,28 @@ preprocessor() {  # preprocessor <case-root> <name>  — reads the body from std
   cat > "$dir/$2"
 }
 
+# A Razor view. `precheck` never opens one — it counts them by suffix — so the body is one line
+# of ordinary block markup, enough that a reader can tell a deliberate fixture from a truncated
+# one. The subdirectory is a place a project might keep block views and nothing in the subject may
+# depend on it: the search is by suffix from the project root, so a case that only passed because
+# of the folder name would be testing the folder name.
+view() {  # view <case-root> <relative-dir> <name>
+  local dir="$1/$2"
+  mkdir -p "$dir"
+  printf '<section class="%s">\n  <h2>@Model.Content.Value("heading")</h2>\n</section>\n' \
+    "${3%.cshtml}" > "$dir/$3"
+}
+
+# A file ASP.NET Core reserves by name. Razor syntax, no markup: `_ViewImports.cshtml` carries
+# `@using` directives and `_ViewStart.cshtml` sets a layout. Written by its own helper rather than
+# by `view` above, because the whole point of the cases that use it is that these two are NOT
+# views to copy conventions from.
+razor_directive_file() {  # razor_directive_file <case-root> <relative-dir> <name>
+  local dir="$1/$2"
+  mkdir -p "$dir"
+  cat > "$dir/$3"
+}
+
 # ==============================================================================
 # The two fixtures are one claim seen from both sides
 # ==============================================================================
@@ -696,5 +718,293 @@ expect "$C" \
   "not_contains: #1F7A5C" \
   "not_contains: #1D2939" \
   "not_contains: \$brand-primary"
+
+# ==============================================================================
+# The three precheck fixtures are one claim seen from three sides
+# ==============================================================================
+#
+# `precheck` answers the spell's precondition in two independent halves — is there a token layer
+# a page can read at render time, and is there an existing block view to copy conventions from —
+# and the behavior under test is that it names **both**, met or unmet, rather than listing only
+# what failed.
+#
+# That is why three cases and not two. An implementation that printed failures alone passes
+# `exit: 3` on both negative cases and leaves the caster unable to tell "this project has views
+# and no tokens" from "this project has nothing at all" — which are different situations with
+# different remedies, and the second is the one where generating anything at all is harmful. So
+# each negative case asserts the MET half by name as well as the unmet one, and the positive case
+# asserts both met:
+#
+#   precheck-both        both halves met            exit 0
+#   precheck-no-tokens   views met, tokens unmet    exit 3
+#   precheck-greenfield  tokens met, views unmet    exit 3
+#
+# The two negative cases are deliberately opposite: whichever half an implementation forgets to
+# report, one of them fails. A single negative case cannot state that, because the half it happens
+# to name is the half that got implemented.
+#
+# **One branch of `precheck`'s token half has no case here, on purpose.** A project whose only
+# layer is build-time gets the token half unmet by relaying `tokens`' existing refusal and remedy,
+# and the plan names exactly three precheck fixtures. tokens-preprocessor-only covers the refusal
+# itself; what is uncovered is precheck RELAYING it. Recorded rather than quietly left out.
+
+# --- precheck-both --------------------------------------------------------------
+#
+# The project the spell is for: a palette in custom properties, and blocks whose views already
+# establish the conventions a new showcase view will follow. Both halves met, exit 0.
+#
+# Two views rather than one, so `examples` has an order to get wrong: they are reported in path
+# order, and callout sorts before hero while the generator writes hero first. A subject reporting
+# walk order rather than sorted order fails the golden here and nowhere else in this suite.
+C="$CASES/precheck-both"; mkdir -p "$C"
+stylesheet "$C" site.css <<'EOF'
+:root {
+  --brand-primary: #0B5FFF;
+  --brand-ink: #101828;
+}
+
+.site-header {
+  color: var(--brand-ink);
+  background-color: var(--brand-primary);
+}
+EOF
+view "$C" src/Web/Views/Partials/blocks hero.cshtml
+view "$C" src/Web/Views/Partials/blocks callout.cshtml
+# Hand-authored from the tree above. The token counts are read off the stylesheet; the view count
+# is the two files written above, and `examples` is those two paths sorted.
+cat > "$C/expected-precheck.json" <<'EOF'
+{
+  "precheckVersion": 1,
+  "preconditionMet": true,
+  "halves": [
+    {"half": "runtime-resolvable-token-layer", "met": true, "statement": "A token layer that resolves at render time is present: custom-properties (declarations: 2, files: 1). A swatch reading one of these names follows a re-theme with no regeneration.", "remedy": null},
+    {"half": "exemplar-block-views", "met": true, "statement": "Razor views on disk: 2. An existing block view is available to copy conventions from: view location, model binding, settings handling and styling approach.", "remedy": null}
+  ],
+  "tokenLayers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 2, "names": 2}
+  ],
+  "authoritativeLayer": "custom-properties",
+  "exemplarViews": {
+    "rule": "Counted: every *.cshtml under the project root, except _ViewImports.cshtml, _ViewStart.cshtml (reserved by name) and anything under a skipped directory. No other exclusion: a page template and a partial count as readily as a block view. 'examples' lists the first 5 in path order; 'files' is the total.",
+    "files": 2,
+    "examples": [
+      "src/Web/Views/Partials/blocks/callout.cshtml",
+      "src/Web/Views/Partials/blocks/hero.cshtml"
+    ]
+  }
+}
+EOF
+# The two row lines bind each half's NAME to its met flag on one line, which is what a bare
+# `contains: "met": true` cannot do — two halves and one flag each, and a transposition satisfies
+# a bag of values found anywhere in the output.
+expect "$C" \
+  "exit: 0" \
+  "args: precheck" \
+  "stdout_matches: expected-precheck.json" \
+  "contains: \"preconditionMet\": true" \
+  "contains: {\"half\": \"runtime-resolvable-token-layer\", \"met\": true," \
+  "contains: {\"half\": \"exemplar-block-views\", \"met\": true,"
+
+# --- precheck-no-tokens ---------------------------------------------------------
+#
+# Twelve block views and not one design token: every color written out where it is used. This is
+# the commonest real project, and the half it fails is the one the whole capability rests on.
+#
+# **Twelve, not one.** A single view would leave `files` at a number an off-by-one or a
+# walk-order bug could still produce by accident; twelve is a count that has to have come from
+# counting, and it is also what makes the `examples` cap observable — five paths beside `files:
+# 12` says the list is a sample rather than the whole set.
+#
+# The token half here is the NO-LAYERS branch, not the refusal branch: there is no preprocessor
+# source in this tree, so `tokens` would report `layers: []` and exit 0. That state has no remedy
+# text in `tokens`, because a project with no palette at all has done nothing wrong — it has not
+# started. `precheck` is where it becomes a stop, and the remedy asserted below is the one written
+# for it.
+C="$CASES/precheck-no-tokens"; mkdir -p "$C"
+stylesheet "$C" site.css <<'EOF'
+.site-header {
+  color: #101828;
+  background-color: #0B5FFF;
+}
+
+.callout {
+  border-color: #C2410C;
+  padding-block: 0.75rem;
+}
+EOF
+for v in accordion banner callout carousel cta faq gallery hero quote rich-text stats video; do
+  view "$C" src/Web/Views/Partials/blocks "$v.cshtml"
+done
+# Hand-authored. Twelve views were written above and `examples` is the first five in path order;
+# the stylesheet declares no custom property, so `tokenLayers` is empty and there is no
+# authoritative layer to name.
+cat > "$C/expected-precheck.json" <<'EOF'
+{
+  "precheckVersion": 1,
+  "preconditionMet": false,
+  "halves": [
+    {"half": "runtime-resolvable-token-layer", "met": false, "statement": "This project holds no token layer at all: no custom properties, and no preprocessor variables either. There is nothing to read, so every value a styleguide showed would be one it invented.", "remedy": "Establish the palette first, as a :root block declaring one custom property per entry, and re-run. This is the precondition the spell states rather than assumes: a styleguide generated before a design system exists documents its own invented values back to the people who were meant to supply them."},
+    {"half": "exemplar-block-views", "met": true, "statement": "Razor views on disk: 12. An existing block view is available to copy conventions from: view location, model binding, settings handling and styling approach.", "remedy": null}
+  ],
+  "tokenLayers": [],
+  "authoritativeLayer": null,
+  "exemplarViews": {
+    "rule": "Counted: every *.cshtml under the project root, except _ViewImports.cshtml, _ViewStart.cshtml (reserved by name) and anything under a skipped directory. No other exclusion: a page template and a partial count as readily as a block view. 'examples' lists the first 5 in path order; 'files' is the total.",
+    "files": 12,
+    "examples": [
+      "src/Web/Views/Partials/blocks/accordion.cshtml",
+      "src/Web/Views/Partials/blocks/banner.cshtml",
+      "src/Web/Views/Partials/blocks/callout.cshtml",
+      "src/Web/Views/Partials/blocks/carousel.cshtml",
+      "src/Web/Views/Partials/blocks/cta.cshtml"
+    ]
+  }
+}
+EOF
+# The met half is asserted by name, and that line is this case's reason for existing: an
+# implementation that reported only what failed satisfies every other assertion here.
+#
+# **The three hex lines are a standing guard, not this case's test**, and saying so is the point of
+# this note. `precheck` reports a precondition and no declaration table at all, so those literals
+# were absent from its output before the first line of it was written — the assertions could not
+# have gone RED and catch no implementation anybody would write today. They stay because they are
+# what fails if a later version decides to be helpful and prints the palette beside the verdict,
+# which is the leak this capability refuses everywhere else.
+expect "$C" \
+  "exit: 3" \
+  "args: precheck" \
+  "stdout_matches: expected-precheck.json" \
+  "contains: \"preconditionMet\": false" \
+  "contains: {\"half\": \"exemplar-block-views\", \"met\": true," \
+  "contains: {\"half\": \"runtime-resolvable-token-layer\", \"met\": false," \
+  "contains: \"files\": 12" \
+  "contains: Establish the palette first" \
+  "not_contains: #0B5FFF" \
+  "not_contains: #101828" \
+  "not_contains: #C2410C"
+
+# --- precheck-greenfield --------------------------------------------------------
+#
+# The refusal at its most intense: a palette already in custom properties, and no block view
+# anywhere. There is nothing to copy, so a generated showcase view would ESTABLISH this project's
+# conventions rather than follow them — and every real block written afterwards gets copied from a
+# page of color swatches. That is the hazard this half exists to guard, and it is worst on a
+# project at setup time, which is exactly when a styleguide looks like a cheap first win.
+#
+# **The two Razor files in the tree are the case's sharp edge.** `_ViewImports.cshtml` and
+# `_ViewStart.cshtml` are `.cshtml` files, they are what a fresh scaffold ships, and they are not
+# views to copy anything from: ASP.NET Core reserves both names, and they carry directives rather
+# than markup. A subject counting every `.cshtml` reports two views here, calls this half met, and
+# exits 0 — so the exit code, the met flag and `files: 0` all fail together on the one
+# implementation that is easiest to write.
+C="$CASES/precheck-greenfield"; mkdir -p "$C"
+stylesheet "$C" site.css <<'EOF'
+:root {
+  --brand-primary: #0B5FFF;
+  --brand-ink: #101828;
+}
+EOF
+razor_directive_file "$C" src/Web/Views _ViewImports.cshtml <<'EOF'
+@using Umbraco.Cms.Web.Common.PublishedModels
+@inject IPublishedValueFallback PublishedValueFallback
+EOF
+razor_directive_file "$C" src/Web/Views _ViewStart.cshtml <<'EOF'
+@{
+    Layout = "master.cshtml";
+}
+EOF
+# Hand-authored. `files: 0` with two `.cshtml` files on disk is the whole claim of this case, and
+# `examples: []` is its other half — a subject that counted zero and still listed a path would be
+# reporting two different answers at once.
+cat > "$C/expected-precheck.json" <<'EOF'
+{
+  "precheckVersion": 1,
+  "preconditionMet": false,
+  "halves": [
+    {"half": "runtime-resolvable-token-layer", "met": true, "statement": "A token layer that resolves at render time is present: custom-properties (declarations: 2, files: 1). A swatch reading one of these names follows a re-theme with no regeneration.", "remedy": null},
+    {"half": "exemplar-block-views", "met": false, "statement": "No Razor view is on disk, so there is no existing markup convention to copy.", "remedy": "Author at least one real block view before generating a styleguide, or take the conventions from another codebase and say which. With nothing to copy, the styleguide's own showcase view becomes the exemplar every later block is copied from, which sets the project's conventions from a color-swatch page rather than from its content."}
+  ],
+  "tokenLayers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 2, "names": 2}
+  ],
+  "authoritativeLayer": "custom-properties",
+  "exemplarViews": {
+    "rule": "Counted: every *.cshtml under the project root, except _ViewImports.cshtml, _ViewStart.cshtml (reserved by name) and anything under a skipped directory. No other exclusion: a page template and a partial count as readily as a block view. 'examples' lists the first 5 in path order; 'files' is the total.",
+    "files": 0,
+    "examples": []
+  }
+}
+EOF
+# `files: 0` and `examples: []` are the exclusion's whole assertion, and there is deliberately no
+# `not_contains: _ViewImports` beside them: the rule string names both reserved files, as it must
+# to be checkable, so an assertion that the name is absent would fail on a correct report. The met
+# half is named here too, so a caster reading this report can tell it from precheck-no-tokens.
+expect "$C" \
+  "exit: 3" \
+  "args: precheck" \
+  "stdout_matches: expected-precheck.json" \
+  "contains: \"preconditionMet\": false" \
+  "contains: {\"half\": \"runtime-resolvable-token-layer\", \"met\": true," \
+  "contains: {\"half\": \"exemplar-block-views\", \"met\": false," \
+  "contains: \"files\": 0" \
+  "contains: \"examples\": []" \
+  "contains: Author at least one real block view"
+
+# --- precheck-build-time-tokens -------------------------------------------------
+#
+# The third state of the token half: a palette exists, and no rendered page can read it. Views
+# are present, so this is the one case where the token half fails for a reason that has a
+# remedy already written for it.
+#
+# Added after Step 5's review, and the plan named only three precheck cases. The reason it earns
+# a fourth: this branch relays wording `tokens` owns — `refusal["message"]` and
+# `refusal["remedy"]` — and nothing else in the suite exercised the relay. A rename on either
+# side would have passed every test and surfaced as a traceback on the one path a project reaches
+# when its palette exists but cannot be read. The golden below holds the relayed text verbatim,
+# so the relay is what breaks the case rather than being what nobody checks.
+#
+# Both strings are read off the script's REFUSAL_MESSAGE and REFUSAL_REMEDY constants by hand,
+# with the layer phrase filled in for a single build-time layer. That is the point: if this
+# golden and those constants disagree, one of them changed without the other.
+C="$CASES/precheck-build-time-tokens"; mkdir -p "$C"
+view "$C" src/Web/Views/Partials/blocks hero.cshtml
+view "$C" src/Web/Views/Partials/blocks callout.cshtml
+preprocessor "$C" _tokens.scss <<'EOF'
+$brand-primary: #1F7A5C;
+$brand-ink: #1D2939;
+EOF
+cat > "$C/expected-precheck.json" <<'EOF'
+{
+  "precheckVersion": 1,
+  "preconditionMet": false,
+  "halves": [
+    {"half": "runtime-resolvable-token-layer", "met": false, "statement": "The palette cannot be read at render time. The only token layer this project holds is preprocessor-variables, whose values the build resolves and discards, so nothing in the rendered page can read them. A page built from this layer shows the palette as it stood at the last build, and does not follow a re-theme.", "remedy": "Add a custom-property layer that the existing variables feed: one :root block declaring a custom property for each palette entry, with that entry's existing variable as its value. The palette stays defined where it is defined today; the block only makes those values readable at render time. Re-run afterwards: the custom-property layer becomes authoritative, and every token reported is one a page can follow through a re-theme."},
+    {"half": "exemplar-block-views", "met": true, "statement": "Razor views on disk: 2. An existing block view is available to copy conventions from: view location, model binding, settings handling and styling approach.", "remedy": null}
+  ],
+  "tokenLayers": [
+    {"layer": "preprocessor-variables", "runtimeResolvable": false, "files": 1, "declarations": 2, "names": 2}
+  ],
+  "authoritativeLayer": "preprocessor-variables",
+  "exemplarViews": {
+    "rule": "Counted: every *.cshtml under the project root, except _ViewImports.cshtml, _ViewStart.cshtml (reserved by name) and anything under a skipped directory. No other exclusion: a page template and a partial count as readily as a block view. 'examples' lists the first 5 in path order; 'files' is the total.",
+    "files": 2,
+    "examples": [
+      "src/Web/Views/Partials/blocks/callout.cshtml",
+      "src/Web/Views/Partials/blocks/hero.cshtml"
+    ]
+  }
+}
+EOF
+# No `not_contains:` on the SCSS hex values here. They would pass whatever the relay did — the
+# preprocessor layer reports counts only — and an assertion that cannot fail is not a guard on
+# this case, it is decoration. What holds this case is the golden.
+expect "$C" \
+  "exit: 3" \
+  "args: precheck" \
+  "stdout_matches: expected-precheck.json" \
+  "contains: {\"half\": \"runtime-resolvable-token-layer\", \"met\": false," \
+  "contains: {\"half\": \"exemplar-block-views\", \"met\": true," \
+  "contains: whose values the build resolves and discards" \
+  "contains: Add a custom-property layer that the existing variables feed"
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

@@ -1,0 +1,17 @@
+{
+  "precheckVersion": 1,
+  "preconditionMet": false,
+  "halves": [
+    {"half": "runtime-resolvable-token-layer", "met": true, "statement": "A token layer that resolves at render time is present: custom-properties (declarations: 2, files: 1). A swatch reading one of these names follows a re-theme with no regeneration.", "remedy": null},
+    {"half": "exemplar-block-views", "met": false, "statement": "No Razor view is on disk, so there is no existing markup convention to copy.", "remedy": "Author at least one real block view before generating a styleguide, or take the conventions from another codebase and say which. With nothing to copy, the styleguide's own showcase view becomes the exemplar every later block is copied from, which sets the project's conventions from a color-swatch page rather than from its content."}
+  ],
+  "tokenLayers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 2, "names": 2}
+  ],
+  "authoritativeLayer": "custom-properties",
+  "exemplarViews": {
+    "rule": "Counted: every *.cshtml under the project root, except _ViewImports.cshtml, _ViewStart.cshtml (reserved by name) and anything under a skipped directory. No other exclusion: a page template and a partial count as readily as a block view. 'examples' lists the first 5 in path order; 'files' is the total.",
+    "files": 0,
+    "examples": []
+  }
+}

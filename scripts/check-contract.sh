@@ -88,16 +88,22 @@ begin() {
 # `.scss` followed in the same suite once a fixture needed a preprocessor source: a `$` variable
 # is named after the project exactly as a custom property is, and the hole was demonstrated the
 # same way before it was filled.
+#
+# `.cshtml` followed when the same suite gained view fixtures for `precheck`'s greenfield guard. A
+# Razor view is the densest client-identifying file type in any of these projects -- it carries
+# block aliases, property names, CSS class names, and copy -- and the hole was demonstrated the
+# same way: a client term planted in a fixture view passed all 17 checks, and fails check 1 once
+# the extension is listed here.
 repo_md_files() {
   if git rev-parse --git-dir >/dev/null 2>&1; then
     { git ls-files; git ls-files --others --exclude-standard; } 2>/dev/null \
-      | grep -E '\.(md|json|sh|py|txt|diff|uda|config|cs|css|scss)$|(^|/)LICENSE$' \
+      | grep -E '\.(md|json|sh|py|txt|diff|uda|config|cs|css|scss|cshtml)$|(^|/)LICENSE$' \
       | grep -vE '^scripts/check-contract\.sh$'
   else
     find . \( "${PRUNE[@]}" \) -prune -o -type f \
       \( -name '*.md' -o -name '*.json' -o -name '*.sh' -o -name '*.py' -o -name '*.txt' \
          -o -name '*.diff' -o -name '*.uda' -o -name '*.config' -o -name '*.cs' \
-         -o -name '*.css' -o -name '*.scss' -o -name 'LICENSE' \) \
+         -o -name '*.css' -o -name '*.scss' -o -name '*.cshtml' -o -name 'LICENSE' \) \
       -print 2>/dev/null
   fi
 }

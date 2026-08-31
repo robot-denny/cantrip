@@ -1,0 +1,9 @@
+:root {
+  --brand-primary: #0B5FFF;
+  --brand-ink: #101828;
+}
+
+.site-header {
+  color: var(--brand-ink);
+  background-color: var(--brand-primary);
+}

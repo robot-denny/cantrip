@@ -1,0 +1,7 @@
+exit: 3
+args: precheck
+stdout_matches: expected-precheck.json
+contains: {"half": "runtime-resolvable-token-layer", "met": false,
+contains: {"half": "exemplar-block-views", "met": true,
+contains: whose values the build resolves and discards
+contains: Add a custom-property layer that the existing variables feed

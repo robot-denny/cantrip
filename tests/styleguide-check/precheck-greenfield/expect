@@ -1,0 +1,9 @@
+exit: 3
+args: precheck
+stdout_matches: expected-precheck.json
+contains: "preconditionMet": false
+contains: {"half": "runtime-resolvable-token-layer", "met": true,
+contains: {"half": "exemplar-block-views", "met": false,
+contains: "files": 0
+contains: "examples": []
+contains: Author at least one real block view
