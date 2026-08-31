@@ -43,6 +43,16 @@ increment.
       increment because it would put a model call in the audit path, which must stay cheap
 - [ ] **Known gap**: the supported serialization format versions are unsettled, and one format's
       element names are carried as unverified in the extraction guidance
+- [ ] **Known gap, found 2026-08-31**: a counterexample to the reason behind *No option is marked as
+      the default*. That Rule was settled on evidence from two projects and 37 option lists, none of
+      which recorded a default. A third project has since been measured whose serialized dropdown
+      **does** carry one — because a startup composer writes the option list and its default into the
+      data type's configuration from application settings, rather than an editor setting it in the
+      backoffice. **The Rule's behavior is still accurate** — nothing in the dossier carries a
+      default, so no guide marks one — but its stated reason ("no source records one") is now known
+      to be false for at least one mechanism. Worth revisiting whether the dossier should carry a
+      default where the source genuinely records one; not this increment's work, and recorded so the
+      evidence is not re-derived
 
 <!-- Page types were a parking-lot item until 2026-08-25, when the spec revision put them in scope:
      a page type is the same concept as a block filling a different role, and extraction already
@@ -412,6 +422,7 @@ Scenario: A project readable only from generated models reports thinness once
 
 ## Revision Notes
 
+- 2026-08-31: Logged a Known gap against *No option is marked as the default* — a third measured project serializes a dropdown default written by a startup composer, which contradicts the reason that Rule records without contradicting its behavior. No scenario changed
 - 2026-08-24: Draft scenarios from initial spec
 - 2026-08-25: Revised from `_work/shipped/editor-facing-guides/notes/spec-revisions.md`. The component guide
   and the how-to guide merged into one guide page per component, with a derived index replacing the
