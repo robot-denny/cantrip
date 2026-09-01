@@ -81,6 +81,16 @@ instead.
   This is one of the "structural gate checks" the roadmap already wants; it is built here because this
   increment is the first to add a status and would otherwise have no RED signal for Step 1.
 
+- **`/spec` now writes a populated coverage table, not an empty one.** *Recorded after the fact:
+  this surfaced during Step 1 and was not planned.* Check 17's first run showed `/spec` had never
+  named a single status, while its Step 6 said only "an empty test coverage table (no tests exist
+  yet)" — and `/spec` in practice emits one `Not covered` row per draft scenario, which is what this
+  increment's own `_features/test-coverage.md` contains. Reaching GREEN meant `/spec` describing the
+  whole vocabulary, and describing it made the empty-table instruction untenable. So the instruction
+  now reads "one row per draft scenario, every row `Not covered`", which is what the spell already
+  did. **This is a behavior change to a shipped spell that no check gates**, and it is recorded here
+  rather than left as an unexplained diff hunk.
+
 - **The pre-commit hook blocks a commit on a failing contract gate**, so every step's RED must be
   consumed inside that step. The styleguide increment hit this and had to pull a roster edit forward
   into an earlier commit; Step 2 below keeps creation and registration together for the same reason.
@@ -159,7 +169,7 @@ inspect this repo versus shipped units); `skills/core/spellbook/feature/SKILL.md
 > does when the argument names an increment slug rather than an area, and what it does when the doc
 > has no table. Declare the two slots it reads — `.agents/config/stack.md` → `## Tests` and
 > `## Build` — each with an `**If empty:**` line. **Use the reworded `## Tests` fallback from the
-> plan's Key Decisions, and reword `/plan` and `/block` to match it**; contract check 10 fails until
+> plan's Key Decisions, and reword `/plan` and `/block` to match it**; contract check 9 fails until
 > all three agree word for word. Then register the unit: `ln -s
 > ../../skills/core/spellbook/testify .claude/skills/testify`, and add `testify` to `ROSTER_CORE` in
 > `scripts/check-install.sh`. Do not write the gap report, the write path, or audit mode yet.
@@ -304,10 +314,15 @@ no-convention refusal, the `Next:` line.
 
 > **Prompt**: Implement Step 6 of `_work/testify/plan.md`. Extend
 > `skills/core/spellbook/testify/SKILL.md` with `/testify audit` — read-only across every capability
-> doc, writing nothing, touching no test file, and offering no approval prompt. It reports four kinds
-> of drift: a scenario no test proves; a test whose scenario has since changed, shown as it was
-> written and as it reads now; a test whose scenario has been deleted; and a row claiming proof whose
-> named test no longer exists or currently fails. Stale and orphaned detection reads the provenance
+> doc, writing nothing, **running no test**, touching no test file, and offering no approval prompt.
+> It reports four kinds of drift: a scenario no test proves; a test whose scenario has since changed,
+> shown as it was written and as it reads now; a test whose scenario has been deleted; and a row
+> claiming proof whose named test **no longer exists at all**. **That fourth one is narrowed on
+> purpose and the spell must say why**: learning that a `Covered` row's test *currently fails* would
+> mean running it, and a sweep that executed a project's suite would be neither cheap nor read-only —
+> where tests create and delete real content to exercise it, an audit would mutate the very thing it
+> reports on. Leave whether a live-but-named test still passes to the next real run, and point at the
+> re-observation entry in the spec's *Open Questions*. Stale and orphaned detection reads the provenance
 > header from Step 4 — say so, and say why matching scenario names as strings is not the fallback: it
 > breaks exactly when a scenario is reworded, which is when detection matters most. Rank capabilities
 > by how much is unproved. Handle a project with no capability docs by saying so and naming the first
@@ -344,7 +359,12 @@ no-convention refusal, the `Next:` line.
 > count is meant to stay small**" to nine. In `CHANGELOG.md`: describe what shipped under
 > `[Unreleased]`, readable as "what will change in my project when I update" — the new spell, the two
 > new coverage statuses, the reworded `## Tests` fallback affecting `/plan` and `/block`, and contract
-> check 17. Correct the existing census line that says eight workflow spells. In `ROADMAP.md`: move
+> check 17. Correct the existing census line that says eight workflow spells. **Also fix
+> `skills/core/reference/tdd-principles/SKILL.md:149`**, which enumerates the coverage vocabulary as
+> "`Covered`, `Not covered`, and `Not covered (code-derived)`" — accurate before this increment and
+> incomplete after it. That file *reads* the vocabulary rather than writing a table, so contract
+> check 17 does not cover it; it was found during Step 1 and deliberately deferred to here rather
+> than stretched into that step's scope. In `ROADMAP.md`: move
 > "A spell for tests" out of **Next** into **Recently shipped**, and carry forward the questions this
 > increment leaves open rather than dropping them — in particular that the audit report shape now has
 > its second caller, which is what the editor-guides entry was waiting on, and that answering it also

@@ -5,7 +5,7 @@
 > capability, an existing feature doc for a change, or a `docs/` runbook for a fix.
 
 branch: robot-denny/feature/testify
-design reference (if any): none
+design reference (if any): prior art only, contributing shape and no content — see *Design Reference* below
 
 **Work type**: new-capability
 **Feature doc**: test-coverage
@@ -40,7 +40,8 @@ stops rather than inventing one.
 - `/testify <capability>` — the write path. Reads that capability's doc, reports the gap, then writes
   and runs on approval.
 - `/testify audit` — the read-only path. Sweeps every capability doc and reports project-wide
-  coverage and drift. Writes nothing, touches no test file, and offers no approval prompt.
+  coverage and drift. Writes nothing, runs no test, touches no test file, and offers no approval
+  prompt.
 
 **The capability doc is the only source of what is unproved.** The spell reads `_features/<area>.md`
 and works from its Test Coverage rows. Behavior that was never written as a scenario is invisible to
@@ -110,13 +111,21 @@ statuses beside `Covered`, `Not covered`, and `Not covered (code-derived)`:
 
 Both ripple into `templates/feature.md`, and into `/feature` and `/spec`, which write the table.
 
-**Audit mode reports drift in both directions.** Four kinds, all read-only:
+**Audit mode reports drift in both directions.** Four kinds, every one of them answered by reading:
 
 1. A scenario no test proves.
 2. A test whose scenario has since changed — **stale**; the row still claims proof of something
    nobody specified any more.
 3. A test whose scenario has been deleted — **orphaned**.
-4. A row claiming `Covered` whose named test no longer exists, or currently fails.
+4. A row claiming `Covered` whose named test no longer exists at all.
+
+**Audit mode runs no test, and item 4 is deliberately the weaker half of the check it could have
+been.** Learning that a `Covered` row's test *currently fails* would mean running it, and a sweep
+that quietly executed a project's suite would be neither cheap nor read-only. It would also not be
+safe: where a project's tests create and delete real content to exercise it, an audit would mutate
+the very thing it claims to be reporting on, and "writes nothing" would be false in the way a user
+would most object to. So the sweep asks only whether the named test still exists. Whether a row that
+still names a live test is telling the truth is left to the next real run — see *Open Questions*.
 
 **Stack knowledge comes from a pack or from the project, never from the spell.** The spell is L0. It
 reads the `stack.md` → `## Tests` slot for where tests live and `## Build` for how to run them,
@@ -408,6 +417,7 @@ Scenario: A project-wide report ranks capabilities by how much is unproved
   Then the report covers all four capabilities
   And "Article Card" appears above "Site Search"
   And no test file has been created or changed
+  And no test is run
   And the developer is not asked to approve anything
 ```
 
@@ -488,12 +498,15 @@ Scenario: What could not be determined is stated rather than invented
   run established. Splitting into two columns would make `Test failing` fall out of the pair rather
   than needing a name of its own. **Not done here** because it rewrites every existing coverage table
   in the project. Worth deciding before a sixth status is proposed.
-- **Nothing re-runs a failing test, so `Test failing` can go stale in the optimistic direction.** A row
-  says failing; the work that would make it pass lands; nobody re-runs it; the row keeps understating
-  what is proved. `/plan`'s final step verifies the doc's scenarios and a re-run of `/testify` would
-  notice, so the candidates exist — but neither is obliged, and a status naming an observation is only
-  as good as the last time anything observed it. The same shape as the stale-reason question below,
-  pointing the other way.
+- **Nothing re-observes a row, so a status can go stale in either direction.** A `Test failing` row
+  *understates*: the work that would make it pass lands, nobody re-runs it, and the row keeps
+  reporting a failure that is over. A `Covered` row *overstates*: its test starts failing and the row
+  goes on claiming proof — which audit mode deliberately does not catch, because catching it would
+  mean running the suite. `/plan`'s final step verifies the doc's scenarios and a re-run of `/testify`
+  would notice either, so candidates exist, but neither is obliged; a status naming an observation is
+  only as good as the last time anything observed it. **The overstating direction costs more**, and
+  whatever closes it has to answer the question audit mode dodged: who may run a project's tests, and
+  when. Same shape as the stale-reason question below — the three are one question in three hats.
 - **Whether a `Not coverable` reason expires, and what notices it.** A reason like "this toolkit ships
   no rendering layer" stops being true the moment something owns the render layer, and nothing in the
   design re-reads it. Skipping the row forever is the failure mode the status was introduced to

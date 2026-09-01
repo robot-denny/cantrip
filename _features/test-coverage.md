@@ -23,7 +23,7 @@ increment.
 
 - [ ] The `/testify` spell: a coverage gap report, approval-gated test authoring against a capability
       doc, a project-wide audit that names drift in both directions, and two new coverage statuses
-      (`_work/testify/spec.md`, no plan yet)
+      (`_work/testify/spec.md`, planned in `_work/testify/plan.md`)
 - [ ] Parking lot: splitting the Status column in two. Five statuses encode two independent facts in
       one cell — whether a test exists, and what its last run established. Deferred because it
       rewrites every existing coverage table
@@ -40,7 +40,6 @@ increment.
 
 Scenarios are grouped by Rule — the business rule the scenarios prove. Use concrete values and
 business language. See the `bdd-principles` skill for guidance.
-
 ### Rule: A developer names a capability and gets back a report of which of its scenarios nothing proves, before any file is written
 
 ```scenario
@@ -241,6 +240,7 @@ Scenario: A project-wide report ranks capabilities by how much is unproved
   Then the report covers all four capabilities
   And "Article Card" appears above "Site Search"
   And no test file has been created or changed
+  And no test is run
   And the developer is not asked to approve anything
 ```
 
@@ -359,13 +359,16 @@ in particular:
 | A project with tests but no stack pack still gets a report | — | Not covered |
 | What could not be determined is stated rather than invented | — | Not covered |
 
-<!-- Covered: a test asserts it and its last run passed. Test failing: a test exists and its last run
-     did not pass — named for the observation, not its cause, which may be work still to come, a
-     regression, or a doc that is wrong. Not covered: specified, no test. Not covered (code-derived):
-     inferred from reading the code, never specified and never tested — the weakest claim here.
-     Not coverable — <reason>: the project has decided this cannot be tested here.
-     Keeping these distinct is what lets a reader tell verified behavior from inferred, and a
-     deliberate gap from an accidental one. -->
+<!-- Status vocabulary, per templates/feature.md, which is the authority.
+
+     Four record an observation — what was seen, or that nothing was:
+     Covered (a test asserts it and its last run passed); Test failing (a test asserts it and its
+     last run did not pass, named for the observation rather than its cause); Not covered
+     (specified, nothing asserts it); Not covered (code-derived) (inferred from reading the code,
+     never specified and never tested, the weakest claim here).
+
+     One records a decision, and is set apart because its name begins like two of theirs and means
+     the opposite: Not coverable — <reason> (the project decided this cannot be proved here). -->
 
 Every row is uncovered because nothing has been built yet. This doc would be the first thing
 `/testify` is pointed at once it exists — useful dogfooding, and an equally useful trap: several of

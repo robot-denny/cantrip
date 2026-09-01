@@ -57,6 +57,13 @@ buried.
   detection recipes begin, and registering every reader of a shared slot. An amendment rather than a
   new record because nothing in the original was reversed.
 
+- **0016 — a coverage status names an observation, not a diagnosis.** A failing test may mean unbuilt
+  work, a regression, or a wrong doc, and nothing available when the row is written tells those apart —
+  so the status records `Test failing` and leaves the cause to the surrounding report. Also admits
+  `Not coverable — <reason>` on the grounds that a *decision* is durable where a *blockage* is not, and
+  records what the five-status column costs: two independent facts in one cell, with the split parked
+  rather than taken.
+
 ## Backfilled
 
 Five decisions predate this repository, having been settled in a direction document that is not in the

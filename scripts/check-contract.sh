@@ -11,6 +11,9 @@
 # Check 1 is repo-wide, because "public from day one, no private staging period" applies
 # to every file here, not just shipped skills. Checks 2-10 apply to shipped units only.
 # Check 12 spans both: it pairs a declaration inside a shipped pack against the README.
+# Check 17 is shipped-only like 2-10, but pairwise rather than per-file: it reads a vocabulary
+# one shipped file declares and requires the two shipped spells that write it to know it. It
+# would hold identically in a consumer's checkout — nothing about this repository is involved.
 #
 # Checks 11, 13, and 16 are the exceptions in the other direction — they inspect this repo
 # rather than what it ships. Each guards a hardcoded list that has to be kept in step with
@@ -797,6 +800,96 @@ if [[ -d skills/core/spellbook ]]; then
       "" "$(printf '%s' "$workflow_spells" | sed 's/^/  - /')"
   else
     report_pass "$CURRENT"
+  fi
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
+# 17. Coverage statuses are known to every spell that writes them
+# ---------------------------------------------------------------------------
+# The feature template DECLARES the Test Coverage vocabulary; /feature and /spec are the two
+# spells that WRITE it. Three shipped files, one vocabulary, and nothing linking them but an
+# author's memory. A status defined in one place and unknown to its writers is worse than no
+# status at all: the template offers a row no spell will ever produce, and a reader cannot tell
+# a status nobody needs from one everybody forgot.
+#
+# This is a SHIPPED-content check like 2-10, not a this-repo check like 11, 13, and 16. It holds
+# three installed files against each other and would hold identically in a consumer's checkout;
+# nothing about this repository is involved. What it shares with 11/13/16 is only the failure
+# mode they were written against -- a list kept in step by hand.
+#
+# The vocabulary is READ from the template at run time, never listed here. A copy inside the gate
+# would be a fourth place to keep in step, and worse, it would pass against itself while the real
+# files drifted. The declaration shape is therefore part of the contract:
+#
+#   * the vocabulary lives in the HTML comment beneath the template's `## Test Coverage` table
+#   * one status per `- Name: description` bullet; a wrapped description line carries no dash
+#   * a status may end in a `<placeholder>` for author-supplied text
+#
+# and so is the way a writer names one: as a backticked literal, `Covered`. Requiring the
+# backticks is what keeps `Not covered` from being satisfied by a spell that only ever mentions
+# `Not covered (code-derived)` -- the substring match that would quietly excuse the exact drift
+# this check exists to catch. A `<placeholder>` matches any text the writer puts there.
+#
+# The vocabulary has never had fewer than three statuses, so reading fewer than three means the
+# declaration moved or changed shape rather than that the project agreed on a shorter list. That
+# fails loud, because an empty vocabulary satisfies every writer trivially -- the silent-success
+# failure mode checks 11 and 13 were both added after suffering.
+begin "coverage statuses are known to every spell that writes them"
+COVERAGE_TEMPLATE=skills/core/reference/workflow/templates/feature.md
+COVERAGE_WRITERS=(skills/core/spellbook/feature/SKILL.md skills/core/spellbook/spec/SKILL.md)
+if [[ -d skills/core ]]; then
+  absent=""
+  [[ -f "$COVERAGE_TEMPLATE" ]] || absent+="  - $COVERAGE_TEMPLATE (declares the vocabulary)"$'\n'
+  for writer in "${COVERAGE_WRITERS[@]}"; do
+    [[ -f "$writer" ]] || absent+="  - $writer (writes the vocabulary)"$'\n'
+  done
+
+  if [[ -n "$absent" ]]; then
+    report_fail "$CURRENT" \
+      "A file this check compares is not where it expects it." \
+      "If it was renamed or retired on purpose, update COVERAGE_TEMPLATE / COVERAGE_WRITERS in this script." \
+      "" "$absent"
+  else
+    # Statuses declared in the comment beneath the Test Coverage table.
+    vocab=$(awk '/^## Test Coverage/ { in_section = 1 }
+                 in_section && /<!--/ { in_comment = 1 }
+                 in_comment { print }
+                 in_comment && /-->/ { exit }' "$COVERAGE_TEMPLATE" \
+            | sed -n 's/^[[:space:]]*-[[:space:]]\{1,\}\([^:]*\):.*/\1/p')
+    vocab_count=$(printf '%s\n' "$vocab" | grep -c . || true)
+
+    if (( vocab_count < 3 )); then
+      report_fail "$CURRENT" \
+        "Read $vocab_count coverage statuses from $COVERAGE_TEMPLATE; the vocabulary has never been that short." \
+        "The declaration is the comment beneath that file's '## Test Coverage' table, one status per '- Name: description' bullet." \
+        "If it moved or changed shape, teach this check where it lives now — an empty vocabulary would pass against every spell."
+    else
+      unknown=""
+      while IFS= read -r status; do
+        [[ -n "$status" ]] || continue
+        # Build the literal a writer must carry: the status in backticks, with any
+        # <placeholder> standing in for whatever text the writer supplies.
+        pattern=$(printf '%s' "$status" \
+          | sed -e 's/[][(){}.*+?^$|\]/\\&/g' -e 's/<[^>]*>/[^`]*/g')
+        pattern='`'"$pattern"'`'
+        for writer in "${COVERAGE_WRITERS[@]}"; do
+          grep -qE -- "$pattern" "$writer" 2>/dev/null \
+            || unknown+="  - $writer never names \`$status\`"$'\n'
+        done
+      done <<<"$vocab"
+
+      if [[ -n "$unknown" ]]; then
+        report_fail "$CURRENT" \
+          "$COVERAGE_TEMPLATE declares $vocab_count coverage statuses; each has to be known to both spells that write the table." \
+          "Describe the missing status where the spell describes the Test Coverage table, naming it in backticks exactly as the template declares it." \
+          "If a status is genuinely not this spell's to write, say so there in one line — silence is indistinguishable from having forgotten it." \
+          "" "$unknown"
+      else
+        report_pass "$CURRENT"
+      fi
+    fi
   fi
 else
   report_pass "$CURRENT"
