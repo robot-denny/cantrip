@@ -364,7 +364,13 @@ no-convention refusal, the `Next:` line.
 > count is meant to stay small**" to nine. In `CHANGELOG.md`: describe what shipped under
 > `[Unreleased]`, readable as "what will change in my project when I update" — the new spell, the two
 > new coverage statuses, the reworded `## Tests` fallback affecting `/plan` and `/block`, and contract
-> check 17. Correct the existing census line that says eight workflow spells. **Also fix
+> check 17. Correct the existing census line that says eight workflow spells. **Also add `/testify` to
+> the roadmap's existing spell-file load-cost entry** — the one recording that a `/guide --audit` cast
+> loads the whole file to use roughly two fifths of it. `/testify` is now a second instance of the
+> same shape: 743 lines with a hard fork at Step 1, so a capability cast never reads audit mode and an
+> audit cast never reads Steps 1–8. That entry was held deliberately on 2026-08-29 and already notes
+> one leg of the hold has since gone; a second instance is evidence, not a new item, so extend it
+> rather than opening a fresh one. **Also fix
 > `skills/core/reference/tdd-principles/SKILL.md:149`**, which enumerates the coverage vocabulary as
 > "`Covered`, `Not covered`, and `Not covered (code-derived)`" — accurate before this increment and
 > incomplete after it. That file *reads* the vocabulary rather than writing a table, so contract

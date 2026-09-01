@@ -1,12 +1,13 @@
 ---
 name: testify
-description: Read a capability's Test Coverage table as a work queue — report which of its documented scenarios nothing proves, separate the ones that can be tested now from the ones blocked on missing test infrastructure, then write and run tests only for the rows a person approves and record in the doc what each run established. Use when asked what is untested, for the missing tests for a capability, or to close the gap between what a capability doc claims and what anything actually verifies.
+description: Read a capability's Test Coverage table as a work queue — report which of its documented scenarios nothing proves, separate the ones that can be tested now from the ones blocked on missing test infrastructure, then write and run tests only for the rows a person approves and record in the doc what each run established. Use when asked what is untested, for the missing tests for a capability, or to close the gap between what a capability doc claims and what anything actually verifies. Pass `audit` instead of a capability name for a read-only project-wide sweep that ranks every documented capability by how much of it nothing proves and reports the tests that have drifted from the scenarios they name.
 disable-model-invocation: true
-argument-hint: "<capability> — the name of a documented capability"
+argument-hint: "<capability> — the name of a documented capability | audit"
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
-The user's argument: **$ARGUMENTS** — the name of a capability this project documents.
+The user's argument: **$ARGUMENTS** — the name of a capability this project documents, or `audit`
+for the mode below, which asks about every documented capability at once rather than about one.
 
 This spell asks one question and only one: **what does this project claim to do that nothing
 proves?** Every other spell in the chain either decides what to build or builds it. This one reads
@@ -32,6 +33,17 @@ Three boundaries, and each of them is a place where a plausible next step belong
   names it and points at `/feature` — it does not quietly add a row to make its own queue longer.
 
 ## Step 1 — Resolve the argument to a capability doc
+
+**Two modes, and the argument decides.** `audit` — alone, in any casing — asks about every documented
+capability at once rather than about one: run **Audit mode** below and none of Steps 1–8. Anything
+else names a capability, and Steps 1–8 are that run end to end. **Fork here, before resolving
+anything**, or `audit` resolves to nothing and gets reported as a capability the project never
+documented.
+
+`audit` is reserved, and there is no way to escape it. A project that documents a capability actually
+called *audit* — an audit log, an audit trail — cannot reach that doc through this spell by name, and
+will have to be asked about under whatever else its doc is called. Say so if it comes up rather than
+letting the sweep run and look like an answer.
 
 The argument names a **capability** — an area of the system, the way capability docs are named.
 Resolve it against the workspace layout described in the `workflow` skill.
@@ -529,6 +541,184 @@ The gap report still stands in both branches. Declining to choose a location is 
 answer the question that was asked: report the unproved scenarios exactly as Step 5 describes, and
 let the stop be about where their tests would go rather than about whether they are missing.
 
+## Audit mode — the project-wide sweep
+
+**One question, asked of every documented capability at once**: where have the docs and the tests
+drifted apart? A run about a single capability answers *what does this one claim that nothing
+proves*. This mode answers that for the whole project, and one thing besides — where a test and the
+scenario it was written for have stopped saying the same thing.
+
+Drift runs in both directions, which is why the sweep is not just the gap report cast repeatedly. A
+doc can outrun its tests, and a test can outlive the scenario that asked for it. Only the first is
+visible from the docs alone.
+
+### The posture, and why it is worth stating
+
+**This mode reads. It writes nothing, runs nothing, and asks for nothing.** Concretely, all four:
+
+- **No test file is created, changed, moved, or deleted.** Not the one the sweep calls orphaned, not
+  the one whose scenario was reworded under it.
+- **No capability doc is edited.** Not a status, not a verification date, not a row for a scenario
+  found unproved. What the sweep learns goes into the report and nowhere else.
+- **No test is run.** Not the suite, not a single named case.
+- **Nobody is asked to approve anything**, because there is nothing to approve. A sweep that ended in
+  an approval prompt would be a write path wearing a report's name.
+
+That is what makes the mode cheap to cast, and cheap to cast is most of its value: a report anybody
+can ask for at any moment, on any branch, in the middle of anything else, without first working out
+what it will touch.
+
+### A1 — Gather every documented capability
+
+Read every capability doc the project holds — its scenarios and its coverage table both, because the
+sweep is a comparison of the two and neither half answers on its own. Resolve where those docs live
+from the recorded workspace layout rather than from a guess.
+
+**When the project documents no capability at all, say so and stop.** Do not report that no drift was
+found: that is what a sweep over nothing computes, and it is true in the way that tells the reader
+the opposite of the truth. A project with no capability docs has no coverage story rather than a
+clean one. Say that no capability is documented, and name **writing the first capability doc** as the
+thing that has to happen before this mode has anything to read. Then render no report — there is
+nothing to rank.
+
+**A doc that carries no coverage table at all is its own finding.** It is neither proved nor
+unproved; the doc simply never said. Name those docs in a line of their own and leave their scenarios
+out of the ranking, rather than counting them as gaps — a project may perfectly well have tests
+nobody recorded, and reporting them as missing would be a guess wearing a finding's clothes.
+
+### A2 — Read the tests from their own end
+
+Half of what this mode reports cannot be seen from the docs at all. A scenario nothing proves shows
+up in a coverage table. A test that has drifted from its scenario shows up only in the test.
+
+**What makes the test end readable is the provenance header**: a comment at the head of a test file
+naming the capability doc its scenarios came from, every scenario the file covers word-for-word as
+that doc worded it, and the date. Writing that header is part of writing a test and is specified
+there; here it is only read. Read each header once — it speaks for every scenario that file covers —
+and hold what it records against **the doc as A1 already read it**, not against a fresh read. Every
+doc is in hand by the time this runs, and test files usually outnumber capabilities, so re-reading a
+doc per test file pays for the same content several times over.
+
+**Comparing scenario names for resemblance is not the fallback, and must not be used as one.** It
+fails exactly where it is needed. A scenario that has been reworded no longer resembles the sentence
+the test recorded — so the one case the sweep exists to catch, a test still claiming to prove
+something nobody specifies any more, is the case a resemblance match quietly reports as fine. Two
+sentences that do not match are a finding. Two sentences a fuzzy comparison judged close enough are a
+silence, and a silence cannot be argued with.
+
+**A test carrying no header is not drift, and it is not evidence either.** Say how many there are and
+that the sweep could not read them from the test end. Do not infer what they cover from their names
+or their contents — that is the resemblance match again, arriving by a different door.
+
+### The four kinds of drift
+
+Every finding is one of four. They are not four ways of saying "unproved": each puts a different
+question to a different person, which is why the report groups by kind rather than lumping them into
+a single count.
+
+#### 1. A scenario nothing proves
+
+Read from the doc: a scenario whose row records that nothing asserts it — `Not covered`, or
+`Not covered (code-derived)` — or a scenario with no row at all. These are what the ranking below is
+built from. *The question this puts: is this worth proving?* The answer, where it is yes, is a run
+that proposes, writes, and runs a test for that capability's unproved rows.
+
+Two statuses are deliberately not this. A `Test failing` row means a test exists and asserts the
+scenario and did not pass the last time anything ran it — strictly more than nothing, and folding it
+into the gaps hides the only proof anybody has written. Report those on a line of their own. A
+`Ruled out — <reason>` row means somebody weighed the scenario and decided it cannot be proved here:
+not a gap, not counted as unproved, and never raised as work. List those at the close, each with the
+reason its row records **repeated as the doc words it** — a decision nobody is shown is a decision
+nobody can revisit.
+
+#### 2. A test whose scenario has changed — stale
+
+The header records a scenario word-for-word, and the doc still holds what is plainly that same
+scenario, reworded. The test goes on asserting a sentence nobody specifies any more.
+
+**Show both versions in full, one above the other** — the scenario as the test recorded it, then the
+scenario as the doc reads today. A stale flag on its own tells the reader only that something moved,
+and leaves them to open two documents to find out what; the two sentences together usually settle it
+on sight. Never summarize either one, and never show only the part that differs: which words changed
+is the finding.
+
+**The sweep does not decide what to do about it.** A rewording that changed nothing observable needs
+no work at all; one that changed what the scenario expects needs the test rewritten. Those are
+opposite conclusions from the same finding, and the two sentences are what somebody tells them apart
+by. The test is left exactly as it is either way.
+
+#### 3. A test whose scenario has been deleted — orphaned
+
+The header records a scenario the doc no longer contains, and nothing in the doc is recognizably its
+rewording. The test may still run and still pass — but nothing documented asks for the behavior it
+asserts.
+
+**Ask whether the behavior is still expected, and say the test has not been touched.** The two
+answers are opposite acts: if it is still expected, the scenario belongs back in the doc; if it is
+not, the test can go. Neither is this mode's to perform, and the wrong one is expensive — deleting a
+passing test because an editing pass stopped mentioning it is how a project loses a regression guard
+without noticing.
+
+#### 4. A row claiming proof whose test no longer exists
+
+The row reads `Covered` and names a test. That test is not there any more.
+
+Report it as **the doc claiming proof that nothing provides**, and count that scenario as unproved in
+the ranking. It is worse than a row that admits the gap: a row reading `Covered` is a row nobody
+looks at twice.
+
+### Why the fourth kind is narrower than it looks, and stays that way
+
+The fourth kind asks only whether the named test still exists. It does not ask whether it still
+passes. That is a decision, not an omission.
+
+**Finding out that a `Covered` row's test currently fails would mean running it.** A sweep that
+executed a project's tests would stop being cheap, and cheap is the whole reason this mode can be
+cast without a second thought. Worse, it would stop being read-only: where a project's tests exercise
+the system by creating and deleting real things, running them changes the very state the report
+claims to be describing, and "this mode writes nothing" becomes false in precisely the way a reader
+would most object to. A report that quietly mutates what it reports on is not a weaker report, it is
+a different and more dangerous act.
+
+So the sweep asks the question it can answer by reading — does the named test exist? — and leaves
+**whether a row that still names a live test is telling the truth to the next run that actually runs
+tests** for that capability, which observes each result and records it.
+
+**Say that in the report, in a sentence**: a `Covered` row whose test exists was not run, so this
+report does not know whether it still passes. A reader who takes a clean sweep to mean every proved
+row was verified has concluded something the sweep never established, and the sweep is the only thing
+in a position to correct them.
+
+**This is a known open edge rather than a defect to work around.** Nothing re-observes a row once it
+is written, so a status can go stale in both directions: a `Test failing` row keeps reporting a
+failure the work has since fixed, and a `Covered` row keeps claiming a proof that has since broken.
+Closing the second means settling who may run a project's tests and when — a decision about the
+project, not a gap in this mode. Report the limit; do not quietly exceed it.
+
+### The report
+
+**Lead with the ranking, and rank by how much of each capability nothing proves** — most unproved
+first, so a reader who stops after the first entry has stopped at the one that most needs attention.
+Rank on the count of that capability's unproved scenarios. Where two tie, the larger share goes
+first: three of four scenarios unproved is a thinner story than three of thirty.
+
+**Every documented capability appears, including the ones with nothing to report.** A capability
+whose scenarios are all proved earns one line and belongs on it. A report listing only what is wrong
+cannot be read as a picture of the project, and it leaves the reader unable to tell a capability that
+is fully proved from one the sweep never managed to read.
+
+Then the four kinds, **grouped by kind and not by capability**, each finding naming the capability it
+belongs to, the scenario as that doc words it now, and the test it concerns. Group by kind because
+each kind asks a different question of a different person — the gaps are work to schedule, the stale
+and orphaned findings are editorial decisions about the doc — and a report sorted by capability
+scatters one question across every heading.
+
+**Findings are a backlog, not a fault, and say so whenever there are any.** On a project that has
+never filled in a coverage table, a long list of unproved scenarios is the expected reading of a
+healthy codebase rather than a problem this sweep discovered. **Never call a finding an error, a
+failure, or a problem**: nothing failed here, and nothing was even run. A report that reads like a
+failure gets cast once.
+
 ## End with a suggestion, never a cast
 
 Every run that had anything to report closes with a single `Next:` line, and **it is a suggestion.**
@@ -551,3 +741,15 @@ Which line depends on what the run did:
   gets fixed.
 - **Nothing was unproved.** No `Next:` line. Step 5 already said to answer briefly and stop, and a
   suggested next move would manufacture exactly the work that rule refuses to manufacture.
+- **The run was an audit.** Nothing was written and nothing was blocked, so neither of the first two
+  lines applies. Which line depends on what the sweep found, and these are in priority order — where
+  a sweep found several of these, suggest the first that applies:
+    - **Anything unproved.** `Next: /testify <the capability at the top of the ranking>` — the sweep
+      found where the coverage is thinnest, and a run over that capability is what closes it.
+    - **Only stale or orphaned tests.** `Next: /feature update <the capability>`, because what moved
+      is the doc's scenarios rather than its coverage.
+    - **Only docs with no coverage table.** `Next: /feature update <the capability>` as well, but for
+      a different reason worth saying: what is missing is the table, not the proof. Those docs were
+      left out of the ranking precisely because nobody can tell yet which they are.
+    - **No capability documented at all.** `Next: /feature <the capability to document first>`.
+    - **Nothing found.** No `Next:` line.
