@@ -1,6 +1,6 @@
 # Plan: Token-Reading Styleguide Page
 
-**Spec**: `_work/styleguide/spec.md`
+**Spec**: `_work/shipped/styleguide/spec.md`
 **Branch**: `feature/styleguide`
 **Work type**: `change-to editor-guides` — copied verbatim from the spec's `**Work type**:` line;
 this decides how the final step records behavior
@@ -208,7 +208,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — The `styleguide-check` suite and the RED apparatus
 
-> **Prompt**: Implement Step 1 of `_work/styleguide/plan.md`. Create `tests/make-styleguide-fixtures.sh`
+> **Prompt**: Implement Step 1 of `_work/shipped/styleguide/plan.md`. Create `tests/make-styleguide-fixtures.sh`
 > following the conventions of the existing `tests/make-guide-fixtures.sh` (generated rather than
 > hand-built, minimal fake project trees, one `expect` file per case, idempotent regeneration), and
 > `tests/styleguide-check/subject` holding the single line
@@ -242,7 +242,7 @@ not exist.
 
 ### Step 2 — `tokens`: the runtime-resolvable layer
 
-> **Prompt**: Implement Step 2 of `_work/styleguide/plan.md`. Create
+> **Prompt**: Implement Step 2 of `_work/shipped/styleguide/plan.md`. Create
 > `skills/umbraco-17/spellbook/styleguide/scripts/styleguide.py` — stdlib-only Python 3, no
 > dependencies — with a `tokens` subcommand taking `--project-root` (defaulting to the working
 > directory) and emitting JSON on stdout. It scans the project's stylesheets for **CSS custom
@@ -304,7 +304,7 @@ alias rule, JSON output).
 
 ### Step 3 — More than one token layer, and which is authoritative
 
-> **Prompt**: Implement Step 3 of `_work/styleguide/plan.md`. Extend `tokens` in
+> **Prompt**: Implement Step 3 of `_work/shipped/styleguide/plan.md`. Extend `tokens` in
 > `skills/umbraco-17/spellbook/styleguide/scripts/styleguide.py` so it **records every token layer it
 > finds and names which is authoritative**, rather than stopping at the first — the same rule
 > `umbraco-17-guide-scaffolding`'s `## Schema serialization` recipe already states, and for the same
@@ -335,7 +335,7 @@ alias rule, JSON output).
 
 ### Step 4 — A layer that cannot be read at render time is refused, not baked
 
-> **Prompt**: Implement Step 4 of `_work/styleguide/plan.md`. Make `tokens` in
+> **Prompt**: Implement Step 4 of `_work/shipped/styleguide/plan.md`. Make `tokens` in
 > `skills/umbraco-17/spellbook/styleguide/scripts/styleguide.py` **exit 3** when the project holds
 > token layers but **none of them is runtime-resolvable** — preprocessor variables or a utility theme
 > config with no custom-property layer. The report says the palette cannot be read at render time,
@@ -366,7 +366,7 @@ alias rule, JSON output).
 
 ### Step 5 — `precheck`: both halves of the precondition, named separately
 
-> **Prompt**: Implement Step 5 of `_work/styleguide/plan.md`. Add a `precheck` subcommand to
+> **Prompt**: Implement Step 5 of `_work/shipped/styleguide/plan.md`. Add a `precheck` subcommand to
 > `skills/umbraco-17/spellbook/styleguide/scripts/styleguide.py`. It answers the spell's precondition
 > in two independent halves: **is there a runtime-resolvable token layer** (reusing `tokens`, not
 > reimplementing it) and **are there exemplar block views to copy conventions from** — the latter
@@ -406,7 +406,7 @@ alias rule, JSON output).
 
 ### Step 6 — The scaffolding reference: showcase element types, and two slot rows
 
-> **Prompt**: Implement Step 6 of `_work/styleguide/plan.md`. Amend
+> **Prompt**: Implement Step 6 of `_work/shipped/styleguide/plan.md`. Amend
 > `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md` — the shipped authority on this
 > section's schema — rather than creating a new reference unit. Add: (a) a **showcase element types**
 > section naming the types a styleguide page's sections are built from, each carrying a **token name**
@@ -440,7 +440,7 @@ amendments), and its `description:` frontmatter if the added scope is not covere
 
 ### Step 7 — The inventory exclusion, and the audit's silence on a styleguide
 
-> **Prompt**: Implement Step 7 of `_work/styleguide/plan.md`. This is a change to **shipped**
+> **Prompt**: Implement Step 7 of `_work/shipped/styleguide/plan.md`. This is a change to **shipped**
 > behavior. Add an `--exclude-palette <name>` flag to **both** the `inventory` and the `audit`
 > subcommands of `skills/umbraco-17/spellbook/guide/scripts/guide.py`, threaded into
 > `scripts/guidelib/inventory.py`: a block-editor palette named by the flag contributes **no**
@@ -492,7 +492,7 @@ new `tests/guide-check/` cases.
 
 ### Step 8 — The `/styleguide` spell: the generate path
 
-> **Prompt**: Implement Step 8 of `_work/styleguide/plan.md`. Create
+> **Prompt**: Implement Step 8 of `_work/shipped/styleguide/plan.md`. Create
 > `skills/umbraco-17/spellbook/styleguide/SKILL.md`, with frontmatter matching the pack's other
 > spells: `disable-model-invocation: true`, an `argument-hint`, and an `allowed-tools` list. Follow
 > `skills/umbraco-17/spellbook/guide/SKILL.md`'s shape — a *What this spell does not decide* section
@@ -540,7 +540,7 @@ new `tests/guide-check/` cases.
 
 ### Step 9 — The `/styleguide` spell: the refusal paths, and where output lands
 
-> **Prompt**: Implement Step 9 of `_work/styleguide/plan.md`. Extend
+> **Prompt**: Implement Step 9 of `_work/shipped/styleguide/plan.md`. Extend
 > `skills/umbraco-17/spellbook/styleguide/SKILL.md` with the paths that do not generate. **Greenfield
 > refusal**: with no block views to copy conventions from, the work stops, having created nothing —
 > and the refusal names the same two escape hatches `/block` Step 5 offers (point at another codebase
@@ -572,7 +572,7 @@ artifact-disposition section, the Conventions list).
 
 ### Step 10 — Register the unit, and document it
 
-> **Prompt**: Implement Step 10 of `_work/styleguide/plan.md`. Register the new unit everywhere it
+> **Prompt**: Implement Step 10 of `_work/shipped/styleguide/plan.md`. Register the new unit everywhere it
 > must be visible.
 >
 > **`ROSTER_PACK` is already done — it was pulled forward into Step 8's commit**, because the
@@ -628,7 +628,7 @@ a spell.
 > build-time-only token layer being refused rather than baked; a styleguide appearing in the derived
 > index like any other guide and being reported by the audit in none of its three sections; and the
 > set of tokens shown being a person's to curate. Flip the styleguide entry in the doc's **Increments**
-> list from planned to shipped and point it at `_work/styleguide/spec.md`. Update the doc's summary
+> list from planned to shipped and point it at `_work/shipped/styleguide/spec.md`. Update the doc's summary
 > sentence, which currently says the styleguide "is the capability's next increment". Fill the Test
 > Coverage table with the real fixture paths from `tests/styleguide-check/` and `tests/guide-check/`,
 > and mark the live-token scenarios **Not covered** on purpose — they describe CMS-side rendering

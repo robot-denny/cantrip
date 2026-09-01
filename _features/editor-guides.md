@@ -2,13 +2,15 @@
 
 A team building a CMS site gets the editor-facing reference their content editors actually use — a
 browsable index of everything documented, grouped by kind, and one guide page per component or page
-type carrying its purpose, live examples of it, and every field an editor can fill. A styleguide
-showing the site's colors, type, and common elements is the capability's next increment. The first
-pass is derived from what the codebase already knows, an audit reports anything built but
-undocumented, and everything a person writes or arranges afterwards is left alone.
+type carrying its purpose, live examples of it, and every field an editor can fill — and a styleguide
+page whose showcase sections read the project's design tokens live, so the palette and type scale it
+shows stay current without anybody regenerating them. The first pass is derived from what the
+codebase already knows, an audit reports anything built but undocumented, and everything a person
+writes or arranges afterwards is left alone.
 
-**Source**: `_work/shipped/editor-facing-guides/spec.md`
-**Last verified**: 2026-08-29
+**Source**: `_work/shipped/editor-facing-guides/spec.md`, and `_work/shipped/styleguide/spec.md` for the
+styleguide
+**Last verified**: 2026-09-01
 
 ---
 
@@ -23,12 +25,13 @@ increment.
       is the only version of the old side-by-side component page that survives the page-weight
       objection. Deliberately out of the first increment; it adds a field to a document type that
       already exists by then
-- [ ] **Next increment, cut from the first on 2026-08-25**: the styleguide — a page whose showcase
-      sections read the project's design tokens live. It is the only story requiring new element
-      types, new views, and a pre-existing design system, and the only one whose rendering has no
-      exemplar to copy in a typical project. Earns its own spec; the decisions already made about
-      it, and the three scenarios drafted before the cut, are carried in
-      `_work/shipped/editor-facing-guides/notes/deferred-styleguide.md`
+- [x] **Shipped 2026-09-01** — the styleguide, story 1 of discovery's four and the second caller of
+      the shared scaffolding: `/styleguide` and its script, three showcase element types with an
+      optional caption, a new `## Design tokens` slot, and `--exclude-palette` on both of
+      `guide.py`'s readings of a project. A design token here is a value that survives to the
+      browser, which is the only definition under which "reads the system live" can be true — so a
+      build-time-only palette is refused with a remedy rather than baked into a snapshot
+      (`_work/shipped/styleguide/spec.md`)
 - [x] **Shipped 2026-08-29** — the capability's first increment, scoped to stories 2–4: the dossier
       and its extraction ladder (Deploy artifacts, uSync exports, generated models, and a live
       instance through the spell), one guide page per component or page type, the derived index, the
@@ -290,6 +293,171 @@ Scenario: A team that wants a gate asks for one
   And the check fails the build
 ```
 
+### Rule: A styleguide shows the system as it stands, without a regeneration
+
+```scenario
+Scenario: A designer changes a brand color and the styleguide follows
+  Given a styleguide page is published with a color palette section
+  And the project's primary brand color is defined in the codebase as a design token
+  When a designer changes that token's value and the site is deployed
+  Then the styleguide's palette section shows the new color on the next page load
+  And no guide regeneration was run
+```
+
+```scenario
+Scenario: A type scale specimen follows a changed font size
+  Given a styleguide page is published with a type scale section showing six heading levels
+  When a designer changes the level-two heading token from 2rem to 2.25rem and the site is deployed
+  Then the level-two specimen renders at the new size on the next page load
+  And no guide regeneration was run
+```
+
+### Rule: A styleguide is generated only where a design system already exists, and an unmet half is named
+
+```scenario
+Scenario: A project with a palette but no blocks is told which half is missing
+  Given a project declares a palette of custom properties
+  And it has no page templates and no block views at all
+  When a team member asks for a styleguide to be created
+  Then the work stops and reports that there is no existing view to take conventions from
+  And it reports that the palette half is met
+  And nothing is created
+```
+
+```scenario
+Scenario: A project with blocks but no palette is told to establish one first
+  Given a project has twelve block views
+  And its components write every color where it is used, declaring no design token
+  When a team member asks for a styleguide to be created
+  Then the work stops and reports that the project holds no token layer at all
+  And it reports that the views half is met
+  And the remedy it names is to establish the palette, not to bridge one
+```
+
+```scenario
+Scenario: A project with both halves proceeds
+  Given a project has block views and declares a palette of custom properties
+  When a team member asks for a styleguide to be created
+  Then both halves are reported met
+  And the run continues to the grouping conversation
+```
+
+### Rule: A palette the rendered page cannot read is refused, never baked into a snapshot
+
+```scenario
+Scenario: A palette that exists only at build time is refused with a remedy
+  Given a project defines its palette as preprocessor variables that compile to literal values
+  And no stylesheet declares a custom property anywhere
+  When a team member asks for a styleguide to be created
+  Then the work stops and reports that the palette cannot be read at render time
+  And the remedy it names is a runtime layer the existing variables feed
+  And no color value from that palette appears anywhere in the report
+```
+
+### Rule: Every token layer a project holds is reported, and one is named authoritative
+
+```scenario
+Scenario: A project holding both layers is read from the one a page can read
+  Given a project keeps its palette as preprocessor variables
+  And a stylesheet declares custom properties from those variables
+  When the project's design tokens are read
+  Then both layers are reported with their own counts
+  And the custom properties are named the authoritative layer
+  And no preprocessor variable appears among the tokens offered as swatches
+```
+
+```scenario
+Scenario: A stylesheet declaring no tokens is a completed read, not a failure
+  Given a project has one stylesheet and it declares no custom property
+  When the project's design tokens are read
+  Then the read completes and reports that nothing was found
+  And it is not reported as a refusal
+```
+
+### Rule: A token is counted where it is declared, not wherever its name appears
+
+```scenario
+Scenario: A token name inside a quoted string is not a token
+  Given a stylesheet sets a tooltip's content to the text "Note; --brand-fake: #FF00FF end"
+  And the same stylesheet declares a real token further down
+  When the project's design tokens are read
+  Then "--brand-fake" is not offered as a token
+  And the real token is still offered
+```
+
+```scenario
+Scenario: An escaped bracket in a class name does not hide the tokens after it
+  Given a stylesheet uses utility class names containing escaped brackets
+  And it declares tokens in a rule after those class names
+  When the project's design tokens are read
+  Then every token declared after them is still offered
+```
+
+### Rule: A styleguide's showcase elements are not components anybody documents
+
+```scenario
+Scenario: The audit passes over a published styleguide
+  Given a project has fourteen blocks, each with a guide page
+  And the guides section also holds a styleguide page
+  When a QA runs the audit
+  Then the report states that nothing is undocumented
+  And the styleguide is not named as an orphan
+  And the styleguide is not named as stale
+```
+
+```scenario
+Scenario: The showcase elements are left out of the count, and the report says which palette
+  Given a project offers three blocks an editor places on a page
+  And it offers two showcase elements from a palette recorded as the styleguide's
+  When a QA runs the inventory or the audit
+  Then three components are counted, not five
+  And the report names the palette it excluded
+```
+
+```scenario
+Scenario: A guide documenting a showcase element is not an orphan
+  Given a guides section holds a guide page naming one of the showcase elements
+  When a QA runs the audit
+  Then that guide is not named as an orphan
+  And it is not counted as closing a documentation gap
+```
+
+### Rule: The set of tokens a styleguide shows is a person's to curate
+
+```scenario
+Scenario: A newly added brand color does not add its own swatch
+  Given a styleguide page carries a palette section showing eight color swatches
+  When a designer adds a ninth color token to the codebase and the site is deployed
+  Then the eight existing swatches still show their current values
+  And the ninth color does not appear until a person adds it
+```
+
+```scenario
+Scenario: A swatch outliving its token names what it could not resolve
+  Given a styleguide page carries a swatch reading a token named for a retired accent color
+  When that token is removed from the codebase and the site is deployed
+  Then the swatch names the token it could not resolve
+  And it does not render as an unexplained blank
+```
+
+### Rule: A styleguide page belongs to the people who edit it
+
+```scenario
+Scenario: An editor's rearranged palette survives a later run
+  Given a styleguide page carries a palette section an editor reordered into brand, neutral, and status groups
+  When a team member asks for a styleguide again on the same project
+  Then the editor's arrangement is left exactly as it stands
+  And any addition is proposed rather than written
+```
+
+```scenario
+Scenario: A styleguide is listed in the index like any other guide
+  Given a guides section lists eleven guides
+  When a styleguide page is published in it
+  Then the index lists twelve guides on the next page load
+  And no regeneration of the index was run
+```
+
 ---
 
 ## Edge Cases
@@ -385,6 +553,29 @@ Scenario: A project readable only from generated models reports thinness once
   And no individual guide is reported as incomplete
 ```
 
+### Rule: A styleguide somebody built by hand is reported, never adopted
+
+```scenario
+Scenario: A hand-built styleguide page of another kind is left untouched
+  Given the guides section already holds a styleguide page somebody built by hand, of a different kind from a guide page
+  When a team member asks for a styleguide to be created
+  Then the work reports where that page is and creates nothing
+  And it does not change that page's kind
+  And a person is asked what to do before anything is created
+```
+
+### Rule: A guides section nobody has recorded is asked about, not searched for
+
+```scenario
+Scenario: The run does the work that needs no guides section, then asks for the key
+  Given a project's configuration records no key for its guides section
+  And the project has both a palette and block views
+  When a team member asks for a styleguide to be created
+  Then the token layers are read and the grouping is proposed as usual
+  And nothing is written
+  And the report says the section's key is the one fact only the project can supply
+```
+
 ---
 
 ## Test Coverage
@@ -424,6 +615,25 @@ Scenario: A project readable only from generated models reports thinness once
 | An export declaring an unrecognized format version is refused whole | `tests/guide-check/usync-format-refused/expect` | Covered |
 | One unreadable artifact does not stop the rest of the read | `tests/guide-check/deploy-mixed-versions/expect` | Covered |
 | A project readable only from generated models reports thinness once | `tests/guide-check/audit-rung-statement/expect` | Covered |
+| A designer changes a brand color and the styleguide follows | — | Not covered |
+| A type scale specimen follows a changed font size | — | Not covered |
+| A project with a palette but no blocks is told which half is missing | `tests/styleguide-check/precheck-greenfield/expect` | Covered |
+| A project with blocks but no palette is told to establish one first | `tests/styleguide-check/precheck-no-tokens/expect` | Covered |
+| A project with both halves proceeds | `tests/styleguide-check/precheck-both/expect` | Covered |
+| A palette that exists only at build time is refused with a remedy | `tests/styleguide-check/precheck-build-time-tokens/expect`, `tests/styleguide-check/tokens-preprocessor-only/expect` | Covered |
+| A project holding both layers is read from the one a page can read | `tests/styleguide-check/tokens-two-layers/expect` | Covered |
+| A stylesheet declaring no tokens is a completed read, not a failure | `tests/styleguide-check/tokens-none/expect` | Covered |
+| A token name inside a quoted string is not a token | `tests/styleguide-check/tokens-string-terminator/expect` | Covered |
+| An escaped bracket in a class name does not hide the tokens after it | `tests/styleguide-check/tokens-escaped-selector/expect` | Covered |
+| The audit passes over a published styleguide | `tests/guide-check/audit-styleguide-silent/expect` | Covered |
+| The showcase elements are left out of the count, and the report says which palette | `tests/guide-check/inventory-excluded-palette/expect`, `tests/guide-check/audit-excluded-palette/expect` | Covered |
+| A guide documenting a showcase element is not an orphan | `tests/guide-check/audit-excluded-palette/expect` | Covered |
+| A newly added brand color does not add its own swatch | — | Not covered |
+| A swatch outliving its token names what it could not resolve | — | Not covered |
+| An editor's rearranged palette survives a later run | — | Not covered |
+| A styleguide is listed in the index like any other guide | — | Not covered |
+| A hand-built styleguide page of another kind is left untouched | — | Not covered |
+| The run does the work that needs no guides section, then asks for the key | — | Not covered |
 <!-- Covered: a test asserts it. Not covered: specified, untested. Not covered (code-derived):
      inferred from reading the code, never specified and never tested — the weakest claim here.
      Keeping the third distinct is what lets a reader tell verified behavior from inferred. -->
@@ -432,6 +642,22 @@ Scenario: A project readable only from generated models reports thinness once
 
 ## Revision Notes
 
+- 2026-09-01: The styleguide shipped, and its observable behavior folded in — nineteen scenarios
+  under seven new Rules in Behaviors and two in Edge Cases, eleven of them covered by the
+  `styleguide-check` suite and the three new `guide-check` cases. **Three of the spec's twelve draft
+  scenarios were rewritten rather than left to fail.** "Standing up a styleguide on a project that
+  has components to copy from" and "two projects with different front-end conventions each get a
+  conforming styleguide" both describe a CMS write this pack cannot reach, so the behavior that can
+  be stated is the precondition either side of it: a run proceeds when both halves are met, and
+  names the met half when one is not. And the precondition's two unmet states turned out to need
+  **different remedies** — a build-time palette is told to add a runtime layer its variables feed, a
+  project with no palette is told to establish one — so one scenario became two rather than one
+  scenario asserting a remedy that would be wrong half the time. Eight scenarios stay uncovered on
+  purpose: six describe CMS-side rendering the script cannot reach, one is a constraint on a
+  project's own view that this pack ships no markup to check, and one is a configuration state no
+  fixture reaches. Point-in-time criteria — the registration rows, the byte-identical guarantee on
+  an unflagged read, the exit-code vocabulary — stay in `_work/shipped/styleguide/spec.md` and are not Rules
+  here
 - 2026-08-31: Logged a Known gap against *No option is marked as the default* — a third measured project serializes a dropdown default written by a startup composer, which contradicts the reason that Rule records without contradicting its behavior. No scenario changed
 - 2026-08-24: Draft scenarios from initial spec
 - 2026-08-25: Revised from `_work/shipped/editor-facing-guides/notes/spec-revisions.md`. The component guide

@@ -79,7 +79,7 @@ that raised them.
   would be fitted to it. The schema half is settled and needs nothing: a showcase element stores a
   name, so re-theming a region is the project's own CSS re-pointing what that name means. **Revisit
   when more worked examples exist across projects** — if they converge this becomes a rule, and if
-  they do not the deferral was right. Recorded in `_work/styleguide/spec.md` and in the spell.
+  they do not the deferral was right. Recorded in `_work/shipped/styleguide/spec.md` and in the spell.
 
 **Pack-authoring meta-skill.** The direct parallel to `design-system-authoring`: a model-invoked
 reference that fires when someone sets out to add a pack, turning [ADR
@@ -287,7 +287,7 @@ on both sides.
   document. **One known limitation**: the exemplar half counts views broadly, so a page template or a
   partial satisfies it and a project with templates and no blocks can pass with nothing to copy; the
   spell reads `exemplarViews.examples` and says so. A `styleguide-check` suite of 10 cases plus 3 new
-  `guide-check` cases, taking the harness to 110 across three suites (`_work/styleguide/spec.md`,
+  `guide-check` cases, taking the harness to 110 across three suites (`_work/shipped/styleguide/spec.md`,
   `_features/editor-guides.md`)
 - **2026-08-29** — Editor-facing guides: `/guide` writes a guide page per component from the schema
   the component already declares and audits which components have none, with
