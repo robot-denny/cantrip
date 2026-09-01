@@ -130,12 +130,16 @@ The guides node comes from the `## Editor guides` slot in `.agents/config/conven
 in `umbraco-17-guide-scaffolding`. Resolve it **by its recorded key** — never by route, never by
 path, and never by name. *Where guides live* argues why, and the argument is not repeated here.
 
-**The key is the one fact only the project can supply.** Where the slot carries none, the node is
-*not recorded*, which is not the same as not existing. Stop before any write, say so, and ask for
-it — do not go looking for the section by name.
+Where the slot carries no key, the node is *not recorded* — which is not the same as not existing —
+and **this is where that is discovered.** *The paths that do not generate* has the path, below. What
+it means for the rest of this step is worth saying here rather than there: **everything remaining in
+Step 2 needs a node, so none of it runs.** No walk, no container, no check of what the container
+holds. **Steps 3 through 7 need no node and do run** — the token read, the grouping, and the whole
+presentation are worth having, and Step 8 is the only step whose work depends on the key. Come back
+to this step when somebody supplies it.
 
-Then walk from that node to its children and find the container for the styleguide's kind, matched
-on **document type, never on name**, exactly as the reference describes.
+Otherwise, walk from that node to its children and find the container for the styleguide's kind,
+matched on **document type, never on name**, exactly as the reference describes.
 
 - **A kind with no container is a container to create.** Where no child of the guides node carries
   the kind, that container does not exist yet, and a similarly-named node is not a fallback — it is
@@ -147,7 +151,8 @@ on **document type, never on name**, exactly as the reference describes.
 
 Say what you resolved before going on — the guides node, the container or its absence, and what the
 container already holds. A styleguide written into the wrong place is a page nobody finds, and this
-is the cheapest point to catch it.
+is the cheapest point to catch it. **Where what it already holds is a styleguide the project built by
+hand**, of another document type, that is a stop too, and *The paths that do not generate* has it.
 
 ## Step 3 — Read the token layers
 
@@ -167,11 +172,9 @@ project's own, and guessing by path would take a project fact this pack must not
 
 An exit **3** here is the same refusal `precheck` already gave, arrived at by the same question
 asked of the same reading. If Step 1 passed and this exits 3, something changed between the two
-reads: say that rather than picking whichever answer is more convenient.
-
-A read that completed and found no declarations at all is not a failure and not a refusal — but it
-is also not a page. `precheck` has already turned that state into a stop; if it did not, trust it
-over this reading and say the two disagree.
+reads: say that rather than picking whichever answer is more convenient. What to do with the refusal
+itself is in *The paths that do not generate*, below — and so is the read that completes and finds no
+declarations at all.
 
 ## Step 4 — Group what the script would not name, with a person
 
@@ -399,3 +402,206 @@ Written: <what reached the CMS, or "nothing — declined">
 Awaiting a person: <views, captions, publishing>
 Next: /block <the swatch showcase element>   (author its view — the element type and its palette already exist)
 ```
+
+## The paths that do not generate
+
+Four states stop a run, and **none of them leaves a partial one.** Step 1 already says to relay a
+refusal's `statement` and its `remedy` **verbatim**, and that rule holds for every path below
+rather than being restated in each. What follows is what each state means, where the finding
+actually comes from, and what else to say.
+
+**Five rows, four states, and one of them splits.** The two ways a project can lack a readable
+palette arrive on the same `precheck` half and are two different answers from `tokens` — which is
+why they get a row each. A spell that claims an exit code the script does not produce is exactly the
+drift this pairing of a spell and a script exists to prevent, and **the row that would be wrong is
+the tempting one**: a project with no palette at all is not refused by `tokens`, it is *reported
+empty* by it. `precheck` is what turns that into a stop.
+
+| The state | What answers it | What a caller sees |
+|---|---|---|
+| no view on disk to copy conventions from | `precheck`, at its `exemplar-block-views` half | exit **3**, that half `met: false`, carrying its own statement and remedy |
+| a palette the build resolves and discards | `precheck`, at its `runtime-resolvable-token-layer` half — and `tokens`, asking the same question of the same reading | exit **3** from either; on `tokens` also a `refusal` object whose `reason` names the state |
+| no palette anywhere at all | `precheck`, at the same half and with a different remedy — but **not** `tokens` | exit **3** from `precheck`. `tokens` exits **0** with `refusal` null: it completed, and found nothing |
+| a guides node the project has not recorded | nothing in the script — it reads no project config at all | no exit code. You find this in the slot, at Step 2 |
+| a styleguide page the project built by hand | nothing in the script — it has no CMS connection | no exit code. You find this in the section, at Step 2 |
+
+**All four are found before anything is created, and the file's own ordering is what guarantees
+it.** Step 1's check runs "before anything is resolved and long before anything is created"; Steps
+2 through 7 write nothing at all; every write in this spell is behind the ask, in Step 8. So each
+of these is a run that created nothing, not a run that stopped halfway with a section half
+scaffolded. A write that fails *inside* Step 8 is a different case, and that step already says
+what to do with it.
+
+### No view to copy conventions from
+
+`precheck` exits **3** with the `exemplar-block-views` half unmet. **Stop, having created
+nothing** — and say whether the other half was met, because "this project has a palette and no
+blocks" and "this project has neither" are different situations with different next steps.
+
+**This is the sharpest refusal in this spell, and the hazard it guards is specific: a styleguide
+scaffolded at project setup makes a color-swatch view the exemplar every real block is later
+copied from.** A project's first view sets its conventions whether or not anybody decided to, and
+a swatch grid is the worst possible thing for that first view to be — it has no content model
+worth copying, no settings, and nothing an editor will ever author into it.
+
+Two ways past it, and they are the same two `/block` Step 5 offers, for the same reason. It is the
+authority on both and neither is re-argued here:
+
+1. **Point at another codebase and take the conventions from there.** A sibling project or a
+   starter the team already trusts. Read it, and say which conventions came from it, so they are
+   adopted deliberately rather than absorbed.
+2. **Otherwise establish the convention explicitly and minimally, and say plainly that you are
+   establishing rather than following it.**
+
+**Neither hatch is taken inside this run.** Both of them end in a first real view, and a view is
+`/block`'s work — this spell writes none, Step 9 included. So name the hatch, suggest the cast,
+and run the precondition again afterwards. Do not carry on past exit **3** having settled a
+convention here: hatch 2 costs most in exactly this spell, because the convention it would
+establish is the one the hazard sentence names, established for a swatch grid.
+
+**One caution about what the half actually counted.** `exemplarViews` prints the `rule` it
+applied, and that rule counts views broadly — a page template and a partial count as readily as a
+block view. So the half can be met by a project holding templates and no blocks at all. Read
+`exemplarViews.examples`, and where none of them is a block, say so: the half passed and the thing
+you would copy is still missing.
+
+### A palette the rendered page cannot read
+
+Both commands answer this, and **they answer it in one wording**: `tokens` carries it as
+`refusal.message` and `refusal.remedy`, `precheck` carries the same two texts on the
+`runtime-resolvable-token-layer` half. Neither is written out in this file for that reason — a
+second wording is two texts to keep in step, and the day they diverge a caster gets a different
+remedy depending on which command they happened to run.
+
+**Relay it and stop. Do not offer a baked snapshot, not even a clearly labelled one.** Why a
+build-time-only layer is refused rather than baked is argued in `scripts/styleguide.py`'s module
+docstring, beside the code that decides it. The operational consequence is the whole of what this
+step needs: no value read from a layer the browser never sees may reach a page, because a page of
+snapshot values would fail this capability's one headline claim while looking exactly like a page
+that passes it.
+
+**Two sibling states arrive on that same half, and they differ in more than their remedy** — the
+table above gives them a row each because `tokens` answers them differently, and this is the half
+they share. A
+project holding a build-time-only layer is told to add a layer its existing definitions feed; a
+project holding no token layer at all is told to establish one first. Relay whichever came back —
+the second is the greenfield of the palette, and telling that project to bridge a layer it does
+not have wastes its time.
+
+**And one state that is neither a failure nor a refusal.** `tokens` can complete, exit **0**, and
+report no declarations at all — `refusal` null and `counts.names` zero. That is a read that
+worked, and it is still not a page: there is nothing to group and nothing to show. `precheck`
+should already have stopped the run there. Where it did not, trust it over this reading and say
+the two disagree, rather than generating from an empty palette.
+
+### A guides node the project has not recorded
+
+**The key is the one fact only the project can supply.** Where the `## Editor guides` slot carries
+no key, the node is *not recorded*, which is not the same as not existing. Stop before any write,
+say exactly that, and ask for the key. **`/guide` Step 1 stops at the same point and asks the same
+question**, and that is deliberate rather than incidental: two spells writing into one section
+must not have two ways of finding it. Do not go looking by name, by route, or by path — *Where
+guides live* argues why.
+
+**This is the one path where most of the run is still worth having**, and Step 2 says the same thing
+where a reader meets it. Step by step: **1 runs** (the precondition needs no node), **the rest of 2
+does not** — its walk and its checks all need one — and **3 through 7 run**, because the token read,
+the grouping conversation, the two showcase decisions and the whole presentation are answers about
+the project rather than about the section. **8 is the step that cannot**, and it is the only one.
+Run what runs, show it, and name what is waiting on one fact.
+
+Where the person supplies the key, say you are proposing it for the slot too, so the next cast — of
+either spell — does not have to ask again. Then resume at Step 2 rather than starting over: nothing
+above it has changed.
+
+### A styleguide page the project built by hand
+
+Where the section already holds a styleguide page of **another document type** — one somebody
+built by hand, before this capability existed — **report that it exists and touch nothing.**
+
+**Adoption is not available here, and what rules it out is a difference in kind.** The shipped
+adoption path is the write of a single property onto a page that is already a guide page, at
+*Ownership is a consequence of provenance*. A page of another document type has no such property
+to write, so adopting it would mean changing its type — **destructive, irreversible, and the one
+thing this capability never does silently.** That is a deliberate non-goal, not a gap waiting for
+a later increment.
+
+**Say where it is precisely, because nothing else will.** It is not a guide page, so it sits
+outside everything this capability counts and reports; this report is the only place it gets
+named. Then put the choice to a person before anything is created:
+
+- **Leaving it alone and creating nothing** is a real answer, and often the right one.
+- **Creating a styleguide page beside it** leaves the project with two, which somebody has to
+  reconcile. Say that before it happens rather than after.
+- **Moving its content into a new page is a copy a person asks for**, made by them or with their
+  say-so step by step. Never as a side effect of this run, and never called a migration.
+
+### What a stopped run reports
+
+```
+Styleguide: not generated
+Stopped at: <the state, named as the table above names it>
+Precondition: <both halves, met or unmet, each with its statement>
+Remedy: <the remedy verbatim, or the one fact only the project can supply>
+Created: nothing
+Next: <the cast or the answer that would clear it>
+```
+
+**"Created: nothing" is a line worth printing even though it is always true here.** A person who
+has just been refused wants to know whether they now have a half-built section to clean up, and
+the answer they should not have to infer is no.
+
+## Where a report or a rendered file lands
+
+This spell can produce two things somebody might want on disk: **a stopped run's report**, and
+**the token grouping** Step 4 arrived at. Both follow the toolkit's artifact-disposition
+convention: **ask whether the output is durable or temporal**, and let the location carry the
+answer, so commit status is not a second decision to remember. The `workflow` skill is the
+authority on the layout and on what a project has overridden.
+
+- **A stopped run's report** — **temporal by default**, so a git-ignored scratch location: it
+  describes a state the project is expected to leave, and a committed copy outlives the fix and then
+  reads as current truth. Where the answer is durable — the remedy is going into somebody's backlog
+  and wants a reference — it is the same kind of artifact an audit report is, and belongs where
+  those go, **with the date in the filename** for the same reason theirs carry one: it is a
+  point-in-time reading of a palette that moves.
+- **The token grouping** — a staging artifact, so **temporal by default**, in the same scratch
+  location: it exists to become a page, and a committed copy is a second source of truth for
+  something the CMS then owns. **Where the answer is durable, say what made it so**, because the
+  honest durable case is narrow: the grouping stopped being a staged write and became the
+  project's own reference for the vocabulary its readers will use — which is durable human
+  reference, and goes where a project keeps that. A grouping that is still on its way to a page is
+  not that, however useful it looks.
+
+**Print first, write only when asked.** Both of these belong in the conversation, and a spell that
+leaves a file behind on every cast trains its user to ignore the files. Where a file *is* wanted,
+ask the durable-or-temporal question rather than choosing for them.
+
+## Conventions
+
+- **Nothing is written before a person says yes**, and a yes to one section is not a yes to
+  another.
+- **The precondition is stated, not assumed.** An established design system is what a styleguide
+  documents; where the project has none, the run says so instead of producing plausible output
+  from nothing.
+- **Relay a refusal; never re-derive it and never soften it.** One wording is held in one place so
+  a person meets the same statement and the same remedy whichever command they ran.
+- **The script's report is the source of truth for what it answered.** Do not recompute a layer
+  count, re-decide which layer is authoritative, or re-group a token by reading its value yourself.
+  Two implementations of one answer disagree eventually, and the one a person sees would then depend
+  on which of them happened to run. Where a reading of yours contradicts the report, say the two
+  disagree rather than picking — that is a finding, not a tie to break.
+- **A showcase element stores a name, never a value.** The reference argues it at *The showcase
+  element types*; what follows operationally is that no token's value is ever written onto a
+  showcase element, and that is the whole of what makes the page read the system live.
+- **The grouping is a person's, not the script's.** The script names the one group whose value
+  shape cannot be misread and leaves every other grouping to be asked for.
+- **No stored source reference on a styleguide page.** It documents the system rather than a
+  component, so there is no source to record and nothing for a staleness comparison to compare
+  against.
+- **This pack ships no view and this spell writes none.** Views are `/block`'s work, reached by
+  suggestion — a spell a person did not cast is one they did not agree to.
+- Every alias — element type, palette, guides node — comes from the `## Editor guides` slot or the
+  reference's default. Never hardcode one.
+- **A refusal leaves nothing behind.** Every check that can stop a run runs before anything is
+  created.
