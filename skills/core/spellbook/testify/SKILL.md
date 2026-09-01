@@ -140,3 +140,118 @@ files — and **name the tests you took those conventions from** in the report,
 so the person reading it can tell a convention that was observed from one that was assumed. If the
 project has no tests at all to read, there is no convention to follow yet — that is the case Step 3's
 `## Tests` fallback describes, and it goes to `/spec` rather than being settled here.
+
+## Step 5 — Report the gap, before anything is written
+
+**The report is the first output on every path, and nothing is written before it.** Not a test file,
+not a row in the table, not a directory scaffolded in advance of one. Somebody who asked what is
+unproved has asked a question, and the report is the answer to it; writing first and reporting
+afterwards turns a question into a fait accompli.
+
+Report only the rows the queue picked up. **Do not recite what is already proved.** A report that
+lists the five covered rows back buries the three that are the answer, and a reader who has to find
+the finding learns to skim.
+
+**Every row lands in exactly one place, and the order these tests are applied in is what makes that
+true.** The groups below are not defined on one axis — one by a status the row carries, two by
+conditions the project is in — so a row can answer to more than one description at once, and a sort
+that does not say which wins will file it twice. Apply these in order and stop at the first match:
+
+1. **Recorded `Not coverable`?** Settled already. It goes in the closing list described at the end of
+   this step and nowhere else — not a group, not a question.
+2. **Names nothing that can be compared?** A question rather than work, whatever else is true of it.
+   It goes in the questions list.
+3. **Reading `Not covered (code-derived)`?** Group 3 — and where it is *also* blocked on missing
+   infrastructure, note that on the row but leave it in group 3. Whether the project means to promise
+   the behavior at all is the cheaper question, and answering it *no* dissolves the other one;
+   scoping infrastructure for behavior nobody meant to commit to is the wrong order to spend in.
+4. **Blocked on missing infrastructure?** Group 2.
+5. **Anything left** — group 1.
+
+A row appearing twice, or disappearing without a reason given, is a sorting error rather than a style
+choice.
+
+**When nothing is unproved, say so and stop.** A sentence or two: every scenario in this doc names a
+test that proves it, and there is nothing here to do. Do not propose a second test for a scenario
+that already has one, do not offer to strengthen the tests that exist, and do not go reading code for
+behavior the doc never described in order to have something to report. A short answer to a question
+whose answer is short is the right result, not a thin one.
+
+### The three groups
+
+Where there is work, group it — and **group it because each group asks the reader for a different
+decision**, not because three headings look tidier than one list. Print the group's question with the
+group, so somebody who stops at the heading still knows what is being put to them. Leave an empty
+group out rather than printing an empty heading.
+
+#### 1. Writable now
+
+The project already has everything these tests need: somewhere they go, a way to
+run them, and a way to make the observation the scenario describes. *The decision this group asks
+for: approve this test, or don't.* Nothing else stands between the row and a test, which is why these
+are the only rows the approval step can act on.
+
+#### 2. Blocked on missing test infrastructure
+
+The scenario is specific enough to test, but the
+project has no means of making the observation it demands. **Name what each blocked row needs,
+individually** — a way to exercise the system as a whole rather than one piece of it, a way to
+observe what a person sees on screen, a way to put the system into a known starting state and take it
+back afterwards, a way to run the thing under test apart from what it depends on. Describe the *kind*
+of capability that is missing and what it would let a test do. **Where several rows are blocked on
+the same missing capability, describe it once and list the rows beneath it** — a paragraph repeated
+per row pads the report without telling the reader anything the second time. **Never name a product, a library, or
+a tool**: which one to adopt is the project's decision informed by whatever stack guidance it has
+installed, and a name dropped into this report reads as a recommendation this spell is in no position
+to make. *The decision this group asks for: whether to take on that capability at all.* That is a
+different size of question from approving a test, which is why no test is offered for these rows and
+none is written for them.
+
+#### 3. Inferred rather than specified
+
+The rows reading `Not covered (code-derived)`. Keep them apart
+from group 1 even where they are just as writable, and carry the warning with the group: **proving
+one of these promotes somebody's reading of the code into a contract the project never agreed to.** A
+test does not only observe behavior, it pins it — after this, the next person to change that behavior
+argues with a failing test rather than with a paragraph. *The decision this group asks for: whether
+this behavior is something the project means to promise.* That is a question about the doc rather
+than about testing, and the honest answer to some of them is that the scenario should be specified
+properly first.
+
+### The scenario too vague to test
+
+Some rows describe an outcome nothing can check. **The test for that is not taste. Apply it
+literally: does the scenario name a value something could be compared against, or anything at all
+that distinguishes the outcome being present from its being absent?** "A card with no image shows a
+placeholder" names something that is either there or not. "A card looks right on mobile" names
+neither — there is nothing to compare it to, and no observation that could come back "no".
+
+Where a row fails that test, **report it as a question for whoever wrote the doc, and propose no test
+for it.** Name the scenario, say that it names nothing that can be compared, and ask the specific
+question that would fix it — what should be on screen, what value should it hold, what would somebody
+see if the behavior were broken. Then leave it alone.
+
+**Do not quietly file a vague row under group 1 with an assertion you supplied for it.** A guessed
+assertion is worse than an empty row because it fills one: the table goes on to read as proved, the
+coverage report agrees, and what is actually pinned down is whatever you happened to guess — which
+nobody agreed to and nobody will re-read. An empty row is at least honest that nothing has been
+decided.
+
+These are not a fourth group of work. They are questions going back, and they belong in a short list
+of their own beneath the groups.
+
+### The rows already decided against
+
+A row reading `Not coverable — <reason>` records a decision somebody took deliberately. It is not
+work. **Do not offer it, do not sort it into a group, and do not raise it again on the next run** — a
+spell that re-proposes a settled question every time it is cast teaches people to stop reading its
+reports.
+
+Do say they are there. Close the report with a short list — one entry per row, naming the scenario
+and **the recorded reason repeated as the doc words it**, not summarized. A count on its own hides
+them, and a single crowded line stops being readable the moment one reason runs past a clause; give
+each row its own entry, the way the questions above get theirs.
+
+The reason is what a reader judges the decision by. One written because nothing here could render a
+page, say, stops being true the day something can. A reason nobody is shown is a decision nobody can
+revisit.
