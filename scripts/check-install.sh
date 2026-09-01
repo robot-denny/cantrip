@@ -44,7 +44,7 @@ ROSTER_CORE=(
   bdd-principles design-system-authoring memory-discipline reviewer-discipline
   tdd-principles workflow
   code-review commit-message explore feature implement-step plan retrofit setup spec
-  update-toolkit
+  testify update-toolkit
 )
 # Pack units are the toolkit's too, so they must be verified and visible. But core-only is
 # the documented baseline, so an ABSENT pack is never reported as missing.

@@ -313,7 +313,12 @@ no-convention refusal, the `Next:` line.
 ### Step 6 — Audit mode: the project-wide sweep and four kinds of drift
 
 > **Prompt**: Implement Step 6 of `_work/testify/plan.md`. Extend
-> `skills/core/spellbook/testify/SKILL.md` with `/testify audit` — read-only across every capability
+> `skills/core/spellbook/testify/SKILL.md` with `/testify audit`. **Amend the frontmatter, do not just
+> append a section**: Step 2 left `audit` out of both `description` and `argument-hint` on purpose, so
+> as things stand `/testify audit` falls through Step 1's resolution and is reported as an
+> undocumented capability. Add the mode to both frontmatter fields and fork for it in Step 1.
+> `/guide` is the model — it declares its audit mode in both fields and forks in its opening. The mode
+> itself is read-only across every capability
 > doc, writing nothing, **running no test**, touching no test file, and offering no approval prompt.
 > It reports four kinds of drift: a scenario no test proves; a test whose scenario has since changed,
 > shown as it was written and as it reads now; a test whose scenario has been deleted; and a row

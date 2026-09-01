@@ -838,7 +838,15 @@ fi
 # failure mode checks 11 and 13 were both added after suffering.
 begin "coverage statuses are known to every spell that writes them"
 COVERAGE_TEMPLATE=skills/core/reference/workflow/templates/feature.md
-COVERAGE_WRITERS=(skills/core/spellbook/feature/SKILL.md skills/core/spellbook/spec/SKILL.md)
+# Every shipped file that names a status for a reader to act on, not only the two that fill in a
+# table. /testify routes on the vocabulary rather than writing it today, and becomes a writer once
+# its recording path lands -- gated from the start, because a list kept in step by hand is the
+# failure checks 11 and 13 were both added after suffering.
+COVERAGE_WRITERS=(
+  skills/core/spellbook/feature/SKILL.md
+  skills/core/spellbook/spec/SKILL.md
+  skills/core/spellbook/testify/SKILL.md
+)
 if [[ -d skills/core ]]; then
   absent=""
   [[ -f "$COVERAGE_TEMPLATE" ]] || absent+="  - $COVERAGE_TEMPLATE (declares the vocabulary)"$'\n'
@@ -882,7 +890,7 @@ if [[ -d skills/core ]]; then
 
       if [[ -n "$unknown" ]]; then
         report_fail "$CURRENT" \
-          "$COVERAGE_TEMPLATE declares $vocab_count coverage statuses; each has to be known to both spells that write the table." \
+          "$COVERAGE_TEMPLATE declares $vocab_count coverage statuses; each has to be known to every spell that names one." \
           "Describe the missing status where the spell describes the Test Coverage table, naming it in backticks exactly as the template declares it." \
           "If a status is genuinely not this spell's to write, say so there in one line — silence is indistinguishable from having forgotten it." \
           "" "$unknown"
