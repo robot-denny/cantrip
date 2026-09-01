@@ -40,7 +40,7 @@ the input is a capability doc covering an increment built in phases.
 
 - **`Test failing`** — a test asserts this scenario and its last run did not pass. Deliberately not
   `Not built yet`, `Regression`, or `Doc wrong`. The row names the test and stops.
-- **`Not coverable — <reason>`** — the project has decided this scenario cannot be proved here. The
+- **`Ruled out — <reason>`** — the project has decided this scenario cannot be proved here. The
   reason travels inside the cell, because a decision whose grounds are not recorded cannot be
   re-judged when the grounds change.
 
@@ -58,7 +58,7 @@ than no test, and collapsing the two throws away the only proof anybody has writ
 **Split the Status column in two** — one cell for whether a test exists, one for what its last run
 established. This is the honest normalization: five statuses in one cell encode two independent facts,
 which is why `Covered` and `Test failing` differ only in the second and `Not covered` and
-`Not coverable` only in the first. Rejected *for now* on cost: it rewrites every coverage table in
+`Ruled out` only in the first. Rejected *for now* on cost: it rewrites every coverage table in
 every existing capability doc, in an increment whose subject is something else. Parked in the
 Test Coverage feature doc rather than dropped.
 
@@ -76,7 +76,7 @@ test invisible, and it guarantees the test is written twice.
 
 **A `Blocked` status for a scenario with no harness to prove it.** Rejected as a category error.
 Blocked-ness is a property of a *report* at a moment in time — nobody has decided anything, and the
-row is still an ordinary gap. `Not coverable` is admissible precisely because it is the opposite: a
+row is still an ordinary gap. `Ruled out` is admissible precisely because it is the opposite: a
 decision was made, and a decision is durable enough to belong in a document. Where infrastructure is
 genuinely missing, the row stays `Not covered` and the missing infrastructure becomes spec-sized work.
 
@@ -88,10 +88,10 @@ genuinely missing, the row stays `Not covered` and the missing infrastructure be
   write it — with nothing but an author's memory linking them. Gate check 17 closes that: it reads the
   statuses the template declares and fails if either spell does not name one. Writing it immediately
   found real drift, in that `/spec` had never named a single status despite creating the table.
-- `Not coverable — <reason>` is the first status carrying free text. The vocabulary stays L0 and the
+- `Ruled out — <reason>` is the first status carrying free text. The vocabulary stays L0 and the
   reason stays the project's, which is the same split every slot makes.
 - **Nothing re-runs a `Test failing` row.** A row goes stale the moment the work behind it lands, and
   the status then understates what is proved. Recorded as a known gap rather than solved here: the fix
   is a re-run, and nothing in the flow owns re-running yet.
-- The same applies to a `Not coverable` reason, which stops being true when the thing it names
+- The same applies to a `Ruled out` reason, which stops being true when the thing it names
   changes, and which nothing re-reads.

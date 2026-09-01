@@ -63,7 +63,7 @@ instead.
   true for a spell that runs tests. No amendment needed.
 
 - **Two new statuses, both named for an observation rather than a diagnosis.** `Test failing` and
-  `Not coverable — <reason>`. The reasoning behind the first is the increment's main shaping decision
+  `Ruled out — <reason>`. The reasoning behind the first is the increment's main shaping decision
   and gets an ADR: a test that fails may mean not-built-yet, a regression, or a wrong doc, and the
   spell cannot tell those apart, so it records what it saw and lets the Draft banner and the report
   supply the interpretation.
@@ -120,7 +120,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 > **Prompt**: Implement Step 1 of `_work/testify/plan.md`. Add two statuses to the Test Coverage
 > vocabulary — `Test failing` (a test exists and its last run did not pass; named for the observation,
-> not its cause) and `Not coverable — <reason>` (the project has decided this scenario cannot be
+> not its cause) and `Ruled out — <reason>` (the project has decided this scenario cannot be
 > tested here). Write ADR 0016 recording why a coverage status names an observation rather than a
 > diagnosis, following the structure of `adr/_template.md` and the tone of the existing ADRs. Update
 > `skills/core/reference/workflow/templates/feature.md` so both statuses appear in the table's example
@@ -140,7 +140,7 @@ inspect this repo versus shipped units); `skills/core/spellbook/feature/SKILL.md
 **Test first**:
 - Add the two statuses to `templates/feature.md` **only**, leaving `/feature` and `/spec` untouched.
 - Write check 17 and run `./scripts/check-contract.sh`. **RED is check 17 naming `Test failing` and
-  `Not coverable` as declared in the template but absent from both writer spells.** Read the failure
+  `Ruled out` as declared in the template but absent from both writer spells.** Read the failure
   and confirm it names which spell is missing which status — a check that says only "mismatch" is not
   worth having.
 - Then update the two spells and confirm GREEN.
@@ -211,7 +211,7 @@ reading, both slot declarations); `skills/core/spellbook/plan/SKILL.md` and
 > code rather than specified, carrying the warning that proving one turns a reading of the code into a
 > contract. Add the rule that a scenario naming no specific observable outcome is reported as a
 > question for whoever wrote the doc and gets no test at all, because a guessed assertion is worse
-> than an empty row. Add the rule that a scenario recorded `Not coverable` is skipped, never
+> than an empty row. Add the rule that a scenario recorded `Ruled out` is skipped, never
 > re-proposed, and its recorded reason repeated in the report. State that a capability whose scenarios
 > are all proved gets a short "nothing to do" rather than manufactured work. Read the spec's
 > *Scenarios (Draft)* for the rules this step covers and keep the spell's language stack-agnostic —

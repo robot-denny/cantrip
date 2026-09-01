@@ -270,11 +270,11 @@ For each scenario, find the corresponding test if one exists:
 | Scenario name | `path/to/test:L58` | Test failing |
 | Scenario name | — | Not covered |
 | Scenario name | — | Not covered (code-derived) |
-| Scenario name | — | Not coverable — why it cannot be proved here |
+| Scenario name | — | Ruled out — why it cannot be proved here |
 
 **Five states, each a claim about what is proved — not a stage in a process.** Four record an
-observation; the fifth records a decision, and is set apart below because its name begins the same
-way two of the others do and it is the one that means something entirely different.
+observation; the fifth records a decision, and is set apart below because that is a different kind of
+claim and deserves to be read as one.
 
 - **`Covered`** — a test asserts it and its last run passed.
 - **`Test failing`** — a test asserts it and its last run did not pass. Name the test anyway. The
@@ -287,11 +287,11 @@ way two of the others do and it is the one that means something entirely differe
 
 And the one that is not an observation at all:
 
-- **`Not coverable — <reason>`** — the project has already decided this scenario cannot be proved
+- **`Ruled out — <reason>`** — the project has already decided this scenario cannot be proved
   here. Carry the row and its reason through unchanged. **This spell never makes that decision**; it
-  only preserves one the doc already records. Read past the "Not cover-" prefix before treating such
-  a row as an ordinary gap — it is the opposite of one, and mistaking it for `Not covered` quietly
-  converts somebody's deliberate decision into a backlog item.
+  only preserves one the doc already records. Never treat such a row as an ordinary gap — it is the
+  opposite of one, and folding it back into `Not covered` quietly converts somebody's deliberate
+  decision into a backlog item.
 
 Keeping these distinct is what makes a backfilled doc honest. A reader can then tell verified behavior
 from inferred behavior at a glance — and a gap somebody chose from a gap nobody has got to yet —

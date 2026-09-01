@@ -29,7 +29,7 @@ increment.
       rewrites every existing coverage table
 - [ ] Parking lot: nothing re-runs a failing test, so a `Test failing` row understates what is proved
       once the work landing behind it ships
-- [ ] Parking lot: an expiry story for a `Not coverable` reason. A reason stops being true when
+- [ ] Parking lot: an expiry story for a `Ruled out` reason. A reason stops being true when
       something changes, and nothing in the current design re-reads it
 - [ ] Parking lot: coverage for work that earned no capability doc. A `change-to` or `fix-infra`
       increment can ship real behavior with no scenarios of its own, which makes it invisible here
@@ -368,7 +368,7 @@ in particular:
      never specified and never tested, the weakest claim here).
 
      One records a decision, and is set apart because its name begins like two of theirs and means
-     the opposite: Not coverable — <reason> (the project decided this cannot be proved here). -->
+     the opposite: Ruled out — <reason> (the project decided this cannot be proved here). -->
 
 Every row is uncovered because nothing has been built yet. This doc would be the first thing
 `/testify` is pointed at once it exists — useful dogfooding, and an equally useful trap: several of

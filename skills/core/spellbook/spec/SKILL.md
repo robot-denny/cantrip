@@ -190,11 +190,11 @@ the `templates/feature.md` asset in the `workflow` skill. Populate it with:
   not been built, so nothing can have proved it. **Write no other status here.** The rest of the
   vocabulary belongs to later readings of the same table, once tests exist: `Covered` and
   `Test failing` record what a run actually established, `Not covered (code-derived)` marks a rule
-  inferred from reading code rather than specified, and `Not coverable — <reason>` records a
+  inferred from reading code rather than specified, and `Ruled out — <reason>` records a
   decision that a scenario cannot be proved in this project at all. The comment beneath the table in
-  `templates/feature.md` defines all five, and sets `Not coverable` apart from the rest because it
-  records a decision rather than an observation despite its name beginning like two of theirs. A
-  draft written from a spec has earned exactly one of the five.
+  `templates/feature.md` defines all five, and sets `Ruled out` apart from the rest because it
+  records a decision rather than an observation. A draft written from a spec has earned exactly one of
+  the five.
 - A revision note: `{today's date}: Draft scenarios from initial spec`
 
 This skeleton gives QA and planners the behavioral contract immediately, before implementation

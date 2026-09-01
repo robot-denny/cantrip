@@ -69,13 +69,12 @@ than re-deriving it. What matters here is narrower: what each status means for t
 | `Test failing` | A test already asserts this scenario and did not pass last time it ran. Something exists; this is not a missing test. |
 | `Not covered` | Specified, and nothing asserts it. **This is the queue.** |
 | `Not covered (code-derived)` | Nobody specified this — it is a reading of the code. Unproved, but not unproved in the same way, and it is never mixed in with the rows above. |
-| `Not coverable — <reason>` | The project has already decided. Skip it, never propose it, and carry its recorded reason forward so a reader can judge whether it still holds. |
+| `Ruled out — <reason>` | The project has already decided. Skip it, never propose it, and carry its recorded reason forward so a reader can judge whether it still holds. |
 
-**Four of those record an observation; the last records a decision.** The rows are listed in the
-template's order, which puts three statuses beginning "Not cover-" together, and the third of them
-means the opposite of the two above it — somebody weighed this scenario and chose, rather than nobody
-having reached it yet. Read the whole of "Not coverable —" before treating a row as an ordinary gap.
-Turning one into a proposal quietly converts a decision into a backlog item.
+**Four of those record an observation; the last records a decision.** `Ruled out` is not a gap
+nobody has reached yet — somebody weighed the scenario and chose. Turning one into a proposal quietly
+converts that decision into a backlog item, which is why the sort below settles it before anything
+else.
 
 A scenario with no row at all is unproved and belongs in the queue. A row naming a scenario the doc
 no longer contains is drift rather than work — note it and move on.
@@ -157,7 +156,7 @@ true.** The groups below are not defined on one axis — one by a status the row
 conditions the project is in — so a row can answer to more than one description at once, and a sort
 that does not say which wins will file it twice. Apply these in order and stop at the first match:
 
-1. **Recorded `Not coverable`?** Settled already. It goes in the closing list described at the end of
+1. **Recorded `Ruled out`?** Settled already. It goes in the closing list described at the end of
    this step and nowhere else — not a group, not a question.
 2. **Names nothing that can be compared?** A question rather than work, whatever else is true of it.
    It goes in the questions list.
@@ -242,7 +241,7 @@ of their own beneath the groups.
 
 ### The rows already decided against
 
-A row reading `Not coverable — <reason>` records a decision somebody took deliberately. It is not
+A row reading `Ruled out — <reason>` records a decision somebody took deliberately. It is not
 work. **Do not offer it, do not sort it into a group, and do not raise it again on the next run** — a
 spell that re-proposes a settled question every time it is cast teaches people to stop reading its
 reports.
@@ -255,3 +254,300 @@ each row its own entry, the way the questions above get theirs.
 The reason is what a reader judges the decision by. One written because nothing here could render a
 page, say, stops being true the day something can. A reason nobody is shown is a decision nobody can
 revisit.
+
+## Step 6 — Put each test to the reader, one row at a time
+
+Only **group 1** reaches this step. Group 2 has no test to offer until somebody decides on the
+missing capability, group 3 asks a question about the doc before it asks one about testing, and the
+questions and the settled rows are not work at all. Sorting already happened in Step 5 — do not
+re-litigate it here by finding a way to squeeze a blocked row through.
+
+**Approval is per row, never per report.** Show the proposed test for one row, ask about that row,
+and move to the next. A reader who approves two of five has approved two: write those two, write
+nothing for the other three, and leave those three exactly as the report left them — still unproved
+in the table, still offered the next time this spell is cast. **Do not read a general "yes, go ahead"
+as approval of every row**; ask which, and say why you are asking. Approving a test is agreeing to
+what it pins down, and five of those are five decisions wearing one word.
+
+Until a row's own approval, **nothing exists on disk for it** — not the test file, not an empty file
+to be filled in later, not the directory it would live in. A file created in anticipation of a yes is
+a fait accompli with a polite question attached.
+
+### What to show for each proposed test
+
+Four things, and they fit in a short block per row:
+
+- **The scenario, as the doc words it.** Not paraphrased — the reader is approving a test *for that
+  sentence*, and a paraphrase quietly widens or narrows what gets pinned.
+- **Where the test would go and what it would be called**, following the conventions Step 4 took from
+  the project.
+- **The observation it would make**: what it does, what it then looks at, and the value it compares
+  against.
+- **Where that expected value came from.** It comes from the scenario — the literal the doc already
+  wrote down. `tdd-principles` explains why a value derived the way the implementation derives it
+  cannot ever disagree with the code; read it there rather than working it out again. Say in the
+  report which sentence of the scenario the value was lifted from, so the reader can check the lift.
+
+### The probes — how this test could pass while the behavior is broken
+
+Say this plainly in the report, once: **for behavior that already works there is no red-to-green
+signal available here.** This spell writes a test after the fact, so a passing run proves the test
+ran; it does not prove the test would have noticed the behavior missing. Do not describe a passing
+run as if a red run had preceded it.
+
+**What stands in for the missing signal is assertion review, and it runs on every path** — draft doc
+or verified, before a run that will pass or one that will fail. It is not a fallback for the cases
+where a red run was unavailable. It is the check, and a red run would not replace it.
+
+So for each proposed test, answer these **about that test, in its own terms** — naming the actual
+value, the actual place, the actual artifact this one test depends on. A generic recital of the
+questions tells the reader nothing they could disagree with:
+
+- **If the value were wrong, would this test still pass?** Name the wrong value it would tolerate. A
+  test that accepts any non-empty text accepts the wrong text.
+- **If the thing under test were produced somewhere other than where the scenario puts it, would this
+  test still pass?** Name where else it could appear and still satisfy the check.
+- **If nothing at all were produced — an empty result, a blank screen, output that failed to build —
+  would this test still pass?** Say what specifically fails in that case, and if nothing does, the
+  test asserts nothing.
+- **Is this check satisfied by the artifact merely existing?** A file being present, a name being
+  defined, a rule being declared. `tdd-principles` calls this the presence assertion and explains why
+  it fails in both directions; the fix is to ask what the artifact is *for* and assert that instead.
+- **Would this test fail if the behavior changed but the implementation stayed the same shape?** The
+  inverse is the diagnostic `tdd-principles` gives for coupling to artifacts rather than to observable
+  behavior — a test that fails when the behavior did not change is testing the wrong thing.
+
+**Each probe has to come out "no, this test would fail, because …" before the test is offered.** A
+probe that comes out "yes" is not a caveat to note beside the proposal — it is a test that would prove
+nothing, and offering it asks the reader to approve a fiction. Rewrite the assertion and probe it
+again. Where you cannot get it to "no" for a row, say so and offer no test for that row; an honest
+gap beats a filled one.
+
+Then **report the answers with the test — one line per probe, in the order above, all five.** Name
+the actual value, the actual place, the actual artifact this test depends on, so each line is
+something the reader can disagree with:
+
+- it would fail if the expected text were <the wrong value it would catch>
+- it would fail if the thing were produced <the other place it could appear>
+- it would fail against an empty result, because <what specifically breaks>
+- it asserts <the behavior>, not that <the artifact> is present
+- it would fail if <the behavior> changed while the code kept its shape
+
+Those five lines are what the reader is approving, as much as the assertion is. A generic recital
+tells them nothing they could push back on.
+
+## Step 7 — Write only what was approved
+
+Write the approved tests, following the conventions Step 4 took from the project's existing tests.
+**Where several approved rows belong in the same file — the usual case, since a capability's scenarios
+conventionally share one — write them together in one pass** rather than reopening the file once per
+row and re-reading its header each time. Nothing else moves: no test for a row that was not approved, no strengthening of a
+test that already exists, no tidying of the file you happen to be writing into.
+
+### The provenance header
+
+**Every test file this spell writes opens with a comment carrying three things:**
+
+- **the capability doc these scenarios came from**, named the way that doc is named;
+- **every scenario this file covers**, each one word-for-word as the doc words it;
+- **the date the tests were written.**
+
+Word-for-word matters more than it looks. The header is what makes the doc-to-test link readable from
+both ends, and reading it from the test end is what lets drift be *detected* rather than guessed at by
+matching scenario names for resemblance — the guess that breaks precisely when a scenario has been
+reworded, which is the moment it was needed. A scenario copied exactly either still matches the doc or
+visibly does not.
+
+**Write it as a comment, in whatever way this project's existing tests write comments.** This spell
+does not know how a comment is written here and must not decide — take the form from the test files
+Step 3 located and Step 4 read, the same way every other convention in this run was taken. Where you
+add scenarios to a file that already has a header, **extend its scenario list and set its date to
+today** rather than opening a second header beneath the first. The date records when the file was last
+written, not when each scenario arrived — the scenario list is what carries which scenarios are
+covered, and one header per file is what keeps it readable from the test end.
+
+### Behavior nobody wrote down
+
+Writing a test means reading the code under it, and you will see things no scenario describes.
+
+When you do: **name it in the report** — what the behavior does and where you saw it — and point the
+reader at `/feature`, whose from-code mode already owns turning observed behavior into a documented
+scenario. **Add nothing to the capability doc yourself: not a scenario, not a row, not a note in the
+margin.** A spell that writes its own queue entries decides what the project promises, which is a
+decision the doc's author makes and this spell only reads.
+
+## Step 8 — Run the approved tests, and record what that run established
+
+Run the command Step 3 resolved **once**, covering every test approved in this run, and read each
+row's result out of that single run's output. **Do not invoke the test command per row.** The command
+a project records is the one that runs its tests, not necessarily one that can be narrowed to a named
+test — so a per-row reading turns one run into as many full runs as there are approved rows, which on
+a capability with a dozen of them is the difference between a wait and an afternoon. Then write the
+results into the doc's Test Coverage table.
+
+**One rule, and it has no branches:**
+
+| What the run did | What the row records |
+|---|---|
+| The test passed | `Covered`, naming the test file |
+| The test did not pass | `Test failing`, naming the test file |
+| The test could not be run at all | **Unchanged.** The row stays exactly as it was, and the report says the test was written but never run |
+
+Touch only the rows you were approved to test. A row you did not write a test for keeps whatever it
+said before, including `Not covered`.
+
+**A failing test is never recorded as `Not covered`.** A test that exists and fails is strictly more
+than no test at all; collapsing the two hides the only proof anybody has written and guarantees
+somebody writes it again.
+
+### A ruled-out row is never overwritten
+
+It was never proposed, never approved, and never tested, so there is no run to record against it.
+Unlike a `Not covered` row — which is waiting for somebody to get to it — this one is finished: a
+person decided the scenario cannot be proved here and wrote down why. Overwriting it discards that
+decision and puts the question back in the queue for somebody to answer again.
+
+### The rule does not consult the Draft banner
+
+There is no version of it that does. A draft capability doc is **not** a doc for unbuilt behavior:
+`/plan` phases its work and `/implement-step` runs one step at a time, so a draft describing six
+scenarios of which four are built and passing is the **normal middle state of the flow**, not an
+anomaly to be corrected. Record those four as `Covered` and the remaining two as `Test failing`, and
+report exactly that.
+
+**A passing test is never reported as proving nothing because the doc it came from is still a draft.**
+What guards against a test that passes vacuously is the probes in Step 6, which already ran on every
+one of those tests and run on verified docs too — where a rule demanding a red run would reach nothing
+at all.
+
+### How a failure is explained
+
+Here is where the Draft banner earns its place, and it is the only place: it selects a **sentence**,
+never a status.
+
+- **The doc still carries its Draft banner.** Explain the failure as expected of a capability still
+  being built — the scenario is specified, the test now exists, and the work that makes it pass has
+  not landed yet. **Do not say the capability is broken.** Nothing is broken that was never claimed
+  finished, and a report that cries regression at ordinary work in flight gets skimmed within a week.
+- **The banner is gone.** Explain the same failure as the capability not behaving the way its doc
+  claims, and say plainly that one of the two is wrong: either the code has a defect, or the doc
+  describes behavior the project no longer has. **Name both possibilities and pick neither** — this
+  spell has no way to tell which, and guessing hands somebody a bug report or a doc edit they did not
+  ask for.
+
+**Same observation, same status, different sentence.** If you find yourself reading the banner while
+deciding what to put in the Status column, you have crossed the line this rule exists to hold. Read it
+once, when you write the prose, and never before.
+
+### What else in the doc changes, and what does not
+
+**Set the doc's `Last verified` date to today** whenever this run recorded any result. That field is
+what tells a later reader how old the table's claims are, and a table of statuses with no date on them
+cannot be told apart from a table nobody has checked in a year.
+
+**Add nothing to Revision Notes.** That section records changes to what the capability *does* —
+scenarios added, rules reworded, behavior corrected — and `/feature` maintains it when it makes them.
+This spell changes none of that; it records what a run observed about claims that did not change. An
+entry per cast would bury the substantive history under a log of test runs. `Last verified` carries
+the freshness, Revision Notes carries the history, and this spell writes only the first.
+
+### Close with what actually happened
+
+A short account, not a re-run of the gap report: which rows were approved, which tests were written
+and where, what each run did, and — where anything could not be run — that it was written but never
+run, and why the command could not be worked out. Then whatever Step 7 turned up that no scenario
+describes.
+
+## Where a run stops short
+
+Two states end a run before every unproved row has a test, and **neither of them is a dead end.**
+Each names what is missing and which spell owns supplying it. A stop that reports only the obstacle
+leaves the reader holding a problem instead of a next move, and the next thing they do is guess.
+
+### A scenario blocked on test infrastructure this project does not have
+
+Step 5's group 2 already named what each blocked row needs. What follows from that naming is the
+part this section adds.
+
+**The blocked rows do not hold up the writable ones.** Group 1 goes through Steps 6 to 8 exactly as
+it would if nothing were blocked — approval per row, the probes, the run, the recorded status. A
+capability that can be half proved today is better half proved today than left wholly unproved
+pending a decision nobody has scheduled.
+
+**Every blocked row is left exactly as the table had it.** No test, no status change, no placeholder
+row promising one later. Nothing was observed about that scenario, so nothing about it is recorded.
+
+**End pointing at `/spec`.** Taking on a way to make an observation this project currently cannot
+make is a change to how the project is built — it gets specified, planned, and implemented like any
+other work, and it reliably costs more than it looks like it will from inside a coverage report. So
+close the run by naming the missing capability once, listing the scenarios waiting on it, and naming
+`/spec` as where that work starts.
+
+**Where every unproved row is blocked, the run ends at the report.** There is nothing to approve, so
+offer no approval prompt and write nothing at all — not a test, not a directory, not a row. The
+report is the entire output: what the missing capability is, which scenarios are waiting on it, and
+`/spec` as the next move.
+
+**Do not scope the infrastructure while you are here.** Naming what a test would need to observe is
+this spell's job and Step 5 did it. Choosing what to adopt, and weighing what adopting it costs, is
+the spec's. A spell that sketches the answer while declining to decide it has decided it anyway,
+because whoever writes the spec starts from the sketch.
+
+### A project that has never decided where its tests go
+
+Step 3's `## Tests` fallback already gives the rule: with nothing recorded and no tests to infer
+from, propose a location, flag plainly that you would be establishing a convention rather than
+following one, and never settle it silently. **This is that same rule at the point where it costs
+something** — somebody has asked for a capability's missing tests, and there is nowhere agreed to put
+one.
+
+Everywhere else in this spell, how a test is written here is settled by finding the closest existing
+test and following it exactly. **That answer is unavailable in this one case, by definition: the
+project has no existing test to be closest to**, and whatever gets written now becomes the convention
+every later test inherits, whether or not anybody chose it. So, in order:
+
+1. **Ask whether another codebase should be the reference.** A sibling project, or a starter the team
+   already trusts, is a far better source than invention, and naming one is a person deciding rather
+   than this spell deciding. If one is named, read it, say in the report which conventions you took
+   from it, and propose recording them in the `## Tests` slot so the next run does not ask again.
+
+2. **Otherwise stop here.** Concretely, and all four of these:
+
+   - **Say that where tests go has never been decided in this project.** Not that a slot is empty —
+     that is a fact about a config file, and it reads as a small thing to go and fix. The fact worth
+     reporting is that the project has no testing convention at all.
+   - **Decline to decide it, and say you are declining.** Silence would be indistinguishable from
+     having no opinion, and the location proposed under Step 3's fallback is a proposal put to a
+     person, never a choice acted on.
+   - **Point at `/spec` for this project's testing setup.** Where tests live, what runs them, and
+     what a test of each kind may reach for are decisions the whole project inherits from whoever
+     makes them first. That is spec-sized work, and it is worth someone's deliberate half hour rather
+     than a side effect of asking about one capability.
+   - **Write no test file.** Not for an approved row, not for the one row that seemed obvious.
+
+The gap report still stands in both branches. Declining to choose a location is not declining to
+answer the question that was asked: report the unproved scenarios exactly as Step 5 describes, and
+let the stop be about where their tests would go rather than about whether they are missing.
+
+## End with a suggestion, never a cast
+
+Every run that had anything to report closes with a single `Next:` line, and **it is a suggestion.**
+This spell casts nothing — it does not run `/code-review` because tests were written, and it does not
+run `/spec` because something was blocked. On the page the two look nearly alike; they are not. A
+suggestion leaves the next decision with the reader; a cast takes it.
+
+Which line depends on what the run did:
+
+- **Tests were written.** `Next: /code-review` — the tests are code, they were written just now, and
+  they earn the same review as anything else this project ships.
+- **Anything was blocked** — a scenario waiting on infrastructure, or a project with no testing
+  convention. `Next: /spec <the missing capability, or this project's testing setup>`, naming what
+  the spec would be for rather than leaving the reader to reconstruct it from the report above.
+- **Both.** Print both lines, in that order. The tests that now exist are reviewable today; the spec
+  is what unblocks the rest.
+- **Only questions came back** — nothing writable, nothing blocked, and every unproved row failed the
+  test for naming something that can be compared. `Next: /feature update <the capability>`, because
+  what stands between these scenarios and a test is how they are written, and the doc is where that
+  gets fixed.
+- **Nothing was unproved.** No `Next:` line. Step 5 already said to answer briefly and stop, and a
+  suggested next move would manufacture exactly the work that rule refuses to manufacture.

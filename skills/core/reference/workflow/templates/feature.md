@@ -75,7 +75,7 @@ Scenario: {Edge case name}
 | {scenario name} | `{test file}:L58` | Test failing |
 | {scenario name} | — | Not covered |
 | {scenario name} | — | Not covered (code-derived) |
-| {scenario name} | — | Not coverable — {why it cannot be proved here} |
+| {scenario name} | — | Ruled out — {why it cannot be proved here} |
 
 <!-- Status vocabulary. Each status is a claim about what is proved, not a stage in a process:
      read a row as its answer to "what does this entitle me to believe?"
@@ -93,14 +93,14 @@ Scenario: {Edge case name}
 
      ONE STATUS RECORDS A DECISION, and it is the only one a person writes deliberately:
 
-     - Not coverable — <reason>: the project has decided this scenario cannot be proved here, and
+     - Ruled out — <reason>: the project has decided this scenario cannot be proved here, and
        the reason travels in the row so a later reader can judge whether it still holds.
 
-     The split is the point, and it is why this status is set apart rather than listed fourth among
-     three others whose names also begin "Not cover". The four above say what happened. This one says
-     somebody chose — which is the difference between a gap nobody has got to yet and a gap the
-     project decided to live with, and it is the easiest distinction in the table to lose while
-     scanning. Read the whole of "Not coverable —" before concluding a row is an ordinary gap. -->
+     The split is the point. The four above say what happened; this one says somebody chose — the
+     difference between a gap nobody has reached yet and a gap the project decided to live with. It is
+     named unlike the other four on purpose: an earlier draft called it "Not coverable", which sat one
+     syllable from "Not covered" and was misread as an ordinary gap every time somebody skimmed the
+     table. A status that records a decision should not look like a status that records an absence. -->
 
 ---
 

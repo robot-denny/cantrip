@@ -105,7 +105,7 @@ statuses beside `Covered`, `Not covered`, and `Not covered (code-derived)`:
   **Deliberately named for the observation rather than its cause**, because the cause differs — not
   built yet, a regression, or a doc that is simply wrong — and the spell is not positioned to tell
   those apart. The Draft banner and the report are what the reader interprets it with.
-- **`Not coverable — <reason>`** — the project has decided this scenario cannot be tested here.
+- **`Ruled out — <reason>`** — the project has decided this scenario cannot be tested here.
   `/testify` skips these and never re-proposes them; the reason travels in the row so a reader can
   judge whether it still holds.
 
@@ -493,7 +493,7 @@ Scenario: What could not be determined is stated rather than invented
 ## Open Questions
 
 - **Five statuses may mean the Status column is doing two jobs.** After this increment a row can read
-  `Covered`, `Test failing`, `Not covered`, `Not covered (code-derived)`, or `Not coverable —
+  `Covered`, `Test failing`, `Not covered`, `Not covered (code-derived)`, or `Ruled out —
   <reason>`. Two independent facts are encoded in one cell: whether a test exists, and what its last
   run established. Splitting into two columns would make `Test failing` fall out of the pair rather
   than needing a name of its own. **Not done here** because it rewrites every existing coverage table
@@ -507,7 +507,7 @@ Scenario: What could not be determined is stated rather than invented
   only as good as the last time anything observed it. **The overstating direction costs more**, and
   whatever closes it has to answer the question audit mode dodged: who may run a project's tests, and
   when. Same shape as the stale-reason question below — the three are one question in three hats.
-- **Whether a `Not coverable` reason expires, and what notices it.** A reason like "this toolkit ships
+- **Whether a `Ruled out` reason expires, and what notices it.** A reason like "this toolkit ships
   no rendering layer" stops being true the moment something owns the render layer, and nothing in the
   design re-reads it. Skipping the row forever is the failure mode the status was introduced to
   create. Candidates: audit mode reports these rows separately as claims to re-check, `/feature`
@@ -522,7 +522,7 @@ Scenario: What could not be determined is stated rather than invented
   same seam.
 - **Whether the two new statuses belong to this increment or to `/feature`.** The claim is uneven.
   `Test failing` records something `/testify` itself observed, so it plainly owns writing it.
-  `Not coverable` is an editorial judgment about the doc, which `/feature` owns — `/testify` only
+  `Ruled out` is an editorial judgment about the doc, which `/feature` owns — `/testify` only
   reads it and skips. Shipping both here is the pragmatic call because this is the first spell that
   needs either, but the second may be in the wrong spell.
 - **Whether a capability doc is the right queue when the work earned no doc.** `change-to` and
