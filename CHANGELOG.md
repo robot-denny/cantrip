@@ -310,7 +310,57 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   - **A `guide-check` test suite of 80 cases**, and `tests/run.sh` generalized to suites so a second
     subject was possible at all. Taking the harness to 97 cases across two suites.
 
+- **A styleguide page that reads the design system live — `/styleguide`** (2026-09-01). A second
+  caller of the guides scaffolding: one guide page whose showcase sections carry *token names*, so
+  the palette and type scale an editor sees follow the project's stylesheet and stay current with no
+  regeneration. Cast it as `/styleguide`; like `/guide` it is invisible to the model and runs only
+  when you ask for it. **It arrives only with the `umbraco-17` pack, and it brings one new slot.**
+  - **It states its precondition instead of producing plausible output from nothing, and it is the
+    one spell in this pack that stops on a project that is otherwise perfectly fine.** Two halves,
+    both always reported met or unmet: a token layer a rendered page can read, and an existing view
+    to take conventions from. Four states stop a run — no view to copy conventions from, a palette
+    the build resolves and discards, no palette anywhere, and a guides node the project has not
+    recorded — and **none of them leaves a half-scaffolded section**, because every write is behind
+    the approval. A stopped run prints `Created: nothing` so nobody has to infer it.
+  - **A design token here is a value that survives to the browser** — in practice a CSS custom
+    property. A preprocessor variable is a design token by any normal usage and is still not one of
+    these, because no markup can read it at render time. So a project whose palette exists only at
+    build time is **refused with a remedy** (a runtime layer its existing definitions feed) rather
+    than having its values baked into a snapshot: a snapshot would fail the one claim this page makes
+    while looking exactly like a page that keeps it.
+  - **The deterministic half is a script**, `skills/umbraco-17/spellbook/styleguide/scripts/styleguide.py`
+    (Python 3, standard library only), with two subcommands: `tokens` reports every layer the project
+    holds, names which is authoritative, and lists each custom property with its group; `precheck`
+    answers whether a styleguide may be generated at all. Exit codes are the same on both — **0**
+    completed, **1** the read failed, **2** the call was malformed, **3** completed with a negative
+    answer — and the document prints before the exit on 0 and 3, so a caller stopping on 3 already
+    holds the finding and its remedy. The spell owns the grouping conversation, the page's
+    arrangement, and every write.
+  - **A project's own hand-built styleguide page is reported, never adopted.** Adoption would mean
+    retyping a document, which is destructive and irreversible; that is a deliberate non-goal rather
+    than a gap. The run says where the page is, and puts the choice to a person.
+  - **How a project with several themes presents them is left to the generating agent**, which asks
+    what the project's own theming mechanism is. Showcase elements need no theme property, because a
+    swatch storing a name already follows whatever the project's CSS re-points that name to.
+  - **A `styleguide-check` test suite of 10 cases**, plus 3 new `guide-check` cases, taking the
+    harness to 110 cases across three suites.
+
 ### Changed
+
+- **The guides scaffolding reference and `/guide`'s script both grew for the styleguide, and you may
+  have vendored either.** `umbraco-17-guide-scaffolding` gains the **three showcase element types** a
+  styleguide page is built from — `styleguideColorSwatch`, `styleguideTypeSpecimen`,
+  `styleguideElementSpecimen`, each with an optional caption as its only editorial field — two more
+  rows on the `## Editor guides` slot (those aliases, and the showcase palette), and a new slot,
+  `.agents/config/stack.md` → `## Design tokens`, declared there and nowhere else with its own
+  `**Detect:**` recipe. A guides section is still complete at four document types; the showcase
+  elements are created when a styleguide is first scaffolded and not before.
+  `guide.py`'s `inventory` **and** `audit` both gain `--exclude-palette NAME`, so the palette holding
+  a project's showcase elements contributes nothing to the documentable count and both reports say
+  which palette was excluded. Without the flag nothing changes, byte for byte. **Its default is a
+  default for creating a palette, never for assuming one**: a project that has not recorded its
+  palette gets its showcases reported as undocumented — a wrong line with a one-line fix — rather
+  than a count quietly too small.
 
 - **Schema reading gained a uSync rung, and this changes four pack files you may have vendored.**
   `umbraco-17-feature-backfill`, `umbraco-17-planning`, `/block`, and `/check-uda` all guarded the

@@ -573,9 +573,7 @@ artifact-disposition section, the Conventions list).
 ### Step 10 — Register the unit, and document it
 
 > **Prompt**: Implement Step 10 of `_work/styleguide/plan.md`. Register the new unit everywhere it
-> must be visible, and expect `./scripts/check-contract.sh` to be **failing** when you start —
-> check 13 compares `ROSTER_PACK` against every `SKILL.md` outside `skills/core`, and Step 8 added
-> one.
+> must be visible.
 >
 > **`ROSTER_PACK` is already done — it was pulled forward into Step 8's commit**, because the
 > pre-commit hook blocks a commit on a failing contract gate and Step 8 would otherwise have needed

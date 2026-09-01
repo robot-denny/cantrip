@@ -10,38 +10,16 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Nothing in flight.** The editor-facing guides increment closed on 2026-08-29 and is archived
-under `_work/shipped/editor-facing-guides/`; the pack-boundary split closed on 2026-08-17 and is
-archived under `_work/shipped/pack-boundaries-and-succession/`. Of what Next now holds, the **pack-authoring
-meta-skill** is the highest-leverage item, because every other pack-related cost is paid per pack
-until it exists.
+**Nothing in flight.** The styleguide increment closed on 2026-09-01 and is recorded under Recently
+shipped. The editor-facing guides increment it extends closed on
+2026-08-29 and is archived under `_work/shipped/editor-facing-guides/`; the pack-boundary split
+closed on 2026-08-17 and is archived under `_work/shipped/pack-boundaries-and-succession/`. Of what
+Next now holds, the **pack-authoring meta-skill** is the highest-leverage item, because every other
+pack-related cost is paid per pack until it exists.
 
 ---
 
 ## Next
-
-**The styleguide, cut from the guides increment on 2026-08-25 and still owed a spec.** Story 1 of
-discovery's four: a page whose showcase sections read the project's design tokens live, so it
-reflects current styles without a regeneration. It was the cut line because stories 2–4 share one
-dossier and one audit while this one shares only the guide-page scaffolding — and because it is the
-only story that has to *invent* rendering rather than copy it. Every other story reads a structure a
-typical project already demonstrates; the token-reading swatch blocks have no analogue anywhere in
-one.
-
-**The groundwork is done, which is what makes this the cheapest thing in Next.** The guides
-increment shipped the guide page type, its containers, the derived index, and the shared
-`umbraco-17-guide-scaffolding` reference whose second caller this was always meant to be — so the
-styleguide inherits a working section rather than standing one up, and inherits provenance-based
-content ownership unchanged.
-
-**Do not re-derive what was already settled.** Five decisions, three drafted scenarios and the
-acceptance criterion they proved are carried verbatim in
-`_work/shipped/editor-facing-guides/notes/deferred-styleguide.md`, written as carry-forward material
-rather than as a spec. The load-bearing ones: it is a **spell, not a reference**, with the case
-against it recorded and answered; it **states its design-system precondition** instead of producing
-plausible output from nothing; and greenfield refusal matters more here than anywhere else in the
-capability, because a styleguide scaffolded at project setup makes a color-swatch view the exemplar
-every real block is later copied from. Start its spec from that file.
 
 **A spell for tests.** The gap the spell budget was raised for. A feature doc already carries a Test
 Coverage table mapping each scenario to a test file and a status, which is the contract such a spell
@@ -79,6 +57,29 @@ corrected on 2026-08-29 rather than left to disagree with this entry.
   the decision above to make it a separate spell means the two share no machinery. **Answer this and
   the scaffolding reference's size entry in Later falls out of it** — the same section is the seam
   both questions point at.
+
+**Two questions the styleguide increment left open**, neither of which belongs to the increment
+that raised them.
+
+- **Whether a project's showcase view can report a token it cannot resolve.** A token gets retired
+  and the swatch reading it renders blank, which reads as a design decision rather than as a
+  reference to something that no longer exists. It is **stated as a constraint in
+  `umbraco-17-guide-scaffolding` → *The showcase element types* and enforced nowhere**, because this
+  pack ships no markup — the same shape as the index's render-as-text-never-as-markup constraint
+  beside it. Its scenario lands uncovered on purpose. What would close it is something that owns the
+  render layer, which is the same thing the caching entry in Later is waiting for. Related but
+  distinct: the **literal-versus-token drift check** already sitting on
+  `_features/editor-guides.md`'s Increments list finds a value written where a token belongs, in
+  project code rather than in a showcase view. Neither needs the other.
+- **How a page presents a set of themes.** A project with several themes is under-served by a
+  showcase that renders one and implies there are no others, and the presentation — one section per
+  theme, a switcher, a single representative with the set named alongside — depends on how the
+  project themes things. **Deliberately deferred to the generating agent**, which asks and decides
+  from the project's own mechanism, because a rule written from the one worked example available
+  would be fitted to it. The schema half is settled and needs nothing: a showcase element stores a
+  name, so re-theming a region is the project's own CSS re-pointing what that name means. **Revisit
+  when more worked examples exist across projects** — if they converge this becomes a rule, and if
+  they do not the deferral was right. Recorded in `_work/styleguide/spec.md` and in the spell.
 
 **Pack-authoring meta-skill.** The direct parallel to `design-system-authoring`: a model-invoked
 reference that fires when someone sets out to add a pack, turning [ADR
@@ -181,9 +182,11 @@ that is deliberate — a pack serves one stack and its spells arrive only with i
 ceiling implies, is unasked rather than answered.
 
 **The guide scaffolding reference is the largest unit in any pack, and the seam is known.**
-Measured 2026-08-28: 436 lines / ~28K, against `umbraco-17-feature-backfill` at 242 / 16K — 1.7x the
-next largest, with a frontmatter trigger broad enough that a schema-only task pays for the audit's
-report format and an audit task pays for the document types. The proposed seam is
+Measured 2026-08-28 at 436 lines / ~28K; **remeasured 2026-09-01 at 623 lines / 44K**, grown by the
+styleguide increment's showcase element types and its `## Design tokens` slot. Against
+`umbraco-17-feature-backfill` at 242 / 16K that is now 2.6x the next largest reference rather than
+1.7x — and the frontmatter trigger widened with the file, so a schema-only task now pays for the
+audit's report format, the document types *and* the showcase schema. The proposed seam is
 `## The audit's report shape`: it documents report output rather than schema, addresses the spell
 rather than someone creating document types, introduces and uses "documentable unit" entirely within
 itself, and would be roughly 110 lines alone. **Held rather than split**, because that section already
@@ -193,17 +196,21 @@ again. Answer the core-extraction question and this falls out of it; split it so
 reports the load cost first.
 
 **The `/guide` spell serves two modes from one load unit, and the seam is known.** Measured
-2026-08-29 at 564 lines / 36K — the largest unit in any pack, past the guide scaffolding reference
-below it. Of that, 300 lines are the generate path, 103 are audit mode, and 116 are cross-cutting
+2026-08-29 at 564 lines / 36K, when it was the largest unit in any pack. **Remeasured 2026-09-01 at
+590 / 38K, and no longer the largest either way**: the scaffolding reference below it is 623 and
+`/styleguide` is 607. Its own growth was slight; what changed is what sits beside it. Of that, 300 lines are the generate path, 103 are audit mode, and 116 are cross-cutting
 (the script's surface, the degradation order, voice and tone, artifact disposition). So a
 `/guide --audit` cast loads the whole file to use roughly two fifths of it, and a generate cast
 carries audit mode it never reads — the shape [ADR 0001](adr/0001-layer-contract-and-slots.md)
 rejected for a combined slot file, recurring at the spell layer. The seam is the mode boundary,
 which the file already dispatches on.
 
-**Held on 2026-08-29, deliberately**, and the reasoning is worth more than the measurement. A spell
-is a unit: splitting means a name, two registry entries, a README and changelog pass, and a fourth
-spell in a pack ADR 0015 describes as carrying three. Against that, the load cost is paid only by
+**Held on 2026-08-29, deliberately**, and the reasoning is worth more than the measurement — but
+**one leg of it has since gone.** The hold cited a fourth spell in a pack ADR 0015 describes as
+carrying three; the pack reached four on 2026-09-01 when `/styleguide` shipped, for reasons that had
+nothing to do with this file. So splitting `/guide` would now make five rather than break three, and
+the count argument is spent. What remains of the hold still stands: splitting means a name, two
+registry entries, and a README and changelog pass. Against that, the load cost is paid only by
 someone who cast `/guide` on purpose — `disable-model-invocation: true` means nobody else pays
 anything. And the 116 cross-cutting lines have no clean home: duplicating them is debt this repo
 already tracks, and hoisting them into the scaffolding reference grows the file directly below this
@@ -261,6 +268,27 @@ on both sides.
 
 ## Recently shipped
 
+- **2026-09-01** — The token-reading styleguide, story 1 of the guides discovery's four and the
+  second caller of `umbraco-17-guide-scaffolding`: `/styleguide` writes one guide page whose showcase
+  sections carry token *names*, so the palette and type scale an editor sees follow the project's
+  stylesheet with no regeneration. **A design token here is a value that survives to the browser** —
+  in practice a CSS custom property — which is the only definition under which the headline claim can
+  be true, so a build-time-only palette is refused with a remedy rather than baked into a snapshot
+  that would fail the claim while looking like it passes. **It states its precondition rather than
+  assuming it**, in two halves always named met or unmet — a palette a rendered page can read, and an
+  existing view to take conventions from — making it the one spell in the pack that stops on a
+  project that is otherwise perfectly fine. That sharpness is deliberate: a styleguide scaffolded at
+  project setup makes a color-swatch view the exemplar every real block is later copied from. Four
+  states stop a run and none leaves a partial one. Ships the showcase element types and the new
+  `stack.md → ## Design tokens` slot in the scaffolding reference, and `--exclude-palette` on both
+  `guide.py`'s `inventory` and its `audit`, because the two derive their counts separately and a flag
+  wired into one leaves the other reporting a project's showcases as undocumented forever. Adopting a
+  project's own hand-built styleguide page is a **deliberate non-goal** — it would mean retyping a
+  document. **One known limitation**: the exemplar half counts views broadly, so a page template or a
+  partial satisfies it and a project with templates and no blocks can pass with nothing to copy; the
+  spell reads `exemplarViews.examples` and says so. A `styleguide-check` suite of 10 cases plus 3 new
+  `guide-check` cases, taking the harness to 110 across three suites (`_work/styleguide/spec.md`,
+  `_features/editor-guides.md`)
 - **2026-08-29** — Editor-facing guides: `/guide` writes a guide page per component from the schema
   the component already declares and audits which components have none, with
   `umbraco-17-guide-scaffolding` describing the document types a guides section needs. **The
