@@ -575,7 +575,13 @@ artifact-disposition section, the Conventions list).
 > **Prompt**: Implement Step 10 of `_work/styleguide/plan.md`. Register the new unit everywhere it
 > must be visible, and expect `./scripts/check-contract.sh` to be **failing** when you start —
 > check 13 compares `ROSTER_PACK` against every `SKILL.md` outside `skills/core`, and Step 8 added
-> one. In `scripts/check-install.sh`: add `styleguide` to `ROSTER_PACK`; add
+> one.
+>
+> **`ROSTER_PACK` is already done — it was pulled forward into Step 8's commit**, because the
+> pre-commit hook blocks a commit on a failing contract gate and Step 8 would otherwise have needed
+> `--no-verify`. So the gate is green when you start, and check 13 is not your RED signal. What
+> remains below is everything else, none of which any check enforces. In
+> `scripts/check-install.sh`: add
 > `"styleguide|umbraco-17"` to `PACK_SOURCE`; and add the `PACK_SLOTS` entries for the new
 > `## Design tokens` slot — one per **reader**, which is both `umbraco-17-guide-scaffolding` (it
 > declares the slot) and `styleguide` (it reads it), because the two install separately and a
@@ -590,8 +596,14 @@ artifact-disposition section, the Conventions list).
 `README.md`, `CHANGELOG.md`, `ROADMAP.md`.
 
 **Test first**:
-- The RED signal is real and already present: run `./scripts/check-contract.sh` **before** editing
-  and confirm check 13 fails naming `styleguide`. GREEN is that check passing.
+- **There is no RED signal for this step, and that is the thing to be careful about.** Check 13's
+  failure was consumed by Step 8, whose commit added `styleguide` to `ROSTER_PACK` so the pre-commit
+  hook would let it through. Every remaining item here — `PACK_SOURCE`, the `PACK_SLOTS` rows, the
+  README row, the changelog, the roadmap — is ungated: a wrong entry or a missing one fails silently,
+  which is exactly what the guides increment recorded learning the hard way.
+- So verify each by reading the output rather than by watching a check go green: run
+  `./scripts/check-install.sh --verbose` and confirm the new unit and the new slot appear, and read
+  the README row as a consumer deciding whether to install it.
 - `PACK_SOURCE` and `PACK_SLOTS` are **not** gated by any check. Verify them by running
   `./scripts/check-install.sh --verbose` and reading the output, not by assuming.
 

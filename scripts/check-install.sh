@@ -56,7 +56,7 @@ ROSTER_CORE=(
 ROSTER_PACK=(
   umbraco-17-planning umbraco-17-feature-backfill umbraco-17-review-rules
   umbraco-17-starter-facts umbraco-17-audit-patterns umbraco-17-guide-scaffolding
-  block umbraco-edit guide
+  block umbraco-edit guide styleguide
   check-uda umbraco-deploy-facts
   dotnet-conventions dotnet-review-rules codebase-audit
 )
