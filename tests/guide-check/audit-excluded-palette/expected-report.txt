@@ -1,0 +1,20 @@
+Guide audit, read at the deploy rung.
+  3 documentable units: 3 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  Excluded by name: the palette 'StyleguideShowcase'.
+  The 2 content blocks it alone offers are left out of the count above. A showcase
+  element on a styleguide page is not a component anybody writes a guide about, and an
+  exclusion that changed a count silently would be worse than the wrong line it fixes.
+  4 guide pages read: 4 claim a source, 0 claim none.
+  Not compared: 3 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 0
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: none. Every documentable unit has a guide page, and every stored source still
+resolves and matches.

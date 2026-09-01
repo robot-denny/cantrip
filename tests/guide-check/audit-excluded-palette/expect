@@ -1,0 +1,6 @@
+exit: 0
+args: audit --guides guides.json --adapter deploy --exclude-palette StyleguideShowcase
+stdout_matches: expected-report.txt
+contains: Excluded by name: the palette 'StyleguideShowcase'.
+not_contains: styleguideColorSwatch
+not_contains: styleguideTypeSpecimen

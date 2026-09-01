@@ -322,6 +322,16 @@ def load_inventory(path):
     if not isinstance(doc["rung"], str) or not doc["rung"].strip():
         raise GuideError("%s declares a 'rung' of %r; a rung is a non-empty string."
                          % (path, doc["rung"]))
+    # Optional — most inventories exclude nothing — but refused rather than ignored where it
+    # is present and unreadable. The report prints this name to explain a count it cannot
+    # otherwise justify, so a document that carries the exclusion without a name to print
+    # would produce the silent count the exclusion exists to prevent.
+    if doc.get("excludedPalette") is not None:
+        if not isinstance(doc["excludedPalette"], str) or not doc["excludedPalette"].strip():
+            raise GuideError(
+                "%s declares an 'excludedPalette' of %r; an excluded palette is named by a "
+                "non-empty string, and its name is what the report prints to explain the "
+                "documentable count." % (path, doc["excludedPalette"]))
     for key in DECLARED_LISTS:
         if key in doc:
             # Replaced, not merely checked: every count downstream reads these lists, so the
@@ -380,8 +390,12 @@ def _check_named_list(path, key, value):
 # union is what an orphan is measured against: a guide for a settings model, a composition, or
 # a folder documents schema that is really there, so it is not an orphan even though its
 # subject is not a documentable unit.
+# `excludedPaletteComponents` is here and not in the pair below, and the split is the point: a
+# showcase element a project excluded by palette is still a content type that project declares,
+# so a guide naming one is no orphan — it simply closes no gap, which is the same answer this
+# audit already gives a guide for a settings model or a composition.
 DECLARED_LISTS = ("components", "pageTypesProposed", "settingsModels",
-                  "unpalettedElementTypes", "notProposed")
+                  "unpalettedElementTypes", "notProposed", "excludedPaletteComponents")
 
 # The two lists a guide can close a gap in. The inventory's own summary line adds exactly these
 # two, so the audit's documentable count and the inventory's cannot drift.
@@ -468,6 +482,12 @@ def run(inventory_doc, guides):
         "componentsRead": len(inventory_doc.get("components") or []),
         "pageTypesProposed": len(inventory_doc.get("pageTypesProposed") or []),
         "documentableUnits": len(units),
+        # Carried through rather than recomputed. Where the inventory arrived as a file this
+        # audit did not derive, the exclusion it was read under is the supplied document's to
+        # state — and stating it is not optional, because it is what makes the count above
+        # explicable.
+        "excludedPalette": inventory_doc.get("excludedPalette"),
+        "excludedPaletteComponents": list(inventory_doc.get("excludedPaletteComponents") or []),
         "guidePagesRead": len(guides),
         "claimingASource": sourced,
         "claimingNoSource": len(guides) - sourced,
@@ -536,6 +556,11 @@ def report(doc):
                     doc["pageTypesProposed"],
                     "" if doc["pageTypesProposed"] == 1 else "s"))
     lines.extend("  " + line for line in RULE_DOCUMENTABLE)
+    # With the determiner's rule, because it is part of that rule: the count above left a
+    # palette out, and the one place a reader looks to find out how the count was reached is
+    # the line that explains it. Rendered by `inventory` so the two reports cannot word one
+    # exclusion two ways.
+    lines.extend("  " + line for line in inventory.excluded_palette_lines(doc))
     lines.append("  %d guide %s read: %d %s a source, %d %s none."
                  % (doc["guidePagesRead"],
                     rpt.plural(doc["guidePagesRead"], "page", "pages"),

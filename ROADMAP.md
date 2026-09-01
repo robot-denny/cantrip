@@ -151,17 +151,25 @@ exemption filtering then needed only for files that actually produced a hit, nor
 
 Measured twice, and the projection did not survive contact:
 
-| | 2026-08-26 | 2026-08-28 |
-|---|---|---|
-| files scanned | 369 | 686 |
-| check 1 alone | ≈3.0s | ≈5.4s |
-| full `check-contract.sh` | ≈5.7s | ≈8.0s |
-| check 1's share | 53% | ≈67% |
+| | 2026-08-26 | 2026-08-28 | 2026-08-31 |
+|---|---|---|---|
+| files scanned | 369 | 686 | ≈770 |
+| check 1 alone | ≈3.0s | ≈5.4s | ≈6.0s |
+| full `check-contract.sh` | ≈5.7s | ≈8.0s | ≈9.1s |
+| check 1's share | 53% | ≈67% | ≈66% |
 
 The 08-26 note projected +0.4s to +0.8s for this increment's fixtures. Actual growth over eleven
 commits was +2.3s, so the estimate was low by roughly 3x — worth recording as much for the estimate
 as for the number, since the fixtures arrived in trees (`.uda`, `.config`, `.cs`, dossier and audit
 inputs) rather than one file per case, and file *count* is what this check charges for.
+
+**The 08-31 column is the styleguide increment**, and its shape confirms the diagnosis rather than
+adding to it: one step's three fixture cases carried 33 `.uda` files between them and moved the full
+gate **+0.39s on their own**, measured by interleaving stashed and unstashed runs so the drift this
+machine shows between sessions could not be mistaken for the diff. The share holds at two thirds
+because both halves grew together. Nothing here is a new problem — it is the same linear charge on
+file count, now with a third point on the line, and the next increment that ships fixture trees will
+move it again by about as much.
 
 Filed rather than fixed in passing: this is the gate that keeps a public repo scrubbed, and rewriting
 how it collects hits deserves its own change with its own negative tests — an exemption still

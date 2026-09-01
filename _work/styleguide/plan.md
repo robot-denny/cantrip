@@ -455,8 +455,7 @@ amendments), and its `description:` frontmatter if the added scope is not covere
 > palette name. The scaffolding reference states this under *The showcase element types*: the
 > exclusion belongs to reading the project, not to one command.
 >
-> The
-> inventory report must **state that a palette was excluded and name it**, beside the determiner's
+> The inventory report must **state that a palette was excluded and name it**, beside the determiner's
 > rule it already prints — an exclusion that changes a count silently is the one thing the audit's
 > report shape refuses. Add three `guide-check` cases via `tests/make-guide-fixtures.sh`:
 > `inventory-excluded-palette` (a project whose palettes include a styleguide showcase palette,
@@ -470,11 +469,12 @@ amendments), and its `description:` frontmatter if the added scope is not covere
 > first; do not invent captions.
 
 **What to build**: `skills/umbraco-17/spellbook/guide/scripts/guide.py` (flag),
-`scripts/guidelib/inventory.py` (exclusion, report line), `tests/make-guide-fixtures.sh`, and the two
+`scripts/guidelib/inventory.py` (exclusion, report line), `tests/make-guide-fixtures.sh`, and the three
 new `tests/guide-check/` cases.
 
 **Test first**:
-- Write both cases first. Run `tests/run.sh guide-check` and confirm the two new ones are RED and
+- Write all three cases first. Run `tests/run.sh guide-check` and confirm the two that need code
+  are RED and
   **all existing cases stay GREEN** — an unflagged run must be byte-identical to today, and the
   existing suite is the assertion that proves it.
 - `audit-styleguide-silent` is expected to pass **without any code change**: a guide claiming no
@@ -483,7 +483,7 @@ new `tests/guide-check/` cases.
   manufacture a change to make it look earned.
 
 **Validation**:
-- [Automated]: `tests/run.sh guide-check` — every prior case still passing, plus the two new ones.
+- [Automated]: `tests/run.sh guide-check` — every prior case still passing, plus the three new ones.
 - [Automated]: `tests/run.sh` overall green; `./scripts/check-contract.sh` passes.
 - [Manual]: run `inventory` on a fixture with and without the flag and confirm the two reports differ
   only in the excluded entries and the added exclusion line.

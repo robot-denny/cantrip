@@ -31,6 +31,17 @@ half. So:
   the dossier resolves compositions into the owning component's property tables — never schema
   a guide documents.
 
+**One palette may be excluded by name, and the name comes from the project.** A styleguide
+page's showcase elements — a color swatch, a type specimen — are element types an editor
+places, which is the rule above word for word, so they are documentable units the audit
+reports as undocumented on every run forever. Excluding them by palette rather than by alias
+is one name to record instead of N, and a showcase added later inherits the exclusion for
+free. The name is a project fact, so it reaches this determiner through a flag rather than
+being detected here, and **the report states the exclusion and names the palette**: an
+exclusion that changed a count silently would be worse than the wrong line it fixes. Both
+readings of a project take it — this determiner and the audit, which derives its own count
+rather than borrowing this one.
+
 The palette read itself is the seam `/block` already established for registering a new block;
 this reuses it rather than adding a source. `guidelib/dossier.py` owns the payload's shape,
 since both formats carry the same JSON, and each adapter owns resolving the keys.
@@ -143,6 +154,18 @@ RULE_UNRESOLVED = (
     "locally. Re-export from an environment that holds it to document these.",
 )
 
+# The one exclusion a project declares rather than this determiner inferring it, printed
+# beside the components rule because it is the components count it changes. Hand-wrapped like
+# every rule above, with the palette's own name on a line of its own and the count on the
+# next: those are the two values a project supplies, and keeping them off the fixed lines is
+# what lets a golden fixture state the rest byte for byte.
+RULE_EXCLUDED_PALETTE = (
+    "Excluded by name: the palette '%s'.",
+    "The %d content %s it alone offers %s left out of the count above. A showcase",
+    "element on a styleguide page is not a component anybody writes a guide about, and an",
+    "exclusion that changed a count silently would be worse than the wrong line it fixes.",
+)
+
 RULE_PAGE_TYPES = (
     "PROPOSED, not decided. No flag separates a page type from a folder, a container, or an",
     "abstract base, so a document type is proposed when it carries a template or matches the",
@@ -169,13 +192,21 @@ CAPTION_NOT_PROPOSED = {
 }
 
 
-def determine(adapter, project_root, with_signatures=True):
+def determine(adapter, project_root, with_signatures=True, exclude_palette=None):
     """Classify every component in the project and return the inventory document.
 
     The whole project is read once, through one catalog, which is then handed to every
     extraction. A signature is taken for each documentable unit because that is what the audit
     compares a guide's stored reference against; the excluded lists carry no signature, since
     nothing will ever be stored against them.
+
+    `exclude_palette` is the one classification this determiner does not make for itself. A
+    project's styleguide showcase elements are element types an editor places, which is this
+    file's own definition of a component, so they would be documentable units reported as
+    undocumented forever. The remedy is the palette's name, which is a project fact and
+    therefore arrives from the caller rather than being guessed at here. **A name that matches
+    no palette excludes nothing and still prints its line**: the exclusion is declared, so a
+    name typed wrongly has to be visible rather than absent.
     """
     catalog = adapter.Catalog(project_root)
     # First, because it is the one call a rung may refuse outright. Reading the components
@@ -211,8 +242,15 @@ def determine(adapter, project_root, with_signatures=True):
              "of the export — read the count of 0 components as 'not found here', not as 'this "
              "project has none'." % len(element_flagged))
 
+    # Computed against the WHOLE palette read, and subtracted from the components alone. The
+    # role sets below are left untouched on purpose: an element type is still offered by a
+    # palette when that palette is the excluded one, so removing it from `content` outright
+    # would drop it into `unpaletted` and print "offered by no palette" — a wrong sentence
+    # about a type this project offers, in place of the wrong count the exclusion is fixing.
+    excluded, excluded_name = _excluded_aliases(palettes, exclude_palette)
+
     components = []
-    for alias in sorted(content, key=str.lower):
+    for alias in sorted([a for a in content if a.lower() not in excluded], key=str.lower):
         entry = by_alias.get(alias.lower())
         components.append({
             "alias": alias,
@@ -240,7 +278,7 @@ def determine(adapter, project_root, with_signatures=True):
         for entry in proposed:
             entry["signature"] = _signature(adapter, project_root, catalog, entry["alias"])
 
-    return {
+    doc = {
         "inventoryVersion": INVENTORY_VERSION,
         "rung": adapter.RUNG,
         "contentTypesRead": len(listed),
@@ -272,6 +310,21 @@ def determine(adapter, project_root, with_signatures=True):
         "pageTypesProposed": proposed,
         "notProposed": not_proposed,
     }
+
+    # Appended, and only when a palette was actually named. A document read without the flag
+    # is byte-identical to the one this determiner has always emitted, which is what lets the
+    # whole existing suite go on asserting that this change is invisible where it was not
+    # asked for. The two keys are flat rather than one nested record because every other list
+    # here is flat, and because the audit reads `excludedPaletteComponents` through the same
+    # loop that reads the rest: an excluded showcase is still a content type this project
+    # declares, so a guide naming one is no orphan.
+    if exclude_palette:
+        doc["excludedPalette"] = excluded_name
+        doc["excludedPaletteComponents"] = [
+            _named(by_alias, alias)
+            for alias in sorted([a for a in content if a.lower() in excluded], key=str.lower)
+        ]
+    return doc
 
 
 def _signature(adapter, project_root, catalog, alias):
@@ -313,6 +366,74 @@ def _palette_roles(palettes):
                 seen_settings.add(alias.lower())
                 settings.append(alias)
     return content, settings
+
+
+def _excluded_aliases(palettes, name):
+    """`(aliases, matched_name)` for the content blocks the named palette ALONE offers.
+
+    A set difference rather than a filter, and that is the whole of the rule: the exclusion is
+    by palette, so a component the named palette shares with a general one is still a
+    component an editor places somewhere a guide is wanted. Dropping every alias the named
+    palette mentions would take that component out too, produce a count one short, and look
+    exactly as correct as this does.
+
+    The palette is matched on its name, case-folded and stripped, because the name is typed by
+    a person into a project's own config rather than read out of a serialization.
+
+    **The matched palette's own spelling comes back with the aliases, and the report prints
+    that rather than what was typed.** The two differ exactly when the match did its job — a
+    name recorded as `styleguideshowcase` matching a palette registered as
+    `StyleguideShowcase` — and a report echoing the argument tells a reader checking it against
+    the project's own configuration to look for a palette spelled a way the project never
+    spelled it. The count would be right and the name beside it wrong, which is the same
+    trustworthiness the exclusion's report line exists to protect, one field over. Where
+    nothing matched there is no project spelling to prefer, so the argument stands as given
+    and the line reports zero blocks against it.
+    """
+    if not name:
+        return set(), None
+    wanted = name.strip().lower()
+    named, elsewhere = set(), set()
+    matched = None
+    for palette in palettes:
+        own = (palette["name"] or "").strip()
+        if own.lower() == wanted:
+            target = named
+            # First match wins the spelling. Two palettes may carry one name — a state the
+            # inventory reports rather than resolves — and their entries are unioned above, so
+            # picking either spelling is picking the same string.
+            if matched is None:
+                matched = own or name
+        else:
+            target = elsewhere
+        for entry in palette["entries"]:
+            alias = entry.get("content")
+            # The unresolved marker is not an alias, and an exclusion says nothing about it:
+            # a palette entry naming a content type this export does not hold is counted and
+            # reported on its own terms whichever palette it sits in.
+            if alias and alias != dossier.PALETTE_UNRESOLVED:
+                target.add(alias.lower())
+    return named - elsewhere, matched or name
+
+
+def excluded_palette_lines(doc):
+    """The exclusion's report lines, or nothing at all when no palette was excluded.
+
+    Rendered here and printed by BOTH reports. The audit derives its own documentable count
+    rather than borrowing this one, so it states the same exclusion beside its own copy of the
+    determiner's rule — and two hand-written renderings of one sentence are two sentences that
+    drift.
+    """
+    name = doc.get("excludedPalette")
+    if not name:
+        return ()
+    dropped = len(doc.get("excludedPaletteComponents") or [])
+    return (
+        RULE_EXCLUDED_PALETTE[0] % name,
+        RULE_EXCLUDED_PALETTE[1] % (dropped,
+                                    rpt.plural(dropped, "block", "blocks"),
+                                    rpt.plural(dropped, "is", "are")),
+    ) + RULE_EXCLUDED_PALETTE[2:]
 
 
 def _palettes_by_component(palettes):
@@ -459,6 +580,9 @@ def report(doc):
     lines.append("")
     lines.append("%s: %d" % (CAPTION_COMPONENTS, len(doc["components"])))
     lines.extend("  " + line for line in RULE_COMPONENTS)
+    # With the rule, never as a section of its own: an exclusion is part of how this count was
+    # arrived at, and a reader doubting the number reads the rule beside it.
+    lines.extend("  " + line for line in excluded_palette_lines(doc))
     for item in doc["components"]:
         lines.append("    %s" % rpt.item(item))
 

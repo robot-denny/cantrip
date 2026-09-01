@@ -50,8 +50,9 @@ declared once in `guidelib/__init__.py`.
     guide.py extract   <alias> [--project-root DIR] [--adapter deploy|usync|models]
     guide.py signature <alias> [--project-root DIR] [--adapter deploy|usync|models]
     guide.py inventory [--json] [--project-root DIR] [--adapter deploy|usync|models]
+                       [--exclude-palette NAME]
     guide.py audit     --guides FILE [--inventory FILE] [--strict]
-                       [--project-root DIR] [--adapter RUNG]
+                       [--project-root DIR] [--adapter RUNG] [--exclude-palette NAME]
     guide.py plan      <alias> --page FILE [--dossier FILE] [--json]
                        [--project-root DIR] [--adapter RUNG]
 
@@ -304,7 +305,8 @@ def cmd_inventory(args):
         # Signatures are a full extract each and only `--json` carries them, so the text
         # report does not pay for values it never prints.
         doc = inventory.determine(adapter, args.project_root,
-                                  with_signatures=args.json)
+                                  with_signatures=args.json,
+                                  exclude_palette=args.exclude_palette)
     finally:
         report_read_notes()
     print(json.dumps(doc, indent=2) if args.json else inventory.report(doc))
@@ -336,13 +338,27 @@ def cmd_audit(args):
     try:
         guides = audit.load_guides(args.guides)
         if args.inventory:
+            # A supplied inventory was read somewhere else, so whatever it excluded is already
+            # in it and this run has nothing to apply. Said out loud rather than ignored: a
+            # flag that quietly did nothing is how somebody concludes the exclusion is broken.
+            if args.exclude_palette:
+                # Printed here rather than recorded through `note`, for the reason
+                # `note_if_propertyless` prints directly: this is a remark about the ARGUMENTS,
+                # not about the read, and the read's notes are drained around it.
+                print(
+                    "%s: note: --exclude-palette names '%s', and this run reads a prepared "
+                    "inventory from %s rather than the project.\n"
+                    "  The exclusion that document was written under is the one in force — "
+                    "this flag applies only where the project is read here."
+                    % (PROG, args.exclude_palette, args.inventory), file=sys.stderr)
             doc = audit.load_inventory(args.inventory)
         else:
             adapter = resolve_adapter(args.project_root, args.adapter)
             # Signatures on, unlike the text inventory report: the staleness comparison is the
             # one place they are read rather than printed, so this is the caller paying for
             # them.
-            doc = inventory.determine(adapter, args.project_root, with_signatures=True)
+            doc = inventory.determine(adapter, args.project_root, with_signatures=True,
+                                      exclude_palette=args.exclude_palette)
         result = audit.run(doc, guides)
         rendered = audit.report(result)
     finally:
@@ -479,6 +495,19 @@ def build_parser():
         sub.add_argument(
             "--project-root", default=".", metavar="DIR",
             help="the project to read (default: the current directory)")
+    # Both readings of the project take it, and that is the whole reason it is registered in a
+    # loop rather than on `inventory` alone. `audit` derives its own documentable count instead
+    # of borrowing the one `inventory` printed, so a palette excluded from one is present in
+    # the other -- and an audit that goes on reporting a project's showcase elements as
+    # undocumented is the failure this flag exists to prevent, while every inventory test
+    # passes. Where `audit` is handed a prepared inventory it inherits that document's own
+    # exclusion instead; `cmd_audit` says so rather than applying this quietly.
+    for sub in (inventory_cmd, audit_cmd):
+        sub.add_argument(
+            "--exclude-palette", default=None, metavar="NAME",
+            help="a block-editor palette whose content blocks are not documentable units — "
+                 "the palette a project registers its styleguide showcase elements in. Named "
+                 "in the report, never applied silently")
     for sub in (extract, signature, inventory_cmd):
         sub.add_argument(
             "--adapter", default=None, metavar="RUNG",

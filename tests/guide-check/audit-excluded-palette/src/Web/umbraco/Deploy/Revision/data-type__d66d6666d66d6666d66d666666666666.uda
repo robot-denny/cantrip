@@ -1,0 +1,22 @@
+{
+  "Name": "[BlockGrid] Hero Slides",
+  "EditorAlias": "Umbraco.BlockGrid",
+  "EditorUiAlias": "Umb.PropertyEditorUi.BlockGrid",
+  "DatabaseType": null,
+  "Configuration": {
+    "blocks": [
+      {
+        "contentElementTypeKey": "a33a3333-a33a-3333-a33a-333333333333",
+        "settingsElementTypeKey": "a44a4444-a44a-4444-a44a-444444444444"
+      },
+      {
+        "contentElementTypeKey": "a22a2222-a22a-2222-a22a-222222222222"
+      }
+    ],
+    "useLiveEditing": false
+  },
+  "Udi": "umb://data-type/d66d6666d66d6666d66d666666666666",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact",
+  "__version": "17.2.0"
+}

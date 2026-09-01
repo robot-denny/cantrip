@@ -1,0 +1,16 @@
+Guide audit, read at the deploy rung.
+  3 documentable units: 3 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  4 guide pages read: 3 claim a source, 1 claims none.
+  Not compared: 3 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 0
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: none. Every documentable unit has a guide page, and every stored source still
+resolves and matches.

@@ -1,0 +1,45 @@
+{
+  "Name": "Notice Bar",
+  "Alias": "noticeBar",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-brick color-blue",
+  "Thumbnail": "folder.png",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [
+    "umb://document-type/a55a5555a55a5555a55a555555555555"
+  ],
+  "PropertyGroups": [
+    {
+      "Key": "a11a1111-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": [
+        {
+          "Key": "a11a1111-0101-4000-8000-000000000101",
+          "Alias": "noticeHeading",
+          "DataType": "umb://data-type/dddd1111dddd1111dddd111111111111",
+          "ValueType": "System.String",
+          "Description": "",
+          "Name": "Notice Heading",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/a11a1111a11a1111a11a111111111111",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/dddd1111dddd1111dddd111111111111",
+      "Ordering": true
+    }
+  ],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "17.2.0"
+}
