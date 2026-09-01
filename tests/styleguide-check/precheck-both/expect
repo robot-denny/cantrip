@@ -1,0 +1,6 @@
+exit: 0
+args: precheck
+stdout_matches: expected-precheck.json
+contains: "preconditionMet": true
+contains: {"half": "runtime-resolvable-token-layer", "met": true,
+contains: {"half": "exemplar-block-views", "met": true,

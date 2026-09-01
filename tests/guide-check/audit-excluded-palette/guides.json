@@ -1,0 +1,21 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Hero Slide",
+      "source": { "alias": "heroSlide", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Media Row",
+      "source": { "alias": "mediaRow", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Color Swatch",
+      "source": { "alias": "styleguideColorSwatch", "kind": "element", "signature": null, "rung": "deploy" }
+    }
+  ]
+}

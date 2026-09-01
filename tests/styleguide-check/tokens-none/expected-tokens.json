@@ -1,0 +1,20 @@
+{
+  "tokensVersion": 3,
+  "declarationsFrom": null,
+  "authoritativeLayer": null,
+  "refusal": null,
+  "layers": [],
+  "stylesheetsRead": [
+    "src/Web/wwwroot/css/site.css"
+  ],
+  "counts": {
+    "declarations": 0,
+    "names": 0,
+    "color": 0,
+    "unclassified": 0,
+    "aliases": 0
+  },
+  "byFile": [],
+  "byPreprocessorFile": [],
+  "declarations": []
+}

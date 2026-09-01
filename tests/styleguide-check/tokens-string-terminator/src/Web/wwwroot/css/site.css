@@ -1,0 +1,12 @@
+.tooltip::after {
+  content: "Note; --brand-fake: #FF00FF end";
+}
+
+.icon {
+  background: url(data:image/png;base64,iVBORw0KGgo=);
+}
+
+:root {
+  --real: #00AA00;
+  --spacing: 1rem;
+}

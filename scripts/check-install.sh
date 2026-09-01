@@ -56,7 +56,7 @@ ROSTER_CORE=(
 ROSTER_PACK=(
   umbraco-17-planning umbraco-17-feature-backfill umbraco-17-review-rules
   umbraco-17-starter-facts umbraco-17-audit-patterns umbraco-17-guide-scaffolding
-  block umbraco-edit guide
+  block umbraco-edit guide styleguide
   check-uda umbraco-deploy-facts
   dotnet-conventions dotnet-review-rules codebase-audit
 )
@@ -82,6 +82,7 @@ PACK_SOURCE=(
   "block|umbraco-17"
   "umbraco-edit|umbraco-17"
   "guide|umbraco-17"
+  "styleguide|umbraco-17"
   "check-uda|umbraco-cloud"
   "umbraco-deploy-facts|umbraco-cloud"
   "dotnet-conventions|dotnet"
@@ -325,6 +326,9 @@ PACK_SLOTS=(
   "stack.md|Schema serialization|guide"
   "conventions.md|Editor guides|umbraco-17-guide-scaffolding"
   "conventions.md|Editor guides|guide"
+  "conventions.md|Editor guides|styleguide"
+  "stack.md|Design tokens|umbraco-17-guide-scaffolding"
+  "stack.md|Design tokens|styleguide"
 )
 for entry in "${PACK_SLOTS[@]}"; do
   IFS='|' read -r pf ph pskill <<<"$entry"

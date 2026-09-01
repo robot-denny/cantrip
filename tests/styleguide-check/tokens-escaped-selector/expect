@@ -1,0 +1,5 @@
+exit: 0
+args: tokens
+stdout_matches: expected-tokens.json
+not_contains: --fake-token
+contains: {"name": "--after-escape", "value": "#445566", "group": "color"

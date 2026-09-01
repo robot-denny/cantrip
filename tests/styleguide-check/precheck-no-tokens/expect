@@ -1,0 +1,11 @@
+exit: 3
+args: precheck
+stdout_matches: expected-precheck.json
+contains: "preconditionMet": false
+contains: {"half": "exemplar-block-views", "met": true,
+contains: {"half": "runtime-resolvable-token-layer", "met": false,
+contains: "files": 12
+contains: Establish the palette first
+not_contains: #0B5FFF
+not_contains: #101828
+not_contains: #C2410C

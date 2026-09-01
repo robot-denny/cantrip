@@ -1,0 +1,11 @@
+:root {
+  --brand-primary: #1F7A5C;
+  --brand-ink: #1D2939;
+  --space-4: 1.25rem;
+}
+
+.site-header {
+  color: var(--brand-ink);
+  background-color: var(--brand-primary);
+  padding-block: var(--space-4);
+}

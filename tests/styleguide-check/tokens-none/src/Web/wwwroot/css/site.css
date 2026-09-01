@@ -1,0 +1,14 @@
+.site-header {
+  color: #101828;
+  background-color: #0B5FFF;
+  padding-block: 0.75rem;
+}
+
+.site-header__title {
+  color: #101828;
+}
+
+.legacy-callout {
+  border-color: #C2410C;
+  padding-block: 0.75rem;
+}

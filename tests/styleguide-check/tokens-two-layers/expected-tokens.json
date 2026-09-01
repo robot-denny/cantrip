@@ -1,0 +1,31 @@
+{
+  "tokensVersion": 3,
+  "declarationsFrom": "custom-properties",
+  "authoritativeLayer": "custom-properties",
+  "refusal": null,
+  "layers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 3, "names": 3},
+    {"layer": "preprocessor-variables", "runtimeResolvable": false, "files": 1, "declarations": 4, "names": 4}
+  ],
+  "stylesheetsRead": [
+    "src/Web/wwwroot/css/site.css"
+  ],
+  "counts": {
+    "declarations": 3,
+    "names": 3,
+    "color": 2,
+    "unclassified": 1,
+    "aliases": 0
+  },
+  "byFile": [
+    {"file": "src/Web/wwwroot/css/site.css", "declarations": 3, "names": 3}
+  ],
+  "byPreprocessorFile": [
+    {"file": "src/Web/wwwroot/scss/_tokens.scss", "declarations": 4, "names": 4}
+  ],
+  "declarations": [
+    {"name": "--brand-primary", "value": "#1F7A5C", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 2},
+    {"name": "--brand-ink", "value": "#1D2939", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 3},
+    {"name": "--space-4", "value": "1.25rem", "group": "unclassified", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 4}
+  ]
+}

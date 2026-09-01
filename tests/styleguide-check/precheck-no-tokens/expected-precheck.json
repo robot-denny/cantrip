@@ -1,0 +1,21 @@
+{
+  "precheckVersion": 1,
+  "preconditionMet": false,
+  "halves": [
+    {"half": "runtime-resolvable-token-layer", "met": false, "statement": "This project holds no token layer at all: no custom properties, and no preprocessor variables either. There is nothing to read, so every value a styleguide showed would be one it invented.", "remedy": "Establish the palette first, as a :root block declaring one custom property per entry, and re-run. This is the precondition the spell states rather than assumes: a styleguide generated before a design system exists documents its own invented values back to the people who were meant to supply them."},
+    {"half": "exemplar-block-views", "met": true, "statement": "Razor views on disk: 12. An existing block view is available to copy conventions from: view location, model binding, settings handling and styling approach.", "remedy": null}
+  ],
+  "tokenLayers": [],
+  "authoritativeLayer": null,
+  "exemplarViews": {
+    "rule": "Counted: every *.cshtml under the project root, except _ViewImports.cshtml, _ViewStart.cshtml (reserved by name) and anything under a skipped directory. No other exclusion: a page template and a partial count as readily as a block view. 'examples' lists the first 5 in path order; 'files' is the total.",
+    "files": 12,
+    "examples": [
+      "src/Web/Views/Partials/blocks/accordion.cshtml",
+      "src/Web/Views/Partials/blocks/banner.cshtml",
+      "src/Web/Views/Partials/blocks/callout.cshtml",
+      "src/Web/Views/Partials/blocks/carousel.cshtml",
+      "src/Web/Views/Partials/blocks/cta.cshtml"
+    ]
+  }
+}

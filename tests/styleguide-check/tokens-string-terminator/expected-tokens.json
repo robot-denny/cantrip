@@ -1,0 +1,27 @@
+{
+  "tokensVersion": 3,
+  "declarationsFrom": "custom-properties",
+  "authoritativeLayer": "custom-properties",
+  "refusal": null,
+  "layers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 2, "names": 2}
+  ],
+  "stylesheetsRead": [
+    "src/Web/wwwroot/css/site.css"
+  ],
+  "counts": {
+    "declarations": 2,
+    "names": 2,
+    "color": 1,
+    "unclassified": 1,
+    "aliases": 0
+  },
+  "byFile": [
+    {"file": "src/Web/wwwroot/css/site.css", "declarations": 2, "names": 2}
+  ],
+  "byPreprocessorFile": [],
+  "declarations": [
+    {"name": "--real", "value": "#00AA00", "group": "color", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 10},
+    {"name": "--spacing", "value": "1rem", "group": "unclassified", "aliasOf": null, "file": "src/Web/wwwroot/css/site.css", "line": 11}
+  ]
+}

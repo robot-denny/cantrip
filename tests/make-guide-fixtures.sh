@@ -69,6 +69,13 @@ U_PHERO=d66d6666d66d6666d66d666666666666   ; G_PHERO=d66d6666-d66d-6666-d66d-666
 # The three shapes no structural flag tells apart: a page, a folder, and an abstract base.
 U_TOPIC=b11b1111b11b1111b11b111111111111   ; G_TOPIC=b11b1111-b11b-1111-b11b-111111111111
 U_PBASE=b22b2222b22b2222b22b222222222222   ; G_PBASE=b22b2222-b22b-2222-b22b-222222222222
+# The showcase elements a styleguide page is built from, and the palette they are registered
+# in. Element types an editor can place, which is the determiner's own definition of a
+# documentable unit -- so without an exclusion they are components reported as undocumented on
+# every run, forever, for a color swatch nobody writes a guide page about.
+U_SWATCH=c11c1111c11c1111c11c111111111111  ; G_SWATCH=c11c1111-c11c-1111-c11c-111111111111
+U_SPECIMEN=c22c2222c22c2222c22c222222222222 ; G_SPECIMEN=c22c2222-c22c-2222-c22c-222222222222
+U_PSHOW=d77d7777d77d7777d77d777777777777   ; G_PSHOW=d77d7777-d77d-7777-d77d-777777777777
 
 DEPLOY_ARTIFACT_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact'
 DEPLOY_DATATYPE_TYPE='Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact'
@@ -1976,6 +1983,12 @@ expect "$C" \
 
 INV_PALETTE_A='[BlockList] Page Body'
 INV_PALETTE_B='[BlockGrid] Hero Slides'
+# The palette a project excludes by name. **No spaces, and that is a constraint of the runner
+# rather than a claim about palette names**: an `expect` file's `args:` line is word-split with
+# no quoting, so a fixture cannot pass "[BlockList] Styleguide Showcase" as one argument. The
+# match is a whole-string comparison either way, so the space makes no difference to what is
+# being tested -- only to what this suite can type.
+INV_PALETTE_SHOWCASE='StyleguideShowcase'
 
 # --- Deploy: six element types, two palettes -----------------------------------
 
@@ -2347,6 +2360,102 @@ C="$CASES/inventory-palette-usync"; mkdir -p "$C"
 inv_palette_project "$C"; expected_inventory "$C" usync
 expect "$C" "${INV_PALETTE_EXPECT[@]}" \
   "args: inventory --json --adapter usync"
+
+# --- the palette a project excludes by name -------------------------------------
+#
+# The same six element types and two palettes, plus a third palette holding the two showcase
+# elements a styleguide page is built from. Showcase elements are element types an editor can
+# place, so the determiner counts them as components and the audit reports them as
+# undocumented -- permanently, on every project that scaffolds a styleguide. The remedy is one
+# recorded palette name, and the flag is the seam the script learns it through.
+#
+# **The third palette also offers `noticeBar`, and that entry is the case's sharpest claim.**
+# The exclusion is by PALETTE, so a component the excluded palette shares with a general one is
+# still a component: an implementation that dropped every alias the named palette mentions
+# would lose noticeBar, produce a count of 2, and look exactly as correct as one that did not.
+# Nothing about the count alone could tell the two apart, which is why the report is compared
+# whole rather than by substring.
+#
+# The two showcase elements appear in NO section of the report -- not among the components,
+# and not among the compositions either, because they are offered by a palette and reading
+# them as "offered by no palette" would print a wrong sentence about them. The golden states
+# that by stating the whole document; `not_contains` says the same thing in one line a reader
+# of the expect file can see without diffing anything.
+inv_deploy_showcase_tree() {  # inv_deploy_showcase_tree <case-root>
+  local rev="$1/src/Web/umbraco/Deploy/Revision"
+  inv_deploy_tree "$1"
+
+  inv_deploy_element "$rev" "$U_SWATCH" styleguideColorSwatch "Styleguide Color Swatch" \
+    swatchToken "Swatch Token"
+  inv_deploy_element "$rev" "$U_SPECIMEN" styleguideTypeSpecimen "Styleguide Type Specimen" \
+    specimenToken "Specimen Token"
+
+  inv_deploy_palette "$rev" "$U_PSHOW" "$INV_PALETTE_SHOWCASE" \
+    "Umbraco.BlockList" "Umb.PropertyEditorUi.BlockList" "[
+      {
+        \"contentElementTypeKey\": \"$G_SWATCH\"
+      },
+      {
+        \"contentElementTypeKey\": \"$G_SPECIMEN\"
+      },
+      {
+        \"contentElementTypeKey\": \"$G_NOTICE\"
+      }
+    ]"
+}
+
+# The text report rather than `--json`, because the claim this case exists to make is about the
+# REPORT: that it states the exclusion and names the palette. A count that dropped silently is
+# the one outcome this exclusion is not allowed to produce, so the assertion has to be made
+# where a person reads it. Hand-authored from the cast above: three components, two showcase
+# elements left out, and the palette named on the line that says so.
+C="$CASES/inventory-excluded-palette"; mkdir -p "$C"
+inv_deploy_showcase_tree "$C"
+cat > "$C/expected-report.txt" <<EOF
+Inventory of documentable units, read at the deploy rung.
+  8 content types read: 8 carry the element-type flag, 0 do not.
+  3 block-editor data types carry a block list.
+
+Components an editor can place: 3
+  A content type named as a palette entry's content block, in one of the project's
+  block-editor data types. Read from the palette, never from the element-type flag.
+  Excluded by name: the palette '$INV_PALETTE_SHOWCASE'.
+  The 2 content blocks it alone offers are left out of the count above. A showcase
+  element on a styleguide page is not a component anybody writes a guide about, and an
+  exclusion that changed a count silently would be worse than the wrong line it fixes.
+    heroSlide (Hero Slide)
+    mediaRow (Media Row)
+    noticeBar (Notice Bar)
+
+  Excluded, the settings half of a block: 1
+    An element type named only as a palette entry's settings model and never as a content
+    block. The settings half of a block already counted, not a block of its own.
+      mediaRowSettings (Media Row Settings)
+
+  Excluded, offered by no palette: 2
+    An element type no palette offers. Read into an owning component's property table as a
+    composition, never documented on its own.
+      sharedFooter (Shared Footer)
+      spacingProperties (Spacing Properties)
+
+Page types PROPOSED for a human to confirm: 0 of 0 document types
+  PROPOSED, not decided. No flag separates a page type from a folder, a container, or an
+  abstract base, so a document type is proposed when it carries a template or matches the
+  project's own page-naming convention. Tree reachability is read as evidence and is not a
+  gate, because a folder is reachable by definition.
+  Naming convention: not derived.
+    0 document types carry a template, and at least 2 are needed to measure a shared suffix.
+
+Documentable: 3 components + 0 proposed page types = 3.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: inventory --adapter deploy --exclude-palette $INV_PALETTE_SHOWCASE" \
+  "stdout_matches: expected-report.txt" \
+  "contains: Excluded by name: the palette '$INV_PALETTE_SHOWCASE'." \
+  "contains: noticeBar (Notice Bar)" \
+  "not_contains: styleguideColorSwatch" \
+  "not_contains: styleguideTypeSpecimen"
 
 # --- one of everything, because "1 content types read" reads as a broken tool -----
 #
@@ -3353,6 +3462,158 @@ expect "$C" \
   "contains: testimonialSlider (Testimonial Slider)" \
   "contains: 1 claims none." \
   "not_contains: Image Sizing"
+
+# --- the same exclusion, through the other reading of the project ----------------
+#
+# **This case exists because `audit` derives its own inventory.** It does not borrow the one
+# `inventory` printed, so a palette exclusion wired into that subcommand alone is absent here:
+# every inventory test passes, and the audit goes on reporting two showcase elements as
+# undocumented forever -- which is the whole of the problem the exclusion exists to solve. So
+# the same project is read a second time through the second command, and the assertion is the
+# same drop and the same named palette.
+#
+# The guides file documents the three real components and nothing else. Without the flag
+# reaching this subcommand the report reads 5 documentable units and names both showcase
+# elements as undocumented; with it, the audit is clean. The two are not confusable.
+#
+# **A fourth guide names an excluded showcase, and it must land in no section at all.** That is
+# the one property of the exclusion nothing else here states: an excluded component is still a
+# content type the project declares, so a guide pointing at one is no orphan -- the same answer
+# the audit already gives a guide for a settings model. It also does not close a gap, because
+# the thing it documents was never counted as one. The `not_contains:` lines below carry this:
+# `styleguideColorSwatch` is now IN the input and must still be absent from the output, so they
+# fail against an implementation that orphans it and against one that lists it as documented.
+# Before this entry those lines could only fail if the exclusion itself broke.
+C="$CASES/audit-excluded-palette"; mkdir -p "$C"
+inv_deploy_showcase_tree "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Hero Slide",
+      "source": { "alias": "heroSlide", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Media Row",
+      "source": { "alias": "mediaRow", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Color Swatch",
+      "source": { "alias": "styleguideColorSwatch", "kind": "element", "signature": null, "rung": "deploy" }
+    }
+  ]
+}
+EOF
+# Hand-authored. The exclusion's lines sit with the determiner's rule the header already
+# prints, which is the one place in this report that explains the documentable count.
+#
+# Four guides read against three documentable units, and every section still zero: the fourth
+# documents a type the project declares but does not count, which is neither a gap closed nor
+# a source gone missing.
+#
+# **Note the not-compared line says three, not four**, and that is the interesting half of this
+# case. All four guides record no signature, but only three were ever candidates for a
+# staleness comparison -- the fourth has no unit on the other side to compare against, so it is
+# counted in the guide-pages total and nowhere else. `audit.py` argues that at the branch: a
+# not-compared line saying four would say the reference lacked a signature when what it lacks
+# is a unit. The behaviour is the shipped one a guide for a settings model has always had, and
+# this case is now the only fixture that states it.
+cat > "$C/expected-report.txt" <<EOF
+Guide audit, read at the deploy rung.
+  3 documentable units: 3 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  Excluded by name: the palette '$INV_PALETTE_SHOWCASE'.
+  The 2 content blocks it alone offers are left out of the count above. A showcase
+  element on a styleguide page is not a component anybody writes a guide about, and an
+  exclusion that changed a count silently would be worse than the wrong line it fixes.
+  4 guide pages read: 4 claim a source, 0 claim none.
+  Not compared: 3 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 0
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: none. Every documentable unit has a guide page, and every stored source still
+resolves and matches.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --adapter deploy --exclude-palette $INV_PALETTE_SHOWCASE" \
+  "stdout_matches: expected-report.txt" \
+  "contains: Excluded by name: the palette '$INV_PALETTE_SHOWCASE'." \
+  "not_contains: styleguideColorSwatch" \
+  "not_contains: styleguideTypeSpecimen"
+
+# --- a styleguide page the audit has nothing to say about ------------------------
+#
+# **This case needs no code, and that is why it is here.** A styleguide is an `editorGuide`
+# carrying no stored reference, so the rule that a guide claiming no source is in none of the
+# three sections already covers it -- the property is inherited rather than added. Pinning it
+# is what stops a later change to the exclusion, or to the audit's arithmetic, from quietly
+# turning the one page a project's own styleguide lives on into an orphan or a gap.
+#
+# Read against the three-component project with a guide for each, so the report is clean in
+# all three sections and the styleguide is the only thing in the guides file that could move a
+# number. The golden is the assertion: a substring can say the page is named nowhere, and only
+# a whole-report comparison can say the counts were not inflated by it.
+C="$CASES/audit-styleguide-silent"; mkdir -p "$C"
+inv_deploy_tree "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Hero Slide",
+      "source": { "alias": "heroSlide", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Media Row",
+      "source": { "alias": "mediaRow", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Styleguide",
+      "source": null
+    }
+  ]
+}
+EOF
+cat > "$C/expected-report.txt" <<'EOF'
+Guide audit, read at the deploy rung.
+  3 documentable units: 3 components + 0 proposed page types.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  4 guide pages read: 3 claim a source, 1 claims none.
+  Not compared: 3 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 0
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: none. Every documentable unit has a guide page, and every stored source still
+resolves and matches.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --adapter deploy" \
+  "stdout_matches: expected-report.txt" \
+  "contains: 1 claims none." \
+  "not_contains: Styleguide"
 
 # --- the signature comparison, with both sides hand-authored ---------------------
 #

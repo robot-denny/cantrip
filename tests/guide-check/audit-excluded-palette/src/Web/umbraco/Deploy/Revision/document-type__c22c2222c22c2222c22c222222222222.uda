@@ -1,0 +1,43 @@
+{
+  "Name": "Styleguide Type Specimen",
+  "Alias": "styleguideTypeSpecimen",
+  "AllowedTemplates": [],
+  "HistoryCleanup": {},
+  "Icon": "icon-brick color-blue",
+  "Thumbnail": "folder.png",
+  "Permissions": {
+    "IsElementType": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [
+    {
+      "Key": "c22c2222-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": [
+        {
+          "Key": "c22c2222-0101-4000-8000-000000000101",
+          "Alias": "specimenToken",
+          "DataType": "umb://data-type/dddd1111dddd1111dddd111111111111",
+          "ValueType": "System.String",
+          "Description": "",
+          "Name": "Specimen Token",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/c22c2222c22c2222c22c222222222222",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/dddd1111dddd1111dddd111111111111",
+      "Ordering": true
+    }
+  ],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "17.2.0"
+}

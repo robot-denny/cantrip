@@ -1,0 +1,24 @@
+{
+  "Name": "StyleguideShowcase",
+  "EditorAlias": "Umbraco.BlockList",
+  "EditorUiAlias": "Umb.PropertyEditorUi.BlockList",
+  "DatabaseType": null,
+  "Configuration": {
+    "blocks": [
+      {
+        "contentElementTypeKey": "c11c1111-c11c-1111-c11c-111111111111"
+      },
+      {
+        "contentElementTypeKey": "c22c2222-c22c-2222-c22c-222222222222"
+      },
+      {
+        "contentElementTypeKey": "a11a1111-a11a-1111-a11a-111111111111"
+      }
+    ],
+    "useLiveEditing": false
+  },
+  "Udi": "umb://data-type/d77d7777d77d7777d77d777777777777",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact",
+  "__version": "17.2.0"
+}

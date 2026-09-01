@@ -1,0 +1,20 @@
+{
+  "precheckVersion": 1,
+  "preconditionMet": true,
+  "halves": [
+    {"half": "runtime-resolvable-token-layer", "met": true, "statement": "A token layer that resolves at render time is present: custom-properties (declarations: 2, files: 1). A swatch reading one of these names follows a re-theme with no regeneration.", "remedy": null},
+    {"half": "exemplar-block-views", "met": true, "statement": "Razor views on disk: 2. An existing block view is available to copy conventions from: view location, model binding, settings handling and styling approach.", "remedy": null}
+  ],
+  "tokenLayers": [
+    {"layer": "custom-properties", "runtimeResolvable": true, "files": 1, "declarations": 2, "names": 2}
+  ],
+  "authoritativeLayer": "custom-properties",
+  "exemplarViews": {
+    "rule": "Counted: every *.cshtml under the project root, except _ViewImports.cshtml, _ViewStart.cshtml (reserved by name) and anything under a skipped directory. No other exclusion: a page template and a partial count as readily as a block view. 'examples' lists the first 5 in path order; 'files' is the total.",
+    "files": 2,
+    "examples": [
+      "src/Web/Views/Partials/blocks/callout.cshtml",
+      "src/Web/Views/Partials/blocks/hero.cshtml"
+    ]
+  }
+}

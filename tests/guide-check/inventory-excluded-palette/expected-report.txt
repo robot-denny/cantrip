@@ -1,0 +1,35 @@
+Inventory of documentable units, read at the deploy rung.
+  8 content types read: 8 carry the element-type flag, 0 do not.
+  3 block-editor data types carry a block list.
+
+Components an editor can place: 3
+  A content type named as a palette entry's content block, in one of the project's
+  block-editor data types. Read from the palette, never from the element-type flag.
+  Excluded by name: the palette 'StyleguideShowcase'.
+  The 2 content blocks it alone offers are left out of the count above. A showcase
+  element on a styleguide page is not a component anybody writes a guide about, and an
+  exclusion that changed a count silently would be worse than the wrong line it fixes.
+    heroSlide (Hero Slide)
+    mediaRow (Media Row)
+    noticeBar (Notice Bar)
+
+  Excluded, the settings half of a block: 1
+    An element type named only as a palette entry's settings model and never as a content
+    block. The settings half of a block already counted, not a block of its own.
+      mediaRowSettings (Media Row Settings)
+
+  Excluded, offered by no palette: 2
+    An element type no palette offers. Read into an owning component's property table as a
+    composition, never documented on its own.
+      sharedFooter (Shared Footer)
+      spacingProperties (Spacing Properties)
+
+Page types PROPOSED for a human to confirm: 0 of 0 document types
+  PROPOSED, not decided. No flag separates a page type from a folder, a container, or an
+  abstract base, so a document type is proposed when it carries a template or matches the
+  project's own page-naming convention. Tree reachability is read as evidence and is not a
+  gate, because a folder is reachable by definition.
+  Naming convention: not derived.
+    0 document types carry a template, and at least 2 are needed to measure a shared suffix.
+
+Documentable: 3 components + 0 proposed page types = 3.

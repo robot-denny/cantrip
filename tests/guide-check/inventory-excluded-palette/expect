@@ -1,0 +1,7 @@
+exit: 0
+args: inventory --adapter deploy --exclude-palette StyleguideShowcase
+stdout_matches: expected-report.txt
+contains: Excluded by name: the palette 'StyleguideShowcase'.
+contains: noticeBar (Notice Bar)
+not_contains: styleguideColorSwatch
+not_contains: styleguideTypeSpecimen

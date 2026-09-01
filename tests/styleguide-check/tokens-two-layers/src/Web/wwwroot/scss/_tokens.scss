@@ -1,0 +1,16 @@
+/* The build's palette. None of these names survive compilation — a stylesheet can hold a
+   var(--brand-primary) that follows a re-theme, and no markup can read a preprocessor
+   variable at all. */
+$brand-primary: #1F7A5C;
+$brand-ink: #1D2939;
+$space-4: 1.25rem;
+$legacy-slate: #475467;
+
+/* The bridge to the layer that does survive, and the trap for a reader that widened its glob
+   instead of discovering a layer: read as CSS, this block declares three more tokens whose
+   values are interpolation syntax no browser ever sees. */
+:root {
+  --brand-primary: #{$brand-primary};
+  --brand-ink: #{$brand-ink};
+  --space-4: #{$space-4};
+}
