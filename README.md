@@ -311,8 +311,9 @@ Editing an installed file is possible but is a **divergence**, not a workflow â€
 surface it, and the bare installer would overwrite it. Tailoring belongs in your layer. If tailoring
 needs a core edit, that is a missing slot; please report it as one.
 
-[docs/contract.md](docs/contract.md) has the precise definition of each of the four, the full slot
-list, and the rules a toolkit file follows when it reads one.
+[docs/contract.md](docs/contract.md) has the precise definition of each of the four and the rules a
+toolkit file follows when it reads one â€” that one slot has one point of authority, and that a file
+reading a slot has to degrade gracefully when it is empty rather than assuming a default.
 
 ---
 
