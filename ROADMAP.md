@@ -106,6 +106,44 @@ somebody working on that spell.
   answers exist and are not decided either — the audit reporting `Ruled out` rows separately as claims
   to re-check, or a reason carrying a date so it goes stale visibly.
 
+**One question the runbook increment leaves open, and the pilot answers it.**
+[ADR 0017](adr/0017-when-a-gap-earns-a-runbook.md) deferred rather than rejected a **first-run branch
+in `/guide`** that would create a guides section's four document types under a scoped approval. The
+precedent exists — `/styleguide` already creates element types and a palette that way — and the
+`## Editor guides` fallback now names the state that would trigger it.
+
+- **The case for it is correctness, not time.** Building four document types by hand is twenty
+  minutes once per project, which would not pay for a branch in the largest spell in the pack. What
+  would pay for it is that the all-optional rule and the exact aliases are the two things people get
+  wrong, and **neither fails at the point of the mistake** — a mandatory `guideSource` surfaces weeks
+  later as a run that dies halfway. That is ADR 0017's part 3, and a machine cannot forget to untick
+  *mandatory*.
+- **The shape to build is the narrow one: create the schema, and leave the node and the key to a
+  person.** Recording the key is what would make this dangerous, because **the absent key is
+  currently the guard** — it is what stops `/guide` writing anything, and it is load-bearing well
+  beyond its stated job. A branch that records it hands back a section whose templates are still
+  empty, and guides written into it render blank while the audit counts them as present: a stop
+  traded for a silent failure, which is the trade the ADR exists to refuse. Leaving the key to a
+  person keeps it as the *I have seen this render* signal. A precondition checking that templates are
+  non-empty was considered and is worse — non-empty is not the property being guarded, and a check
+  that cannot express its property is [ADR 0006](adr/0006-no-unguarded-preconditions.md)'s lesson
+  repeating.
+- **It cannot live in `SKILL.md`.** `/guide` was measured at 564 lines when it was the largest unit
+  in any pack, and an `--audit` cast already loads the whole file to use just under half of it. A
+  branch that fires **once in a project's lifetime** is dead weight on every later cast, and the
+  script cannot hold it either — `scripts/guide.py` has no CMS connection and no approval to act on,
+  by design. So it belongs in an asset the spell loads only on that branch, which is the same
+  reasoning that kept the setup sequence out of the reference.
+- **What it does not fix.** A project with no blocks and no page templates has nothing for guide
+  templates to be copied from, so it would create four document types and land on the same stop one
+  step later. Greenfield-with-no-exemplars stays a stop, correctly.
+- **The pilot answers whether to build it at all, and the question is specific: did anyone mark a
+  field mandatory?** If nobody does — if the runbook carries people through Phase 1 without incident
+  — the silent-failure case evaporates and this stays deferred permanently. **Expect the runbook to
+  shrink if it ships**: automating the schema retires ADR 0017's part 2 for that half, so two-thirds
+  of `docs/runbooks/umbraco-17-guides-section.md` would stop earning its place. That is the test
+  working, not a cost.
+
 **Pack-authoring meta-skill.** The direct parallel to `design-system-authoring`: a model-invoked
 reference that fires when someone sets out to add a pack, turning [ADR
 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md)'s rules into something followed rather than
