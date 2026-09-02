@@ -1,14 +1,14 @@
 # Cantrip — spell card content
 
-Card content for a flashcard deck teaching the Cantrip toolkit. **One card per unit**: 30 cards, 14
+Card content for a flashcard deck teaching the Cantrip toolkit. **One card per unit**: 32 cards, 16
 spells and 16 references. Every fact here is drawn from the units themselves; nothing is invented.
 
 This file is content only. Formatting, layout, and card art are the reading agent's call.
 
-**Basis, and when to regenerate.** Written against the 30 units in `skills/` as of `1df963f`
-(2026-08-31). The deck is a snapshot: a new spell or reference means a missing card, and nothing here
-will notice. A `/styleguide` spell is in flight for the `umbraco-17` pack and will take the count to
-31, so check `skills/` against the card list before treating this as complete.
+**Basis, and when to regenerate.** Written against the 32 units in `skills/` as of `2fb0c96`
+(2026-09-01) — 16 spells and 16 references. The deck is a snapshot: a new spell or reference means a
+missing card, and nothing here will notice. Count `SKILL.md` files under `skills/` against the `###`
+headings here before treating this as complete.
 
 ---
 
@@ -46,9 +46,9 @@ posture:
 
 Five group cards, if the deck wants them — text for the back of each.
 
-- **Core spellbook** — Ten spells. Eight are the workflow chain, two are configuration. Cast by name, never automatically.
+- **Core spellbook** — Eleven spells. Nine are the workflow chain, two are configuration. Cast by name, never automatically.
 - **Core reference** — Six opinions the toolkit holds. You never cast these; the model reaches for them.
-- **umbraco-17** — Optional pack, pinned to the CMS major. Six references, three spells.
+- **umbraco-17** — Optional pack, pinned to the CMS major. Six references, four spells.
 - **umbraco-cloud** — Optional pack for Umbraco Deploy. Applies to any licensed install, not only Cloud.
 - **dotnet** — Optional pack for C# and .NET, CMS or not. Three references, no spells.
 
@@ -155,6 +155,18 @@ Everything else is either a later stage or an opinion you will meet when it appl
 - **Does:** The easy button for out-of-flow work. Reconciles your stated intent against the actual diff, runs the reviewers, surfaces edge cases, then proposes the tests and docs the flow would have produced.
 - **Watch for:** run it before committing — or before pushing, if you already committed.
 - **Then:** a fresh `/code-review`, then `/commit-message`
+
+### /testify
+
+- **Type:** Spell
+- **Group:** Core spellbook
+- **Cast:** `/testify <capability>` · `/testify audit`
+- **Needs:** a capability doc with a Test Coverage table, and somewhere the project keeps its tests
+- **Leaves:** a report first, then only the tests you approved — and the doc's rows recording what each run established
+- **Does:** Asks what a capability claims that nothing proves. Reads its coverage table as a work queue, reports the gap in three groups, then writes and runs tests only for the rows you approve.
+- **Modes:** `audit` sweeps every capability doc read-only, ranks them by how much is unproved, and reports tests whose scenarios have been reworded or deleted.
+- **Watch for:** it never invents a scenario, never decides where tests go, and never runs a test in audit mode.
+- **Then:** `/code-review`, or `/spec` for whatever was blocked
 
 ### /setup
 
@@ -319,6 +331,17 @@ Everything else is either a later stage or an opinion you will meet when it appl
 - **Modes:** `--audit` reports which components have no guide, which guides name a component the project no longer holds, and which have gone stale.
 - **Watch for:** nothing reaches the CMS before the ask.
 - **Then:** `/guide <next alias>`
+
+### /styleguide
+
+- **Type:** Spell
+- **Group:** umbraco-17
+- **Cast:** `/styleguide`
+- **Needs:** a design system already in place — a token layer a rendered page can read, and an existing view to take conventions from
+- **Leaves:** one guide page whose showcase sections read the project's tokens live
+- **Does:** Writes a styleguide page that stays current without regeneration, because its swatches read the design tokens rather than copying their values.
+- **Watch for:** it stops when either half of the precondition is missing, and names which half — a build-time-only token layer is refused rather than baked into a snapshot.
+- **Then:** `/guide --audit`
 
 ### /umbraco-edit
 
