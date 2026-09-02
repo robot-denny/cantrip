@@ -155,6 +155,11 @@ the options, the constraints, and what counts as good practice.
 | [/styleguide](skills/umbraco-17/spellbook/styleguide/SKILL.md) | spell | Writes a guide page whose showcase sections read the project's design tokens live, so the palette and type scale it shows stay current without a regeneration — **it stops unless a design system is already in place (a token layer a rendered page can read, and an existing view to take conventions from), and names the remedy for whichever half is missing** |
 | [/umbraco-edit](skills/umbraco-17/spellbook/umbraco-edit/SKILL.md) | spell | Edits content through the Management API from outside the backoffice |
 
+**Before the first `/guide` cast on a project with no guides section**, the four document types and
+two templates it needs have to exist — the pack documents that schema and deliberately does not
+create it. [docs/runbooks/umbraco-17-guides-section.md](docs/runbooks/umbraco-17-guides-section.md)
+walks a person through it.
+
 ### `umbraco-cloud` pack
 
 Versionless: Umbraco Deploy behaves the same across CMS majors, so releases are annotated per feature
