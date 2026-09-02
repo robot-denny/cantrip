@@ -117,6 +117,22 @@ authoring skill is where they get read. It is also where one sentence settles wh
 cut on an organization's own conventions and kept private — a question that costs a sentence there
 and would cost an ADR anywhere else.
 
+**An installed project receives no human-facing documentation at all.** Installs are subpath-scoped,
+so only `skills/` ships — `README.md`, `docs/`, `adr/`, and `LICENSE` never reach a consumer
+(`docs/layout.md` states this, and it is correct). What a consumer gets is `SKILL.md` per unit plus
+the assets those units load. Those files carry roughly 7,800 lines of real detail, but they are
+written in second person to an agent, and nothing in an installed project tells a person they are
+readable at all.
+
+**The 2026-09-01 README split narrowed this by exactly nothing**, which is worth stating plainly: it
+moved prose from one unshipped file to another and linked the catalogue to the units. That helps
+somebody evaluating the toolkit on GitHub and does nothing for somebody who already installed it —
+the population that has committed to it. Options, none costed: ship a short per-unit README beside
+each `SKILL.md` (they would vendor, but 32 hand-written files is the maintenance the split was trying
+to avoid); ship one orientation file per pack; have `/setup` write a pointer into the consuming
+project; or decide the installed surface is deliberately agent-only and say so where a consumer will
+read it. **Deciding is cheap and is the actual blocker** — the fix follows from whichever answer.
+
 **A moved unit breaks an install silently.** Renaming `architecture-audit` to `codebase-audit` and
 moving it to another pack left every existing lockfile pinning a path that no longer resolves, and
 neither the installer nor `/update-toolkit` tells a move apart from a deletion. Today's remedy is a

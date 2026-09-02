@@ -904,6 +904,67 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 18. Every shipped unit is reachable from the README (this repo only)
+# ---------------------------------------------------------------------------
+# The README is the only file a consumer reads before installing, and the units carry the
+# actual detail -- roughly 7,800 lines of it. A unit the README never links is documentation
+# that exists and cannot be found, which is the state the whole catalog was in until the
+# links were added.
+#
+# Two directions, and the second is the one that earns its keep. Forward: every unit has a
+# link, so a new spell cannot ship uncatalogued. Backward: every link resolves, so a unit
+# that is RENAMED OR MOVED fails here instead of leaving a dead link nobody clicks -- the
+# same silent-move failure recorded on the roadmap for installed lockfiles, caught for the
+# one surface this repo controls.
+begin "every shipped unit is linked from the README"
+if [[ ! -d skills ]]; then
+  report_pass "$CURRENT"
+elif [[ ! -f README.md ]]; then
+  report_fail "$CURRENT" \
+    "There are shipped units but no README to catalogue them in." \
+    "This check exists because the README is the only file a consumer reads before installing;" \
+    "its absence is the most complete form of the failure, not an exemption from it."
+else
+  # Fenced blocks are demonstration, not documentation -- a path shown inside an install
+  # snippet is not a catalogue entry. Check 12 learned this the hard way for companion
+  # names; the same reasoning applies to a link.
+  readme_prose=$(awk '/^[[:space:]]*```/{fence=!fence; next} !fence' README.md)
+
+  # Both directions read from one pass over each side, then compare the sets. An earlier
+  # form grepped README once per unit -- 32 forks where none are needed, and the largest
+  # single-check cost in this file until it was measured.
+  units=$(find skills -name 'SKILL.md' -type f 2>/dev/null | sort)
+  links=$(printf '%s\n' "$readme_prose" | grep -oE '\]\(skills/[^)]+\)' \
+            | sed -e 's/^](//' -e 's/)$//' | sort -u)
+
+  details=""
+
+  # Forward: a unit nothing links is documentation that exists and cannot be found.
+  while IFS= read -r f; do
+    [[ -z "$f" ]] && continue
+    details+="  - $f is shipped but never linked from README.md"$'\n'
+  done < <(comm -23 <(printf '%s\n' "$units") <(printf '%s\n' "$links"))
+
+  # Backward: a link that resolves to nothing is how a RENAMED OR MOVED unit hides -- the
+  # same silent-move failure recorded on the roadmap for installed lockfiles, caught here
+  # for the one surface this repo controls.
+  while IFS= read -r target; do
+    [[ -z "$target" ]] && continue
+    [[ -f "$target" ]] \
+      || details+="  - README.md links $target, which does not exist"$'\n'
+  done < <(printf '%s\n' "$links")
+
+  if [[ -n "$details" ]]; then
+    report_fail "$CURRENT" \
+      "The README and skills/ disagree about what this toolkit ships." \
+      "Add a linked row for a new unit, or update the link for one that moved." \
+      "" "$details"
+  else
+    report_pass "$CURRENT"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n'
 if [[ $FAILURES -eq 0 ]]; then
   printf '\033[32m%s checks passed.\033[0m\n' "$CHECKS_RUN"
