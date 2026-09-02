@@ -133,6 +133,13 @@ to avoid); ship one orientation file per pack; have `/setup` write a pointer int
 project; or decide the installed surface is deliberately agent-only and say so where a consumer will
 read it. **Deciding is cheap and is the actual blocker** — the fix follows from whichever answer.
 
+**Narrowed 2026-09-02, not closed.** [ADR 0017](adr/0017-when-a-gap-earns-a-runbook.md) takes a fifth
+option for the *content* question: a human-facing runbook per genuine wall, earned by a three-part
+test, rather than a file per unit or per pack. The first one exists
+(`docs/runbooks/umbraco-17-guides-section.md`). What stays open is **delivery** — runbooks live outside
+`skills/`, so nothing carries them into a consuming project and the pilot copies by hand. The
+remaining options are unchanged; the difference is that there is now something to deliver.
+
 **A moved unit breaks an install silently.** Renaming `architecture-audit` to `codebase-audit` and
 moving it to another pack left every existing lockfile pinning a path that no longer resolves, and
 neither the installer nor `/update-toolkit` tells a move apart from a deletion. Today's remedy is a

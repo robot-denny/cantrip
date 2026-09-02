@@ -64,6 +64,13 @@ buried.
   records what the five-status column costs: two independent facts in one cell, with the split parked
   rather than taken.
 
+- **0017 — when a gap earns a runbook.** A three-part conjunctive test — the precondition is mechanical
+  and identical everywhere, the toolkit deliberately declines to automate it, and getting it wrong fails
+  silently — deciding which gaps get a human-facing runbook in `docs/runbooks/` rather than a README per
+  unit or per pack. Also: the guard names the runbook, because discoverability is the deliverable; and a
+  runbook cites what it restates. Records that a gate can see an absence clause exists but not that the
+  absence it describes is the only one, which is how the guides gap survived [0006](0006-no-unguarded-preconditions.md).
+
 ## Backfilled
 
 Five decisions predate this repository, having been settled in a direction document that is not in the

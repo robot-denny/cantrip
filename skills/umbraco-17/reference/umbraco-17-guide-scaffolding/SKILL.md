@@ -440,6 +440,20 @@ existing. Do not go looking for it by name — a section a project already
 has is a fact to be told, and its key is one question worth asking. Until it is supplied, there is no
 guides node to read and nothing may be written into one.
 
+**An empty slot describes two different projects, and one question separates them.** A section that
+exists and was never recorded needs its key. A project with no guides section at all needs one built
+— and asking that project for a key is asking for a fact nobody can produce, which reads as the
+tooling not believing an answer already given. **So ask whether the section exists before asking
+where it is.**
+
+**Where it does not, name what stands in the way rather than the key.** The four document types in
+*The document types* above, plus a template each for the two that render — a project cannot have a
+guides node until they exist, because the node *is* an `editorGuideIndex`. Nothing here creates them,
+and the two templates are markup this pack never writes, so this is a **stop with a remedy** rather
+than a refusal. For a person, that remedy is the setup runbook,
+`docs/runbooks/umbraco-17-guides-section.md` in the Cantrip repository. **It does not ship with an
+install** — name it and say where it comes from rather than reproducing any of it here.
+
 The slot records the guides node's key and the aliases the project actually used:
 
 | What the slot records | Default |

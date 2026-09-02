@@ -82,9 +82,10 @@ views by their `*.cshtml` files, and the extension root by its `umbraco-package.
 back to MCP; a folder with no matching file is a partial export, not an empty schema.
 
 Then resolve the guides section from the `## Editor guides` slot, per the reference. **An unrecorded
-guides node is not an absent one.** Where the slot does not carry a key, stop before any write, say
-that the section's key is the one fact only the project can supply, and ask for it. Everything up to
-the write — extract, plan, the difference — still runs and is still worth showing.
+guides node is not an absent one, and an absent one is not a missing key.** Where the slot carries no
+key, stop before any write and follow the slot's fallback — it asks whether the section exists at all
+before asking where it is, and names the remedy where it does not. Everything up to the write —
+extract, plan, the difference — still runs and is still worth showing.
 
 State what you resolved before going on: the rung, the project root, and the guides node or its
 absence. A wrong adapter produces a plausible guide about the wrong shape, and this is the cheapest
