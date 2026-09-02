@@ -69,8 +69,12 @@ Before planning, read enough of the codebase to answer:
 - What is the right test file location and naming convention here?
 
   **Slot:** `.agents/config/stack.md` → `## Tests`
-  **If empty:** infer from existing test files; if the project has no tests yet, propose a
-  location in Key Decisions and flag it as a new convention being established.
+  **If empty:** infer from existing test files. If the project has no tests yet, propose a location
+  and flag plainly that you are establishing a convention rather than following one — never settle it
+  silently.
+
+  In a plan, that proposal and its flag go in **Key Decisions**, so the next increment inherits the
+  convention rather than re-deciding it.
 
 **Do not plan in a vacuum — ground every step in what already exists.**
 

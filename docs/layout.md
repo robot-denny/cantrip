@@ -87,6 +87,7 @@ archived together — so they live together, and archiving is one move. Every sp
 /plan     ─▶ _work/<slug>/plan.md            reads spec.md
 /implement-step ─▶ your codebase             reads plan.md, one step per cast
 /feature  ─▶ _features/<area>.md             reads spec.md — or reads code alone (from-code mode)
+/testify  ─▶ your tests + _features/<area>.md  reads that doc's Test Coverage table as a queue
 /code-review ─▶ a report                     reads the diff
 /commit-message ─▶ a message                 reads the diff + conventions.md
 /setup    ─▶ .agents/config/* and the scaffold above
@@ -101,10 +102,10 @@ independent of the increment slug, which is why a spec carries an explicit `feat
 cantrip/
 ├── skills/
 │   ├── core/                    L0 — technology-agnostic, works on any project
-│   │   ├── spellbook/             10 user-cast spells
+│   │   ├── spellbook/             11 user-cast spells
 │   │   └── reference/             6 model-invoked references (+ the reviewer agents)
 │   ├── umbraco-17/              L1 — the CMS, pinned to a major
-│   │   ├── spellbook/             3 spells
+│   │   ├── spellbook/             4 spells
 │   │   └── reference/             6 references
 │   ├── umbraco-cloud/           L1 — Umbraco Deploy, versionless
 │   │   ├── spellbook/             1 spell
@@ -113,7 +114,7 @@ cantrip/
 │       └── reference/             3 references
 │
 ├── docs/                        contract, layout, durable reference
-├── adr/                         15 decision records
+├── adr/                         16 decision records
 ├── scripts/                     check-contract.sh · check-install.sh · check-preserved.py
 ├── tests/                       install-verification fixtures
 ├── _work/ · _features/          the toolkit dogfooding its own workflow

@@ -72,12 +72,35 @@ Scenario: {Edge case name}
 | Scenario | Test File | Status |
 |----------|-----------|--------|
 | {scenario name} | `{test file}:L42` | Covered |
+| {scenario name} | `{test file}:L58` | Test failing |
 | {scenario name} | — | Not covered |
 | {scenario name} | — | Not covered (code-derived) |
+| {scenario name} | — | Ruled out — {why it cannot be proved here} |
 
-<!-- Covered: a test asserts it. Not covered: specified, untested. Not covered (code-derived):
-     inferred from reading the code, never specified and never tested — the weakest claim here.
-     Keeping the third distinct is what lets a reader tell verified behavior from inferred. -->
+<!-- Status vocabulary. Each status is a claim about what is proved, not a stage in a process:
+     read a row as its answer to "what does this entitle me to believe?"
+
+     FOUR STATUSES RECORD AN OBSERVATION — what was seen, or that nothing was:
+
+     - Covered: a test asserts this scenario, and its last run passed.
+     - Test failing: a test asserts this scenario, and its last run did not pass. Named for what was
+       observed rather than for its cause, because the cause may be behavior not built yet, a
+       regression, or a doc that is simply wrong, and the row cannot tell those apart. Whatever
+       reported the run is where the cause gets argued.
+     - Not covered: the scenario is specified, and nothing asserts it.
+     - Not covered (code-derived): the rule was inferred by reading the code — never specified and
+       never tested, and so the weakest claim in this table.
+
+     ONE STATUS RECORDS A DECISION, and it is the only one a person writes deliberately:
+
+     - Ruled out — <reason>: the project has decided this scenario cannot be proved here, and
+       the reason travels in the row so a later reader can judge whether it still holds.
+
+     The split is the point. The four above say what happened; this one says somebody chose — the
+     difference between a gap nobody has reached yet and a gap the project decided to live with. It is
+     named unlike the other four on purpose: an earlier draft called it "Not coverable", which sat one
+     syllable from "Not covered" and was misread as an ordinary gap every time somebody skimmed the
+     table. A status that records a decision should not look like a status that records an absence. -->
 
 ---
 

@@ -146,9 +146,9 @@ alone. Two rules still hold:
 - **A test written after the code has to fail first anyway.** Break the behavior, or assert a wrong
   value, and watch it go red. A test that has never failed proves only that it runs.
 - **A rule read out of code is not a tested rule.** `/feature`'s coverage vocabulary keeps these apart —
-  `Covered`, `Not covered`, and `Not covered (code-derived)`. Do not promote the third into the first by
-  writing a test that asserts whatever the code currently happens to do. That is the tautology above
-  with extra steps.
+  `Covered`, `Test failing`, `Not covered`, `Not covered (code-derived)`, and `Ruled out — <reason>`.
+  Do not promote a code-derived row to `Covered` by writing a test that asserts whatever the code
+  currently happens to do. That is the tautology above with extra steps.
 
 ## Refactoring is a review concern
 

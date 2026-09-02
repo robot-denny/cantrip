@@ -47,8 +47,15 @@ The test asserts that the element type exists with the expected property aliases
 — the element type doesn't exist yet.
 
 **Slot:** `.agents/config/stack.md` → `## Tests`
-**If empty:** infer from existing test files; if the project has no tests yet, propose a location in
-Key Decisions and flag it as a new convention being established.
+**If empty:** infer from existing test files. If the project has no tests yet, propose a location and
+flag plainly that you are establishing a convention rather than following one — never settle it
+silently.
+
+Where this block is being built from a plan, that proposal and its flag belong in the plan's **Key
+Decisions**, so the next block does not re-decide them. Built without one — this spell takes a bare
+description, so that is a normal way to cast it — there is no Key Decisions section to write into,
+and saying it in passing is how it gets lost: propose it for `.agents/config/stack.md` → `## Tests`
+instead, so the second block inherits the answer rather than facing the same empty slot.
 
 Three Umbraco-specific facts the assertions depend on:
 

@@ -10,35 +10,25 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Nothing in flight.** The styleguide increment closed on 2026-09-01 and is recorded under Recently
-shipped. The editor-facing guides increment it extends closed on
-2026-08-29 and is archived under `_work/shipped/editor-facing-guides/`; the pack-boundary split
-closed on 2026-08-17 and is archived under `_work/shipped/pack-boundaries-and-succession/`. Of what
-Next now holds, the **pack-authoring meta-skill** is the highest-leverage item, because every other
-pack-related cost is paid per pack until it exists.
+**Nothing in flight.** The coverage spell closed on 2026-09-01 and is recorded under Recently
+shipped, as is the styleguide increment that closed the same day. The editor-facing guides increment
+the styleguide extends closed on 2026-08-29 and is archived under
+`_work/shipped/editor-facing-guides/`; the pack-boundary split closed on 2026-08-17 and is archived
+under `_work/shipped/pack-boundaries-and-succession/`. Of what Next now holds, the **pack-authoring
+meta-skill** is the highest-leverage item, because every other pack-related cost is paid per pack
+until it exists.
 
 ---
 
 ## Next
 
-**A spell for tests.** The gap the spell budget was raised for. A feature doc already carries a Test
-Coverage table mapping each scenario to a test file and a status, which is the contract such a spell
-would serve: read the scenarios, find what is uncovered, write and run, update the table. That makes
-it a pair with `/feature` — both operate on the living doc — rather than a new stage in the chain,
-and it would be the first QA-owned verb in the spellbook.
-
-**Decided 2026-08-25: a ninth spell, not a mode on `/feature`.** So the count goes to nine, leaving
-one under ADR 0010's ceiling of ten. The decision was forced by an unrelated increment —
-`editor-facing-guides` ships an audit that reports documentation gaps, and whether that report shape
-belonged in core or in a pack depended on this answer. A separate spell means the two share no
-machinery and the gap-report shape stays with its own caller, so that increment keeps its report
-shape local while writing it as a self-contained section, extractable later if the shapes converge.
-
 **Two questions the guides increment left open**, both stated the same way in
 `_work/shipped/editor-facing-guides/spec.md` under *Still open*, and repeated here because neither belongs
 to the increment that raised them. The spec's bullet on the second one carried a half that has
 since closed — whether the report shape survived the inventory determiner, which it did — and was
-corrected on 2026-08-29 rather than left to disagree with this entry.
+corrected on 2026-08-29 rather than left to disagree with this entry. That bullet moved again on
+2026-09-01 when the second caller arrived; **this entry is the current statement of it**, and the
+archived spec is a snapshot of the question as it was raised.
 
 - **Which format-version values a schema adapter accepts.** Where a version lives and how refusal
   works are settled and verified in both on-disk formats — one stamps a version per artifact and so
@@ -53,10 +43,15 @@ corrected on 2026-08-29 rather than left to disagree with this entry.
   report header, ahead of the findings, so a wrong determiner is visible before a hundred guides are
   proposed. It is written as a self-contained section of `umbraco-17-guide-scaffolding` naming no
   CMS, no serialization format and no file, so extraction is a move rather than a rewrite. What
-  stays open is whether a second caller ever arrives: the planned test spell was the candidate, and
-  the decision above to make it a separate spell means the two share no machinery. **Answer this and
-  the scaffolding reference's size entry in Later falls out of it** — the same section is the seam
-  both questions point at.
+  stayed open was whether a second caller would ever arrive, and the planned test spell was the named
+  candidate. **It arrived on 2026-09-01**: `/testify audit` sweeps every capability doc, ranks them by
+  how much of each nothing proves, and reports drift in both directions. So the question is no longer
+  whether a second caller exists — it is whether the two are the same shape. That increment
+  **deliberately did not answer it**, writing its report independently so convergence could be judged
+  from two real shapes rather than predicted from one; both now exist, and the next move is to read
+  them side by side and either extract the common section to core or record that they only looked
+  alike. **Answer this and the scaffolding reference's size entry in Later falls out of it** — the
+  same section is the seam both questions point at.
 
 **Two questions the styleguide increment left open**, neither of which belongs to the increment
 that raised them.
@@ -80,6 +75,36 @@ that raised them.
   name, so re-theming a region is the project's own CSS re-pointing what that name means. **Revisit
   when more worked examples exist across projects** — if they converge this becomes a rule, and if
   they do not the deferral was right. Recorded in `_work/shipped/styleguide/spec.md` and in the spell.
+
+**Two questions the coverage spell leaves open**, both about the Test Coverage table rather than
+about `/testify`, which is why neither belongs to the increment that raised them. The rest of that
+increment's *Open Questions* stay in `_work/shipped/testify/spec.md`, because they only matter to
+somebody working on that spell.
+
+- **Five statuses may mean the Status column is doing two jobs.** A row now reads `Covered`, `Test
+  failing`, `Not covered`, `Not covered (code-derived)`, or `Ruled out — <reason>`, which encodes two
+  independent facts in one cell: whether a test exists, and what its last run established. Split into
+  two columns and `Test failing` falls out of the pair rather than needing a name of its own —
+  [ADR 0016](adr/0016-coverage-status-names-an-observation.md) records why it got one anyway. **Not
+  done in that increment** because it rewrites every coverage table in every consuming project, which
+  is a migration rather than an edit. Worth deciding **before a sixth status is proposed**, because
+  each one added makes the split more expensive and the column harder to read.
+- **Nothing re-reads a coverage row, so every status is only as good as the last time something
+  looked.** Three shapes of the same question:
+    - A `Test failing` row **understates** once the work that would make it pass lands and nobody
+      re-runs it.
+    - A `Covered` row **overstates** the moment its test starts failing.
+    - A `Ruled out` reason — "this toolkit ships no rendering layer" — stops being true the day
+      something owns the render layer, and skipping that row forever is the failure mode the status
+      was introduced to create.
+
+  `/plan`'s final step and a re-run of `/testify` are both candidates
+  for noticing, and neither is obliged. **The overstating direction costs more**, and whatever closes
+  it has to answer the question audit mode deliberately dodged: **who may run a project's tests, and
+  when.** A sweep that quietly executed a suite would be neither cheap nor read-only, and on a project
+  whose tests create and delete real content it would mutate what it reports on. Cheaper partial
+  answers exist and are not decided either — the audit reporting `Ruled out` rows separately as claims
+  to re-check, or a reason carrying a date so it goes stale visibly.
 
 **Pack-authoring meta-skill.** The direct parallel to `design-system-authoring`: a model-invoked
 reference that fires when someone sets out to add a pack, turning [ADR
@@ -112,6 +137,24 @@ settled ladder. Check 9 is not a substitute
 for it, and the rung proved so: the first fix was applied to the four gated fallbacks and missed an
 ungated prose paragraph eighteen lines from one of them, which review caught and no gate would
 have.
+
+**Check 10 is narrower than it reads, in two places.** *Exemplar instructions handle having no
+exemplar* is the forcing function ADR 0006's principle needs, and its own comment says why it exists:
+"a principle without a forcing function gets applied when the author happens to remember." Two
+patterns in it under-match, both found and verified while writing `/testify` on 2026-09-01:
+
+- `ABSENCE_PAT` groups `there is no` inside an `if (...)` alternation, so it only matches after a
+  literal *if*. A clause reading "**there is no** existing test to be closest to" — the natural way to
+  write it — does not satisfy the check, and the instruction it guards is reported as unguarded.
+- `EXEMPLAR_PAT` matches `follow it exactly` and not `following it exactly`, so the same instruction
+  in a participial sentence is not seen at all. That is the worse of the two: an under-matching
+  *trigger* passes silently, where an under-matching *absence clause* at least fails loudly.
+
+Both are a few characters of regex, but they belong to their own increment rather than to whatever
+work notices them next: the fix is to a **gate**, so it needs its own negative tests — a bare "there
+is no…" clause now accepted, a participial exemplar instruction now caught, and the existing passes
+and failures unchanged — and a gate quietly loosened in passing is how a forcing function stops
+forcing anything.
 
 **A contributor path for packs.** The intent is that people outside this repository write packs for
 the stacks and versions they work in — an `umbraco-13` beside the `umbraco-17`, an Episerver, a
@@ -181,6 +224,16 @@ and says nothing about packs, so a pack could ship a dozen spells and nothing wo
 that is deliberate — a pack serves one stack and its spells arrive only with it — or a gap the
 ceiling implies, is unasked rather than answered.
 
+**And the census stated in prose is ungated in the other direction.** Check 16 *computes* the count
+to enforce the ceiling; nothing holds the number written in `README.md`, `CHANGELOG.md`, or ADR 0010
+to what it computes. The `/testify` increment shipped with the README corrected and ADR 0010 left
+saying "the workflow set is eight" — caught in review, on a pass whose whole purpose was hunting
+stale counts, because the verification grep looked for *"eight workflow spells"* and the ADR says
+*"workflow set is eight"*. **A grep for one phrasing of a fact is not a check for the fact.** The
+gateable version is check 17's shape applied to a number rather than a vocabulary: read what check 16
+computes, and fail if a shipped document states a different figure. Cheap, and it removes a class of
+error that has now recurred twice.
+
 **The guide scaffolding reference is the largest unit in any pack, and the seam is known.**
 Measured 2026-08-28 at 436 lines / ~28K; **remeasured 2026-09-01 at 623 lines / 44K**, grown by the
 styleguide increment's showcase element types and its `## Design tokens` slot. Against
@@ -195,12 +248,18 @@ says it is a candidate for extraction to the technology-agnostic layer, and spli
 again. Answer the core-extraction question and this falls out of it; split it sooner if a consumer
 reports the load cost first.
 
-**The `/guide` spell serves two modes from one load unit, and the seam is known.** Measured
-2026-08-29 at 564 lines / 36K, when it was the largest unit in any pack. **Remeasured 2026-09-01 at
-590 / 38K, and no longer the largest either way**: the scaffolding reference below it is 623 and
-`/styleguide` is 607. Its own growth was slight; what changed is what sits beside it. Of that, 300 lines are the generate path, 103 are audit mode, and 116 are cross-cutting
-(the script's surface, the degradation order, voice and tone, artifact disposition). So a
-`/guide --audit` cast loads the whole file to use roughly two fifths of it, and a generate cast
+**A mode-forked spell serves two modes from one load unit, and the seam is known.** Two instances
+now, one in a pack and one in core, so read this as a question about the shape rather than about
+either file.
+
+`/guide` was measured 2026-08-29 at 564 lines / 36K, when it was the largest unit in any pack.
+**Remeasured 2026-09-01 at 590 / 38K, and no longer the largest either way**: the scaffolding
+reference below it is 623 and `/styleguide` is 607. Its own growth was slight; what changed is what
+sits beside it. Of that, 300 lines are the generate path, 124 are audit mode, and 166 are
+cross-cutting (the script's surface, the degradation order, voice and tone, artifact disposition).
+**Recounted 2026-09-01**: the earlier split read 300/103/116, which sums to 519 against a 590-line
+file — the generate figure was right, which is why a 71-line hole survived two readings. So a
+`/guide --audit` cast loads the whole file to use just under half of it, and a generate cast
 carries audit mode it never reads — the shape [ADR 0001](adr/0001-layer-contract-and-slots.md)
 rejected for a combined slot file, recurring at the spell layer. The seam is the mode boundary,
 which the file already dispatches on.
@@ -216,6 +275,37 @@ anything. And the 116 cross-cutting lines have no clean home: duplicating them i
 already tracks, and hoisting them into the scaffolding reference grows the file directly below this
 entry to roughly 490 lines, trading one outlier for a worse one. **Revisit when audit mode next
 grows**, which is the trigger that would tip it — not the line count on its own.
+
+**`/testify` shipped on 2026-09-01 as a second instance of exactly this shape, in core.** Measured
+755 lines / 48K, which makes it the largest unit in `skills/core` by some way — 2.3x `/feature` at
+334 and 2.2x `bdd-principles` at 340. The fork is harder than `/guide`'s and sits at the top of
+Step 1: `audit` runs the sweep and **none** of Steps 1–8, anything else runs Steps 1–8 and never
+reaches the sweep. Of the 755, 509 lines are the capability path (Steps 1–8 plus the two stop
+states), 178 are audit mode, and 68 are cross-cutting (the framing, the three boundaries, the
+closing `Next:` line). So an audit cast loads the whole file to use about a third of it, and a
+capability cast carries a quarter it never reads.
+
+**The same shape, not the same arithmetic** — `/testify` wastes proportionally less than `/guide`
+does, 33% against 49%, which is worth stating rather than smoothing over. The pattern is what
+recurs; the ratio is a property of how much cross-cutting content each file happens to carry, and
+citing the two as equivalent would make a weaker case look like a stronger one.
+
+**A second instance is evidence, not a second item**, which is why it is recorded here rather than
+opened as its own entry. What it changes is the shape of the answer: two mode-forked spells in two
+layers means the question is no longer "should `/guide` be split" but whether a spell that hard-forks
+on its argument should be two units by rule — and if it should, the cross-cutting lines are the cost
+in both files, not a quirk of one. The hold's third leg transfers unchanged:
+`disable-model-invocation: true` means the load cost is paid only by someone who cast the spell on
+purpose, and nobody else pays anything.
+
+**Its count leg does not transfer, and is worse here.** For `/guide` that argument was ruled spent
+once its pack independently reached four spells, and a pack has no stated ceiling. Core does: ADR
+0010 sets ten, and the spellbook now stands at nine. Audit mode is a deliberately-cast,
+side-effectful action, so it could not ship as a Reference-posture unit — splitting it out means a
+tenth **workflow** spell, spending the last slot under the ceiling on a mode that already has a home.
+That is a real cost `/guide` never faced, and whoever revisits this should weigh it before the line
+counts. **Revisit when either spell's audit mode next grows** — and if a third instance appears, stop
+revisiting and write the rule.
 
 **Nothing tells a project to cache a derived guides index.** `umbraco-17-review-rules` already treats
 a stable, expensive, frequently-rendered listing with no caching as a finding in its own right, and a
@@ -268,6 +358,35 @@ on both sides.
 
 ## Recently shipped
 
+- **2026-09-01** — The coverage spell, and the spellbook's first QA-owned verb: `/testify` reads a
+  capability doc's Test Coverage table as a work queue, reports which of its scenarios nothing proves,
+  then writes and runs tests only for the rows a person approves and records what each run
+  established. The ninth workflow spell, against ADR 0010's ceiling of ten, and a **pair with
+  `/feature` over one document** rather than a new stage in the chain — decided 2026-08-25 as a
+  separate spell rather than a mode on `/feature`, so the two share no machinery. The gap report comes
+  first on every path and sorts the unproved rows **by the decision each asks of the reader**:
+  writable now, blocked on test infrastructure this project does not have, or inferred from code
+  rather than specified — the last kept apart because proving one promotes a reading of the code into
+  a contract nobody agreed to. A scenario naming nothing that can be compared comes back as a question
+  for whoever wrote the doc, never as a guessed assertion, because a guessed assertion fills the row
+  it should have left empty. **Named probes stand in for a red-to-green signal that does not exist**:
+  behavior already built cannot go red, so every proposed test is reported with the specific ways it
+  could pass while the behavior is broken, and the spell says plainly that no such signal is available
+  rather than implying a proof it did not perform. Every test it writes carries a provenance header
+  naming the doc, its scenarios and the date, which is what makes drift detectable rather than guessed
+  at by matching scenario names — core requires the header, the project's own tests supply the comment
+  syntax. **The Draft banner frames a failure and never forks the behavior**, since a half-built
+  increment with some scenarios passing is the normal middle of the flow rather than an edge case. Two
+  stop states, both routed to `/spec`, because the spell reports what a project's testing architecture
+  is missing and never establishes one by accident. `/testify audit` sweeps every capability doc
+  read-only and reports drift in both directions, **deliberately never running a test** — a sweep that
+  executed a suite would be neither cheap nor read-only, and on a project whose tests create and
+  delete real content it would mutate what it reports on. Ships two coverage statuses (`Test failing`
+  and `Ruled out — <reason>`, [ADR 0016](adr/0016-coverage-status-names-an-observation.md)), contract
+  check 17 holding the vocabulary's writers in step, and a reworded `## Tests` slot fallback shared by
+  `/plan`, `/block` and `/testify`. **No script and no fixtures** — `skills/core/` is markdown and this
+  increment adds one `SKILL.md` to it, so the harness stays at 110 cases across three suites
+  (`_work/shipped/testify/spec.md`, `_features/test-coverage.md`)
 - **2026-09-01** — The token-reading styleguide, story 1 of the guides discovery's four and the
   second caller of `umbraco-17-guide-scaffolding`: `/styleguide` writes one guide page whose showcase
   sections carry token *names*, so the palette and type scale an editor sees follow the project's

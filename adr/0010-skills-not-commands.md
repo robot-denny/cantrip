@@ -58,7 +58,8 @@ Neither was anticipated.
   loads, and the symptom is merely-generic output rather than an error — which is why descriptions here
   are long, and why the same rigor is demanded of pack skills (ADR 0003).
 - Keeping spells at 6–8 was the stated aim; **amended 2026-08-18 to a working ceiling of ten**, so
-  that a genuinely new stage has somewhere to land. The workflow set is eight; two further spells —
+  that a genuinely new stage has somewhere to land. The workflow set is nine as of 2026-09-01, when
+  `/testify` shipped as the QA verb the raised ceiling was raised for; two further spells —
   `update-toolkit` and `setup` — are maintenance and onboarding rather than workflow stages, and are
   counted separately for that reason. Past the ceiling the answer is to merge two stages or add a
   router, not to append another.

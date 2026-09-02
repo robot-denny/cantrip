@@ -85,11 +85,12 @@ them by name.
 | `/plan` | Turns a spec into TDD-first steps, each runnable in a fresh context, each with a paste-ready prompt. |
 | `/implement-step` | Runs one plan step in an isolated context, then reports back. |
 | `/feature` | Writes or updates a living behavioral doc. Also backfills one from code alone. |
+| `/testify` | The other half of that doc: `/feature` records what a behavioral doc *claims*, this asks what nothing *proves*. Reports the scenarios no test covers, then writes and runs tests only for the rows you approve. `/testify audit` sweeps the whole project and writes nothing. |
 | `/code-review` | Three reviewers in parallel, merged into one report with an ordered action plan. |
 | `/commit-message` | Proposes a message that explains *why*, following your project's own convention. |
 | `/retrofit` | The easy button for a change that skipped the flow — reconciles intent against the diff, then proposes the missing tests and docs. |
 
-**Eight workflow spells, and the count is meant to stay small.** A spellbook you can hold in your
+**Nine workflow spells, and the count is meant to stay small.** A spellbook you can hold in your
 head is worth more than one that covers every case, so ten is the working ceiling; past that, the
 answer is to merge two stages or add a router rather than keep appending. Two more spells sit
 outside the chain, because they are not stages of doing work:
@@ -410,7 +411,7 @@ DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --skill '*' -
 
 | | `--all` | `--skill '*' --agent claude-code` |
 |---|---|---|
-| Skills installed | 16 | 16 |
+| Skills installed | 17 | 17 |
 | Bundled assets and agents | ✓ | ✓ |
 | Writes to | `.agents/`, `.claude/`, `agent/`, `skills/` | `.claude/` only |
 | Canonical `.agents/` tree | ✓ | ✗ (files copied into `.claude/skills/`) |
