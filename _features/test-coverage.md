@@ -7,7 +7,7 @@ cannot, the reason is named — a missing piece of test infrastructure, or a del
 the scenario is not testable here. A project-wide report reads the same docs and names drift in both
 directions: scenarios nothing proves, and tests whose scenarios have since changed or gone.
 
-**Source**: `_work/testify/spec.md`
+**Source**: `_work/shipped/testify/spec.md`
 **Last verified**: 2026-09-01
 
 > **Draft** — These scenarios have not yet been verified against an implementation. They will be
@@ -23,7 +23,7 @@ increment.
 
 - [ ] The `/testify` spell: a coverage gap report, approval-gated test authoring against a capability
       doc, a project-wide audit that names drift in both directions, and two new coverage statuses
-      (`_work/testify/spec.md`, planned in `_work/testify/plan.md`)
+      (`_work/shipped/testify/spec.md`, planned in `_work/shipped/testify/plan.md`)
 - [ ] Parking lot: splitting the Status column in two. Five statuses encode two independent facts in
       one cell — whether a test exists, and what its last run established. Deferred because it
       rewrites every existing coverage table

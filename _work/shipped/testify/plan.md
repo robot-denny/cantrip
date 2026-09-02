@@ -1,6 +1,6 @@
 # Plan: Testify — The Coverage Spell
 
-**Spec**: `_work/testify/spec.md`
+**Spec**: `_work/shipped/testify/spec.md`
 **Branch**: `robot-denny/feature/testify`
 **Work type**: `new-capability` — copied verbatim from the spec's `**Work type**:` line; this decides
 how the final step records behavior
@@ -118,7 +118,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — The coverage status vocabulary, and a check that keeps its writers in step
 
-> **Prompt**: Implement Step 1 of `_work/testify/plan.md`. Add two statuses to the Test Coverage
+> **Prompt**: Implement Step 1 of `_work/shipped/testify/plan.md`. Add two statuses to the Test Coverage
 > vocabulary — `Test failing` (a test exists and its last run did not pass; named for the observation,
 > not its cause) and `Ruled out — <reason>` (the project has decided this scenario cannot be
 > tested here). Write ADR 0016 recording why a coverage status names an observation rather than a
@@ -160,7 +160,7 @@ inspect this repo versus shipped units); `skills/core/spellbook/feature/SKILL.md
 
 ### Step 2 — The spell exists, reads its inputs, and the gate is green
 
-> **Prompt**: Implement Step 2 of `_work/testify/plan.md`. Create
+> **Prompt**: Implement Step 2 of `_work/shipped/testify/plan.md`. Create
 > `skills/core/spellbook/testify/SKILL.md` with complete frontmatter — `name: testify`, a
 > trigger-engineered `description`, `disable-model-invocation: true` (every spellbook unit sets it),
 > `argument-hint`, and an `allowed-tools` list. Write only the spell's opening: how it resolves its
@@ -204,7 +204,7 @@ reading, both slot declarations); `skills/core/spellbook/plan/SKILL.md` and
 
 ### Step 3 — The gap report: three groups, and the scenario too vague to test
 
-> **Prompt**: Implement Step 3 of `_work/testify/plan.md`. Extend
+> **Prompt**: Implement Step 3 of `_work/shipped/testify/plan.md`. Extend
 > `skills/core/spellbook/testify/SKILL.md` with the gap report, which is the first output of both
 > modes and is produced before anything is written. It groups unproved scenarios into three sets —
 > writable now; blocked on missing test infrastructure, naming what each one needs; and inferred from
@@ -239,7 +239,7 @@ above.
 
 ### Step 4 — The write path: approval, the run, and what the row records
 
-> **Prompt**: Implement Step 4 of `_work/testify/plan.md`. Extend
+> **Prompt**: Implement Step 4 of `_work/shipped/testify/plan.md`. Extend
 > `skills/core/spellbook/testify/SKILL.md` with everything between approval and the updated table.
 > Row-by-row approval, with nothing written until the reader confirms that specific scenario. The
 > assertion probes: for each proposed test, report the specific ways it could have passed while the
@@ -280,7 +280,7 @@ recording rule, the provenance header, the Draft-banner framing rule, the hand-o
 
 ### Step 5 — Blocked rows, and the refusal to establish a convention
 
-> **Prompt**: Implement Step 5 of `_work/testify/plan.md`. Extend
+> **Prompt**: Implement Step 5 of `_work/shipped/testify/plan.md`. Extend
 > `skills/core/spellbook/testify/SKILL.md` with the two places it stops. First: where proving a
 > scenario needs test infrastructure the project does not have, name what is needed, write the tests
 > that are writable, and end pointing at `/spec` for the infrastructure. Second: where the project has
@@ -312,7 +312,7 @@ no-convention refusal, the `Next:` line.
 
 ### Step 6 — Audit mode: the project-wide sweep and four kinds of drift
 
-> **Prompt**: Implement Step 6 of `_work/testify/plan.md`. Extend
+> **Prompt**: Implement Step 6 of `_work/shipped/testify/plan.md`. Extend
 > `skills/core/spellbook/testify/SKILL.md` with `/testify audit`. **Amend the frontmatter, do not just
 > append a section**: Step 2 left `audit` out of both `description` and `argument-hint` on purpose, so
 > as things stand `/testify audit` falls through Step 1's resolution and is reported as an
@@ -357,7 +357,7 @@ no-convention refusal, the `Next:` line.
 
 ### Step 7 — Document the spell and correct the census
 
-> **Prompt**: Implement Step 7 of `_work/testify/plan.md`. **None of this is gated by any check** —
+> **Prompt**: Implement Step 7 of `_work/shipped/testify/plan.md`. **None of this is gated by any check** —
 > check 16 computes the spell count and will pass silently at nine, and everything below is prose that
 > fails silently when wrong. In `README.md`: add a `/testify` row to the spellbook table describing
 > what it does for someone deciding whether to cast it, and change "**Eight workflow spells, and the
@@ -418,7 +418,7 @@ a spell — the wrong mechanism, and it blurs the chain's boundary between build
 > writing a weaker test and claiming the scenario; the spec's *Testing Guidelines* already rules the
 > report-prose scenarios out of harness scope, and that reasoning belongs in the doc where a reader
 > will meet the gaps. Flip the `/testify` entry in the doc's **Increments** list from planned to
-> shipped and point it at `_work/testify/spec.md`. Leave the four parking-lot entries intact — none is
+> shipped and point it at `_work/shipped/testify/spec.md`. Leave the four parking-lot entries intact — none is
 > closed by this work. Add a revision note dated today.
 >
 > **Validation**: Every scenario matches observable behavior; the Draft banner is gone; every "Not

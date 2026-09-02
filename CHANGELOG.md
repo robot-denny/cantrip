@@ -18,7 +18,7 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   with posture in frontmatter, and the lifecycle-based file layout. The reasoning now lives with the code
   instead of in a document consumers never see.
 - **ADR 0007** — repository ownership stays as-is, with the costs of a later move recorded.
-- The spell census is stated explicitly: **eight workflow spells** against a working ceiling of ten, plus
+- The spell census is stated explicitly: **nine workflow spells** against a working ceiling of ten, plus
   `/setup` and `/update-toolkit` counted separately as configuration and maintenance rather than
   workflow stages.
 
@@ -351,7 +351,98 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   - **A `styleguide-check` test suite of 10 cases**, plus 3 new `guide-check` cases, taking the
     harness to 110 cases across three suites.
 
+- **A spell for what nothing proves — `/testify`** (2026-09-01). The spellbook's **ninth workflow
+  spell** and its first QA-owned verb. Every other spell either decides what to build or builds it;
+  this one reads what has already been decided and asks what nothing verifies. A capability doc
+  already ends with a **Test Coverage** table mapping each scenario to the test that proves it, and
+  `/testify` reads that table as a work queue: report the unproved rows, write and run tests for the
+  ones you approve, and record in the doc what each run established. **It ships with core, so it
+  arrives on your next update.** Cast it as `/testify <capability>`, or `/testify audit` for a
+  project-wide sweep; like every spellbook unit it is invisible to the model and runs only when you
+  ask for it by name.
+  - **It pairs with `/feature` over one document rather than adding a stage to the chain.**
+    `/feature` owns what a capability does; `/testify` owns whether anything proves it. Decided
+    2026-08-25 as a separate spell rather than a mode on `/feature`, so the two share no machinery.
+  - **Report first, and nothing is written before approval**, row by row — the same posture as
+    `/guide` and `/styleguide`. The gap report sorts the unproved rows into three groups by the
+    decision each asks of you: **writable now**, **blocked on test infrastructure this project does
+    not have**, and **inferred rather than specified** — the last kept apart because writing a test
+    for a `Not covered (code-derived)` row promotes somebody's reading of the code into a contract the
+    project never agreed to. A scenario naming nothing that can be compared — "a card looks right on
+    mobile" — comes back as a question for whoever wrote the doc rather than as a guessed assertion,
+    because a guessed assertion is worse than an empty row: it fills one.
+  - **Every proposed test is reported with the specific ways it could have passed while the behavior
+    was broken** — the value wrong, the thing rendering somewhere else entirely, the page blank, the
+    check satisfied by the artifact merely existing — alongside the `tdd-principles` failure modes.
+    That review is what stands in for the red-to-green signal, and the spell **says plainly that no
+    such signal is available** for behavior that already works rather than implying a proof it did not
+    perform. Every test it writes opens with a provenance comment naming the capability doc, the
+    scenarios it covers, and the date, which is what makes drift detectable rather than guessed at by
+    matching scenario names — the match that breaks exactly when a scenario is reworded. **Core
+    requires the header and its content; the comment syntax comes from the project's own tests**,
+    never from the spell.
+  - **It records what a run established and never second-guesses that from the doc's state.** A
+    half-built increment where four scenarios pass and two fail is the normal middle of the flow
+    rather than an edge case, so there is no draft-versus-verified fork in what gets written. The
+    Draft banner changes only the sentence that explains a failure — expected of work in flight, or
+    the doc and the code disagreeing — and never reaches control flow.
+  - **Two stop states, both routed to `/spec`**: a scenario blocked on a harness the project does not
+    have, and a project that never decided where its tests go. It names what is missing and declines
+    to establish a testing convention by accident, the same reasoning `/block` uses for a greenfield
+    project with no exemplar to copy. Blocked rows never hold up the writable ones.
+  - **`/testify audit` is read-only and stays that way.** It sweeps every capability doc, ranks them
+    by how much of each nothing proves, and reports drift in both directions: a scenario no test
+    proves, a test whose scenario has since been reworded (**stale**), a test whose scenario has been
+    deleted (**orphaned**), and a `Covered` row whose named test no longer exists at all. **It runs no
+    test** — deliberately, because a sweep that quietly executed your suite would be neither cheap nor
+    read-only, and on a project whose tests create and delete real content to exercise it, an audit
+    would mutate the very thing it reports on. So it asks only whether the named test still exists,
+    and findings are presented as a backlog rather than as a fault.
+  - **It holds no knowledge of any test library, and no pack changed for it.** Library idiom comes
+    from whatever pack is installed or from the project's own tests; where tests live and how they run
+    are the existing `.agents/config/stack.md` → `## Tests` and `## Build` slots. **No new slot, and
+    the spell works with no pack installed**, saying what it could not determine instead of guessing.
+  - **No script, and so no fixtures.** `skills/core/` is markdown and templates, and this increment
+    adds one `SKILL.md` to it. `tests/run.sh` stays at 110 cases across three suites.
+
 ### Changed
+
+- **The Test Coverage vocabulary gained two statuses, and that changes three core files you already
+  have.** `templates/feature.md`, `/feature`, and `/spec` all carry them after this update, so a doc
+  written or refreshed from here on can hold a row you have not seen before. Nothing rewrites the
+  tables you already have — a three-status table stays valid and simply never uses the new two.
+  - **`Test failing`** — a test asserts this scenario and its last run did not pass, with the test
+    still named. **Named for the observation rather than for its cause**, because the cause may be
+    behavior not built yet, a regression, or a doc that is simply wrong, and a table cell is not
+    positioned to tell those apart
+    ([ADR 0016](adr/0016-coverage-status-names-an-observation.md)). Do not downgrade such a row to
+    `Not covered` — that erases a proof somebody already wrote.
+  - **`Ruled out — <reason>`** — the project has decided this scenario cannot be proved here, and the
+    reason travels in the row so a later reader can judge whether it still holds. It is the only one
+    of the five recording a *decision* rather than an observation, and it is named unlike the rest on
+    purpose: an earlier draft called it `Not coverable`, which sat one syllable from `Not covered` and
+    was misread as an ordinary gap in four separate review passes before the name was changed.
+  `/spec` also stops writing an empty coverage table and now writes one `Not covered` row per draft
+  scenario, saying which of the five a draft has earned and why it is only ever that one.
+  `tdd-principles` enumerated three of the statuses and now names all five — it *reads* the vocabulary
+  rather than writing a table, so no gate covered it.
+- **Contract check 17 — coverage statuses are known to every spell that names one.** The feature
+  template *declares* the vocabulary; `/feature`, `/spec`, and `/testify` are the shipped files that
+  act on it, and nothing linked the four but an author's memory. A status defined in one place and
+  unknown to its writers is worse than no status: the template offers a row no spell will ever
+  produce. The check reads the list out of the template at run time and requires each status as a
+  backticked literal in every writer, rather than carrying its own copy of the list — a copy would be
+  a fourth place to keep in step, and worse, it would pass against itself while the real files
+  drifted. The commit gate is now **18 checks**.
+- **The `## Tests` slot fallback is reworded, and it changes `/plan` and `/block`.** Both told you to
+  propose a test location "in Key Decisions" — which is a section of a *plan*, so `/block`, which
+  takes a bare description and is routinely cast without one, named a place its reader did not have,
+  and the convention got established in passing and lost. The shared half now says to infer from
+  existing tests, and where there are none to propose a location and **flag plainly that you are
+  establishing a convention rather than following one, never settling it silently**. Each spell then
+  says where that proposal goes: `/plan` into Key Decisions, `/block` into the slot itself when there
+  is no plan, so the second block inherits the answer. Check 9 requires every reader of a slot to give
+  it the same fallback, and `/testify` is now a third reader of this one.
 
 - **The guides scaffolding reference and `/guide`'s script both grew for the styleguide, and you may
   have vendored either.** `umbraco-17-guide-scaffolding` gains the **three showcase element types** a
@@ -466,10 +557,11 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   pack is cut on is what decides whether its name carries a version.
 
 - **The spell budget is a working ceiling of ten, not a stated aim of 6–8**
-  ([ADR 0010](adr/0010-skills-not-commands.md), amended). The workflow set is still eight and the
-  principle is unchanged — past the ceiling, merge two stages or add a router rather than append
-  another — but a budget sitting at its limit would have made the next genuine stage a documentation
-  rewrite, which the aim was never meant to cost. `AGENTS.md` carries the new number and check 16
+  ([ADR 0010](adr/0010-skills-not-commands.md), amended). The workflow set was eight when this was
+  written and the principle is unchanged — past the ceiling, merge two stages or add a router rather
+  than append another — but a budget sitting at its limit would have made the next genuine stage a
+  documentation rewrite, which the aim was never meant to cost. `/testify` was that next stage, and it
+  cost a count and a sentence. `AGENTS.md` carries the new number and check 16
   holds it, so it cannot drift back. **Nothing here arrives by update** — the budget governs what this
   repository ships, not anything installed.
 - **The README describes the toolkit that exists.** `design-system-authoring` is a method for writing
