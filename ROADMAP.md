@@ -266,15 +266,24 @@ and says nothing about packs, so a pack could ship a dozen spells and nothing wo
 that is deliberate — a pack serves one stack and its spells arrive only with it — or a gap the
 ceiling implies, is unasked rather than answered.
 
-**And the census stated in prose is ungated in the other direction.** Check 16 *computes* the count
-to enforce the ceiling; nothing holds the number written in `README.md`, `CHANGELOG.md`, or ADR 0010
-to what it computes. The `/testify` increment shipped with the README corrected and ADR 0010 left
-saying "the workflow set is eight" — caught in review, on a pass whose whole purpose was hunting
-stale counts, because the verification grep looked for *"eight workflow spells"* and the ADR says
-*"workflow set is eight"*. **A grep for one phrasing of a fact is not a check for the fact.** The
-gateable version is check 17's shape applied to a number rather than a vocabulary: read what check 16
-computes, and fail if a shipped document states a different figure. Cheap, and it removes a class of
-error that has now recurred twice.
+**The census stated in prose was ungated — closed 2026-09-03 by removing the duplication rather
+than gating it.** Check 16 *computes* the workflow-spell count to enforce the ceiling, and the number
+was separately written into four documents, where it went stale once: ADR 0010 said "the workflow set
+is eight" after the README had been corrected to nine.
+
+A check to hold all four to the computed value was built and then reverted. It had to tell a count
+claim from a ceiling statement from a quotation, and review reproduced four defect classes in ~55
+lines of hot-path prose-matching: it captured any word rather than a number, its own comment claimed
+ceiling phrasings were safe when they were not, and a claim split by a hard line-wrap was invisible —
+in four documents that are hard-wrapped throughout.
+
+**The duplication was the defect; the staleness was only its symptom.** Three of the four claims did
+not need to be live, and ADR 0010 had already shown how without anyone noticing: it dates its claim,
+so it can never be wrong. The changelog entry now reads as of the release it describes, and this file
+states the count relative to the ceiling. **`README.md` carries the one live claim**, and one sentence
+in one file does not earn a gate. The same move as one slot with one point of authority, and as one
+vocabulary declaration its writers are held to: remove the second copy rather than checking it
+against the first.
 
 **The guide scaffolding reference is the largest unit in any pack, and the seam is known.** 623
 lines, 2.6x the next largest reference, and its frontmatter trigger widened with it — a schema-only
@@ -300,7 +309,7 @@ pass; and the load cost is paid only by someone who cast the spell on purpose, s
 `disable-model-invocation: true` means nobody else pays anything.
 
 **The count argument does not transfer to `/testify`, and there it is worse.** A pack has no stated
-ceiling; core does — ADR 0010 sets ten and the spellbook stands at nine. Audit mode is a
+ceiling; core does — ADR 0010 sets ten and the spellbook stands one short of it. Audit mode is a
 deliberately-cast, side-effectful action, so it could not ship as a Reference-posture unit: splitting
 it means a **tenth workflow spell**, spending the last slot under the ceiling on a mode that already
 has a home. Weigh that before the line counts.
@@ -337,11 +346,16 @@ Recorded here so they are not reopened; the reasoning lives in the ADR, not in a
 All five are [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md), which carries the worked
 example that settled each.
 
-- **How a pack declares the version it targets** — §3
-- **Which axis a pack is cut on**, when version is not the thing that makes it wrong — §4
-- **How a pack is replaced when its platform moves a major** — §5: a swap, never a merge
-- **Where portable criteria end and stack-specific detection recipes begin** — §6, gated by check 14
-- **Registering a slot that two packs read** — §7, held by the `shared-slot-two-packs` fixture
+- **How a pack declares the version it targets** — §3. One pack per major where majors break,
+  per-feature annotation where they add.
+- **Which axis a pack is cut on**, when version is not what makes it wrong — §4. A pack cut on a
+  product axis is versionless, and described for the product rather than where it usually runs.
+- **How a pack is replaced when its platform moves a major** — §5. A swap, never a merge: the major
+  lives in the pack name, references carry the version and spells never do.
+- **Where portable criteria end and stack-specific recipes begin** — §6, gated by check 14. The
+  criterion is portable and stays; the grep names a technology and moves to the pack.
+- **Registering a slot that two packs read** — §7. Every reader is registered, and registration
+  dedups on file-plus-heading. Held by the `shared-slot-two-packs` fixture.
 
 ---
 
@@ -351,16 +365,19 @@ example that settled each.
   QA-owned verb: it reads a capability doc's Test Coverage table as a work queue, reports what
   nothing proves, then writes and runs tests only for the rows a person approves. A pair with
   `/feature` over one document rather than a new stage in the chain. Full detail in `CHANGELOG.md`;
-  the decision it rests on is [ADR 0016](adr/0016-coverage-status-names-an-observation.md).
+  the decision it rests on is [ADR 0016](adr/0016-coverage-status-names-an-observation.md)
+  (`_work/shipped/testify/spec.md`, `_features/test-coverage.md`).
 
 - **2026-09-01** — **The token-reading styleguide, `/styleguide`.** A guide page whose showcase
   sections carry token *names*, so what an editor sees follows the project's stylesheet and stays
   current with no regeneration. Story 1 of the guides discovery's four, and the second caller of the
-  guides scaffolding. Full detail in `CHANGELOG.md`.
+  guides scaffolding. Full detail in `CHANGELOG.md`
+  (`_work/shipped/styleguide/spec.md`, `_features/editor-guides.md`).
 
 - **2026-08-29** — **Editor-facing guides, `/guide`.** One guide page per component, written from
   the schema the component already declares, plus an audit of which components have none. The
-  deterministic half is a script; the prose half is the model's. Full detail in `CHANGELOG.md`.
+  deterministic half is a script; the prose half is the model's. Full detail in `CHANGELOG.md`
+  (`_work/shipped/editor-facing-guides/spec.md`, `_features/editor-guides.md`).
 
 - **2026-08-24** — The uSync rung in schema extraction: four pack files across `umbraco-17` and
   `umbraco-cloud` stopped sending a uSync project to a live API for schema already in its repository,

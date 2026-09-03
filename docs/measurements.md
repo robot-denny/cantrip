@@ -23,14 +23,20 @@ actually produced a hit — normally none.
 
 | | 2026-08-26 | 2026-08-28 | 2026-08-31 | 2026-09-03 |
 |---|---|---|---|---|
-| files scanned | 369 | 686 | ≈770 | 936 |
+| files scanned | 369 | 686 | ≈770 | 787 |
 | check 1 alone | ≈3.0s | ≈5.4s | ≈6.0s | — |
 | full gate | ≈5.7s | ≈8.0s | ≈9.1s | ≈9.4s |
 | check 1's share | 53% | ≈67% | ≈66% | — |
 
 **The 09-03 column is whole-gate only.** Checks 17 and 18 landed between it and 08-31, so an isolated
-check-1 figure is not comparable without re-measuring the others. The gate grew +0.3s on +166 files,
-the same linear charge the rest of the table shows.
+check-1 figure is not comparable without re-measuring the others.
+
+**Its file count was wrong when first recorded, and the error is instructive.** It read 936, taken
+from `git ls-files | wc -l` — the repo's *total tracked files*. Every other column counts what check 1
+actually scans, which is that list run through its own extension allowlist minus the script itself:
+787. Two different quantities, one label. The corrected growth from 08-31 is **+17 files**, not the
++166 the wrong figure implied, which also disposed of a causal story that was never there. Reproduce
+the real number with `repo_md_files`'s own filter, never with a bare file count.
 
 **The projection did not survive contact.** The 08-26 note projected +0.4s to +0.8s for that
 increment's fixtures. Actual growth over eleven commits was +2.3s — low by roughly 3x, because the
@@ -42,9 +48,14 @@ to it: one step's three fixture cases carried 33 `.uda` files between them and m
 **+0.39s on their own** — measured by interleaving stashed and unstashed runs, so session-to-session
 drift on this machine could not be mistaken for the diff.
 
-Later checks, measured in isolation over 30 iterations: check 18 ≈19ms (≈150ms before its `comm`
-rewrite), check 17 ≈50ms, the `SEAM_FILES` multi-`find` loop ≈57ms, the `basename`-in-loop idiom
-≈56ms. All are milliseconds against check 1's seconds and were never in the same comparison class.
+**Per-check millisecond figures are deliberately not kept here.** Four were, briefly, and three were
+wrong within a session: two cited costs that a since-applied fix had already removed, and one was
+attributed to a check number that had shifted underneath it — the label pointed at a different check
+than the figure was taken from. They are volatile, they are numbering-dependent, and none of them
+drives an open decision. Measure one when you need it, in isolation over 30 iterations, and cite it
+where the decision is rather than storing it here. The one worth knowing without measuring: every
+small check is milliseconds against check 1's seconds, so check 1 is the only one in a class of its
+own.
 
 ---
 
