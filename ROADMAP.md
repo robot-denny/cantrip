@@ -251,36 +251,11 @@ and lowest as regression protection, so the answer probably falls out of the aut
 rather than being a separate piece of work. Until then they are a specification for a test, and the
 feature doc says so.
 
-**Check 1 greps file by file, and it is now two thirds of the commit gate.** The scrub check spawns
-two or three `grep` processes per scanned file, unconditionally, so its cost tracks file *count*
-rather than content. One batched `grep` over the same list finished in under 0.01s, with per-file
-exemption filtering then needed only for files that actually produced a hit, normally none.
-
-Measured at four points, and the projection did not survive contact:
-
-| | 2026-08-26 | 2026-08-28 | 2026-08-31 | 2026-09-03 |
-|---|---|---|---|---|
-| files scanned | 369 | 686 | ≈770 | 936 |
-| check 1 alone | ≈3.0s | ≈5.4s | ≈6.0s | — |
-| full `check-contract.sh` | ≈5.7s | ≈8.0s | ≈9.1s | ≈9.4s |
-| check 1's share | 53% | ≈67% | ≈66% | — |
-
-The 09-03 column is whole-gate only: checks 17 and 18 landed between it and 08-31, so an isolated
-check-1 figure would no longer be comparable without re-measuring the others too. The full gate grew
-+0.3s on +166 files, which is the same linear charge the rest of the table shows.
-
-The 08-26 note projected +0.4s to +0.8s for this increment's fixtures. Actual growth over eleven
-commits was +2.3s, so the estimate was low by roughly 3x — worth recording as much for the estimate
-as for the number, since the fixtures arrived in trees (`.uda`, `.config`, `.cs`, dossier and audit
-inputs) rather than one file per case, and file *count* is what this check charges for.
-
-**The 08-31 column is the styleguide increment**, and its shape confirms the diagnosis rather than
-adding to it: one step's three fixture cases carried 33 `.uda` files between them and moved the full
-gate **+0.39s on their own**, measured by interleaving stashed and unstashed runs so the drift this
-machine shows between sessions could not be mistaken for the diff. The share holds at two thirds
-because both halves grew together. Nothing here is a new problem — it is the same linear charge on
-file count, now with a third point on the line, and the next increment that ships fixture trees will
-move it again by about as much.
+**Check 1 greps file by file, and it is two thirds of the commit gate.** The scrub check spawns two
+or three `grep` processes per scanned file, so its cost tracks file *count* rather than content — one
+batched `grep` over the same list finished in under 0.01s. At 936 files the full gate is ≈9.4s and
+still growing linearly with every fixture tree an increment ships. Figures, and the projection that
+came in 3x low, in [docs/measurements.md](docs/measurements.md#the-commit-gate--scriptscheck-contractsh).
 
 Filed rather than fixed in passing: this is the gate that keeps a public repo scrubbed, and rewriting
 how it collects hits deserves its own change with its own negative tests — an exemption still
@@ -301,78 +276,37 @@ gateable version is check 17's shape applied to a number rather than a vocabular
 computes, and fail if a shipped document states a different figure. Cheap, and it removes a class of
 error that has now recurred twice.
 
-**The guide scaffolding reference is the largest unit in any pack, and the seam is known.**
-Measured 2026-08-28 at 436 lines / ~28K; **remeasured 2026-09-01 at 623 lines / 44K**, grown by the
-styleguide increment's showcase element types and its `## Design tokens` slot. Against
-`umbraco-17-feature-backfill` at 242 / 16K that is now 2.6x the next largest reference rather than
-1.7x — and the frontmatter trigger widened with the file, so a schema-only task now pays for the
-audit's report format, the document types *and* the showcase schema. The proposed seam is
-`## The audit's report shape`: it documents report output rather than schema, addresses the spell
-rather than someone creating document types, introduces and uses "documentable unit" entirely within
-itself, and would be roughly 110 lines alone. **Held rather than split**, because that section already
-says it is a candidate for extraction to the technology-agnostic layer, and splitting it into a second
-`umbraco-17` unit first means a unit name, two registry entries and a docs pass — then moving it
-again. Answer the core-extraction question and this falls out of it; split it sooner if a consumer
-reports the load cost first.
+**The guide scaffolding reference is the largest unit in any pack, and the seam is known.** 623
+lines, 2.6x the next largest reference, and its frontmatter trigger widened with it — a schema-only
+task now pays for the audit's report format as well. The seam is `## The audit's report shape`,
+roughly 110 lines that document report output rather than schema. **Held rather than split**, because
+that section already says it is a candidate for extraction to the technology-agnostic layer, and
+splitting it into a second `umbraco-17` unit first means a unit name, two registry entries and a docs
+pass — then moving it again. Answer the core-extraction question and this falls out of it; split it
+sooner if a consumer reports the load cost first. Sizes in
+[docs/measurements.md](docs/measurements.md#the-guide-scaffolding-reference).
 
 **A mode-forked spell serves two modes from one load unit, and the seam is known.** Two instances
-now, one in a pack and one in core, so read this as a question about the shape rather than about
-either file.
+now — `/guide` in a pack, `/testify` in core — so this is a question about the shape rather than about
+either file: whether a spell that hard-forks on its argument should be two units by rule. An audit
+cast of `/guide` loads the whole file to use just under half of it; `/testify` wastes proportionally
+less. The seam in both is the mode boundary the file already dispatches on. Sizes in
+[docs/measurements.md](docs/measurements.md#mode-forked-spells).
 
-`/guide` was measured 2026-08-29 at 564 lines / 36K, when it was the largest unit in any pack.
-**Remeasured 2026-09-01 at 590 / 38K, and no longer the largest either way**: the scaffolding
-reference below it is 623 and `/styleguide` is 607. Its own growth was slight; what changed is what
-sits beside it. Of that, 300 lines are the generate path, 124 are audit mode, and 166 are
-cross-cutting (the script's surface, the degradation order, voice and tone, artifact disposition).
-**Recounted 2026-09-01**: the earlier split read 300/103/116, which sums to 519 against a 590-line
-file — the generate figure was right, which is why a 71-line hole survived two readings. So a
-`/guide --audit` cast loads the whole file to use just under half of it, and a generate cast
-carries audit mode it never reads — the shape [ADR 0001](adr/0001-layer-contract-and-slots.md)
-rejected for a combined slot file, recurring at the spell layer. The seam is the mode boundary,
-which the file already dispatches on.
+**Held, and two of the three reasons still stand.** *Spent:* the count argument for `/guide` — its
+pack reached four spells on 2026-09-01 for unrelated reasons, so splitting would make five rather than
+break three. *Standing:* splitting costs a name, two registry entries, and a README and changelog
+pass; and the load cost is paid only by someone who cast the spell on purpose, since
+`disable-model-invocation: true` means nobody else pays anything.
 
-**Held on 2026-08-29, deliberately**, and the reasoning is worth more than the measurement — but
-**one leg of it has since gone.** The hold cited a fourth spell in a pack ADR 0015 describes as
-carrying three; the pack reached four on 2026-09-01 when `/styleguide` shipped, for reasons that had
-nothing to do with this file. So splitting `/guide` would now make five rather than break three, and
-the count argument is spent. What remains of the hold still stands: splitting means a name, two
-registry entries, and a README and changelog pass. Against that, the load cost is paid only by
-someone who cast `/guide` on purpose — `disable-model-invocation: true` means nobody else pays
-anything. And the 116 cross-cutting lines have no clean home: duplicating them is debt this repo
-already tracks, and hoisting them into the scaffolding reference grows the file directly below this
-entry to roughly 490 lines, trading one outlier for a worse one. **Revisit when audit mode next
-grows**, which is the trigger that would tip it — not the line count on its own.
+**The count argument does not transfer to `/testify`, and there it is worse.** A pack has no stated
+ceiling; core does — ADR 0010 sets ten and the spellbook stands at nine. Audit mode is a
+deliberately-cast, side-effectful action, so it could not ship as a Reference-posture unit: splitting
+it means a **tenth workflow spell**, spending the last slot under the ceiling on a mode that already
+has a home. Weigh that before the line counts.
 
-**`/testify` shipped on 2026-09-01 as a second instance of exactly this shape, in core.** Measured
-755 lines / 48K, which makes it the largest unit in `skills/core` by some way — 2.3x `/feature` at
-334 and 2.2x `bdd-principles` at 340. The fork is harder than `/guide`'s and sits at the top of
-Step 1: `audit` runs the sweep and **none** of Steps 1–8, anything else runs Steps 1–8 and never
-reaches the sweep. Of the 755, 509 lines are the capability path (Steps 1–8 plus the two stop
-states), 178 are audit mode, and 68 are cross-cutting (the framing, the three boundaries, the
-closing `Next:` line). So an audit cast loads the whole file to use about a third of it, and a
-capability cast carries a quarter it never reads.
-
-**The same shape, not the same arithmetic** — `/testify` wastes proportionally less than `/guide`
-does, 33% against 49%, which is worth stating rather than smoothing over. The pattern is what
-recurs; the ratio is a property of how much cross-cutting content each file happens to carry, and
-citing the two as equivalent would make a weaker case look like a stronger one.
-
-**A second instance is evidence, not a second item**, which is why it is recorded here rather than
-opened as its own entry. What it changes is the shape of the answer: two mode-forked spells in two
-layers means the question is no longer "should `/guide` be split" but whether a spell that hard-forks
-on its argument should be two units by rule — and if it should, the cross-cutting lines are the cost
-in both files, not a quirk of one. The hold's third leg transfers unchanged:
-`disable-model-invocation: true` means the load cost is paid only by someone who cast the spell on
-purpose, and nobody else pays anything.
-
-**Its count leg does not transfer, and is worse here.** For `/guide` that argument was ruled spent
-once its pack independently reached four spells, and a pack has no stated ceiling. Core does: ADR
-0010 sets ten, and the spellbook now stands at nine. Audit mode is a deliberately-cast,
-side-effectful action, so it could not ship as a Reference-posture unit — splitting it out means a
-tenth **workflow** spell, spending the last slot under the ceiling on a mode that already has a home.
-That is a real cost `/guide` never faced, and whoever revisits this should weigh it before the line
-counts. **Revisit when either spell's audit mode next grows** — and if a third instance appears, stop
-revisiting and write the rule.
+**Revisit when either spell's audit mode next grows** — that is the trigger, not the line count on
+its own. If a third instance appears, stop revisiting and write the rule.
 
 **Nothing tells a project to cache a derived guides index.** `umbraco-17-review-rules` already treats
 a stable, expensive, frequently-rendered listing with no caching as a finding in its own right, and a
