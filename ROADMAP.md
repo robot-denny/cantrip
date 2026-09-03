@@ -10,13 +10,15 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Nothing in flight.** The coverage spell closed on 2026-09-01 and is recorded under Recently
-shipped, as is the styleguide increment that closed the same day. The editor-facing guides increment
-the styleguide extends closed on 2026-08-29 and is archived under
-`_work/shipped/editor-facing-guides/`; the pack-boundary split closed on 2026-08-17 and is archived
-under `_work/shipped/pack-boundaries-and-succession/`. Of what Next now holds, the **pack-authoring
-meta-skill** is the highest-leverage item, because every other pack-related cost is paid per pack
-until it exists.
+**Slimming this file.** The roadmap had grown into a lab notebook: 508 lines, of which about 120
+were historical record duplicated from `CHANGELOG.md` and ADR 0015, and most open entries carried
+their own measurement history inline rather than a current figure and a decision. The work is the
+four factual corrections, moving the measurement history to `docs/measurements.md`, and a gate that
+holds a stated spell count to the one contract check 16 computes.
+
+**Of what Next holds, the pack-authoring meta-skill is the highest-leverage item** — every other
+pack-related cost is paid per pack until it exists. Closed increments are in `CHANGELOG.md` and
+under `_work/shipped/`; this section names what is open, not what is done.
 
 ---
 
@@ -249,124 +251,71 @@ and lowest as regression protection, so the answer probably falls out of the aut
 rather than being a separate piece of work. Until then they are a specification for a test, and the
 feature doc says so.
 
-**Check 1 greps file by file, and it is now two thirds of the commit gate.** The scrub check spawns
-two or three `grep` processes per scanned file, unconditionally, so its cost tracks file *count*
-rather than content. One batched `grep` over the same list finished in under 0.01s, with per-file
-exemption filtering then needed only for files that actually produced a hit, normally none.
-
-Measured twice, and the projection did not survive contact:
-
-| | 2026-08-26 | 2026-08-28 | 2026-08-31 |
-|---|---|---|---|
-| files scanned | 369 | 686 | ≈770 |
-| check 1 alone | ≈3.0s | ≈5.4s | ≈6.0s |
-| full `check-contract.sh` | ≈5.7s | ≈8.0s | ≈9.1s |
-| check 1's share | 53% | ≈67% | ≈66% |
-
-The 08-26 note projected +0.4s to +0.8s for this increment's fixtures. Actual growth over eleven
-commits was +2.3s, so the estimate was low by roughly 3x — worth recording as much for the estimate
-as for the number, since the fixtures arrived in trees (`.uda`, `.config`, `.cs`, dossier and audit
-inputs) rather than one file per case, and file *count* is what this check charges for.
-
-**The 08-31 column is the styleguide increment**, and its shape confirms the diagnosis rather than
-adding to it: one step's three fixture cases carried 33 `.uda` files between them and moved the full
-gate **+0.39s on their own**, measured by interleaving stashed and unstashed runs so the drift this
-machine shows between sessions could not be mistaken for the diff. The share holds at two thirds
-because both halves grew together. Nothing here is a new problem — it is the same linear charge on
-file count, now with a third point on the line, and the next increment that ships fixture trees will
-move it again by about as much.
+**Check 1 greps file by file, and it is two thirds of the commit gate.** The scrub check spawns two
+or three `grep` processes per scanned file, so its cost tracks file *count* rather than content — one
+batched `grep` over the same list finished in under 0.01s. At 936 files the full gate is ≈9.4s and
+still growing linearly with every fixture tree an increment ships. Figures, and the projection that
+came in 3x low, in [docs/measurements.md](docs/measurements.md#the-commit-gate--scriptscheck-contractsh).
 
 Filed rather than fixed in passing: this is the gate that keeps a public repo scrubbed, and rewriting
 how it collects hits deserves its own change with its own negative tests — an exemption still
 honored, a planted token still caught in both the `git ls-files` and `find` branches.
 
-**Pack spell counts are ungated.** Contract check 16 holds the core spellbook to ten workflow spells
+**Pack spell counts are ungated.** Contract check 16 holds the core spellbook to a ceiling of ten
 and says nothing about packs, so a pack could ship a dozen spells and nothing would notice. Whether
 that is deliberate — a pack serves one stack and its spells arrive only with it — or a gap the
 ceiling implies, is unasked rather than answered.
 
-**And the census stated in prose is ungated in the other direction.** Check 16 *computes* the count
-to enforce the ceiling; nothing holds the number written in `README.md`, `CHANGELOG.md`, or ADR 0010
-to what it computes. The `/testify` increment shipped with the README corrected and ADR 0010 left
-saying "the workflow set is eight" — caught in review, on a pass whose whole purpose was hunting
-stale counts, because the verification grep looked for *"eight workflow spells"* and the ADR says
-*"workflow set is eight"*. **A grep for one phrasing of a fact is not a check for the fact.** The
-gateable version is check 17's shape applied to a number rather than a vocabulary: read what check 16
-computes, and fail if a shipped document states a different figure. Cheap, and it removes a class of
-error that has now recurred twice.
+**The census stated in prose was ungated — closed 2026-09-03 by removing the duplication rather
+than gating it.** Check 16 *computes* the workflow-spell count to enforce the ceiling, and the number
+was separately written into four documents, where it went stale once: ADR 0010 said "the workflow set
+is eight" after the README had been corrected to nine.
 
-**The guide scaffolding reference is the largest unit in any pack, and the seam is known.**
-Measured 2026-08-28 at 436 lines / ~28K; **remeasured 2026-09-01 at 623 lines / 44K**, grown by the
-styleguide increment's showcase element types and its `## Design tokens` slot. Against
-`umbraco-17-feature-backfill` at 242 / 16K that is now 2.6x the next largest reference rather than
-1.7x — and the frontmatter trigger widened with the file, so a schema-only task now pays for the
-audit's report format, the document types *and* the showcase schema. The proposed seam is
-`## The audit's report shape`: it documents report output rather than schema, addresses the spell
-rather than someone creating document types, introduces and uses "documentable unit" entirely within
-itself, and would be roughly 110 lines alone. **Held rather than split**, because that section already
-says it is a candidate for extraction to the technology-agnostic layer, and splitting it into a second
-`umbraco-17` unit first means a unit name, two registry entries and a docs pass — then moving it
-again. Answer the core-extraction question and this falls out of it; split it sooner if a consumer
-reports the load cost first.
+A check to hold all four to the computed value was built and then reverted. It had to tell a count
+claim from a ceiling statement from a quotation, and review reproduced four defect classes in ~55
+lines of hot-path prose-matching: it captured any word rather than a number, its own comment claimed
+ceiling phrasings were safe when they were not, and a claim split by a hard line-wrap was invisible —
+in four documents that are hard-wrapped throughout.
+
+**The duplication was the defect; the staleness was only its symptom.** Three of the four claims did
+not need to be live, and ADR 0010 had already shown how without anyone noticing: it dates its claim,
+so it can never be wrong. The changelog entry now reads as of the release it describes, and this file
+states the count relative to the ceiling. **`README.md` carries the one live claim**, and one sentence
+in one file does not earn a gate. The same move as one slot with one point of authority, and as one
+vocabulary declaration its writers are held to: remove the second copy rather than checking it
+against the first.
+
+**The guide scaffolding reference is the largest unit in any pack, and the seam is known.** 623
+lines, 2.6x the next largest reference, and its frontmatter trigger widened with it — a schema-only
+task now pays for the audit's report format as well. The seam is `## The audit's report shape`,
+roughly 110 lines that document report output rather than schema. **Held rather than split**, because
+that section already says it is a candidate for extraction to the technology-agnostic layer, and
+splitting it into a second `umbraco-17` unit first means a unit name, two registry entries and a docs
+pass — then moving it again. Answer the core-extraction question and this falls out of it; split it
+sooner if a consumer reports the load cost first. Sizes in
+[docs/measurements.md](docs/measurements.md#the-guide-scaffolding-reference).
 
 **A mode-forked spell serves two modes from one load unit, and the seam is known.** Two instances
-now, one in a pack and one in core, so read this as a question about the shape rather than about
-either file.
+now — `/guide` in a pack, `/testify` in core — so this is a question about the shape rather than about
+either file: whether a spell that hard-forks on its argument should be two units by rule. An audit
+cast of `/guide` loads the whole file to use just under half of it; `/testify` wastes proportionally
+less. The seam in both is the mode boundary the file already dispatches on. Sizes in
+[docs/measurements.md](docs/measurements.md#mode-forked-spells).
 
-`/guide` was measured 2026-08-29 at 564 lines / 36K, when it was the largest unit in any pack.
-**Remeasured 2026-09-01 at 590 / 38K, and no longer the largest either way**: the scaffolding
-reference below it is 623 and `/styleguide` is 607. Its own growth was slight; what changed is what
-sits beside it. Of that, 300 lines are the generate path, 124 are audit mode, and 166 are
-cross-cutting (the script's surface, the degradation order, voice and tone, artifact disposition).
-**Recounted 2026-09-01**: the earlier split read 300/103/116, which sums to 519 against a 590-line
-file — the generate figure was right, which is why a 71-line hole survived two readings. So a
-`/guide --audit` cast loads the whole file to use just under half of it, and a generate cast
-carries audit mode it never reads — the shape [ADR 0001](adr/0001-layer-contract-and-slots.md)
-rejected for a combined slot file, recurring at the spell layer. The seam is the mode boundary,
-which the file already dispatches on.
+**Held, and two of the three reasons still stand.** *Spent:* the count argument for `/guide` — its
+pack reached four spells on 2026-09-01 for unrelated reasons, so splitting would make five rather than
+break three. *Standing:* splitting costs a name, two registry entries, and a README and changelog
+pass; and the load cost is paid only by someone who cast the spell on purpose, since
+`disable-model-invocation: true` means nobody else pays anything.
 
-**Held on 2026-08-29, deliberately**, and the reasoning is worth more than the measurement — but
-**one leg of it has since gone.** The hold cited a fourth spell in a pack ADR 0015 describes as
-carrying three; the pack reached four on 2026-09-01 when `/styleguide` shipped, for reasons that had
-nothing to do with this file. So splitting `/guide` would now make five rather than break three, and
-the count argument is spent. What remains of the hold still stands: splitting means a name, two
-registry entries, and a README and changelog pass. Against that, the load cost is paid only by
-someone who cast `/guide` on purpose — `disable-model-invocation: true` means nobody else pays
-anything. And the 116 cross-cutting lines have no clean home: duplicating them is debt this repo
-already tracks, and hoisting them into the scaffolding reference grows the file directly below this
-entry to roughly 490 lines, trading one outlier for a worse one. **Revisit when audit mode next
-grows**, which is the trigger that would tip it — not the line count on its own.
+**The count argument does not transfer to `/testify`, and there it is worse.** A pack has no stated
+ceiling; core does — ADR 0010 sets ten and the spellbook stands one short of it. Audit mode is a
+deliberately-cast, side-effectful action, so it could not ship as a Reference-posture unit: splitting
+it means a **tenth workflow spell**, spending the last slot under the ceiling on a mode that already
+has a home. Weigh that before the line counts.
 
-**`/testify` shipped on 2026-09-01 as a second instance of exactly this shape, in core.** Measured
-755 lines / 48K, which makes it the largest unit in `skills/core` by some way — 2.3x `/feature` at
-334 and 2.2x `bdd-principles` at 340. The fork is harder than `/guide`'s and sits at the top of
-Step 1: `audit` runs the sweep and **none** of Steps 1–8, anything else runs Steps 1–8 and never
-reaches the sweep. Of the 755, 509 lines are the capability path (Steps 1–8 plus the two stop
-states), 178 are audit mode, and 68 are cross-cutting (the framing, the three boundaries, the
-closing `Next:` line). So an audit cast loads the whole file to use about a third of it, and a
-capability cast carries a quarter it never reads.
-
-**The same shape, not the same arithmetic** — `/testify` wastes proportionally less than `/guide`
-does, 33% against 49%, which is worth stating rather than smoothing over. The pattern is what
-recurs; the ratio is a property of how much cross-cutting content each file happens to carry, and
-citing the two as equivalent would make a weaker case look like a stronger one.
-
-**A second instance is evidence, not a second item**, which is why it is recorded here rather than
-opened as its own entry. What it changes is the shape of the answer: two mode-forked spells in two
-layers means the question is no longer "should `/guide` be split" but whether a spell that hard-forks
-on its argument should be two units by rule — and if it should, the cross-cutting lines are the cost
-in both files, not a quirk of one. The hold's third leg transfers unchanged:
-`disable-model-invocation: true` means the load cost is paid only by someone who cast the spell on
-purpose, and nobody else pays anything.
-
-**Its count leg does not transfer, and is worse here.** For `/guide` that argument was ruled spent
-once its pack independently reached four spells, and a pack has no stated ceiling. Core does: ADR
-0010 sets ten, and the spellbook now stands at nine. Audit mode is a deliberately-cast,
-side-effectful action, so it could not ship as a Reference-posture unit — splitting it out means a
-tenth **workflow** spell, spending the last slot under the ceiling on a mode that already has a home.
-That is a real cost `/guide` never faced, and whoever revisits this should weigh it before the line
-counts. **Revisit when either spell's audit mode next grows** — and if a third instance appears, stop
-revisiting and write the rule.
+**Revisit when either spell's audit mode next grows** — that is the trigger, not the line count on
+its own. If a third instance appears, stop revisiting and write the rule.
 
 **Nothing tells a project to cache a derived guides index.** `umbraco-17-review-rules` already treats
 a stable, expensive, frequently-rendered listing with no caching as a finding in its own right, and a
@@ -393,98 +342,43 @@ on both sides.
 
 ## Settled, no work outstanding
 
-- **How a pack declares the version it targets** — [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md)
-  §3. One pack per major where majors break, per-feature annotation where they add, decided by
-  whether a project on an older major would get *correct* guidance from the pack. `umbraco-17` and
-  `dotnet` were both already right; the rule that made them right was not written down.
-- **Which axis a pack is cut on** — [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) §4.
-  A pack can be wrong for a project by host or product with the version held fixed, and Deploy
-  guidance on a non-Deploy install is the worked example. A pack cut on a product axis is versionless
-  and is described for the product rather than for the place the product usually runs.
-- **How a pack is replaced when its platform moves a major** —
-  [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) §5. A swap, not a merge: a
-  version-pinned pack carries its major in the pack name, references carry the version and spells
-  never do, one major of a platform is installed at a time, and an upgrade that touches more than one
-  pack means the boundaries were cut wrong. No rename was needed to adopt it — the rule is phrased so
-  the name that existed already complied.
-- **Where portable criteria end and stack-specific detection recipes begin** —
-  [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) §6, gated by contract check 14. The
-  criterion is portable and stays; the grep names a technology by necessity and moves to the pack
-  side. Settled empirically, after sanitizing a recipe rather than relocating it cost real signal.
-- **Registering a slot that two packs read** — [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md)
-  §7. Every reader is registered, and registration dedups on file-plus-heading. Both halves produced
-  a real bug before they were written down, and the `shared-slot-two-packs` fixture holds them.
+Recorded here so they are not reopened; the reasoning lives in the ADR, not in a second copy of it.
+All five are [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md), which carries the worked
+example that settled each.
+
+- **How a pack declares the version it targets** — §3. One pack per major where majors break,
+  per-feature annotation where they add.
+- **Which axis a pack is cut on**, when version is not what makes it wrong — §4. A pack cut on a
+  product axis is versionless, and described for the product rather than where it usually runs.
+- **How a pack is replaced when its platform moves a major** — §5. A swap, never a merge: the major
+  lives in the pack name, references carry the version and spells never do.
+- **Where portable criteria end and stack-specific recipes begin** — §6, gated by check 14. The
+  criterion is portable and stays; the grep names a technology and moves to the pack.
+- **Registering a slot that two packs read** — §7. Every reader is registered, and registration
+  dedups on file-plus-heading. Held by the `shared-slot-two-packs` fixture.
 
 ---
 
 ## Recently shipped
 
-- **2026-09-01** — The coverage spell, and the spellbook's first QA-owned verb: `/testify` reads a
-  capability doc's Test Coverage table as a work queue, reports which of its scenarios nothing proves,
-  then writes and runs tests only for the rows a person approves and records what each run
-  established. The ninth workflow spell, against ADR 0010's ceiling of ten, and a **pair with
-  `/feature` over one document** rather than a new stage in the chain — decided 2026-08-25 as a
-  separate spell rather than a mode on `/feature`, so the two share no machinery. The gap report comes
-  first on every path and sorts the unproved rows **by the decision each asks of the reader**:
-  writable now, blocked on test infrastructure this project does not have, or inferred from code
-  rather than specified — the last kept apart because proving one promotes a reading of the code into
-  a contract nobody agreed to. A scenario naming nothing that can be compared comes back as a question
-  for whoever wrote the doc, never as a guessed assertion, because a guessed assertion fills the row
-  it should have left empty. **Named probes stand in for a red-to-green signal that does not exist**:
-  behavior already built cannot go red, so every proposed test is reported with the specific ways it
-  could pass while the behavior is broken, and the spell says plainly that no such signal is available
-  rather than implying a proof it did not perform. Every test it writes carries a provenance header
-  naming the doc, its scenarios and the date, which is what makes drift detectable rather than guessed
-  at by matching scenario names — core requires the header, the project's own tests supply the comment
-  syntax. **The Draft banner frames a failure and never forks the behavior**, since a half-built
-  increment with some scenarios passing is the normal middle of the flow rather than an edge case. Two
-  stop states, both routed to `/spec`, because the spell reports what a project's testing architecture
-  is missing and never establishes one by accident. `/testify audit` sweeps every capability doc
-  read-only and reports drift in both directions, **deliberately never running a test** — a sweep that
-  executed a suite would be neither cheap nor read-only, and on a project whose tests create and
-  delete real content it would mutate what it reports on. Ships two coverage statuses (`Test failing`
-  and `Ruled out — <reason>`, [ADR 0016](adr/0016-coverage-status-names-an-observation.md)), contract
-  check 17 holding the vocabulary's writers in step, and a reworded `## Tests` slot fallback shared by
-  `/plan`, `/block` and `/testify`. **No script and no fixtures** — `skills/core/` is markdown and this
-  increment adds one `SKILL.md` to it, so the harness stays at 110 cases across three suites
-  (`_work/shipped/testify/spec.md`, `_features/test-coverage.md`)
-- **2026-09-01** — The token-reading styleguide, story 1 of the guides discovery's four and the
-  second caller of `umbraco-17-guide-scaffolding`: `/styleguide` writes one guide page whose showcase
-  sections carry token *names*, so the palette and type scale an editor sees follow the project's
-  stylesheet with no regeneration. **A design token here is a value that survives to the browser** —
-  in practice a CSS custom property — which is the only definition under which the headline claim can
-  be true, so a build-time-only palette is refused with a remedy rather than baked into a snapshot
-  that would fail the claim while looking like it passes. **It states its precondition rather than
-  assuming it**, in two halves always named met or unmet — a palette a rendered page can read, and an
-  existing view to take conventions from — making it the one spell in the pack that stops on a
-  project that is otherwise perfectly fine. That sharpness is deliberate: a styleguide scaffolded at
-  project setup makes a color-swatch view the exemplar every real block is later copied from. Four
-  states stop a run and none leaves a partial one. Ships the showcase element types and the new
-  `stack.md → ## Design tokens` slot in the scaffolding reference, and `--exclude-palette` on both
-  `guide.py`'s `inventory` and its `audit`, because the two derive their counts separately and a flag
-  wired into one leaves the other reporting a project's showcases as undocumented forever. Adopting a
-  project's own hand-built styleguide page is a **deliberate non-goal** — it would mean retyping a
-  document. **One known limitation**: the exemplar half counts views broadly, so a page template or a
-  partial satisfies it and a project with templates and no blocks can pass with nothing to copy; the
-  spell reads `exemplarViews.examples` and says so. A `styleguide-check` suite of 10 cases plus 3 new
-  `guide-check` cases, taking the harness to 110 across three suites (`_work/shipped/styleguide/spec.md`,
-  `_features/editor-guides.md`)
-- **2026-08-29** — Editor-facing guides: `/guide` writes a guide page per component from the schema
-  the component already declares and audits which components have none, with
-  `umbraco-17-guide-scaffolding` describing the document types a guides section needs. **The
-  extraction adapter this item was waiting on was built here**, rather than consumed from elsewhere:
-  the increment decided to ship the deterministic half — extraction, the dossier, the inventory
-  determiner, the audit's arithmetic, the change plan — as a Python script inside the spell, leaving
-  the spell the prose, the diff-and-approve conversation, and every CMS write. Four rungs, Deploy →
-  uSync → live instance → generated models, with a read that finds nothing failing loudly and the
-  same component read through two adapters producing the same signature. Property tables never
-  depend on a model, which is what lets the whole thing degrade to files. The audit warns and never
-  blocks — exit zero whatever it found, `--strict` the only opt-in — and it reports the inventory
-  and the rule that produced it before acting on it, because a determiner reading the element-type
-  flag rather than the block palettes over-counts by 1.5x to 2.4x on the two projects measured. Two
-  new slots, `stack.md → ## Schema serialization` and `conventions.md → ## Editor guides`, both
-  declared in the reference and nowhere else. Ships an 80-case test suite, taking the harness to 97
-  across two suites (`_work/shipped/editor-facing-guides/spec.md`, `_features/editor-guides.md`)
+- **2026-09-01** — **The coverage spell, `/testify`.** The ninth workflow spell and the first
+  QA-owned verb: it reads a capability doc's Test Coverage table as a work queue, reports what
+  nothing proves, then writes and runs tests only for the rows a person approves. A pair with
+  `/feature` over one document rather than a new stage in the chain. Full detail in `CHANGELOG.md`;
+  the decision it rests on is [ADR 0016](adr/0016-coverage-status-names-an-observation.md)
+  (`_work/shipped/testify/spec.md`, `_features/test-coverage.md`).
+
+- **2026-09-01** — **The token-reading styleguide, `/styleguide`.** A guide page whose showcase
+  sections carry token *names*, so what an editor sees follows the project's stylesheet and stays
+  current with no regeneration. Story 1 of the guides discovery's four, and the second caller of the
+  guides scaffolding. Full detail in `CHANGELOG.md`
+  (`_work/shipped/styleguide/spec.md`, `_features/editor-guides.md`).
+
+- **2026-08-29** — **Editor-facing guides, `/guide`.** One guide page per component, written from
+  the schema the component already declares, plus an audit of which components have none. The
+  deterministic half is a script; the prose half is the model's. Full detail in `CHANGELOG.md`
+  (`_work/shipped/editor-facing-guides/spec.md`, `_features/editor-guides.md`).
+
 - **2026-08-24** — The uSync rung in schema extraction: four pack files across `umbraco-17` and
   `umbraco-cloud` stopped sending a uSync project to a live API for schema already in its repository,
   a Deploy-to-uSync field mapping and the normalize-on-the-alias rule landed in

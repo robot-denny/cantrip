@@ -18,7 +18,7 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   with posture in frontmatter, and the lifecycle-based file layout. The reasoning now lives with the code
   instead of in a document consumers never see.
 - **ADR 0007** — repository ownership stays as-is, with the costs of a later move recorded.
-- The spell census is stated explicitly: **nine workflow spells** against a working ceiling of ten, plus
+- The spell census as this release ships it: **nine workflow spells** against a working ceiling of ten, plus
   `/setup` and `/update-toolkit` counted separately as configuration and maintenance rather than
   workflow stages.
 
