@@ -10,15 +10,24 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Slimming this file.** The roadmap had grown into a lab notebook: 508 lines, of which about 120
-were historical record duplicated from `CHANGELOG.md` and ADR 0015, and most open entries carried
-their own measurement history inline rather than a current figure and a decision. The work is the
-four factual corrections, moving the measurement history to `docs/measurements.md`, and a gate that
-holds a stated spell count to the one contract check 16 computes.
+**Nothing in flight.**
 
 **Of what Next holds, the pack-authoring meta-skill is the highest-leverage item** — every other
-pack-related cost is paid per pack until it exists. Closed increments are in `CHANGELOG.md` and
-under `_work/shipped/`; this section names what is open, not what is done.
+pack-related cost is paid per pack until it exists. Two items are waiting on something rather than on
+effort: the `/guide` first-run branch needs the pilot's one question answered, and the installed-docs
+gap needs a decision rather than a build.
+
+Closed increments are in `CHANGELOG.md` and under `_work/shipped/`; **this section names what is
+open, not what is done.**
+
+**This section has been wrong four times in three days**, and never for an interesting reason: it
+claimed nothing was in flight through an open branch, then described work as pending after it
+shipped, then named a gate the same increment had reverted, then said a merged PR was in review. It
+is the only part of this file that describes the *present*, so it is the only part that goes wrong
+just by time passing — every other entry stays true until somebody changes something. A reader caught
+it each time. **If it goes wrong a fifth time, derive it instead of writing it**: open branches and
+open PRs are both machine-readable, and a sentence nobody can keep true is worth less than a command
+that answers the same question.
 
 ---
 
@@ -266,25 +275,6 @@ and says nothing about packs, so a pack could ship a dozen spells and nothing wo
 that is deliberate — a pack serves one stack and its spells arrive only with it — or a gap the
 ceiling implies, is unasked rather than answered.
 
-**The census stated in prose was ungated — closed 2026-09-03 by removing the duplication rather
-than gating it.** Check 16 *computes* the workflow-spell count to enforce the ceiling, and the number
-was separately written into four documents, where it went stale once: ADR 0010 said "the workflow set
-is eight" after the README had been corrected to nine.
-
-A check to hold all four to the computed value was built and then reverted. It had to tell a count
-claim from a ceiling statement from a quotation, and review reproduced four defect classes in ~55
-lines of hot-path prose-matching: it captured any word rather than a number, its own comment claimed
-ceiling phrasings were safe when they were not, and a claim split by a hard line-wrap was invisible —
-in four documents that are hard-wrapped throughout.
-
-**The duplication was the defect; the staleness was only its symptom.** Three of the four claims did
-not need to be live, and ADR 0010 had already shown how without anyone noticing: it dates its claim,
-so it can never be wrong. The changelog entry now reads as of the release it describes, and this file
-states the count relative to the ceiling. **`README.md` carries the one live claim**, and one sentence
-in one file does not earn a gate. The same move as one slot with one point of authority, and as one
-vocabulary declaration its writers are held to: remove the second copy rather than checking it
-against the first.
-
 **The guide scaffolding reference is the largest unit in any pack, and the seam is known.** 623
 lines, 2.6x the next largest reference, and its frontmatter trigger widened with it — a schema-only
 task now pays for the audit's report format as well. The seam is `## The audit's report shape`,
@@ -342,9 +332,10 @@ on both sides.
 
 ## Settled, no work outstanding
 
-Recorded here so they are not reopened; the reasoning lives in the ADR, not in a second copy of it.
-All five are [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md), which carries the worked
-example that settled each.
+Recorded here so they are not reopened; where an ADR carries the reasoning, this is a pointer to it
+rather than a second copy. The first five are all
+[ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md), which holds the worked example that
+settled each.
 
 - **How a pack declares the version it targets** — §3. One pack per major where majors break,
   per-feature annotation where they add.
@@ -357,9 +348,36 @@ example that settled each.
 - **Registering a slot that two packs read** — §7. Every reader is registered, and registration
   dedups on file-plus-heading. Held by the `shared-slot-two-packs` fixture.
 
+**The census stated in prose was ungated — closed 2026-09-03 by removing the duplication rather
+than gating it.** Check 16 *computes* the workflow-spell count to enforce the ceiling, and the number
+was separately written into four documents, where it went stale once: ADR 0010 said "the workflow set
+is eight" after the README had been corrected to nine.
+
+A check to hold all four to the computed value was built and then reverted. It had to tell a count
+claim from a ceiling statement from a quotation, and review reproduced four defect classes in ~55
+lines of hot-path prose-matching: it captured any word rather than a number, its own comment claimed
+ceiling phrasings were safe when they were not, and a claim split by a hard line-wrap was invisible —
+in four documents that are hard-wrapped throughout.
+
+**The duplication was the defect; the staleness was only its symptom.** Three of the four claims did
+not need to be live, and ADR 0010 had already shown how without anyone noticing: it dates its claim,
+so it can never be wrong. The changelog entry now reads as of the release it describes, and this file
+states the count relative to the ceiling. **`README.md` carries the one live claim**, and one sentence
+in one file does not earn a gate. The same move as one slot with one point of authority, and as one
+vocabulary declaration its writers are held to: remove the second copy rather than checking it
+against the first.
+
 ---
 
 ## Recently shipped
+
+- **2026-09-03** — **This file, slimmed, and its measurement history split out.** 508 lines to 406:
+  four factual corrections, the sizes and timings moved to
+  [docs/measurements.md](docs/measurements.md) so each entry keeps a current figure and a decision
+  rather than its own history, and `Recently shipped` and `Settled` stopped restating `CHANGELOG.md`
+  and ADR 0015. A check holding a stated spell count to the one check 16 computes was built and
+  reverted — the duplication was the defect, so three of the four claims were made immutable or
+  relative instead, leaving `README.md` with the only live one.
 
 - **2026-09-01** — **The coverage spell, `/testify`.** The ninth workflow spell and the first
   QA-owned verb: it reads a capability doc's Test Coverage table as a work queue, reports what
