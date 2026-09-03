@@ -10,13 +10,15 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Nothing in flight.** The coverage spell closed on 2026-09-01 and is recorded under Recently
-shipped, as is the styleguide increment that closed the same day. The editor-facing guides increment
-the styleguide extends closed on 2026-08-29 and is archived under
-`_work/shipped/editor-facing-guides/`; the pack-boundary split closed on 2026-08-17 and is archived
-under `_work/shipped/pack-boundaries-and-succession/`. Of what Next now holds, the **pack-authoring
-meta-skill** is the highest-leverage item, because every other pack-related cost is paid per pack
-until it exists.
+**Slimming this file.** The roadmap had grown into a lab notebook: 508 lines, of which about 120
+were historical record duplicated from `CHANGELOG.md` and ADR 0015, and most open entries carried
+their own measurement history inline rather than a current figure and a decision. The work is the
+four factual corrections, moving the measurement history to `docs/measurements.md`, and a gate that
+holds a stated spell count to the one contract check 16 computes.
+
+**Of what Next holds, the pack-authoring meta-skill is the highest-leverage item** — every other
+pack-related cost is paid per pack until it exists. Closed increments are in `CHANGELOG.md` and
+under `_work/shipped/`; this section names what is open, not what is done.
 
 ---
 
@@ -254,14 +256,18 @@ two or three `grep` processes per scanned file, unconditionally, so its cost tra
 rather than content. One batched `grep` over the same list finished in under 0.01s, with per-file
 exemption filtering then needed only for files that actually produced a hit, normally none.
 
-Measured twice, and the projection did not survive contact:
+Measured at four points, and the projection did not survive contact:
 
-| | 2026-08-26 | 2026-08-28 | 2026-08-31 |
-|---|---|---|---|
-| files scanned | 369 | 686 | ≈770 |
-| check 1 alone | ≈3.0s | ≈5.4s | ≈6.0s |
-| full `check-contract.sh` | ≈5.7s | ≈8.0s | ≈9.1s |
-| check 1's share | 53% | ≈67% | ≈66% |
+| | 2026-08-26 | 2026-08-28 | 2026-08-31 | 2026-09-03 |
+|---|---|---|---|---|
+| files scanned | 369 | 686 | ≈770 | 936 |
+| check 1 alone | ≈3.0s | ≈5.4s | ≈6.0s | — |
+| full `check-contract.sh` | ≈5.7s | ≈8.0s | ≈9.1s | ≈9.4s |
+| check 1's share | 53% | ≈67% | ≈66% | — |
+
+The 09-03 column is whole-gate only: checks 17 and 18 landed between it and 08-31, so an isolated
+check-1 figure would no longer be comparable without re-measuring the others too. The full gate grew
++0.3s on +166 files, which is the same linear charge the rest of the table shows.
 
 The 08-26 note projected +0.4s to +0.8s for this increment's fixtures. Actual growth over eleven
 commits was +2.3s, so the estimate was low by roughly 3x — worth recording as much for the estimate
@@ -393,98 +399,35 @@ on both sides.
 
 ## Settled, no work outstanding
 
-- **How a pack declares the version it targets** — [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md)
-  §3. One pack per major where majors break, per-feature annotation where they add, decided by
-  whether a project on an older major would get *correct* guidance from the pack. `umbraco-17` and
-  `dotnet` were both already right; the rule that made them right was not written down.
-- **Which axis a pack is cut on** — [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) §4.
-  A pack can be wrong for a project by host or product with the version held fixed, and Deploy
-  guidance on a non-Deploy install is the worked example. A pack cut on a product axis is versionless
-  and is described for the product rather than for the place the product usually runs.
-- **How a pack is replaced when its platform moves a major** —
-  [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) §5. A swap, not a merge: a
-  version-pinned pack carries its major in the pack name, references carry the version and spells
-  never do, one major of a platform is installed at a time, and an upgrade that touches more than one
-  pack means the boundaries were cut wrong. No rename was needed to adopt it — the rule is phrased so
-  the name that existed already complied.
-- **Where portable criteria end and stack-specific detection recipes begin** —
-  [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md) §6, gated by contract check 14. The
-  criterion is portable and stays; the grep names a technology by necessity and moves to the pack
-  side. Settled empirically, after sanitizing a recipe rather than relocating it cost real signal.
-- **Registering a slot that two packs read** — [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md)
-  §7. Every reader is registered, and registration dedups on file-plus-heading. Both halves produced
-  a real bug before they were written down, and the `shared-slot-two-packs` fixture holds them.
+Recorded here so they are not reopened; the reasoning lives in the ADR, not in a second copy of it.
+All five are [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md), which carries the worked
+example that settled each.
+
+- **How a pack declares the version it targets** — §3
+- **Which axis a pack is cut on**, when version is not the thing that makes it wrong — §4
+- **How a pack is replaced when its platform moves a major** — §5: a swap, never a merge
+- **Where portable criteria end and stack-specific detection recipes begin** — §6, gated by check 14
+- **Registering a slot that two packs read** — §7, held by the `shared-slot-two-packs` fixture
 
 ---
 
 ## Recently shipped
 
-- **2026-09-01** — The coverage spell, and the spellbook's first QA-owned verb: `/testify` reads a
-  capability doc's Test Coverage table as a work queue, reports which of its scenarios nothing proves,
-  then writes and runs tests only for the rows a person approves and records what each run
-  established. The ninth workflow spell, against ADR 0010's ceiling of ten, and a **pair with
-  `/feature` over one document** rather than a new stage in the chain — decided 2026-08-25 as a
-  separate spell rather than a mode on `/feature`, so the two share no machinery. The gap report comes
-  first on every path and sorts the unproved rows **by the decision each asks of the reader**:
-  writable now, blocked on test infrastructure this project does not have, or inferred from code
-  rather than specified — the last kept apart because proving one promotes a reading of the code into
-  a contract nobody agreed to. A scenario naming nothing that can be compared comes back as a question
-  for whoever wrote the doc, never as a guessed assertion, because a guessed assertion fills the row
-  it should have left empty. **Named probes stand in for a red-to-green signal that does not exist**:
-  behavior already built cannot go red, so every proposed test is reported with the specific ways it
-  could pass while the behavior is broken, and the spell says plainly that no such signal is available
-  rather than implying a proof it did not perform. Every test it writes carries a provenance header
-  naming the doc, its scenarios and the date, which is what makes drift detectable rather than guessed
-  at by matching scenario names — core requires the header, the project's own tests supply the comment
-  syntax. **The Draft banner frames a failure and never forks the behavior**, since a half-built
-  increment with some scenarios passing is the normal middle of the flow rather than an edge case. Two
-  stop states, both routed to `/spec`, because the spell reports what a project's testing architecture
-  is missing and never establishes one by accident. `/testify audit` sweeps every capability doc
-  read-only and reports drift in both directions, **deliberately never running a test** — a sweep that
-  executed a suite would be neither cheap nor read-only, and on a project whose tests create and
-  delete real content it would mutate what it reports on. Ships two coverage statuses (`Test failing`
-  and `Ruled out — <reason>`, [ADR 0016](adr/0016-coverage-status-names-an-observation.md)), contract
-  check 17 holding the vocabulary's writers in step, and a reworded `## Tests` slot fallback shared by
-  `/plan`, `/block` and `/testify`. **No script and no fixtures** — `skills/core/` is markdown and this
-  increment adds one `SKILL.md` to it, so the harness stays at 110 cases across three suites
-  (`_work/shipped/testify/spec.md`, `_features/test-coverage.md`)
-- **2026-09-01** — The token-reading styleguide, story 1 of the guides discovery's four and the
-  second caller of `umbraco-17-guide-scaffolding`: `/styleguide` writes one guide page whose showcase
-  sections carry token *names*, so the palette and type scale an editor sees follow the project's
-  stylesheet with no regeneration. **A design token here is a value that survives to the browser** —
-  in practice a CSS custom property — which is the only definition under which the headline claim can
-  be true, so a build-time-only palette is refused with a remedy rather than baked into a snapshot
-  that would fail the claim while looking like it passes. **It states its precondition rather than
-  assuming it**, in two halves always named met or unmet — a palette a rendered page can read, and an
-  existing view to take conventions from — making it the one spell in the pack that stops on a
-  project that is otherwise perfectly fine. That sharpness is deliberate: a styleguide scaffolded at
-  project setup makes a color-swatch view the exemplar every real block is later copied from. Four
-  states stop a run and none leaves a partial one. Ships the showcase element types and the new
-  `stack.md → ## Design tokens` slot in the scaffolding reference, and `--exclude-palette` on both
-  `guide.py`'s `inventory` and its `audit`, because the two derive their counts separately and a flag
-  wired into one leaves the other reporting a project's showcases as undocumented forever. Adopting a
-  project's own hand-built styleguide page is a **deliberate non-goal** — it would mean retyping a
-  document. **One known limitation**: the exemplar half counts views broadly, so a page template or a
-  partial satisfies it and a project with templates and no blocks can pass with nothing to copy; the
-  spell reads `exemplarViews.examples` and says so. A `styleguide-check` suite of 10 cases plus 3 new
-  `guide-check` cases, taking the harness to 110 across three suites (`_work/shipped/styleguide/spec.md`,
-  `_features/editor-guides.md`)
-- **2026-08-29** — Editor-facing guides: `/guide` writes a guide page per component from the schema
-  the component already declares and audits which components have none, with
-  `umbraco-17-guide-scaffolding` describing the document types a guides section needs. **The
-  extraction adapter this item was waiting on was built here**, rather than consumed from elsewhere:
-  the increment decided to ship the deterministic half — extraction, the dossier, the inventory
-  determiner, the audit's arithmetic, the change plan — as a Python script inside the spell, leaving
-  the spell the prose, the diff-and-approve conversation, and every CMS write. Four rungs, Deploy →
-  uSync → live instance → generated models, with a read that finds nothing failing loudly and the
-  same component read through two adapters producing the same signature. Property tables never
-  depend on a model, which is what lets the whole thing degrade to files. The audit warns and never
-  blocks — exit zero whatever it found, `--strict` the only opt-in — and it reports the inventory
-  and the rule that produced it before acting on it, because a determiner reading the element-type
-  flag rather than the block palettes over-counts by 1.5x to 2.4x on the two projects measured. Two
-  new slots, `stack.md → ## Schema serialization` and `conventions.md → ## Editor guides`, both
-  declared in the reference and nowhere else. Ships an 80-case test suite, taking the harness to 97
-  across two suites (`_work/shipped/editor-facing-guides/spec.md`, `_features/editor-guides.md`)
+- **2026-09-01** — **The coverage spell, `/testify`.** The ninth workflow spell and the first
+  QA-owned verb: it reads a capability doc's Test Coverage table as a work queue, reports what
+  nothing proves, then writes and runs tests only for the rows a person approves. A pair with
+  `/feature` over one document rather than a new stage in the chain. Full detail in `CHANGELOG.md`;
+  the decision it rests on is [ADR 0016](adr/0016-coverage-status-names-an-observation.md).
+
+- **2026-09-01** — **The token-reading styleguide, `/styleguide`.** A guide page whose showcase
+  sections carry token *names*, so what an editor sees follows the project's stylesheet and stays
+  current with no regeneration. Story 1 of the guides discovery's four, and the second caller of the
+  guides scaffolding. Full detail in `CHANGELOG.md`.
+
+- **2026-08-29** — **Editor-facing guides, `/guide`.** One guide page per component, written from
+  the schema the component already declares, plus an audit of which components have none. The
+  deterministic half is a script; the prose half is the model's. Full detail in `CHANGELOG.md`.
+
 - **2026-08-24** — The uSync rung in schema extraction: four pack files across `umbraco-17` and
   `umbraco-cloud` stopped sending a uSync project to a live API for schema already in its repository,
   a Deploy-to-uSync field mapping and the normalize-on-the-alias rule landed in
