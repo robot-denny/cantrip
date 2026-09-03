@@ -261,7 +261,7 @@ Filed rather than fixed in passing: this is the gate that keeps a public repo sc
 how it collects hits deserves its own change with its own negative tests — an exemption still
 honored, a planted token still caught in both the `git ls-files` and `find` branches.
 
-**Pack spell counts are ungated.** Contract check 16 holds the core spellbook to ten workflow spells
+**Pack spell counts are ungated.** Contract check 16 holds the core spellbook to a ceiling of ten
 and says nothing about packs, so a pack could ship a dozen spells and nothing would notice. Whether
 that is deliberate — a pack serves one stack and its spells arrive only with it — or a gap the
 ceiling implies, is unasked rather than answered.

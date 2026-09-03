@@ -965,6 +965,81 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 19. A stated spell census matches the one check 16 computes (this repo only)
+# ---------------------------------------------------------------------------
+# Check 16 computes the workflow-spell count to enforce ADR 0010's ceiling. Nothing held the
+# number WRITTEN DOWN to what it computes, and it went stale twice in one increment: the README
+# was corrected to nine while ADR 0010 went on saying "the workflow set is eight", and the
+# verification grep missed it because it looked for "eight workflow spells" while the ADR said
+# "workflow set is eight". A grep for one phrasing of a fact is not a check for the fact.
+#
+# Three things a naive matcher confuses, and how each is handled:
+#
+#   A COUNT CLAIM ...... "Nine workflow spells", "the workflow set is nine". Must match.
+#   A CEILING .......... "ten workflow spells is the working ceiling". A different fact with a
+#                        different number, so ceiling phrasings are not claim phrasings and the
+#                        patterns below do not match them.
+#   A QUOTATION ........ the roadmap quotes "the workflow set is eight" as the worked example of
+#                        this very bug. Quoted spans are stripped before matching, because a
+#                        claim inside quotation marks is a quotation and not a claim.
+#
+# Adding a fifth phrasing to a shipped document means adding it here. That is the cost of stating
+# one number four ways, and it is cheaper than the number being wrong.
+#
+# AGENTS.md is deliberately not in the list: it states the ceiling and never the count, so it has
+# no figure that can go stale. Add it the day it claims one.
+begin "a stated spell census matches the computed one"
+CENSUS_DOCS=(README.md CHANGELOG.md ROADMAP.md adr/0010-skills-not-commands.md)
+if [[ -d skills/core/spellbook ]]; then
+  census_expected=0
+  for entry in skills/core/spellbook/*/; do
+    [[ -f "$entry/SKILL.md" ]] || continue
+    name="${entry%/}"; name="${name##*/}"
+    skip=0
+    for excluded in "${NON_WORKFLOW[@]}"; do
+      [[ "$name" == "$excluded" ]] && skip=1
+    done
+    (( skip )) || census_expected=$((census_expected + 1))
+  done
+
+  census_word() {  # spell out the count so a claim can be written either way
+    case "$1" in
+      6) printf 'six' ;;   7) printf 'seven' ;;  8) printf 'eight' ;;
+      9) printf 'nine' ;; 10) printf 'ten' ;;   11) printf 'eleven' ;;
+      12) printf 'twelve' ;; *) printf '%s' "$1" ;;
+    esac
+  }
+  expected_word=$(census_word "$census_expected")
+
+  details=""
+  for doc in "${CENSUS_DOCS[@]}"; do
+    [[ -f "$doc" ]] || continue
+    while IFS=: read -r lineno stated; do
+      [[ -z "$stated" ]] && continue
+      [[ "$stated" == "$expected_word" || "$stated" == "$census_expected" ]] && continue
+      details+="  - $doc:$lineno states \"$stated\" where the spellbook holds $census_expected ($expected_word)"$'\n'
+    done < <(
+      sed -e 's/"[^"]*"//g' "$doc" \
+        | grep -nioE '(\*\*)?[a-z0-9]+ workflow spells|workflow set is [a-z0-9]+|spellbook stands at [a-z0-9]+' \
+        | sed -e 's/\*\*//g' -e 's/ workflow spells$//' -e 's/workflow set is //' \
+              -e 's/spellbook stands at //' \
+        | tr '[:upper:]' '[:lower:]'
+    )
+  done
+
+  if [[ -n "$details" ]]; then
+    report_fail "$CURRENT" \
+      "A document states a spell census that disagrees with what check 16 computes." \
+      "Correct the figure, or if it is a ceiling or a quotation rather than a claim, phrase it as one." \
+      "" "$details"
+  else
+    report_pass "$CURRENT"
+  fi
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n'
 if [[ $FAILURES -eq 0 ]]; then
   printf '\033[32m%s checks passed.\033[0m\n' "$CHECKS_RUN"
