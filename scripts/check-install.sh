@@ -217,10 +217,8 @@ fi
 # ---------------------------------------------------------------------------
 # 4. Reviewer agents — degraded, not broken, when unregistered
 # ---------------------------------------------------------------------------
-# Unregistered reviewers mean /code-review runs its passes inline instead of in parallel. That
-# is a working toolkit, so it must not affect the exit code. /retrofit dispatches the same three
-# reviewers but documents no inline fallback, so its unregistered behavior is undefined rather
-# than degraded -- see the note in docs/installing.md.
+# Unregistered reviewers mean /code-review and /retrofit run their passes inline instead
+# of in parallel. That is a working toolkit, so it must not affect the exit code.
 LINK_FIX='mkdir -p .claude/agents && for f in .claude/skills/reviewer-discipline/agents/*.md; do n=$(basename "$f"); ln -s "../skills/reviewer-discipline/agents/$n" ".claude/agents/$n"; done'
 
 # A name match is NOT a registration. A project may have its own agent under the same name
@@ -255,7 +253,7 @@ if [[ ${#collided[@]} -gt 0 ]]; then
 fi
 
 if [[ $registered -eq 0 && ${#collided[@]} -eq 0 ]]; then
-  DEGRADED+=("reviewer agents are not registered — /code-review still runs, but inline instead of in parallel, and /retrofit has no inline fallback. Register with: $LINK_FIX")
+  DEGRADED+=("reviewer agents are not registered — review still runs, but inline instead of in parallel. Register with: $LINK_FIX")
 elif [[ $registered -gt 0 && $((registered + ${#collided[@]})) -lt ${#REVIEWERS[@]} ]]; then
   DEGRADED+=("only $registered of ${#REVIEWERS[@]} toolkit reviewer agents are registered — review will be partial. Link the rest with: $LINK_FIX")
 fi

@@ -1,7 +1,18 @@
 # 0004. Install layout — corrections from verifying the CLI
 
 **Status:** Accepted — supersedes two claims in [ADR 0002](0002-packaging-and-install-shape.md)
-**Date:** 2026-08-03
+**Date:** 2026-08-03 — corrected 2026-09-04
+
+> **One claim below was wrong when written.** Decision 2 calls the inline sequential fallback "a
+> degradation both already document". Only `/code-review` documented it. `/retrofit` dispatched the
+> same three reviewers and said nothing about the unregistered case. Its behavior there was
+> undefined rather than degraded, and stayed that way for the month this record stood. `/retrofit`
+> now documents the fallback and discovers registered reviewers the way `/code-review` does, which
+> makes the sentence true. The decision itself is untouched: reviewers still ship as
+> `reviewer-discipline` assets, and registration is still a step the CLI cannot perform. This is
+> neither an amendment nor a supersession under [adr/README.md](README.md), since nothing was added
+> to the decision and nothing reversed. The body stays as written, because a record should say what
+> was actually seen at the time.
 
 ## Context
 

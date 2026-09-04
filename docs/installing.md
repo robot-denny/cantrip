@@ -121,9 +121,8 @@ New-Item -ItemType Directory -Force .claude\agents
 Copy-Item .claude\skills\reviewer-discipline\agents\*.md .claude\agents\
 ```
 
-Until you do this, `/code-review` runs the three passes one after another rather than in parallel.
-Everything works either way, and you are trading speed rather than capability. `/retrofit` dispatches
-the same three reviewers but documents no inline fallback, so register them before you rely on it.
+Until you do this, `/code-review` and `/retrofit` run the three passes one after another rather than
+in parallel. Everything works either way, and you are trading speed rather than capability.
 
 ## If your project already has commands with these names
 
