@@ -41,8 +41,8 @@ CONFIG_DIR=".agents/config"
 # Contract check 13 now compares this roster against skills/core in the toolkit repo, which
 # is the only place the comparison is possible.
 ROSTER_CORE=(
-  bdd-principles design-system-authoring memory-discipline reviewer-discipline
-  tdd-principles workflow
+  bdd-principles design-system-authoring memory-discipline prose-discipline
+  reviewer-discipline tdd-principles workflow
   code-review commit-message explore feature implement-step plan retrofit setup spec
   testify update-toolkit
 )

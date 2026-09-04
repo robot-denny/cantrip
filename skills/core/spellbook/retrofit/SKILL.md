@@ -120,10 +120,15 @@ documentation.
 
 ## Step 3 — Code review (reuse the reviewers)
 
-Run the same three reviewers `/code-review` orchestrates — `accessibility-reviewer`,
-`code-reviewer`, `perf-reviewer` — **in parallel**, but feed them the **retrofit diff from Step 1**
-rather than letting them recompute their own staged-and-unstaged scope. The change may already be
-committed, in which case a recomputed scope would come up empty.
+Run the accessibility, code-quality and performance reviewers **in parallel**, but feed them the
+**retrofit diff from Step 1** rather than letting them recompute their own staged-and-unstaged
+scope. The change may already be committed, in which case a recomputed scope would come up empty.
+
+**Discover which reviewers are registered the way `/code-review` does**, rather than assuming the
+canonical `accessibility-reviewer`, `code-reviewer` and `perf-reviewer`. Its *Find the reviewers
+before assuming their names* section owns that mapping and the slot behind it. A project that kept
+its own tailored reviewer under a different name is the expected case, and the install checker
+recommends exactly that. Hardcoded names would dispatch nothing there.
 
 Give each the retrofit diff, the full text of any new files, and brief repo context. They follow the
 `reviewer-discipline` skill, so severity and evidence standards are already consistent.
@@ -131,7 +136,17 @@ Give each the retrofit diff, the full text of any new files, and brief repo cont
 Collect findings by severity. You will fold them into the proposal in Step 6, tagging each as
 *retrofit can apply* or *needs human decision*.
 
-*If every change is still uncommitted, running `/code-review` directly is equivalent — orchestrating
+**If a reviewer is unavailable.** One reported as not found usually means the session predates its
+installation, since registered agents load at session start. Say so and suggest restarting rather
+than quietly proceeding a reviewer short. If a role has no reviewer under any name, run that pass
+inline instead of dropping it. If none can be dispatched at all, run all three inline, one after
+another, under the same severity scale.
+
+Either way the findings still reach Step 6. Say which roles were covered and how: a proposal
+missing a whole dimension looks identical to one that found nothing there. Parallel dispatch is an
+efficiency rather than the contract.
+
+*If every change is still uncommitted, running `/code-review` directly is equivalent. Orchestrating
 the reviewers here is what keeps retrofit correct regardless of commit state.*
 
 ## Step 4 — Surface edge cases

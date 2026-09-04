@@ -53,9 +53,17 @@ DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/umbraco-cloud --al
 #    C# and .NET, CMS or not
 DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/dotnet --all
 
-# 3. Configure it — reads what your repo already answers, asks only for the rest
+# 3. Register the three reviewers so /code-review runs them in parallel.
+#    Optional, and easy to skip forever, because nothing later tells you that you did.
+mkdir -p .claude/agents && for f in .claude/skills/reviewer-discipline/agents/*.md; do n=$(basename "$f"); ln -s "../skills/reviewer-discipline/agents/$n" ".claude/agents/$n"; done
+
+# 4. Configure it — reads what your repo already answers, asks only for the rest
 /setup
 ```
+
+Step 3 is a copy rather than a link on Windows, and it errors on any reviewer name your project
+already uses, which is a case to leave alone rather than force.
+[Installing in detail](docs/installing.md) covers both.
 
 Then cast `/spec` on your next piece of work.
 
@@ -68,8 +76,7 @@ part you own and edit, and it is committed, so filling a slot answers it for you
 does real work or asks for the single fact it is missing.
 
 Install edge cases — Windows symlinks, name collisions with existing commands, choosing an install
-shape, registering the reviewers for parallel dispatch — are in
-[Installing in detail](#installing-in-detail). Skip them until something looks wrong.
+shape — are in [Installing in detail](#installing-in-detail). Skip them until something looks wrong.
 
 ---
 
@@ -119,6 +126,7 @@ matches the work in front of it. They are where the toolkit's opinions live.
 | [tdd-principles](skills/core/reference/tdd-principles/SKILL.md) | What a test should *assert* — observable behavior over implementation artifacts, and what counts as a RED→GREEN signal in a project with no harness |
 | [reviewer-discipline](skills/core/reference/reviewer-discipline/SKILL.md) | The contract every reviewer follows: scope, severity, evidence, and where two reviewers' domains abut |
 | [memory-discipline](skills/core/reference/memory-discipline/SKILL.md) | How an agent's persistent project memory should be written and calibrated, including recording its own false positives |
+| [prose-discipline](skills/core/reference/prose-discipline/SKILL.md) | How toolkit prose should read for an audience that includes non-developers: plain language, sentence rhythm, the em-dash budget, and when magic vocabulary earns its place |
 | [design-system-authoring](skills/core/reference/design-system-authoring/SKILL.md) | How to write your project's *own* design-system skill, so an agent conforms to your visual system instead of inventing a look |
 
 The last one is a skill for writing skills. Your visual conventions are your own, so instead of
@@ -234,6 +242,12 @@ Both come from one Claude Code plugin marketplace, `umbraco/Umbraco-CMS-Backoffi
 you; only the committed one works for your teammates. A user-level enablement is the classic
 works-on-my-machine gap — your plans get the extension guidance and theirs quietly do not. `/setup`
 reports which are enabled and where from.
+
+**Not using Claude Code?** The same two skill sets install through the Skills CLI instead, with a
+per-tool `-a` flag. Umbraco documents the commands for Cursor, GitHub Copilot and Windsurf in
+[Backoffice Skills](https://docs.umbraco.com/umbraco-in-ai/agent-skills/backoffice-skills). That flag
+matters there for the same reason the install shape matters here: without it, the skills are
+symlinked into every agent directory the CLI can find.
 
 ---
 
