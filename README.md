@@ -53,9 +53,17 @@ DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/umbraco-cloud --al
 #    C# and .NET, CMS or not
 DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/dotnet --all
 
-# 3. Configure it — reads what your repo already answers, asks only for the rest
+# 3. Register the three reviewers so /code-review runs them in parallel.
+#    Optional, and easy to skip forever, because nothing later tells you that you did.
+mkdir -p .claude/agents && for f in .claude/skills/reviewer-discipline/agents/*.md; do n=$(basename "$f"); ln -s "../skills/reviewer-discipline/agents/$n" ".claude/agents/$n"; done
+
+# 4. Configure it — reads what your repo already answers, asks only for the rest
 /setup
 ```
+
+Step 3 is a copy rather than a link on Windows, and it errors on any reviewer name your project
+already uses, which is a case to leave alone rather than force.
+[Installing in detail](docs/installing.md) covers both.
 
 Then cast `/spec` on your next piece of work.
 
@@ -68,8 +76,7 @@ part you own and edit, and it is committed, so filling a slot answers it for you
 does real work or asks for the single fact it is missing.
 
 Install edge cases — Windows symlinks, name collisions with existing commands, choosing an install
-shape, registering the reviewers for parallel dispatch — are in
-[Installing in detail](#installing-in-detail). Skip them until something looks wrong.
+shape — are in [Installing in detail](#installing-in-detail). Skip them until something looks wrong.
 
 ---
 
@@ -235,6 +242,12 @@ Both come from one Claude Code plugin marketplace, `umbraco/Umbraco-CMS-Backoffi
 you; only the committed one works for your teammates. A user-level enablement is the classic
 works-on-my-machine gap — your plans get the extension guidance and theirs quietly do not. `/setup`
 reports which are enabled and where from.
+
+**Not using Claude Code?** The same two skill sets install through the Skills CLI instead, with a
+per-tool `-a` flag. Umbraco documents the commands for Cursor, GitHub Copilot and Windsurf in
+[Backoffice Skills](https://docs.umbraco.com/umbraco-in-ai/agent-skills/backoffice-skills). That flag
+matters there for the same reason the install shape matters here: without it, the skills are
+symlinked into every agent directory the CLI can find.
 
 ---
 
