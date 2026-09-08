@@ -23,7 +23,7 @@ taxonomy and the citation convention, and gives the **quality reviewer** explici
 security findings then carry an OWASP category, and its `Clean` section names the OWASP areas it swept.
 
 **No fourth reviewer**, and that is now a recorded rule rather than this increment's judgment. [ADR
-0018](../../adr/0018-where-new-review-substance-goes.md) states it generally: new review substance is a
+0018](../../../adr/0018-where-new-review-substance-goes.md) states it generally: new review substance is a
 reference until it needs its own voice in the merged report, or until it changes files rather than
 reporting on them and the demand recurs. Security fails both tests. Its findings attribute cleanly to
 the quality reviewer's existing domain, so a fourth reviewer would buy a domain boundary to negotiate,
@@ -34,7 +34,7 @@ This increment is the first of the two instances ADR 0018 generalizes from, so i
 gets tested rather than merely asserted.
 
 **Why core rather than a stack pack**, which was the leading alternative: [ADR
-0003](../../adr/0003-how-core-reaches-a-stack-pack.md) forbids an L0 file naming a pack, so the quality
+0003](../../../adr/0003-how-core-reaches-a-stack-pack.md) forbids an L0 file naming a pack, so the quality
 reviewer could only repeat the generic "consult installed pack guidance" line it already carries —
 meaning a pack-only version requires no change to the reviewer at all, and delivers no ownership, no
 OWASP-naming `Clean` section, and no guaranteed citation. Packs are opt-in besides, which would make
@@ -64,7 +64,7 @@ Full framing, options, and rejected alternatives: [discovery.md](discovery.md).
 - **FR6 — The reference states which categories a change-scoped review cannot reach**, and what would
   cover them instead. Routing must be generic, since core cannot name the unit that covers them.
 - **FR7 — The reviewer roster stays three**, per [ADR
-  0018](../../adr/0018-where-new-review-substance-goes.md) test 1. No new agent is registered; the
+  0018](../../../adr/0018-where-new-review-substance-goes.md) test 1. No new agent is registered; the
   install checker, `/code-review`, and `/retrofit` are untouched.
 - **FR8 — Existing security rules keep their force.** The committed-secret Blocker and its rotation
   requirement are additive targets for citation, never rewritten by it.

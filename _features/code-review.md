@@ -4,17 +4,18 @@ A developer hands a change to review and gets one ranked report rather than thre
 reviewers each cover their own domain — quality, performance, accessibility — under a shared contract that
 governs scope, severity, evidence, and where their domains touch. The report names what is wrong, what it
 costs, and what to do about it, with each defect appearing exactly once no matter how many reviewers could
-have claimed it.
+have claimed it. Security is checked against a named public standard, so a finding says which category it
+belongs to and a clean review says which areas it swept.
 
-**Source**: `_work/shipped/review-failure-modes/spec.md`
-**Last verified**: 2026-08-13
+**Source**: `_work/shipped/review-failure-modes/spec.md`, `_work/shipped/owasp-security-review-rules/spec.md`
+**Last verified**: 2026-09-08
 
-> **Thin by design.** This doc records only what the `review-failure-modes` increment established. The
-> review capability is considerably older and larger than what is documented here — the severity scale,
-> the diff-only scope rule, the evidence standard, the Clean section, the reviewer-discovery behavior, and
-> each reviewer's own domain checklist all predate any spec and appear in no scenario below. That is
-> visible debt with a known remedy: `/feature`'s from-code mode can backfill the rest against the
-> reviewer files. It is not a claim that the capability does only this.
+> **Thin by design.** This doc records what the `review-failure-modes` and `owasp-security-review-rules`
+> increments established, and nothing older. The review capability is considerably larger than what is
+> documented here — the severity scale, the diff-only scope rule, the evidence standard, the Clean section
+> itself, the reviewer-discovery behavior, and each reviewer's own domain checklist all predate any spec
+> and appear in no scenario below. That is visible debt with a known remedy: `/feature`'s from-code mode
+> can backfill the rest against the reviewer files. It is not a claim that the capability does only this.
 
 ---
 
@@ -24,6 +25,9 @@ The per-feature mini-roadmap: shipped increments, planned increments, and parkin
 Newest planned items first. When an item ships, flip the checkbox and point it at the archived
 increment.
 
+- [x] 2026-09-08 — Security checked against a named standard: a finding carries its OWASP category, a
+      clean review names the areas it swept, and a change with nothing to check claims nothing
+      (`_work/shipped/owasp-security-review-rules/spec.md`)
 - [x] 2026-08-13 — Two language-agnostic review failure modes, plus the domain boundary that keeps a
       shared rule from being reported twice (`_work/shipped/review-failure-modes/spec.md`)
 - [ ] **Backfill**: everything the capability did before this increment. See the note above — the
@@ -132,6 +136,72 @@ Scenario: Two different defects on one line are two findings
   And the report shows two findings rather than merging them into one
 ```
 
+### Rule: A security finding names the category it belongs to
+
+```scenario
+Scenario: A visitor's search term reaching a data query is reported with its category
+  Given a change whose handler passes a visitor's search term straight into a data query
+  When the change is reviewed
+  Then the review reports the defect
+  And it names the security category the defect belongs to, by number and name
+  And the category appears alongside the file and line the finding already carried
+```
+
+```scenario
+Scenario: A committed secret keeps its rotation requirement and gains a category
+  Given a change that commits a credential
+  When the change is reviewed
+  Then the review reports it as the most severe class of finding
+  And it states that the credential must be treated as compromised and rotated, not merely removed
+  And it names the security category, which displaces no part of the rotation requirement
+```
+
+### Rule: A finding that is not a security defect carries no category
+
+```scenario
+Scenario: An unclear helper name is reported with no category attached
+  Given a change whose only defect is a helper named "doStuff"
+  And the change contains no security defect anywhere
+  When the change is reviewed
+  Then the review reports the unclear name
+  And the finding carries no security category
+```
+
+```scenario
+Scenario: In one report, only the security finding is cited
+  Given a change carrying both a data-query defect and several unrelated quality defects
+  When the change is reviewed
+  Then the data-query finding names its category
+  And the unrelated findings name none
+```
+
+### Rule: A clean review names the security areas the change actually had code for
+
+```scenario
+Scenario: A validated contact form comes back with the areas it swept named
+  Given a change adding a contact form that validates every submitted field
+  And the form's insert passes its values as parameters, logs no submitted content, and stores no credential
+  When the change is reviewed
+  Then the review reports no security defect
+  And it names the security areas it checked and found clean, by number and name
+  And every area it names is one the change contains code for
+```
+
+```scenario
+Scenario: An area the change has no code for is not named
+  Given that same contact form change
+  When the review names the areas it swept
+  Then it names no area the change contains no code for
+```
+
+```scenario
+Scenario: The two out-of-reach areas are never listed among those swept
+  Given any change under review
+  When the review names the security areas it swept
+  Then it never lists the two areas a change-scoped review cannot reach
+  And those two are a weakness in the design itself, and how old the dependency set has grown
+```
+
 ---
 
 ## Edge Cases
@@ -154,6 +224,33 @@ Scenario: An error both replaced without its origin and logged as a built-up mes
   When the change is reviewed
   Then both are reported
   And that is correct, because they are two defects with two different fixes
+```
+
+### Rule: A change with nothing to check claims no security coverage
+
+```scenario
+Scenario: A rename gets no security line at all
+  Given a change that only renames a local variable and reflows a comment
+  And the change reads no input, and stores, logs, renders, and queries nothing
+  When the change is reviewed
+  Then the review names no security area
+  And it makes no claim that the change was checked against the standard
+```
+
+```scenario
+Scenario: Describing the change as having no security-relevant code is not a coverage claim
+  Given that same rename
+  When the review says the change contains no security-relevant code
+  Then that is accurate, because it describes the change rather than claiming a sweep
+```
+
+```scenario
+Scenario: A sweep of the whole standard is not claimed either
+  Given that same rename
+  When the change is reviewed
+  Then the review does not state that the change was swept against the full range of categories
+  And it does not state that no category applies to it
+  And both would claim a sweep that never happened
 ```
 
 ---
@@ -179,6 +276,16 @@ committed alongside the increment, so each claim below is checkable rather than 
 | Two different defects on one line are two findings | `_work/shipped/review-failure-modes/assets/step3/` | Not covered — manual check recorded |
 | A swallowed failure is not also reported as a lost origin | `_work/shipped/review-failure-modes/assets/step1/` | Not covered — manual check recorded |
 | An error both replaced without its origin and logged as a built-up message | — | Not covered |
+| A visitor's search term reaching a data query is reported with its category | `_work/shipped/owasp-security-review-rules/assets/step5-case-a-injection.md` | Not covered — manual check recorded |
+| A committed secret keeps its rotation requirement and gains a category | `_work/shipped/owasp-security-review-rules/assets/step5-validation-log.md` | Not covered — probe only, no planted case |
+| An unclear helper name is reported with no category attached | `_work/shipped/owasp-security-review-rules/assets/step5-case-b-naming-only.md` | Not covered — manual check recorded |
+| In one report, only the security finding is cited | `_work/shipped/owasp-security-review-rules/assets/step5-case-a-injection.md` | Not covered — manual check recorded |
+| A validated contact form comes back with the areas it swept named | `_work/shipped/owasp-security-review-rules/assets/step6-case-c-clean-with-security-code.md` | Not covered — manual check recorded |
+| An area the change has no code for is not named | `_work/shipped/owasp-security-review-rules/assets/step6-case-c-clean-with-security-code.md` | Not covered — manual check recorded |
+| The two out-of-reach areas are never listed among those swept | `_work/shipped/owasp-security-review-rules/assets/step6-case-c-clean-with-security-code.md` | Not covered — one change only |
+| A rename gets no security line at all | `_work/shipped/owasp-security-review-rules/assets/step6-case-d-no-security-code.md` | Not covered — manual check recorded |
+| Describing the change as having no security-relevant code is not a coverage claim | `_work/shipped/owasp-security-review-rules/assets/step6-case-d-no-security-code.md` | Not covered — manual check recorded |
+| A sweep of the whole standard is not claimed either | `_work/shipped/owasp-security-review-rules/assets/step6-case-d-no-security-code.md` | Not covered — manual check recorded |
 
 <!-- Covered: a test asserts it. Not covered: specified, untested. Not covered (code-derived):
      inferred from reading the code, never specified and never tested — the weakest claim here.
@@ -186,9 +293,16 @@ committed alongside the increment, so each claim below is checkable rather than 
 
 **Nothing here is `Covered`, and that is accurate rather than pessimistic.** A recorded manual check is
 real evidence and better than an untested claim, but it is not a test: it does not re-run, so it cannot
-catch a later regression. Three scenarios have no evidence at all and are marked plainly — two were
-derived from the wording of the rules rather than exercised, and the standalone-reviewer scenario
-describes behavior the boundary statement introduced and which no run has exercised yet.
+catch a later regression. Three scenarios from the first increment have no evidence at all and are marked
+plainly — two were derived from the wording of the rules rather than exercised, and the standalone-reviewer
+scenario describes behavior the boundary statement introduced and which no run has exercised yet.
+
+Two security rows carry a weaker qualifier than the rest, and the difference is deliberate. **The
+committed-secret scenario was never planted**: the rule was confirmed by asking a dispatched reviewer to
+quote its own instruction back, which proves the instruction is present and intact but not that a real
+committed secret draws the finding. **The out-of-reach scenario was exercised against one change**, which
+is enough to show the two areas were not listed and not enough to call it general. Both are honest gaps
+rather than oversights, and both are cheap to close with a planted case when someone next touches this.
 
 ---
 
@@ -205,3 +319,14 @@ describes behavior the boundary statement introduced and which no run has exerci
 - 2026-08-13: The manual-check evidence was moved out of a temporary scratch directory into
   `_work/shipped/review-failure-modes/assets/` so the coverage table cites something that survives. It archives
   with the increment bundle.
+- 2026-09-08: Folded in `owasp-security-review-rules`. Only observable behavior was taken: a security
+  finding names its category, a non-security finding names none, a clean review names the areas it swept,
+  and a change with nothing to check claims nothing. The increment's point-in-time criteria — the five
+  registration gates, the two new contract checks, the roster and README entries, and the reviewer count
+  staying three — stay in the shipped spec and appear in no Rule here.
+- 2026-09-08: The increment was archived to `_work/shipped/owasp-security-review-rules/` in the same
+  change, so every evidence path in the coverage table above resolves. Archiving also re-depthed the
+  bundle's own links: five markdown links to `../../adr/` gained a level, and the plan's self-references
+  now name the shipped path, matching what the previous increment did. The two `../../skills/...` strings
+  in the plan were deliberately left alone — they document a symlink's target, which is relative to
+  `.claude/skills/` and not to the file quoting it.

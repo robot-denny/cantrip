@@ -1,6 +1,6 @@
 # Plan: OWASP Security Review Rules
 
-**Spec**: `_work/owasp-security-review-rules/spec.md`
+**Spec**: `_work/shipped/owasp-security-review-rules/spec.md`
 **Branch**: `robot-denny/owasp-security-review-rules`
 **Work type**: change-to code-review
 **Feature doc**: code-review
@@ -11,7 +11,7 @@ Review already covers security as the quality reviewer's first focus area. What 
 the standard it checked against or the areas it swept, so a finding reads as an assertion and a clean
 review is indistinguishable from one that never looked. This increment adds a technology-agnostic
 `security-review-rules` reference to core and gives `code-reviewer` explicit ownership of it, per
-[ADR 0018](../../adr/0018-where-new-review-substance-goes.md).
+[ADR 0018](../../../adr/0018-where-new-review-substance-goes.md).
 
 **The unit of work in this repo is a shipped unit plus the registrations that make it reachable.**
 Five contract gates fire on a new core reference — frontmatter (6), no technology names (8),
@@ -86,9 +86,9 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — Author the security reference
 
-> **Prompt**: Implement Step 1 of `_work/owasp-security-review-rules/plan.md`. Create
+> **Prompt**: Implement Step 1 of `_work/shipped/owasp-security-review-rules/plan.md`. Create
 > `skills/core/reference/security-review-rules/SKILL.md`, a new technology-agnostic core reference. Read
-> `_work/owasp-security-review-rules/spec.md` for FR1, FR1a, FR5, and FR6, and read
+> `_work/shipped/owasp-security-review-rules/spec.md` for FR1, FR1a, FR5, and FR6, and read
 > `skills/core/reference/memory-discipline/SKILL.md` for the house structure of a core reference.
 > **Look up the current OWASP Top 10 revision and its category list from the OWASP source rather than
 > writing it from memory** — this increment exists because recalled citations go stale, so recalling
@@ -132,7 +132,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 2 — Register the unit
 
-> **Prompt**: Implement Step 2 of `_work/owasp-security-review-rules/plan.md`. The reference at
+> **Prompt**: Implement Step 2 of `_work/shipped/owasp-security-review-rules/plan.md`. The reference at
 > `skills/core/reference/security-review-rules/SKILL.md` exists but is unregistered, so
 > `./scripts/check-contract.sh` currently fails on checks 11, 13, and 18. Register it in three places.
 > Create the self-hosting symlink `.claude/skills/security-review-rules` pointing to
@@ -161,7 +161,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 3 — Gate the revision being stated once
 
-> **Prompt**: Implement Step 3 of `_work/owasp-security-review-rules/plan.md`. Add a new check to
+> **Prompt**: Implement Step 3 of `_work/shipped/owasp-security-review-rules/plan.md`. Add a new check to
 > `scripts/check-contract.sh` enforcing AC5: the OWASP revision this increment pins is named in exactly
 > one place across the repo's shipped files. Follow the authoring conventions of the checks already in
 > that file — a `begin "<short description>"` call, `report_pass "$CURRENT"` or `report_fail "$CURRENT"`
@@ -171,12 +171,12 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > listed rather than passing quietly when it finds nothing to inspect. Verify it in both directions:
 > confirm the gate passes on the current tree, then add a second mention of the revision year to another
 > shipped file, confirm the gate fails and names that file, and revert. Record both observations in
-> `_work/owasp-security-review-rules/assets/step3-validation-log.md`.
+> `_work/shipped/owasp-security-review-rules/assets/step3-validation-log.md`.
 
 **What to build**:
 - A new check in `scripts/check-contract.sh`, appended in the numbered sequence, with the file-header
   comment block updated if it enumerates check numbers by role
-- `_work/owasp-security-review-rules/assets/step3-validation-log.md` recording the two-direction
+- `_work/shipped/owasp-security-review-rules/assets/step3-validation-log.md` recording the two-direction
   verification
 
 **Test first**:
@@ -196,7 +196,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 4 — Gate the category table's shape
 
-> **Prompt**: Implement Step 4 of `_work/owasp-security-review-rules/plan.md`. Add a second new check to
+> **Prompt**: Implement Step 4 of `_work/shipped/owasp-security-review-rules/plan.md`. Add a second new check to
 > `scripts/check-contract.sh` enforcing the checkable part of AC9: the category table in
 > `skills/core/reference/security-review-rules/SKILL.md` is well-formed. **Read the Key Decisions
 > section of the plan first** — this check deliberately does not verify that an identifier carries the
@@ -208,11 +208,11 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > directions: confirm it passes on the current table, then break the table three ways in turn — drop a
 > row, duplicate an identifier, and change the declared count — confirming a distinct failure each time,
 > and revert. Record all four observations in
-> `_work/owasp-security-review-rules/assets/step4-validation-log.md`.
+> `_work/shipped/owasp-security-review-rules/assets/step4-validation-log.md`.
 
 **What to build**:
 - A second new check in `scripts/check-contract.sh`
-- `_work/owasp-security-review-rules/assets/step4-validation-log.md`
+- `_work/shipped/owasp-security-review-rules/assets/step4-validation-log.md`
 
 **Test first**:
 - Three negative cases, each planted and reverted in turn: a dropped row, a duplicated identifier, a
@@ -229,10 +229,10 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 5 — Make security findings carry a citation, and only security findings
 
-> **Prompt**: Implement Step 5 of `_work/owasp-security-review-rules/plan.md`. This step tests before it
+> **Prompt**: Implement Step 5 of `_work/shipped/owasp-security-review-rules/plan.md`. This step tests before it
 > edits, so **do the observation first**. Write two small planted changes and record the outcome you
 > expect from each in
-> `_work/owasp-security-review-rules/assets/step5-validation-log.md` *before* running anything. Case A:
+> `_work/shipped/owasp-security-review-rules/assets/step5-validation-log.md` *before* running anything. Case A:
 > a change whose handler passes a visitor's search term straight into a data query — a security defect,
 > which should be reported *with* its OWASP category by number and name. Case B: a change whose only
 > defect is a helper named `doStuff`, with no security defect anywhere — the naming problem should be
@@ -251,10 +251,10 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 **What to build**:
 - `skills/core/reference/reviewer-discipline/agents/code-reviewer.md`, modified in focus area 1: the
   pointer to the reference, and the citation convention including its restraint half
-- `_work/owasp-security-review-rules/assets/step5-case-a-injection.md` — planted diff and both review
+- `_work/shipped/owasp-security-review-rules/assets/step5-case-a-injection.md` — planted diff and both review
   runs
-- `_work/owasp-security-review-rules/assets/step5-case-b-naming-only.md` — the same
-- `_work/owasp-security-review-rules/assets/step5-validation-log.md`
+- `_work/shipped/owasp-security-review-rules/assets/step5-case-b-naming-only.md` — the same
+- `_work/shipped/owasp-security-review-rules/assets/step5-validation-log.md`
 
 **Test first**:
 - Write both expected outcomes into the log **before** running the reviewer. Scoring a review after
@@ -277,9 +277,9 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 6 — Make a review name the areas it swept, and claim no more
 
-> **Prompt**: Implement Step 6 of `_work/owasp-security-review-rules/plan.md`. Same shape as Step 5 —
+> **Prompt**: Implement Step 6 of `_work/shipped/owasp-security-review-rules/plan.md`. Same shape as Step 5 —
 > observe first, then edit. Write two planted changes and record the expected outcome of each in
-> `_work/owasp-security-review-rules/assets/step6-validation-log.md` before running anything. Case C: a
+> `_work/shipped/owasp-security-review-rules/assets/step6-validation-log.md` before running anything. Case C: a
 > change adding a contact form that validates every submitted field and stores no credentials — security-
 > relevant code with no security defect, so the review should name the security areas it checked and
 > found clean. Case D: a change that only renames a variable and reflows a comment — no security-relevant
@@ -297,9 +297,9 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 **What to build**:
 - `skills/core/reference/reviewer-discipline/agents/code-reviewer.md`, modified once more: the `Clean`
   section instruction and its restraint half
-- `_work/owasp-security-review-rules/assets/step6-case-c-clean-with-security-code.md`
-- `_work/owasp-security-review-rules/assets/step6-case-d-no-security-code.md`
-- `_work/owasp-security-review-rules/assets/step6-validation-log.md`
+- `_work/shipped/owasp-security-review-rules/assets/step6-case-c-clean-with-security-code.md`
+- `_work/shipped/owasp-security-review-rules/assets/step6-case-d-no-security-code.md`
+- `_work/shipped/owasp-security-review-rules/assets/step6-validation-log.md`
 
 **Test first**:
 - Both expected outcomes written into the log before the reviewer runs
@@ -320,7 +320,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 7 — Record the change for consumers
 
-> **Prompt**: Implement Step 7 of `_work/owasp-security-review-rules/plan.md`. Add a `CHANGELOG.md`
+> **Prompt**: Implement Step 7 of `_work/shipped/owasp-security-review-rules/plan.md`. Add a `CHANGELOG.md`
 > entry under `## [Unreleased]`, written so it reads as "what will change in my project when I update"
 > — a consuming project gains a security reference its quality reviewer consults, and security findings
 > start carrying an OWASP category. Match the density and voice of the entries already there. Then add a
@@ -363,7 +363,7 @@ finishes.
 > in the shipped spec — the five registration gates, the two new checks, the roster and README
 > registrations, and the reviewer count staying three are all transitions or architecture, and must not
 > appear as Rules. Add the increment to the doc's Increments list with today's date, pointing at
-> `_work/owasp-security-review-rules/spec.md`. Add a revision note dated today.
+> `_work/shipped/owasp-security-review-rules/spec.md`. Add a revision note dated today.
 >
 > **Validation**: The capability doc describes current behavior with no transition-style ("goes from…
 > to…") Rules; no new feature doc was added; the Increments list gained one checked row.
@@ -383,12 +383,12 @@ finishes.
 | Modify | `CHANGELOG.md` |
 | Modify | `docs/concepts.md` |
 | Modify | `docs/spell-cards.md` (card for the new unit, plus the two stated counts) |
-| Create | `_work/owasp-security-review-rules/assets/step3-validation-log.md` |
-| Create | `_work/owasp-security-review-rules/assets/step4-validation-log.md` |
-| Create | `_work/owasp-security-review-rules/assets/step5-case-a-injection.md` |
-| Create | `_work/owasp-security-review-rules/assets/step5-case-b-naming-only.md` |
-| Create | `_work/owasp-security-review-rules/assets/step5-validation-log.md` |
-| Create | `_work/owasp-security-review-rules/assets/step6-case-c-clean-with-security-code.md` |
-| Create | `_work/owasp-security-review-rules/assets/step6-case-d-no-security-code.md` |
-| Create | `_work/owasp-security-review-rules/assets/step6-validation-log.md` |
+| Create | `_work/shipped/owasp-security-review-rules/assets/step3-validation-log.md` |
+| Create | `_work/shipped/owasp-security-review-rules/assets/step4-validation-log.md` |
+| Create | `_work/shipped/owasp-security-review-rules/assets/step5-case-a-injection.md` |
+| Create | `_work/shipped/owasp-security-review-rules/assets/step5-case-b-naming-only.md` |
+| Create | `_work/shipped/owasp-security-review-rules/assets/step5-validation-log.md` |
+| Create | `_work/shipped/owasp-security-review-rules/assets/step6-case-c-clean-with-security-code.md` |
+| Create | `_work/shipped/owasp-security-review-rules/assets/step6-case-d-no-security-code.md` |
+| Create | `_work/shipped/owasp-security-review-rules/assets/step6-validation-log.md` |
 | _(work type: `change-to code-review`)_ Update | `_features/code-review.md` (fold observable behavior only; **no new file**) |

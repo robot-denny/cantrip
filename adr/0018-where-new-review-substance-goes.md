@@ -10,7 +10,7 @@ somewhere other than a reviewer.
 
 The first was OWASP security rules. Its discovery settled on a core reference owned by
 `code-reviewer`, because the substance "needs no new voice in the merged report and therefore no new
-domain boundary." See `_work/owasp-security-review-rules/discovery.md`.
+domain boundary." See `_work/shipped/owasp-security-review-rules/discovery.md`.
 
 The second was prose quality. The toolkit's own documentation reads mechanical, and the fix that
 stuck was `prose-discipline`, a reference the model picks up whenever it writes prose. What remained

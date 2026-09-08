@@ -79,7 +79,7 @@ negotiate. **Chosen.**
 
 **F — Put the whole thing in the `dotnet` pack.** Considered on the grounds that .NET is the primary
 audience and pack rules may name their technology, so the rules could be concrete and checkable.
-*Rejected on two counts.* First, [ADR 0003](../../adr/0003-how-core-reaches-a-stack-pack.md) forbids an
+*Rejected on two counts.* First, [ADR 0003](../../../adr/0003-how-core-reaches-a-stack-pack.md) forbids an
 L0 file naming a pack; `code-reviewer` could only repeat the generic "consult any installed stack pack
 guidance" line it already carries, so pack-only requires **no change to `code-reviewer` at all** — and
 delivers no owned domain, no OWASP-naming `Clean` section, and no guaranteed citation. The ownership
