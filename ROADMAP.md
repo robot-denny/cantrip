@@ -234,6 +234,43 @@ Python. That makes two things load-bearing that are currently optional: the auth
 and something a contributor can run to check their pack before proposing it. Worth deciding how far
 that goes — a template and a checklist, or a conformance script, or an accepted-packs list.
 
+**Decide whether the quality reviewer should read the security reference unconditionally.** Raised
+2026-09-08 by the performance reviewer on the OWASP increment's own branch, and left alone there
+because changing it means amending a shipped spec rather than editing a file.
+
+`code-reviewer.md` says to read `security-review-rules` before reporting, with no condition attached.
+That is FR2 working as written: consulting the reference is an instruction rather than a possibility,
+and the increment exists so a citation comes from a lookup instead of from recall. The cost is roughly
+1,200 tokens on every dispatch, including the many diffs with no security surface at all, and
+`/implement-step` runs `/code-review` between steps, so one plan pays it dozens of times. The two
+defensible answers are opposite: keep it and accept the cost as the price of the lookup, or condition
+the read on the diff having security-relevant code and accept that the reviewer decides when to look.
+Taking the second quietly would reintroduce the hedge FR2 removed, which is why it wants a spec
+amendment rather than a wording tweak.
+
+**Two OWASP rules sit in the capability doc on weaker evidence than the rest, and close cheaply.**
+Raised 2026-09-08 while folding the increment into `_features/code-review.md`.
+
+The committed-secret rule was confirmed by asking a dispatched reviewer to quote its own instruction
+back. That proves the instruction is present and intact; it does not prove a real committed secret
+draws the finding with its category attached. The out-of-reach rule — that the two unreachable
+categories never appear among the areas a review says it swept — was exercised against exactly one
+change, which shows it held once. Both are marked distinctly in that doc's coverage table rather than
+presented as equal to the planted cases. One planted diff each, scored the way cases A through D were,
+closes both.
+
+**A revision bump to the OWASP table has one step no gate can check.** Raised 2026-09-08 while
+building the table's gate, and recorded here because the trap springs at bump time rather than now.
+
+The gate verifies shape: a complete and unique identifier sequence, one name per identifier, a
+declared count matching the rows, and the revision named once. It cannot verify that an identifier
+carries the right *name* in the revision it claims, because that needs a second copy of the list, and
+a second copy is exactly what the one-mention rule forbids. So name accuracy rests on a hand-check
+against the published source, done once when the table was authored. That is fine while the table sits
+still and misleading the day someone bumps the revision, because the gate will pass on a table with a
+stale name in it. Whatever closes this belongs with the bump rather than before it — a fetch-and-compare
+step, or a line in the reference telling the next editor what the gate will not do for them.
+
 ---
 
 ## Later
@@ -388,6 +425,14 @@ against the first.
 ---
 
 ## Recently shipped
+
+- **2026-09-08** — **Security review against a named standard.** A `security-review-rules` core
+  reference holding the OWASP Top 10 table, and a quality reviewer that cites a category on every
+  security finding, names the areas a clean review swept, and claims nothing on a change that had
+  nothing to check. Two contract checks came with it: the pinned revision stated once, and the
+  category table well-formed. Full detail in `CHANGELOG.md`; the decision it rests on is
+  [ADR 0018](adr/0018-where-new-review-substance-goes.md)
+  (`_work/shipped/owasp-security-review-rules/spec.md`, `_features/code-review.md`).
 
 - **2026-09-03** — **This file, slimmed, and its measurement history split out.** 508 lines to 406:
   four factual corrections, the sizes and timings moved to
