@@ -22,8 +22,8 @@ what they resolve against.
 
 ## The ten categories
 
-Ten categories. Each row gives the identifier, the category name, and what the category looks like
-inside a change.
+The table below lists 10 categories, one per row. Each row gives the identifier, the category
+name, and what the category looks like inside a change.
 
 | ID | Category | What to look for in a change |
 |---|---|---|
