@@ -63,6 +63,26 @@ be true; it does not describe one organization's way of working. Check 1b enforc
   `/setup` and `/update-toolkit` are configuration and maintenance, and count separately.
 - Record shaping decisions as ADRs in [adr/](adr/); log user-visible changes in
   [CHANGELOG.md](CHANGELOG.md).
+- **Contract checks cannot be fixture-tested, so verify a new one by hand and record it.**
+  `scripts/check-contract.sh` does `cd "$(dirname "$0")/.."` on startup, so a subject run inside a
+  `tests/` case directory re-scans the real repo instead of the fixture. Plant the defect the check
+  is meant to catch, run the gate, confirm it fails and names the right file, then revert. Write the
+  commands and their output into a validation log beside the increment.
+- **Plant a defect for every rule a check claims.** A check that documents four rules and is tested
+  on three will ship with the untested one broken. That has happened here: the category-table check
+  promised a non-empty guidance cell and never tested for one, and the gate said `ok`. A passing gate
+  says nothing about a branch nothing exercised.
+- **Editing a reviewer agent needs a fresh session before you can test it.** Agent definitions are
+  read once when a session starts. Skills hot-reload, so a new `.claude/skills/` symlink is available
+  immediately, but a reviewer under `reviewer-discipline/agents/` does not: a reviewer dispatched
+  after the edit still runs the definition from session start. The edit is on disk and the symlink
+  resolves to it, which is what makes this look like a failed edit rather than a stale read.
+
+  **Probe before you trust an after-test.** Ask the dispatched reviewer whether its own instructions
+  contain the new rule, and to quote it. If it reports the rule absent, the definition is stale and
+  the result is invalid rather than negative. Observed while adding the OWASP citation rule to
+  `code-reviewer`: the before-test was real evidence, the after-test was not, and only the probe told
+  them apart.
 
 ## Source repos
 

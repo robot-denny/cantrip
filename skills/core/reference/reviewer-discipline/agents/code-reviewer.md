@@ -44,8 +44,21 @@ Absence of such guidance is not an error — fall back to the checklist below.
   client-visible markup is public**: it must never carry secrets, tokens, or internal-only data
 - Missing authorization checks on endpoints and controller actions
 
+Read the `security-review-rules` reference before you report. It carries the category table you cite
+from, so the category on a finding comes from a lookup rather than from your recall. Security is
+yours across the whole checklist, not only this section, so an input reaching an interpreter or an
+error disclosing internals is cited the same way.
+
+**Every security finding names its category by number and name**, alongside the file and line the
+evidence standard already requires. Write `A05 Injection`, never the number on its own.
+
+**A finding that is not a security defect carries no category.** An unclear name, a duplicated
+helper, a missing test: none of these get one. A reader who sees a category on something that plainly
+is not a security defect learns to discount every other citation in the report.
+
 A committed secret is always a **Blocker**, and the finding must note that the credential should be
-considered compromised and rotated — not merely removed.
+considered compromised and rotated — not merely removed. The citation is added on top of that rule
+and displaces no part of it.
 
 ### 2. Input validation and error handling
 

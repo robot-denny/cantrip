@@ -51,12 +51,20 @@ reports 110/110 across 3 suites.
   repo. Negative verification is therefore a hand-run recorded as a validation log, following the
   `review-failure-modes` precedent (`_work/shipped/review-failure-modes/assets/step3/30-validation-log.md`).
   Making contract checks fixture-testable would mean giving the gate a root argument, which is its own
-  increment with its own negative tests. **Suggest recording this in
-  `.agents/config/conventions.md` → `## Planning gotchas` once that slot exists.**
-- **Defer the spell card.** `docs/spell-cards.md` is not gated — it states plainly that a new unit means
-  a missing card and nothing will notice. It is also being rewritten wholesale on the
-  `robot-denny/prose-discipline` branch, including its unit counts, so adding a card here buys a merge
-  conflict for an ungated file. The deck carries its own regeneration procedure; let that handle it.
+  increment with its own negative tests. **Both halves are now recorded.** The practice a check author
+  needs today is in `AGENTS.md` under *Authoring conventions*; the underlying limitation is filed in
+  `ROADMAP.md` under *Later*. The original suggestion was to write it to
+  `.agents/config/conventions.md` → `## Planning gotchas`, which this repo has no `.agents/` directory
+  for. Creating one would switch on the config layer for four spells and the install checker here, so
+  it is a posture decision rather than a note, and it did not belong inside this increment.
+- **Update the spell-card deck in Step 7.** This reverses an earlier decision to defer it, and the
+  reason for the reversal is worth recording. Deferring rested on two facts. The file is not gated,
+  and it was being rewritten wholesale on the `robot-denny/prose-discipline` branch, so a card added
+  here would have met a merge conflict for no gain. **That branch merged on 2026-09-04 and this one
+  is rebased onto it, so the conflict is gone.** What remains is an ungated file that misstates what
+  the toolkit ships: 33 cards against 34 units, and a stated 17 references against 18. The deck's own
+  regeneration note is an instruction for a person to re-count rather than a process that will catch
+  this, so deferring to it means deferring to someone remembering.
 - **Commands, inferred because this repo has no `.agents/config/`** (it is the toolkit, not a consuming
   project): `./scripts/check-contract.sh` for the gate (add `--verbose` to see per-check names),
   `tests/run.sh` for the fixture suites, `tests/run.sh install-check` for that suite alone. The
@@ -317,18 +325,28 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > — a consuming project gains a security reference its quality reviewer consults, and security findings
 > start carrying an OWASP category. Match the density and voice of the entries already there. Then add a
 > sentence to the "Code review and its guardrails" section of `docs/concepts.md` noting that security
-> findings are cited to the standard, keeping it to a sentence. **Do not add a spell card to
-> `docs/spell-cards.md`** — the plan's Key Decisions explain why, and that file is being rewritten on
-> another branch. Then run `./scripts/check-contract.sh` and `tests/run.sh`.
+> findings are cited to the standard, keeping it to a sentence. Then update `docs/spell-cards.md`: add
+> a card for `security-review-rules` in the core reference section, matching the field structure the
+> sibling cards use, and correct the two stated counts — "Seven opinions the toolkit holds" becomes
+> eight, and "16 spells and 17 references, 33 in all" becomes 18 references and 34 in all. Verify both
+> numbers by counting rather than by arithmetic. **Name no year in any of these three files.** Check 19
+> enforces that the pinned revision appears once across shipped files, and its scope covers `skills/`
+> and `agents/` only, so `CHANGELOG.md`, `docs/concepts.md`, and `docs/spell-cards.md` are all outside
+> what the gate can see. Then run `./scripts/check-contract.sh` and `tests/run.sh`.
 
 **What to build**:
 - `CHANGELOG.md`: an entry under `## [Unreleased]`
 - `docs/concepts.md`: one sentence in the code-review section
+- `docs/spell-cards.md`: a card for `security-review-rules`, plus the two corrected counts
 
 **Validation**:
 - [Automated]: `./scripts/check-contract.sh` → passes; `tests/run.sh` → 110/110
+- [Automated]: `find skills -name SKILL.md | wc -l` matches the deck's stated total, and
+  `grep -c '^### ' docs/spell-cards.md` matches it too. Both were wrong before this step, so a
+  passing count is the evidence the step worked
 - [Manual]: the changelog entry names the observable change for a consumer, not the increment's
   internal argument
+- [Manual]: none of the three files names the pinned revision year, since check 19 cannot see them
 
 ---
 
@@ -364,6 +382,7 @@ finishes.
 | Modify | `skills/core/reference/reviewer-discipline/agents/code-reviewer.md` |
 | Modify | `CHANGELOG.md` |
 | Modify | `docs/concepts.md` |
+| Modify | `docs/spell-cards.md` (card for the new unit, plus the two stated counts) |
 | Create | `_work/owasp-security-review-rules/assets/step3-validation-log.md` |
 | Create | `_work/owasp-security-review-rules/assets/step4-validation-log.md` |
 | Create | `_work/owasp-security-review-rules/assets/step5-case-a-injection.md` |
