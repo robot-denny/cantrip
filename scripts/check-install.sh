@@ -42,7 +42,7 @@ CONFIG_DIR=".agents/config"
 # is the only place the comparison is possible.
 ROSTER_CORE=(
   bdd-principles design-system-authoring memory-discipline prose-discipline
-  reviewer-discipline tdd-principles workflow
+  reviewer-discipline security-review-rules tdd-principles workflow
   code-review commit-message explore feature implement-step plan retrofit setup spec
   testify update-toolkit
 )

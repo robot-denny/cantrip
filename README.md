@@ -125,6 +125,7 @@ matches the work in front of it. They are where the toolkit's opinions live.
 | [bdd-principles](skills/core/reference/bdd-principles/SKILL.md) | What behavior to specify — Given/When/Then in business language, Example Mapping, specification by example |
 | [tdd-principles](skills/core/reference/tdd-principles/SKILL.md) | What a test should *assert* — observable behavior over implementation artifacts, and what counts as a RED→GREEN signal in a project with no harness |
 | [reviewer-discipline](skills/core/reference/reviewer-discipline/SKILL.md) | The contract every reviewer follows: scope, severity, evidence, and where two reviewers' domains abut |
+| [security-review-rules](skills/core/reference/security-review-rules/SKILL.md) | The OWASP Top 10 categories a security review checks against, what each one looks like inside a change, and which two a change-scoped review cannot reach |
 | [memory-discipline](skills/core/reference/memory-discipline/SKILL.md) | How an agent's persistent project memory should be written and calibrated, including recording its own false positives |
 | [prose-discipline](skills/core/reference/prose-discipline/SKILL.md) | How toolkit prose should read for an audience that includes non-developers: plain language, sentence rhythm, the em-dash budget, and when magic vocabulary earns its place |
 | [design-system-authoring](skills/core/reference/design-system-authoring/SKILL.md) | How to write your project's *own* design-system skill, so an agent conforms to your visual system instead of inventing a look |
