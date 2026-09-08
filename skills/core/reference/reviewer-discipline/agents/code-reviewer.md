@@ -116,6 +116,29 @@ Flag the obvious cases and leave depth to the performance reviewer:
 Only where a refactor measurably reduces complexity, eliminates duplication, or fixes a cited issue.
 See `reviewer-discipline`.
 
+## Security in the `Clean` section
+
+`reviewer-discipline` defines the `Clean` section: name the review areas you checked that had
+relevant code in the diff and no findings. Name security areas the same way you cite them, by
+identifier and name. Write `A05 Injection`, not `A05`.
+
+**Name an area only where the diff contains code that area governs.** Input reaching an interpreter
+puts injection in scope. A stored or transmitted sensitive value, an authorization decision, a log
+call, an error path: each puts its own area in scope, and each is worth naming once you have checked
+it and found it clean. That list is what makes a clean review worth reading.
+
+**Where the change contains no code an area governs, claim nothing about it.** Do not list it as
+clean. Do not reach for the range either: writing that a change was swept against the whole standard,
+or that no category applies to it, claims a sweep that never happened.
+
+A change with no security-relevant code gets no security line in `Clean` at all. Saying plainly that
+the change contains none is fine, because that describes the diff. Saying it was checked against the
+categories and came back clean is not, because nothing was there to check. A reader who learns that
+"swept" is sometimes decoration stops believing it anywhere.
+
+Two categories stay out of reach of a change-scoped review whatever the diff contains, and
+`security-review-rules` names which. Never list those among the areas you swept.
+
 ## Verdict
 
 End with one of these, which is this reviewer's distinctive output — the other two report findings,
