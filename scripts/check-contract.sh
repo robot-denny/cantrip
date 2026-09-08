@@ -15,6 +15,10 @@
 # one shipped file declares and requires the two shipped spells that write it to know it. It
 # would hold identically in a consumer's checkout — nothing about this repository is involved.
 #
+# Check 19 is shipped-scoped like 2-10, but singular: it reads one unit by path, because the
+# value it guards — the OWASP revision the security reference pins — lives in that one file
+# and must not be copied anywhere else.
+#
 # Checks 11, 13, and 16 are the exceptions in the other direction — they inspect this repo
 # rather than what it ships. Each guards a hardcoded list that has to be kept in step with
 # skills/core by hand: 11 the self-hosting symlinks, 13 the install checker's roster, 16 the
@@ -961,6 +965,89 @@ else
       "" "$details"
   else
     report_pass "$CURRENT"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 19. The pinned OWASP revision is named in exactly one place (shipped files)
+# ---------------------------------------------------------------------------
+# The security reference cites a standard that gets reissued. A bump has to be one edit, in
+# the one file that pins the revision, or the copies drift and a review starts citing
+# categories from a list nobody maintains. That is the same defect the reference exists to
+# prevent, one level up. So the revision may appear once across shipped files, in the
+# reference that declares it, and nowhere else.
+#
+# The revision is READ from the reference rather than hardcoded here. Hardcoding it would put
+# a second copy in this script and make a bump two edits again, so the check would create the
+# drift it exists to prevent. Check 16 hardcodes its ceiling because ADR 0010 is where that
+# number lives; here the reference is where the number lives, so this check asks it.
+#
+# Two ways this can stop working. The loud one: the revision is found by the literal phrase
+# "Top 10:<year>", so restyling that sentence makes the year unreadable and the check fails
+# rather than skipping. The quiet one: a date-shaped occurrence such as <year>-07 is ignored
+# on purpose, because starter facts stamp verification dates and a fact verified during the
+# pinned year is not a second citation. A second mention written date-shaped would slip past.
+# The scope is shipped_md_files, the same set check 9 reads, which keeps this increment's own
+# planning notes under _work/ out of range; widening that helper widens this check with it.
+begin "the pinned OWASP revision is named once"
+SECURITY_RULES_FILE=skills/core/reference/security-review-rules/SKILL.md
+if [[ ! -f "$SECURITY_RULES_FILE" ]]; then
+  report_fail "$CURRENT" \
+    "The security reference is missing: $SECURITY_RULES_FILE" \
+    "This check reads the pinned OWASP revision out of that file, so without it there is" \
+    "nothing to enforce — and an empty inspection reporting ok is indistinguishable from a" \
+    "clean one. Restore the file, or retire this check deliberately if the unit is going."
+else
+  revision=$(grep -oE 'Top 10:[0-9]{4}' "$SECURITY_RULES_FILE" 2>/dev/null \
+               | sed 's/.*://' | sort -u)
+  revision_lines=$(printf '%s' "$revision" | grep -c . || true)
+  # Captured once and reused below. A per-file loop here forked twice for every shipped
+  # unit; checks 2 and 3 above already establish the one-invocation shape, and this file is
+  # what a later check gets copied from.
+  files=$(shipped_md_files)
+  scanned=$(printf '%s\n' "$files" | grep -c . || true)
+
+  if (( revision_lines != 1 )); then
+    report_fail "$CURRENT" \
+      "Could not read one pinned OWASP revision from $SECURITY_RULES_FILE." \
+      "The check looks for the literal phrase \"Top 10:<year>\" and found $revision_lines." \
+      "Either the sentence naming the revision was restyled, or the file now names two." \
+      "Restore a single \"OWASP Top 10:<year>\" mention, or update the pattern in this check."
+  elif (( scanned == 0 )); then
+    report_fail "$CURRENT" \
+      "No shipped markdown files were found, so this check inspected nothing." \
+      "It fails rather than reporting ok, because a scope that matches nothing looks exactly" \
+      "like a clean repo. Confirm SHIPPED_DIRS still points at where units live."
+  else
+    # Word-boundary on both sides, minus the date shapes (<year>-07, 2026-<year>): a
+    # verification stamp is not a citation of the standard.
+    year_pattern="(^|[^0-9-])${revision}([^0-9-]|\$)"
+    # Two grep invocations for the whole scan rather than two per file: -o counts
+    # occurrences (a line naming the revision twice is two mentions, not one), and the
+    # second pass carries whole lines so the failure message shows context. /dev/null keeps
+    # the filename prefix if the shipped set ever narrows to a single file, since grep drops
+    # it when handed one path.
+    revision_count=$(printf '%s\n' "$files" \
+                       | xargs grep -oE "$year_pattern" /dev/null 2>/dev/null \
+                       | grep -c . || true)
+    revision_hits=$(printf '%s\n' "$files" \
+                      | xargs grep -nE "$year_pattern" /dev/null 2>/dev/null \
+                      | cut -c1-140 | sed 's|^|  - |')
+
+    if (( revision_count != 1 )); then
+      report_fail "$CURRENT" \
+        "The pinned OWASP revision ($revision) is named $revision_count times across shipped files." \
+        "It belongs in exactly one place, so moving to the next revision stays a single edit." \
+        "Remove the extra mentions and let them resolve against $SECURITY_RULES_FILE instead." \
+        "" "${revision_hits%$'\n'}"
+    elif [[ "$revision_hits" != *"$SECURITY_RULES_FILE"* ]]; then
+      report_fail "$CURRENT" \
+        "The pinned OWASP revision ($revision) is named once, but not in the file that pins it." \
+        "The one authoritative mention belongs in $SECURITY_RULES_FILE." \
+        "" "${revision_hits%$'\n'}"
+    else
+      report_pass "$CURRENT"
+    fi
   fi
 fi
 

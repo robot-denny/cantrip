@@ -191,9 +191,9 @@ Versionless: .NET and C# majors add rather than break, so each newer form says w
 | [codebase-audit](skills/dotnet/reference/codebase-audit/SKILL.md) | reference | A five-pillar written assessment of a .NET codebase — hygiene, separation, documentation, resilience, refactorability — staged to its lifecycle and framework-neutral, with an optional head-to-head against a second repo |
 
 **What a reference costs.** Its *description* sits in context from the moment you install it; only
-its *body* loads when triggered. So an installed reference you never use is cheap, not free — the
-three `dotnet` units add roughly 420 tokens against about 3,100 for the whole toolkit. That's the
-reason packs are meant to be opt-in.
+its *body* loads when triggered. So an installed reference you never use is cheap rather than free.
+Each description costs roughly 100 to 150 tokens, which puts the three `dotnet` units at about 420
+and the whole toolkit in the low thousands. That's the reason packs are meant to be opt-in.
 
 ---
 
