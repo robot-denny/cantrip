@@ -405,6 +405,33 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   - **No script, and so no fixtures.** `skills/core/` is markdown and templates, and this increment
     adds one `SKILL.md` to it. `tests/run.sh` stays at 110 cases across three suites.
 
+- **`security-review-rules` reference skill** — the standard the quality reviewer checks against, and
+  the missing half of every security finding it has reported so far. The reviewer already hunted for
+  security defects. It could not name what it checked against, so a finding read as one reviewer's
+  opinion, and a review that found nothing looked exactly like a review that never looked. After this
+  update a security finding names its OWASP Top 10 category by number and name, alongside the file and
+  line it already carried. **It ships with core, so it arrives on your next update**, and there is
+  nothing to configure for it.
+  - **A clean review names the security areas it swept.** Injection, authorization, logging, error
+    paths: whichever ones the change actually contained code for come back listed as checked and
+    found clean. You can tell "checked and fine" from "nobody looked", which is the whole point of a
+    clean review.
+  - **Where the change had no code an area governs, the review claims nothing about it.** A commit
+    that renames a variable gets no security line at all. Saying it was swept against the full
+    standard would claim a sweep that never happened, and a reader who learns that "swept" is
+    sometimes decoration stops believing it anywhere.
+  - **A finding that is not a security defect carries no category.** An unclear name, a duplicated
+    helper, a missing test: none of them get one. Over-citation is what teaches a reader to discount
+    every citation in the report, so the restraint is stated as firmly as the citation.
+  - **A committed secret loses none of its force.** It is still a Blocker, still requires rotation
+    rather than deletion, and now carries a category on top.
+  - **Two categories are declared out of reach of a change-scoped review**, and are never listed
+    among the areas swept: a weakness in the design itself, and how old the dependency set has grown.
+    Neither is a property of a diff. Both belong to a whole-codebase assessment, which is separate
+    work with a separate scope.
+  - **The reference names the revision it pins**, in one place, so you can check any citation against
+    the published source and a later bump stays a single edit.
+
 ### Changed
 
 - **The Test Coverage vocabulary gained two statuses, and that changes three core files you already

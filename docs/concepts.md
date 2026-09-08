@@ -46,6 +46,10 @@ turning into a changelog.
 | `perf-reviewer` | Rendering and data-access cost, payload size, caching, client-side weight |
 | `accessibility-reviewer` | Semantics, focus, keyboard, labelling, assistive-technology behavior |
 
+The quality reviewer checks security against a named standard, the OWASP Top 10: every security
+finding cites the category it belongs to, and a clean review lists the areas the change actually had
+code for.
+
 All three follow `reviewer-discipline`, which exists to stop the failure modes that make review output
 worthless:
 
