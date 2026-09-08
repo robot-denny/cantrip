@@ -58,49 +58,44 @@ Verbatim, the finding:
 The report also raised a Nit about unvalidated numeric inputs, and closed with **Approve with
 fixes**. No OWASP category appears anywhere.
 
-## Run 2 — after the edit to `code-reviewer.md`
+## Run 2 — after the edit, in a session that started with the edit committed
 
-**Outcome: INVALID, not passed.** The dispatched `code-reviewer` reported the naming finding and
-attached no category, which is the predicted result — but the stale-definition probe shows the run
-read the pre-edit definition, so it proves nothing about the edit. Asked whether its instructions
-carry a citation instruction, it answered:
+Dispatched the same way as run 1: the real `code-reviewer` agent, the diff above as the whole change
+under review, file writes disallowed, and no mention of citation anywhere in the prompt. The probe
+recorded in `step5-case-a-injection.md` ran first and confirmed the dispatched reviewer's instructions
+carry the citation rule, so citing was available on this report.
 
-> My own instructions (the domain checklist and role description under which I am operating for this
-> review, as given above) do not contain an instruction to cite a security category on a security
-> finding. [...] No such citation requirement appears anywhere in my instructions, so it is absent.
-
-Two independent agents, dispatched after the edit, both reported the instruction absent and both
-quoted the committed-secret sentence that sits directly beneath the inserted text. See case A for the
-on-disk verification.
-
-## Diagnostic — the same review from the current on-disk definition
-
-**Not evidence for the step's validation**, for the reason given in case A. Same stand-in method: a
-`general-purpose` agent read `code-reviewer.md` from disk, read the skills it points at, and reviewed
-this diff under them.
-
-The naming finding, verbatim and uncited:
+**Outcome: GREEN.** One finding, and it carries no category.
 
 > | # | Severity | File & Line | Issue | Recommended Fix |
 > |---|----------|-------------|-------|-----------------|
-> | 1 | Minor | `src/Web/Basket/BasketTotals.ts`, line 9 | Exported function is named `doStuff`, which does not express intent | Rename to `calculateBasketTotalInCents` |
-> | 2 | Minor | `src/Web/Basket/BasketTotals.ts`, lines 9-16 | New exported behavior arrives with no test in the diff (conditional) | Add a test covering the empty-basket, single-line, and multi-line cases |
+> | 1 | Minor | `src/Web/Basket/BasketTotals.ts:9` | Exported function named `doStuff` doesn't express intent | Rename to something like `calculateBasketTotal` or `sumBasketLines` |
 
-Neither finding carries a category, in the table or in its detail block. **The restraint half held on
-a report where citing had become available**, which is the assertion this case exists for.
+Its detail block carries no `**Category**:` line either — the naming finding is reported as a naming
+finding and nothing more. **The restraint half held on a report where citing was available**, which is
+the assertion this case exists for. That is AC3.
 
-### One observation for Step 6, not a defect in this step
+### Superseded: the earlier invalid run
 
-The `Clean` section of this run does name OWASP categories, on a change that is pure arithmetic:
+The first attempt at run 2 was made in the session that performed the edit, and was **invalid rather
+than passed**: two independently dispatched reviewers both reported the citation instruction absent
+from their own instructions, having read a definition snapshotted at session start. A
+`general-purpose` stand-in was used at the time to check the wording in isolation, and is no longer
+the evidence for this case. See case A for the on-disk verification and the probe.
 
-> **Secrets and security exposure.** Nothing here reaches a credential, a config file, or
-> client-visible markup. Of the OWASP categories a diff this shape can reach, the relevant ones are
-> clean: no authorization decision (A01), no stored or transmitted sensitive value (A04), no input
-> reaching an interpreter or a query (A05), no log calls at all (A09), no error path (A10). A03
-> Software Supply Chain Failures and A06 Insecure Design are not reachable from a change of this
-> scope, and I claim no coverage of them.
+## What run 2 changed about Step 6's case D
 
-That is naming areas the diff had no relevant code for, which is close to the failure mode Step 6's
-case D is built to catch. Step 5 asserts nothing about the `Clean` section and this does not change
-its result. It does say that Step 6's restraint half is load-bearing, and that a reviewer will reach
-for category names in `Clean` from the reference alone, before any instruction tells it to.
+The stand-in's `Clean` section named five specific categories on this pure-arithmetic diff — A01, A04,
+A05, A09, A10 — and disclaimed two more. That was the live failure mode Step 6's case D is built to
+catch, and it was worth flagging.
+
+The real reviewer does something different, and milder. It makes one blanket claim:
+
+> **Security**: no user input, no interpreter reached, no secrets, no auth surface — nothing in this
+> diff falls under any A01–A10 category.
+
+No category is named individually, so this is not the stand-in's behaviour. But it is still a coverage
+claim spanning the whole standard, volunteered on a diff with no security-relevant code and before any
+instruction asks for one. **Case D's failure mode is live, in a weaker form**: the risk is not a list
+of invented areas but a range claim that reads as "all ten checked". Step 6's restraint half has to
+rule out both.

@@ -94,7 +94,7 @@ above or around it makes the rotation requirement conditional on anything. FR8 h
 No language, framework, or ORM is named in the added prose, and no revision year, so checks 8 and 19
 are unaffected.
 
-### Case A and case B, run 2 — INVALID, not failed
+### Run 2, first attempt — INVALID, not failed
 
 Both dispatched reviewers reported that their own instructions contain no citation instruction. Both
 quoted the committed-secret sentence as the closest related text, which is the sentence directly
@@ -111,30 +111,43 @@ $ grep -c "names its category by number and name" .claude/agents/code-reviewer.m
 ```
 
 No other copy of the definition exists on the machine, and `~/.claude/agents/` does not exist. So the
-agent definition was snapshotted at session start and does not hot-reload. **Run 2 is invalid rather
-than failed**, and the probe is the only reason the two are distinguishable. Without it, a stale pass
-and a real failure would have looked identical.
+agent definition was snapshotted at session start and does not hot-reload. **That attempt is invalid
+rather than failed**, and the probe is the only reason the two are distinguishable. Without it, a
+stale pass and a real failure would have looked identical.
 
-Resolving this needs a session restart, which cannot be done from inside the session.
+A `general-purpose` stand-in was run at the time to check that the wording works when a reviewer
+actually reads it. It did — but the registered agent is the subject of the test, so that run was
+recorded as a diagnostic and never as evidence. It has been superseded by run 2 proper and dropped
+from both case files.
 
-### Diagnostic — the wording works when a reviewer actually reads it
+### Run 2, re-run in a fresh session — GREEN on both cases
 
-Recorded as a diagnostic, not as the step's evidence. The registered agent is the subject of the
-test and this is a stand-in for it.
+The edit was committed as `3d8af37` and this session started after it, so the dispatched reviewers
+read the committed definition rather than a pre-edit snapshot.
 
-A `general-purpose` agent was told to read `code-reviewer.md` from disk, read the skills that file
-instructs it to follow, and review each diff under those instructions. It reached
-`security-review-rules` unprompted in both runs.
+**The probe ran first.** A `code-reviewer` was dispatched with no diff and one question about its own
+instructions. It answered `PRESENT`, quoted all three paragraphs of the citation rule including the
+restraint half, named `security-review-rules` as the reference it is told to read before reporting,
+and confirmed the committed-secret rule is intact, quoting it verbatim. The stale-definition risk is
+closed for this session, and every result below is scored against a reviewer that can see the rule.
 
-- **Case A**: the injection Blocker carries `A05 Injection`, by number and name, in the findings
-  table and again on a `**Category**:` line beside its file and line. A conditional access-control
-  finding carries `A01 Broken Access Control`. The five non-security findings in the same report
-  carry none.
-- **Case B**: both findings carry no category, on a report where citing had become available. This is
-  the restraint assertion, and it held.
+Both cases were then dispatched exactly as in run 1 — the diff handed over as the whole change under
+review, file writes disallowed, no mention of citation, categories, or OWASP anywhere in the prompt.
 
-So the instruction produces the behaviour both cases predict. What is unverified is that the
-*registered* agent does, which is what a restart would settle.
+**Case A — GREEN.** The injection Blocker carries `A05 Injection`, number and name, in the findings
+table and again on a `**Category**:` line beside its file and line. **AC1 holds.** Four of the five
+non-security findings carry no category. The fifth, a Major about a missing error boundary, names
+`A10 Mishandling of Exceptional Conditions` in its Impact paragraph, hedged on a hosting condition
+the diff does not show — a security consequence stated as one, not a category stamped on a
+reliability finding. Recorded in the case file rather than smoothed over, because it is the closest
+this report comes to the failure mode AC3 guards.
+
+**Case B — GREEN.** The single finding, the `doStuff` name, carries no category in the table and no
+`**Category**:` line in its detail block. Citing was available and was not taken. **AC3 holds**, and
+this is the assertion that matters most: over-citation is what teaches a reader to discount every
+citation in a report.
+
+Full output for both in `step5-case-a-injection.md` and `step5-case-b-naming-only.md`.
 
 ### Gates
 
@@ -152,7 +165,16 @@ by it.
 
 ### One note for Step 6
 
-Case B's diagnostic `Clean` section names OWASP categories on a change that is pure arithmetic, from
-the reference alone and before any instruction tells it to. Step 5 asserts nothing about `Clean`, so
-this does not change its result. It does mean Step 6's case D has a live failure mode to catch rather
-than a hypothetical one. Details in `step5-case-b-naming-only.md`.
+Case B's `Clean` section makes a security claim on a change that is pure arithmetic, unprompted:
+
+> **Security**: no user input, no interpreter reached, no secrets, no auth surface — nothing in this
+> diff falls under any A01–A10 category.
+
+No individual category is named, which is milder than the stand-in's behaviour — that run listed five
+categories by identifier and disclaimed two more. But a range claim spanning the whole standard still
+reads as "all ten checked" on a diff that contained nothing to check. Step 5 asserts nothing about
+`Clean`, so this does not change its result.
+
+It does mean **Step 6's case D has a live failure mode rather than a hypothetical one**, and that the
+restraint half has to rule out two shapes: a list of named areas the diff had no code for, and a
+blanket claim of coverage across the standard. Details in `step5-case-b-naming-only.md`.

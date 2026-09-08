@@ -91,21 +91,58 @@ evidence of restraint: nothing was citing at all.
 Grepping the report for a category identifier returns nothing. `A05`, `A01`, `OWASP`, and `Top 10`
 are all absent.
 
-## Run 2 — after the edit to `code-reviewer.md`
+## Run 2 — after the edit, in a session that started with the edit committed
 
-**Outcome: INVALID, not failed.** The dispatched `code-reviewer` reported the same defect as run 1
-and still cited no category. The stale-definition probe explains why. Asked whether its own
-instructions contain an instruction to cite a security category, it answered:
+Dispatched the same way as run 1: the real `code-reviewer` agent, the diff above as the whole change
+under review, file writes disallowed. The instruction to cite was nowhere in the prompt — the diff was
+handed over on its own, exactly as in run 1.
 
-> My own instructions (the agent definition/domain checklist above, not any skill I loaded) do not
-> contain an instruction to cite a security category when reporting a security finding. The closest
-> related text is the severity guidance: "Blocker — security risk, data exposure, or a crash path"
-> and, for section 1, "A committed secret is always a Blocker... and the finding must note that the
-> credential should be considered compromised and rotated." Neither of these directs me to name a
-> security category [...] that instruction is absent from my instructions as given.
+**Outcome: GREEN.** The injection Blocker carries `A05 Injection`, number and name, in the findings
+table and again on a `**Category**:` line directly above the file and line.
 
-The edit was on disk before this run, and it is reachable through the only path the agent is
-registered by:
+The table row:
+
+> | # | Severity | File & Line | Issue | Recommended Fix |
+> |---|----------|-------------|-------|-----------------|
+> | 1 | Blocker | `SiteSearchController.cs:24` | User input concatenated directly into a SQL string (A05 Injection) | Parameterize the query |
+
+And the detail block:
+
+> #### Finding 1 — SQL injection via string concatenation (Blocker)
+>
+> **Category**: A05 Injection
+>
+> **File**: `SiteSearchController.cs`, line 24
+
+That is AC1: the category by number and name, alongside the file and the line.
+
+### The restraint half, on the same report
+
+Six findings were reported. Four carry no category at all — the missing error boundary's synchronous
+sibling (Major), the unbounded result set (Minor), the unescaped `LIKE` wildcards (Minor), and the
+unguarded `NULL` read (Minor). Citing was available on every one of them and none took it.
+
+One finding sits on the line and is worth recording rather than smoothing over. Finding 2, "No error
+handling around database access", is a Major reported for reliability, and its **Impact** paragraph
+names a category conditionally:
+
+> IF the hosting environment has the developer exception page or a verbose error handler enabled (not
+> visible in this diff), this would also disclose internal exception details to the caller — A10
+> Mishandling of Exceptional Conditions.
+
+This is not over-citation as AC3 defines it. The citation is attached to a stated security
+consequence, hedged on a condition the diff does not show, and the reviewer did not put it on the
+finding's `**Category**:` line — the finding has no such line. A reader can tell which half of that
+finding is the security claim. Recorded because it is the closest this report comes to the failure
+mode, and a later reader should see it was looked at rather than missed.
+
+### Superseded: the earlier invalid run
+
+An earlier attempt at run 2, made in the session that performed the edit, was **invalid rather than
+failed**. The dispatched reviewer read an agent definition snapshotted at session start and reported
+the citation instruction absent, quoting the committed-secret sentence that sits directly beneath the
+inserted paragraphs as the closest related text. The edit was on disk and reachable through the only
+registered path:
 
 ```
 $ ls -l .claude/agents/code-reviewer.md
@@ -115,45 +152,32 @@ $ grep -c "names its category by number and name" .claude/agents/code-reviewer.m
 1
 ```
 
-No second copy of the definition exists anywhere on the machine, and `~/.claude/agents/` does not
-exist. So the agent read a snapshot taken at session start. The run cannot score the edit.
+Agent definitions do not hot-reload. The run above was made in a new session, after the edit was
+committed, and the probe below confirms the definition it read is the current one. A `general-purpose`
+stand-in was used at the time to check the wording in isolation; it is no longer the evidence for this
+case and has been dropped.
 
-## Diagnostic — the same review from the current on-disk definition
+### The probe, run before either case
 
-**Not evidence for the step's validation.** The registered agent is the subject of the test, and this
-is a stand-in. It answers a narrower question: does the wording, once actually in front of a
-reviewer, produce the citation? It does.
+Before either diff was handed over, a `code-reviewer` was dispatched and asked one question about its
+own instructions — no diff, no review. It answered:
 
-A `general-purpose` agent was told to read `code-reviewer.md` from disk, read the skills that file
-instructs it to follow, and review the same diff under those instructions. It reached
-`security-review-rules` on its own and opened with:
-
-> I've read the agent definition, `reviewer-discipline`, and `security-review-rules`.
-
-Its findings table:
-
-> | # | Severity | File & Line | Issue | Recommended Fix |
-> |---|----------|-------------|-------|-----------------|
-> | 1 | Blocker | `src/Web/Controllers/SiteSearchController.cs`, line 24 | **A05 Injection** — `q` concatenated into SQL and executed | Parameterize the pattern and escape `LIKE` wildcards |
-> | 2 | Major | `src/Web/Controllers/SiteSearchController.cs`, lines 21–31 | Synchronous blocking DB I/O in the action; no cancellation token | Make the action `async Task<IActionResult>`, use the `*Async` APIs, accept `CancellationToken` |
-> | 3 | Major | `src/Web/Controllers/SiteSearchController.cs`, lines 17, 24 | `q` unvalidated: null or empty matches every row, and there is no result cap | Guard for null/whitespace and a minimum length; add `TOP (@take)` |
-> | 4 | Major (conditional) | `src/Web/Controllers/SiteSearchController.cs`, line 24 | **A01 Broken Access Control** — orders by `Published` but never filters on it | IF `Pages` holds non-public rows, add the publication predicate to the `WHERE` clause |
-
-And the detail block on the Blocker:
-
-> #### Finding 1 — Query-string value concatenated into SQL (Blocker)
+> 1. PRESENT.
 >
-> **File**: `src/Web/Controllers/SiteSearchController.cs`, line 24
-> **Category**: A05 Injection
+> 2. Verbatim lines stating the citation rule:
+>
+> "Read the `security-review-rules` reference before you report. It carries the category table you cite
+> from, so the category on a finding comes from a lookup rather than from your recall."
+>
+> "**Every security finding names its category by number and name**, alongside the file and line the
+> evidence standard already requires. Write `A05 Injection`, never the number on its own."
+>
+> "**A finding that is not a security defect carries no category.** [...]"
+>
+> 3. Reference file: `security-review-rules`.
+>
+> 4. Yes, still required. Verbatim: "A committed secret is always a **Blocker**, and the finding must
+> note that the credential should be considered compromised and rotated — not merely removed."
 
-Three things worth noting from this run:
-
-- The category is **number and name**, both in the table row and on its own `**Category**:` line, and
-  it sits beside the file and the line. That is what AC1 asks for.
-- The four non-security findings — blocking I/O, the missing result cap, the null connection string,
-  the legacy driver, the using directives — carry **no** category. The restraint half held on a report
-  where citing was available.
-- The reviewer volunteered the two out-of-reach categories rather than implying coverage: "Two areas
-  I cannot reach from a change-scoped review, and claim no coverage on: **A06 Insecure Design** [...]
-  and **A03 Software Supply Chain Failures**". That is Step 6's territory, arriving early from the
-  reference alone.
+This is what separates a real pass from a stale one. Without it, run 2 reading the current definition
+and run 2 reading a snapshot would look identical.
