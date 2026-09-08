@@ -171,3 +171,74 @@ exit: 0
 
 Check 8 is among the 21, and an agent file under `skills/core/` is L0, so the added prose is covered
 by it.
+
+## Run 2 — a fresh session, both cases GREEN
+
+Session opened at HEAD `20bb4ff` with a clean tree, after the edit was committed, so the dispatched
+reviewers read the committed definition rather than a pre-edit snapshot.
+
+### The probe, first
+
+A `code-reviewer` was dispatched with no diff and four questions about its own instructions. It
+answered `PRESENT`, and quoted the heading immediately preceding `## Verdict` as
+`## Security in the \`Clean\` section`. The same probe before the commit returned
+`### 7. Suggested refactors`, so the snapshot has demonstrably moved. It reproduced the whole new
+section verbatim, both halves, and quoted the committed-secret rule intact with its rotation
+requirement and the sentence saying the citation displaces no part of it.
+
+The stale-definition risk is closed for this session. Every result below is scored against a reviewer
+that can see the instruction.
+
+### Case D — GREEN, and it is the one that mattered
+
+No findings, verdict Approve, and a `Clean` section naming no OWASP area and claiming no sweep.
+Run 1's `**Security (A01–A10)**: swept` is gone. What stands in its place tells the reader that
+security does not **apply** to the diff and grounds that in what the diff contains — the second shape
+the case file admits as a pass, written down before either run.
+
+Neither failure shape is present: no identifier appears anywhere in the report, and the word "swept"
+does not occur. **The step's only real RED is fixed**, and no gate in the repository can see either
+state, which is why the full text is quoted in the case file.
+
+### Case C — GREEN, with a narrowing worth recording
+
+Three areas named in `Clean` — `A05 Injection`, `A09 Security Logging & Alerting Failures`,
+`A10 Mishandling of Exceptional Conditions` — each by identifier and name, each an area this diff has
+code for, and neither A03 nor A06 claimed as swept. The assertion holds.
+
+Run 1 named five. `A04 Cryptographic Failures / secrets` and `A01 Broken Access Control` dropped out.
+The prediction above named this risk before the run — an instruction that makes the reviewer more
+cautious could cost the areas run 1 produced for free — so it is scored rather than read past.
+
+It is a narrowing and not a defect: nothing false is claimed, and an area dropped from `Clean` is
+coverage not asserted, which is the safe direction of the two. Both dropped areas happen to be the
+ones where "clean" rests on an absence rather than on code doing something right, and the instruction
+says to name an area only where the diff contains code that area governs — so the restraint half
+plausibly reached a little further than intended. Offered as a reading, not a certainty. The cost is
+real all the same: "no credential is stored or transmitted" is worth saying on a change that opens a
+data store to the public, and run 1 said it.
+
+The A06 nuance from run 1 repeated exactly: rate limiting raised as a conditional Minor finding naming
+`A06 Insecure Design`, and A06 not listed among the areas swept. Reporting what the diff shows while
+claiming no coverage of the category is the distinction the reference draws, and the report drew it a
+second time.
+
+### FR4 and the step's manual validation
+
+- Case C's `Clean` names security areas checked and found clean, and every one is an area the diff
+  contains code for — **holds**
+- Case D claims no security coverage whatsoever — **holds**, and this is the assertion with a RED
+  behind it
+- `git diff --stat` for the step lists one shipped file,
+  `skills/core/reference/reviewer-discipline/agents/code-reviewer.md`.
+  `reviewer-discipline/SKILL.md` is untouched — **holds**
+
+### Gates, re-run in this session
+
+```
+$ ./scripts/check-contract.sh
+21 checks passed.
+
+$ tests/run.sh
+110/110 cases passed across 3 suites.
+```

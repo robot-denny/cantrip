@@ -91,5 +91,52 @@ paragraph folded into Step 5.
 
 ## Run 2 — after the edit to `code-reviewer.md`
 
-_Pending a fresh session. Agent definitions are snapshotted at session start, so a reviewer dispatched
-after the edit in this session would read the pre-edit definition. See the validation log._
+A fresh session at HEAD `20bb4ff`, clean tree, opened with the probe described in
+`step6-case-c-clean-with-security-code.md`: the dispatched reviewer answered `PRESENT` and quoted the
+new section verbatim, so the definition it read is the committed one. The case was then dispatched
+exactly as in run 1, with no mention of `Clean`, coverage, areas, or OWASP in the prompt.
+
+**Outcome: GREEN. The false coverage claim is gone.** No finding, verdict Approve, and a `Clean`
+section that names no OWASP area and claims no sweep. Verbatim:
+
+> **Clean**
+>
+> - **Clarity and readability** — the diff's only substantive change is exactly this: replacing terse
+>   single-letter names with intent-revealing ones (`t` → `totalSeconds`, `m` → `minutes`,
+>   `s` → `seconds`), which makes the branch logic (`totalSeconds < 60`) and the return expressions
+>   self-explanatory without needing the comment to carry the mapping. No new magic numbers or unclear
+>   logic introduced.
+> - **Naming and structure conventions** — new names use the file's existing camelCase local-variable
+>   convention; no style is imported that wasn't already present in the surrounding function.
+> - **Duplication** — no repeated logic; single small function, unchanged structure.
+>
+> No other checklist areas (security, input validation/error handling, performance) apply — the diff
+> contains no user input, no external calls, no logging, no error paths, and no loops or I/O to
+> evaluate them against.
+
+Against the two failure shapes written above before either run:
+
+1. **Named areas** — absent. Not one identifier appears anywhere in the report
+2. **A blanket claim** — absent. No range, no "A01–A10", and the word "swept" does not occur
+
+Run 1's line was `**Security (A01–A10)**: swept`. The label is gone, and what replaced it is the
+second shape the case admits as a pass: a statement about what the diff contains, not a claim about
+what was checked. "No user input, no external calls, no logging, no error paths" enumerates absences
+in the change, and the reader is told the areas do not **apply** rather than that they came back
+clean.
+
+### Where this sits against the bar, said precisely
+
+The instruction asks for no security line at all on a change with no security-relevant code, and this
+report has a sentence that mentions security. It passes because of what that sentence does: it names
+security among the checklist areas that do not apply and grounds the non-application in the diff. It
+asserts no coverage, so a reader cannot come away believing the change was measured against the
+standard and cleared.
+
+It sits close to the line, and that is worth recording rather than rounding off. The failing version
+and the passing version differ by a claim, not by a topic — both mention security on a diff that has
+none. What separates them is that one says "swept" and the other says "does not apply". The
+instruction's restraint half is carrying exactly the weight it was written to carry.
+
+**This was the step's only real RED, and it is now GREEN.** No gate in the repository can see either
+state, which is why it is recorded here in full.

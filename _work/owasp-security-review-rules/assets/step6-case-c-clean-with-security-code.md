@@ -197,5 +197,73 @@ correctly.
 
 ## Run 2 — after the edit to `code-reviewer.md`
 
-_Pending a fresh session. Agent definitions are snapshotted at session start, so a reviewer dispatched
-after the edit in this session would read the pre-edit definition. See the validation log._
+A fresh session, opened at HEAD `20bb4ff` with a clean tree, so the dispatched reviewer reads the
+committed definition rather than a pre-edit snapshot.
+
+**The probe ran first.** A `code-reviewer` was dispatched with no diff and asked four questions about
+its own instructions. It answered `PRESENT`, quoted `## Security in the \`Clean\` section` as the
+heading immediately preceding `## Verdict` — the heading this edit introduced, where the same probe
+before the commit returned `### 7. Suggested refactors` — and reproduced the whole section verbatim,
+both halves. It also quoted the committed-secret rule intact, rotation requirement included. Every
+result below is scored against a reviewer that can see the instruction.
+
+The case was then dispatched exactly as in run 1: the diff above as the whole change under review,
+file writes disallowed, and no mention of `Clean`, coverage, areas, or OWASP anywhere in the prompt.
+
+**Outcome: the naming behaviour survived the edit, and it narrowed.** Three areas named, where run 1
+named five. The `Clean` section verbatim:
+
+> ### Clean
+>
+> - **A05 Injection** — `SqlContactStore.SaveAsync` uses parameterized `SqlCommand` parameters
+>   throughout (`@name`, `@email`, `@message`); no string concatenation into SQL.
+> - **A09 Security Logging & Alerting Failures** — both `_logger.Log*` calls use named placeholders
+>   (`{MessageLength}`) rather than interpolation, and log no PII (name/email/message body are never
+>   logged).
+> - **A10 Mishandling of Exceptional Conditions** — the `SqlException` catch returns a generic message
+>   to the caller while passing the real exception to `_logger.LogError`, so the origin is preserved
+>   internally without disclosing internals externally.
+> - **Input validation** (core checklist, non-security) — `ContactRequest` validates required fields,
+>   length bounds, and email shape via data annotations, and `ModelState.IsValid` is checked before the
+>   request reaches the store.
+
+**Each of the three is an area this diff has code for**, matching the list recorded above before any
+run. Neither A03 nor A06 is claimed as swept. Each is named by identifier and name, as the instruction
+asks. **The case's assertion holds.**
+
+### The narrowing, recorded rather than smoothed
+
+Run 1 named five areas; run 2 names three. `A04 Cryptographic Failures / secrets` and
+`A01 Broken Access Control` are gone. The validation log named exactly this risk before the run — an
+instruction that makes the reviewer more cautious could cost the areas run 1 produced for free — so it
+is scored as a real observation and not read past.
+
+Two things make it a narrowing rather than a defect. Nothing false was claimed: an area dropped from
+`Clean` is coverage not asserted, which is the safe direction of the two. And both dropped areas are
+the ones where "clean" rests on an absence rather than on code doing something right — no credential
+is stored, and there is no authorization decision to make on an endpoint that is public by design. The
+instruction says to name an area only where the diff contains code that area governs, and a reviewer
+can fairly read a deliberately anonymous endpoint as containing no access-control code to check. On
+that reading the restraint half is working as written and reaching slightly further than intended,
+which is a plausible account and is offered as one rather than as a certainty.
+
+What it costs is real all the same. "No credential is stored or transmitted" is worth a reader's
+attention on a change that opens a data store to the public, and run 1 said it.
+
+### The A06 nuance held
+
+The report again raises rate limiting on the public write endpoint as a Minor finding, naming
+`A06 Insecure Design` in its Impact and hedging it on a condition the diff does not show — and again
+does not list A06 among the areas swept. Reporting what the diff shows while claiming no coverage of
+the category is the distinction the reference draws, and this report drew it a second time.
+
+### Two smaller observations
+
+The non-security entry in `Clean` is labelled "(core checklist, non-security)" and carries no
+category. Step 5's restraint half is visible here in a place it was not tested: the reviewer had a
+citation available on an input-validation entry and did not take it.
+
+The reviewer made seven tool calls despite the prompt asking for none. The diff was still the subject
+of the report, and this repository contains no code in the language the case is written in, so nothing
+it could have read is capable of feeding the findings above. Recorded for completeness rather than as
+a concern.
