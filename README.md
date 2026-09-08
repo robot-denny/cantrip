@@ -125,6 +125,7 @@ matches the work in front of it. They are where the toolkit's opinions live.
 | [bdd-principles](skills/core/reference/bdd-principles/SKILL.md) | What behavior to specify — Given/When/Then in business language, Example Mapping, specification by example |
 | [tdd-principles](skills/core/reference/tdd-principles/SKILL.md) | What a test should *assert* — observable behavior over implementation artifacts, and what counts as a RED→GREEN signal in a project with no harness |
 | [reviewer-discipline](skills/core/reference/reviewer-discipline/SKILL.md) | The contract every reviewer follows: scope, severity, evidence, and where two reviewers' domains abut |
+| [security-review-rules](skills/core/reference/security-review-rules/SKILL.md) | The OWASP Top 10 categories a security review checks against, what each one looks like inside a change, and which two a change-scoped review cannot reach |
 | [memory-discipline](skills/core/reference/memory-discipline/SKILL.md) | How an agent's persistent project memory should be written and calibrated, including recording its own false positives |
 | [prose-discipline](skills/core/reference/prose-discipline/SKILL.md) | How toolkit prose should read for an audience that includes non-developers: plain language, sentence rhythm, the em-dash budget, and when magic vocabulary earns its place |
 | [design-system-authoring](skills/core/reference/design-system-authoring/SKILL.md) | How to write your project's *own* design-system skill, so an agent conforms to your visual system instead of inventing a look |
@@ -190,9 +191,9 @@ Versionless: .NET and C# majors add rather than break, so each newer form says w
 | [codebase-audit](skills/dotnet/reference/codebase-audit/SKILL.md) | reference | A five-pillar written assessment of a .NET codebase — hygiene, separation, documentation, resilience, refactorability — staged to its lifecycle and framework-neutral, with an optional head-to-head against a second repo |
 
 **What a reference costs.** Its *description* sits in context from the moment you install it; only
-its *body* loads when triggered. So an installed reference you never use is cheap, not free — the
-three `dotnet` units add roughly 420 tokens against about 3,100 for the whole toolkit. That's the
-reason packs are meant to be opt-in.
+its *body* loads when triggered. So an installed reference you never use is cheap rather than free.
+Each description costs roughly 100 to 150 tokens, which puts the three `dotnet` units at about 420
+and the whole toolkit in the low thousands. That's the reason packs are meant to be opt-in.
 
 ---
 

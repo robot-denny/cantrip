@@ -254,6 +254,24 @@ normally — which is exactly what makes it a rule worth stating rather than a l
 It pairs with the drift check on `_features/editor-guides.md`'s Increments list: the rule says what
 must be true, and that check finds where it is not. Neither needs the other to ship.
 
+**Let the contract gate take a root argument, so its checks become fixture-testable.** Raised
+2026-09-08 while adding the two OWASP checks, and kept out of that increment because the fix needs
+its own negative tests.
+
+`scripts/check-contract.sh` runs `cd "$(dirname "$0")/.."` unconditionally. `tests/run.sh` works by
+executing a subject inside a case directory, so a contract check pointed at a fixture re-scans the
+real repo instead and every case passes for the wrong reason. That is why the suite covers
+`check-install.sh` and not the gate, and why a new check is verified by hand and written up in a
+validation log. Two increments have now done it that way.
+
+The cost is paid twice over. Hand verification is slow enough that a check with four rules gets
+tested on three, which is exactly how the category-table check shipped promising a non-empty
+guidance cell it never tested for. And the gate is the file most likely to be edited by someone
+copying an existing check, with nothing to catch a copy that stopped firing. Accepting a root
+argument would make the existing fixture harness reach it. Note that the harness itself would then
+need a case proving a check *fails* on a broken fixture, or the new suite inherits the same defect
+it exists to fix.
+
 **Resolve the content evals.** `dotnet-review-rules` ships eight cases describing what a review of a
 planted defect should produce, and nothing runs them. Their value is highest while authoring a pack
 and lowest as regression protection, so the answer probably falls out of the authoring skill above

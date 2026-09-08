@@ -71,6 +71,16 @@ buried.
   runbook cites what it restates. Records that a gate can see an absence clause exists but not that the
   absence it describes is the only one, which is how the guides gap survived [0006](0006-no-unguarded-preconditions.md).
 
+- **0018 — where new review substance goes.** New substance is a reference until one of two tests moves
+  it. A reviewer is justified only when its findings need their own voice in the merged report, since a
+  fourth one adds a domain boundary, a dispatch paid on every `/implement-step`, and edits to every doc
+  stating the reviewer count. A spell is justified only when the work changes files rather than
+  reporting on them *and* the demand recurs; a demand that decays once a reference is in place is a
+  migration, and a migration does not earn a permanent slot. Generalized from two instances a day
+  apart, OWASP security rules and prose quality, per [0017](0017-when-a-gap-earns-a-runbook.md)'s bar of
+  waiting for a second case. Records that prose ships as `prose-discipline` with no reviewer and no
+  spell, and names the condition that would reverse that.
+
 ## Backfilled
 
 Five decisions predate this repository, having been settled in a direction document that is not in the

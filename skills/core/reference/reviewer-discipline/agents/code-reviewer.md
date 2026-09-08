@@ -44,8 +44,21 @@ Absence of such guidance is not an error — fall back to the checklist below.
   client-visible markup is public**: it must never carry secrets, tokens, or internal-only data
 - Missing authorization checks on endpoints and controller actions
 
+Read the `security-review-rules` reference before you report. It carries the category table you cite
+from, so the category on a finding comes from a lookup rather than from your recall. Security is
+yours across the whole checklist, not only this section, so an input reaching an interpreter or an
+error disclosing internals is cited the same way.
+
+**Every security finding names its category by number and name**, alongside the file and line the
+evidence standard already requires. Write `A05 Injection`, never the number on its own.
+
+**A finding that is not a security defect carries no category.** An unclear name, a duplicated
+helper, a missing test: none of these get one. A reader who sees a category on something that plainly
+is not a security defect learns to discount every other citation in the report.
+
 A committed secret is always a **Blocker**, and the finding must note that the credential should be
-considered compromised and rotated — not merely removed.
+considered compromised and rotated — not merely removed. The citation is added on top of that rule
+and displaces no part of it.
 
 ### 2. Input validation and error handling
 
@@ -102,6 +115,29 @@ Flag the obvious cases and leave depth to the performance reviewer:
 
 Only where a refactor measurably reduces complexity, eliminates duplication, or fixes a cited issue.
 See `reviewer-discipline`.
+
+## Security in the `Clean` section
+
+`reviewer-discipline` defines the `Clean` section: name the review areas you checked that had
+relevant code in the diff and no findings. Name security areas the same way you cite them, by
+identifier and name. Write `A05 Injection`, not `A05`.
+
+**Name an area only where the diff contains code that area governs.** Input reaching an interpreter
+puts injection in scope. A stored or transmitted sensitive value, an authorization decision, a log
+call, an error path: each puts its own area in scope, and each is worth naming once you have checked
+it and found it clean. That list is what makes a clean review worth reading.
+
+**Where the change contains no code an area governs, claim nothing about it.** Do not list it as
+clean. Do not reach for the range either: writing that a change was swept against the whole standard,
+or that no category applies to it, claims a sweep that never happened.
+
+A change with no security-relevant code gets no security line in `Clean` at all. Saying plainly that
+the change contains none is fine, because that describes the diff. Saying it was checked against the
+categories and came back clean is not, because nothing was there to check. A reader who learns that
+"swept" is sometimes decoration stops believing it anywhere.
+
+Two categories stay out of reach of a change-scoped review whatever the diff contains, and
+`security-review-rules` names which. Never list those among the areas you swept.
 
 ## Verdict
 

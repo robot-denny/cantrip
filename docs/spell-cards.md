@@ -1,6 +1,6 @@
 # Cantrip spell cards
 
-Card content for a deck that teaches the toolkit. One card per unit, 33 in all. Read it to learn
+Card content for a deck that teaches the toolkit. One card per unit, 34 in all. Read it to learn
 what Cantrip offers without installing anything, or print it as a desk reference for the team.
 
 Every fact here is drawn from the units themselves. Nothing is invented.
@@ -55,7 +55,7 @@ like "where do tests live" once rather than every time.
 Five group cards, if the deck wants them. Text for the back of each:
 
 - **Core spellbook** — Eleven spells. Nine are the workflow chain, two are configuration. Cast by name, never automatically.
-- **Core reference** — Seven opinions the toolkit holds. You never cast these; the model reaches for them.
+- **Core reference** — Eight opinions the toolkit holds. You never cast these; the model reaches for them.
 - **umbraco-17** — Optional pack, pinned to the CMS major. Six references, four spells.
 - **umbraco-cloud** — Optional pack for Umbraco Deploy. Applies to any licensed install, not only Cloud.
 - **dotnet** — Optional pack for C# and .NET, CMS or not. Three references, no spells.
@@ -73,7 +73,7 @@ Everything else is either a later stage or an opinion you will meet when it appl
 
 ## When to regenerate the deck
 
-Written against the units in `skills/`: 16 spells and 17 references, 33 in all. The deck is a
+Written against the units in `skills/`: 16 spells and 18 references, 34 in all. The deck is a
 snapshot and it cannot tell when it has gone stale. A new spell or
 reference means a missing card, and nothing here will notice. Count the `SKILL.md` files under
 `skills/` against the `###` headings in this file before treating it as complete.
@@ -245,6 +245,16 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Does:** The contract all three reviewers share. It exists to stop the failure modes that make review output worthless: speculation about unseen code, invented severities, findings with no file and line.
 - **Watch for:** the agents ship here but must be linked into `.claude/agents/` once, or review runs inline instead of in parallel.
 - **Pairs with:** `/code-review`, `/retrofit`
+
+### security-review-rules
+
+- **Type:** Reference
+- **Group:** Core reference
+- **Triggers:** reviewing a change for security defects; deciding which category a defect belongs to; when a review needs to name the areas it swept
+- **Holds:** the OWASP Top 10 category table and the revision it pins, what each category looks like inside a diff, the citation convention
+- **Does:** The standard the quality reviewer checks security against. It gives every security finding a category by number and name, and lets a clean review say which areas it swept.
+- **Watch for:** two categories sit outside what any single change can show, and it names which. A clean review must never list those among the areas it swept.
+- **Pairs with:** `reviewer-discipline`, `/code-review`
 
 ### memory-discipline
 

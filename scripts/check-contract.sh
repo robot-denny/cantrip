@@ -15,6 +15,11 @@
 # one shipped file declares and requires the two shipped spells that write it to know it. It
 # would hold identically in a consumer's checkout — nothing about this repository is involved.
 #
+# Checks 19 and 20 are shipped-scoped like 2-10, but singular: each reads one unit by path,
+# the security reference. 19 guards the OWASP revision that reference pins, which lives in
+# that one file and must not be copied anywhere else; 20 guards the shape of its category
+# table. Neither would notice a second copy of either thing outside that file.
+#
 # Checks 11, 13, and 16 are the exceptions in the other direction — they inspect this repo
 # rather than what it ships. Each guards a hardcoded list that has to be kept in step with
 # skills/core by hand: 11 the self-hosting symlinks, 13 the install checker's roster, 16 the
@@ -959,6 +964,204 @@ else
       "The README and skills/ disagree about what this toolkit ships." \
       "Add a linked row for a new unit, or update the link for one that moved." \
       "" "$details"
+  else
+    report_pass "$CURRENT"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 19. The pinned OWASP revision is named in exactly one place (shipped files)
+# ---------------------------------------------------------------------------
+# The security reference cites a standard that gets reissued. A bump has to be one edit, in
+# the one file that pins the revision, or the copies drift and a review starts citing
+# categories from a list nobody maintains. That is the same defect the reference exists to
+# prevent, one level up. So the revision may appear once across shipped files, in the
+# reference that declares it, and nowhere else.
+#
+# The revision is READ from the reference rather than hardcoded here. Hardcoding it would put
+# a second copy in this script and make a bump two edits again, so the check would create the
+# drift it exists to prevent. Check 16 hardcodes its ceiling because ADR 0010 is where that
+# number lives; here the reference is where the number lives, so this check asks it.
+#
+# Two ways this can stop working. The loud one: the revision is found by the literal phrase
+# "Top 10:<year>", so restyling that sentence makes the year unreadable and the check fails
+# rather than skipping. The quiet one: a date-shaped occurrence such as <year>-07 is ignored
+# on purpose, because starter facts stamp verification dates and a fact verified during the
+# pinned year is not a second citation. A second mention written date-shaped would slip past.
+# The scope is shipped_md_files, the same set check 9 reads, which keeps this increment's own
+# planning notes under _work/ out of range; widening that helper widens this check with it.
+begin "the pinned OWASP revision is named once"
+SECURITY_RULES_FILE=skills/core/reference/security-review-rules/SKILL.md
+if [[ ! -f "$SECURITY_RULES_FILE" ]]; then
+  report_fail "$CURRENT" \
+    "The security reference is missing: $SECURITY_RULES_FILE" \
+    "This check reads the pinned OWASP revision out of that file, so without it there is" \
+    "nothing to enforce — and an empty inspection reporting ok is indistinguishable from a" \
+    "clean one. Restore the file, or retire this check deliberately if the unit is going."
+else
+  revision=$(grep -oE 'Top 10:[0-9]{4}' "$SECURITY_RULES_FILE" 2>/dev/null \
+               | sed 's/.*://' | sort -u)
+  revision_lines=$(printf '%s' "$revision" | grep -c . || true)
+  # Captured once and reused below. A per-file loop here forked twice for every shipped
+  # unit; checks 2 and 3 above already establish the one-invocation shape, and this file is
+  # what a later check gets copied from.
+  files=$(shipped_md_files)
+  scanned=$(printf '%s\n' "$files" | grep -c . || true)
+
+  if (( revision_lines != 1 )); then
+    report_fail "$CURRENT" \
+      "Could not read one pinned OWASP revision from $SECURITY_RULES_FILE." \
+      "The check looks for the literal phrase \"Top 10:<year>\" and found $revision_lines." \
+      "Either the sentence naming the revision was restyled, or the file now names two." \
+      "Restore a single \"OWASP Top 10:<year>\" mention, or update the pattern in this check."
+  elif (( scanned == 0 )); then
+    report_fail "$CURRENT" \
+      "No shipped markdown files were found, so this check inspected nothing." \
+      "It fails rather than reporting ok, because a scope that matches nothing looks exactly" \
+      "like a clean repo. Confirm SHIPPED_DIRS still points at where units live."
+  else
+    # Word-boundary on both sides, minus the date shapes (<year>-07, 2026-<year>): a
+    # verification stamp is not a citation of the standard.
+    year_pattern="(^|[^0-9-])${revision}([^0-9-]|\$)"
+    # Two grep invocations for the whole scan rather than two per file: -o counts
+    # occurrences (a line naming the revision twice is two mentions, not one), and the
+    # second pass carries whole lines so the failure message shows context. /dev/null keeps
+    # the filename prefix if the shipped set ever narrows to a single file, since grep drops
+    # it when handed one path.
+    revision_count=$(printf '%s\n' "$files" \
+                       | xargs grep -oE "$year_pattern" /dev/null 2>/dev/null \
+                       | grep -c . || true)
+    revision_hits=$(printf '%s\n' "$files" \
+                      | xargs grep -nE "$year_pattern" /dev/null 2>/dev/null \
+                      | cut -c1-140 | sed 's|^|  - |')
+
+    if (( revision_count != 1 )); then
+      report_fail "$CURRENT" \
+        "The pinned OWASP revision ($revision) is named $revision_count times across shipped files." \
+        "It belongs in exactly one place, so moving to the next revision stays a single edit." \
+        "Remove the extra mentions and let them resolve against $SECURITY_RULES_FILE instead." \
+        "" "${revision_hits%$'\n'}"
+    elif [[ "$revision_hits" != *"$SECURITY_RULES_FILE"* ]]; then
+      report_fail "$CURRENT" \
+        "The pinned OWASP revision ($revision) is named once, but not in the file that pins it." \
+        "The one authoritative mention belongs in $SECURITY_RULES_FILE." \
+        "" "${revision_hits%$'\n'}"
+    else
+      report_pass "$CURRENT"
+    fi
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 20. The security category table is well-formed
+# ---------------------------------------------------------------------------
+# The security reference commits the OWASP category list as a literal table, and a review
+# cites rows out of it. A malformed table is worse than a missing one: a row quietly dropped
+# means a whole category stops being swept, and nothing about the reference looks wrong.
+#
+# WHAT THIS CHECK CANNOT SEE: whether an identifier carries the right NAME in the pinned
+# revision. Verifying that needs a second copy of the category list, which is exactly what
+# check 19 forbids — so a pass here says the table is well-SHAPED, never that it is accurate.
+# Name accuracy was verified once by a person against the OWASP source when the table was
+# authored, and nothing re-checks it. If a name is wrong, this check still reports ok. Do not
+# read a pass as name verification.
+#
+# What it does enforce: identifiers run contiguously from A01 with no gaps and no duplicates,
+# every row pairs its identifier with a non-empty name and non-empty guidance, and the number
+# of rows matches the count the reference declares in prose.
+#
+# Two ways this can stop working. The loud one: rows and the declared count are both found by
+# literal shape — a row is a table line whose first cell is an `A<digits>` identifier, and the
+# count is the phrase "lists <n> categories" — so restyling either makes them unreadable and
+# this check fails rather than skipping. Identifiers are deliberately bare (`A01`, not
+# `A01:<year>`): carrying the year on ten rows would name the revision ten times over and
+# defeat check 19. The quiet one: it reads one file by path. If the reference is ever split or
+# a second category table appears elsewhere, that table is ungated until this check is told.
+begin "the security category table is well-formed"
+if [[ ! -f "$SECURITY_RULES_FILE" ]]; then
+  report_fail "$CURRENT" \
+    "The security reference is missing: $SECURITY_RULES_FILE" \
+    "This check reads the category table out of that one file, so without it there is nothing" \
+    "to inspect — and an empty inspection reporting ok is indistinguishable from a clean one." \
+    "Restore the file, or retire this check deliberately if the unit is going."
+else
+  # One grep per thing being read, on one file. -n carries line numbers so a failure can point
+  # at the offending row rather than making the reader find it.
+  table_rows=$(grep -nE '^\|[[:space:]]*A[0-9]+[[:space:]]*\|' "$SECURITY_RULES_FILE" 2>/dev/null)
+  row_count=$(printf '%s\n' "$table_rows" | grep -c . || true)
+  # A distinctive phrase, not a bare "<n> categories": the frontmatter description says "Top 10
+  # categories", and a looser pattern would read the description as a second declaration.
+  declared_hits=$(grep -oE 'lists [0-9]+ categories' "$SECURITY_RULES_FILE" 2>/dev/null)
+  declared_lines=$(printf '%s' "$declared_hits" | grep -c . || true)
+  declared=${declared_hits#lists }
+  declared=${declared% categories}
+
+  ids=$(printf '%s\n' "$table_rows" \
+          | sed -E 's/^[0-9]+:\|[[:space:]]*(A[0-9]+)[[:space:]]*\|.*/\1/' | grep . || true)
+  unique_ids=$(printf '%s\n' "$ids" | grep . | sort -u || true)
+  unique_count=$(printf '%s\n' "$unique_ids" | grep -c . || true)
+  duplicate_ids=$(printf '%s\n' "$ids" | grep . | sort | uniq -d | paste -sd' ' - || true)
+  # A row must pair its identifier with a name AND with guidance, and must have exactly the
+  # shape that pairing lives in: five |-delimited fields once the "<lineno>:" prefix counts as
+  # the first -- prefix, identifier, name, guidance, and the empty tail after the closing pipe.
+  # Cells and shape are both tested, because neither sees the other's failure. A blank guidance
+  # cell leaves a reviewer an identifier and a name with nothing to look for, and NF cannot see
+  # it, since a row keeping its delimiters still counts five fields when one is empty. An
+  # unescaped pipe inside guidance prose is the mirror image: it pushes the row to six fields
+  # while leaving both cells non-empty, so the cell test passes while everything past the stray
+  # pipe silently leaves the table -- in the rendered markdown as well as here. A reference
+  # about input reaching an interpreter is a likely place for someone to write a bare pipe.
+  malformed_rows=$(printf '%s\n' "$table_rows" | grep . \
+                     | awk -F'|' '{ n = $3; g = $4;
+                                    gsub(/^[[:space:]]+|[[:space:]]+$/, "", n);
+                                    gsub(/^[[:space:]]+|[[:space:]]+$/, "", g);
+                                    if (n == "" || g == "" || NF != 5) print "  - " substr($0, 1, 130) }')
+  # The expected sequence is derived from how many rows there are, not from the declared count,
+  # so a gap and a wrong count stay two distinct failures instead of collapsing into one.
+  # One awk call rather than a subshell per row, matching the single-invocation idiom the
+  # checks above use.
+  expected_ids=$(awk -v n="$unique_count" 'BEGIN { for (i = 1; i <= n; i++) printf "A%02d\n", i }')
+
+  if (( row_count == 0 )); then
+    report_fail "$CURRENT" \
+      "No category rows were found in $SECURITY_RULES_FILE, so this check inspected nothing." \
+      "It fails rather than reporting ok, because a table nothing matches looks exactly like a" \
+      "well-formed one. A row is expected to open with an identifier cell such as \"| A01 |\"." \
+      "Restore the table, or update the row pattern in this check."
+  elif (( declared_lines != 1 )); then
+    report_fail "$CURRENT" \
+      "Could not read one declared category count from $SECURITY_RULES_FILE." \
+      "The check looks for the literal phrase \"lists <n> categories\" and found $declared_lines." \
+      "Restore a single such declaration above the table, or update the pattern in this check."
+  elif [[ -n "$duplicate_ids" ]]; then
+    dup_pattern="\|[[:space:]]*(${duplicate_ids// /|})[[:space:]]*\|"
+    report_fail "$CURRENT" \
+      "The category table repeats an identifier: $duplicate_ids" \
+      "An identifier names one category, so a repeat means one category gets cited twice and" \
+      "another cannot be cited at all. Give every row its own identifier." \
+      "" "$(printf '%s\n' "$table_rows" | grep -E "$dup_pattern" | cut -c1-130 | sed 's|^|  - |')"
+  elif [[ -n "$malformed_rows" ]]; then
+    report_fail "$CURRENT" \
+      "A category row is not shaped like a row: three filled cells and no more." \
+      "Every row needs the identifier, the category name, and what the category looks like" \
+      "inside a change -- none of them empty, and no fourth cell. An unescaped pipe in the" \
+      "guidance opens one, and everything after it leaves the table without looking wrong." \
+      "" "${malformed_rows%$'\n'}"
+  elif [[ "$unique_ids" != "$expected_ids" ]]; then
+    missing=$(comm -13 <(printf '%s\n' "$unique_ids") <(printf '%s\n' "$expected_ids") \
+                | paste -sd' ' -)
+    stray=$(comm -23 <(printf '%s\n' "$unique_ids") <(printf '%s\n' "$expected_ids") \
+              | paste -sd' ' -)
+    report_fail "$CURRENT" \
+      "The category identifiers do not run contiguously from A01." \
+      "$row_count rows means the sequence should be A01 through $(printf 'A%02d' "$unique_count")." \
+      "Missing from the sequence: ${missing:-none}. Outside it: ${stray:-none}." \
+      "A gap means a category was dropped, and a review would stop sweeping it with nothing said."
+  elif (( row_count != declared )); then
+    report_fail "$CURRENT" \
+      "The category table has $row_count rows, but the reference declares $declared categories." \
+      "One of the two is stale: either a row was added or dropped without the count following," \
+      "or the count was edited without the table. Bring them back into step."
   else
     report_pass "$CURRENT"
   fi
