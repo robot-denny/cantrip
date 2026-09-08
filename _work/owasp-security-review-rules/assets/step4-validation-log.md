@@ -312,3 +312,110 @@ fixture suites, and the syntax check.
 Not evidenced: the unreadable-count branch, for the reason given above. Also not evidenced, and not
 evidenceable by any gate in this repo, is that each identifier carries the right category name in
 the pinned revision. That rests on the authoring-time read recorded in Step 1.
+
+---
+
+## Breakage 5 — a stray pipe inside a guidance cell (added by code review, after Step 7)
+
+Found by `/code-review` over the finished branch, not by this log's own mutation pass. Recorded here
+because this log is the only negative verification check 20 gets, so a gap closed elsewhere and left
+unrecorded here would be invisible to the next person who edits the check.
+
+### The gap
+
+The guard tested that the name and guidance cells were non-empty and that the row had at least four
+fields:
+
+```awk
+if (n == "" || g == "" || NF < 4) print "  - " substr($0, 1, 130)
+```
+
+A well-formed row splits on `|` into exactly five fields: the `<lineno>:` prefix `grep -n` adds, the
+identifier, the name, the guidance, and the empty tail after the closing pipe. **One unescaped pipe
+inside guidance prose pushes the row to six.** Both cells stay non-empty and `NF` still clears a
+floor of four, so the row passed while everything after the stray pipe left the table — in the
+rendered markdown as much as in this check. A reference whose A05 row is about input reaching an
+interpreter is a likely place for someone to type a bare pipe.
+
+This is breakage 4's mirror image. That one was an emptied cell that `NF` could not see; this one is
+an extra field that the cell test could not see. Neither test covers the other, which is why the
+guard now carries both.
+
+### The gap reproduced, before the fix
+
+The A05 guidance cell was edited to read `... shell invocations (a bare | pipe here), path
+resolution, ...`, with the guard still at `NF < 4`:
+
+```
+$ ./scripts/check-contract.sh
+21 checks passed.
+```
+
+A malformed table, and a green gate. The check exists to prevent exactly this, and its own comment
+says so: "a row quietly dropped means a whole category stops being swept, and nothing about the
+reference looks wrong."
+
+### The fix
+
+`NF < 4` becomes `NF != 5`. The comment above the guard now states the row shape it asserts and why
+the cell test and the shape test each miss what the other catches.
+
+The failure message was rewritten in the same edit, and needed it more than the guard did. It read
+"A category row does not pair its identifier with both a name and guidance. Every row needs three
+filled cells" — accurate for breakage 4, and actively misleading here, where all three cells *are*
+filled. A reader would have gone looking for an empty cell that does not exist. That is the failure
+this log warned about under breakage 3: a gate that fails identically for different defects sends
+the reader hunting. It now names both shapes and says which one an unescaped pipe produces.
+
+### Both directions, after the fix
+
+Stray pipe planted, guard at `NF != 5`:
+
+```
+$ ./scripts/check-contract.sh
+FAIL  the security category table is well-formed
+      A category row is not shaped like a row: three filled cells and no more.
+      Every row needs the identifier, the category name, and what the category looks like
+      inside a change -- none of them empty, and no fourth cell. An unescaped pipe in the
+      guidance opens one, and everything after it leaves the table without looking wrong.
+
+        - 34:| A05 | Injection | Input reaching an interpreter as part of a command rather than as data. Data queries, shell invocations (a
+
+1 of 21 checks failed.
+```
+
+The offending row is named and truncated at 130 characters, as the other branches do.
+
+**Breakage 4 re-run as a regression check**, since the guard that catches it was the one edited. A05's
+guidance cell emptied, guard at `NF != 5`:
+
+```
+$ ./scripts/check-contract.sh
+FAIL  the security category table is well-formed
+      A category row is not shaped like a row: three filled cells and no more.
+      ...
+        - 34:| A05 | Injection |  |
+```
+
+Still caught. Tightening the shape test did not cost the cell test.
+
+Reference file restored, guard left at `NF != 5`:
+
+```
+$ ./scripts/check-contract.sh
+21 checks passed.
+
+$ tests/run.sh
+110/110 cases passed across 3 suites.
+
+$ git diff --stat -- skills/
+(no output)
+```
+
+### What this does not close
+
+The two tests are now complementary rather than overlapping, but they still only see rows the row
+pattern matches. A line that stops looking like a category row entirely — a broken leading pipe, an
+identifier that is not `A<digits>` — is invisible to both and is caught by the sequence and count
+branches instead, which is where it belongs. Name accuracy remains outside every branch of this
+check, for the reason recorded at the top of this log.

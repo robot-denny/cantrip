@@ -1101,16 +1101,21 @@ else
   unique_ids=$(printf '%s\n' "$ids" | grep . | sort -u || true)
   unique_count=$(printf '%s\n' "$unique_ids" | grep -c . || true)
   duplicate_ids=$(printf '%s\n' "$ids" | grep . | sort | uniq -d | paste -sd' ' - || true)
-  # A row must pair its identifier with a name AND with guidance: the third and fourth
-  # |-delimited fields both non-empty, and at least four fields once the "<lineno>:" prefix
-  # counts as the first. Both cells are tested, because a blank guidance cell leaves a
-  # reviewer an identifier and a name with nothing to look for -- and NF alone cannot see it,
-  # since a row keeping its delimiters still counts five fields when one is empty.
+  # A row must pair its identifier with a name AND with guidance, and must have exactly the
+  # shape that pairing lives in: five |-delimited fields once the "<lineno>:" prefix counts as
+  # the first -- prefix, identifier, name, guidance, and the empty tail after the closing pipe.
+  # Cells and shape are both tested, because neither sees the other's failure. A blank guidance
+  # cell leaves a reviewer an identifier and a name with nothing to look for, and NF cannot see
+  # it, since a row keeping its delimiters still counts five fields when one is empty. An
+  # unescaped pipe inside guidance prose is the mirror image: it pushes the row to six fields
+  # while leaving both cells non-empty, so the cell test passes while everything past the stray
+  # pipe silently leaves the table -- in the rendered markdown as well as here. A reference
+  # about input reaching an interpreter is a likely place for someone to write a bare pipe.
   malformed_rows=$(printf '%s\n' "$table_rows" | grep . \
                      | awk -F'|' '{ n = $3; g = $4;
                                     gsub(/^[[:space:]]+|[[:space:]]+$/, "", n);
                                     gsub(/^[[:space:]]+|[[:space:]]+$/, "", g);
-                                    if (n == "" || g == "" || NF < 4) print "  - " substr($0, 1, 130) }')
+                                    if (n == "" || g == "" || NF != 5) print "  - " substr($0, 1, 130) }')
   # The expected sequence is derived from how many rows there are, not from the declared count,
   # so a gap and a wrong count stay two distinct failures instead of collapsing into one.
   # One awk call rather than a subshell per row, matching the single-invocation idiom the
@@ -1137,9 +1142,10 @@ else
       "" "$(printf '%s\n' "$table_rows" | grep -E "$dup_pattern" | cut -c1-130 | sed 's|^|  - |')"
   elif [[ -n "$malformed_rows" ]]; then
     report_fail "$CURRENT" \
-      "A category row does not pair its identifier with both a name and guidance." \
-      "Every row needs three filled cells: the identifier, the category name, and what the" \
-      "category looks like inside a change." \
+      "A category row is not shaped like a row: three filled cells and no more." \
+      "Every row needs the identifier, the category name, and what the category looks like" \
+      "inside a change -- none of them empty, and no fourth cell. An unescaped pipe in the" \
+      "guidance opens one, and everything after it leaves the table without looking wrong." \
       "" "${malformed_rows%$'\n'}"
   elif [[ "$unique_ids" != "$expected_ids" ]]; then
     missing=$(comm -13 <(printf '%s\n' "$unique_ids") <(printf '%s\n' "$expected_ids") \
