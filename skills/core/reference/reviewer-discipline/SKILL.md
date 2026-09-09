@@ -153,6 +153,20 @@ what makes coverage legible rather than implied.]
 The Clean section is not optional padding. Without it, a reader cannot tell the difference between
 "checked and fine" and "not checked".
 
+**A reviewer may ask more of its own `Clean` entries than this template does.** A domain with a named
+standard behind it will want its areas named a particular way, so that a reader can match what the
+review swept against what the standard covers. That requirement belongs in that reviewer's own
+definition and not here. This contract says what a `Clean` section is for and what every reviewer owes
+it; what one domain must name inside it is that domain's business, and stating it here would hand one
+reviewer's rule to all three.
+
+Two limits hold wherever a reviewer extends this. **Name an area only where the diff contains code
+that area governs** — a list padded with areas the change never touched costs a reader the ability to
+tell a real sweep from a decorative one. And **where a change has nothing in a given area, claim
+nothing about it**, rather than reaching for a phrase that covers the whole domain at once. Both are
+the same rule the scope rule already states, applied to the half of the report that describes what was
+found clean.
+
 ## Suggested refactors
 
 Include a refactor **only** when it measurably reduces complexity, eliminates duplication, or fixes
