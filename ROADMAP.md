@@ -12,10 +12,12 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 **Nothing in flight.**
 
-**Of what Next holds, the pack-authoring meta-skill is the highest-leverage item** — every other
-pack-related cost is paid per pack until it exists. Two items are waiting on something rather than on
-effort: the `/guide` first-run branch needs the pilot's one question answered, and the installed-docs
-gap needs a decision rather than a build.
+**Of what Next holds, the sidecar-delivery defect is the most urgent and the pack-authoring
+meta-skill is the highest-leverage.** The first is urgent because a shipped increment is currently
+undeliverable and nothing says so; the second because every other pack-related cost is paid per pack
+until it exists. Two items are waiting on something rather than on effort: the `/guide` first-run
+branch needs the pilot's one question answered, and the installed-docs gap needs a decision rather
+than a build.
 
 Closed increments are in `CHANGELOG.md` and under `_work/shipped/`; **this section names what is
 open, not what is done.**
@@ -32,6 +34,49 @@ that answers the same question.
 ---
 
 ## Next
+
+**`skills update` never delivers a sidecar file whose `SKILL.md` did not change.** Reported by the
+ai-sketchlab project on 2026-09-08 after running `/update-toolkit`, and reproduced against this
+repository's own history. Filed rather than fixed, because the option space crosses a third-party
+tool, our gate, and the consumer contract, and picking among those is the work.
+
+The installer appears to decide per skill by comparing `SKILL.md`. When that file is already current
+the whole directory is skipped, sidecars included, so a `templates/`, `references/`, `agents/`, or
+`scripts/` file that changed upstream is never delivered by any number of update runs. **The failure
+leaves no trace**: `git diff` after the update is empty for that file, the lockfile hash is unchanged,
+and `check-install.sh` sees a whole skill directory. That is worse than the failure modes
+`/update-toolkit` already reasons about, each of which shows up in a diff or as an absence.
+
+**Two of our own units are in that state, and the second one matters most:**
+
+| Unit | `SKILL.md` last changed | Sidecar last changed |
+|---|---|---|
+| `workflow` | 2026-08-04 | `templates/feature.md` — 2026-09-01 |
+| `reviewer-discipline` | 2026-08-13 | `agents/code-reviewer.md` — 2026-09-08 |
+
+The first is what the reporter hit: their `feature.md` kept the three-status coverage vocabulary while
+`/feature`, `/spec`, and `tdd-principles` all moved to five, so the spell and the template it writes
+from disagreed and nothing said so. **The second is the OWASP increment**, whose whole behavioral
+change lives in a sidecar because [ADR 0018](adr/0018-where-new-review-substance-goes.md) put it
+there deliberately. The architectural rule that made the increment correct is the same rule that makes
+it undeliverable, which is the part worth sitting with before choosing a remedy.
+
+Four options, and only some are ours:
+
+1. **Hash the skill directory rather than `SKILL.md`.** Correct by construction, and upstream's to make.
+2. **Recopy sidecars unconditionally for every pinned skill.** Also upstream's, and matches what the
+   documented wipe-and-recopy behavior already implies.
+3. **Give `/update-toolkit` a sidecar-diff step at Step 4**, where the wrapper already looks for what
+   the bare update hides. Ours, and it detects rather than prevents.
+4. **A contract check failing a commit that changes a sidecar without touching its `SKILL.md`.** Ours,
+   and the only option that makes content actually arrive rather than telling a consumer to hand-copy
+   it. It would have caught the OWASP increment before it merged. It is also a workaround with a
+   smell, since it means editing a file to trigger delivery rather than to say something.
+
+3 and 4 are not alternatives to each other. **Note for whoever picks this up**: the report suggests
+adding an entry under a section of `/update-toolkit` called *Two things the guard does not protect you
+from*. No such section exists, and `git log -S` says it never did, so that remedy means writing one
+rather than appending to it.
 
 **Two questions the guides increment left open**, both stated the same way in
 `_work/shipped/editor-facing-guides/spec.md` under *Still open*, and repeated here because neither belongs
