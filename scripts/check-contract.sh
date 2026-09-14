@@ -310,6 +310,41 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 6b. Frontmatter parses as YAML (ADR-free: the installer's parser is the gate)
+# ---------------------------------------------------------------------------
+# Checks 6's greps only prove a key is PRESENT. The installer parses the block as real
+# YAML, and a plain (unquoted) scalar has syntax the prose does not advertise: a ": "
+# inside it opens a nested mapping, so the parse throws and the skill is silently
+# skipped at install time -- the whole skill lost to one colon in its description.
+# A trailing ":" fails the same way; a " #" is worse, truncating the value with no error.
+begin "skill frontmatter parses as YAML"
+yaml_errs=""
+while IFS= read -r f; do
+  [[ -z "$f" ]] && continue
+  while IFS= read -r line; do
+    key=${line%%:*}
+    val=${line#*:}
+    val=${val#"${val%%[![:space:]]*}"}
+    # Quoted scalars carry their own escaping rules; only plain ones are at risk.
+    case "$val" in ''|'"'*|"'"*|'>'*|'|'*) continue ;; esac
+    case "$val" in
+      *": "*) yaml_errs+="$f: '$key' contains ': ' -- YAML reads the rest as a nested mapping, so the install skips this skill. Use an em dash, or quote the value."$'\n' ;;
+      *:)     yaml_errs+="$f: '$key' ends with ':' -- YAML reads it as a nested mapping. Reword, or quote the value."$'\n' ;;
+    esac
+    case "$val" in
+      *" #"*) yaml_errs+="$f: '$key' contains ' #' -- YAML truncates the value there with no error. Quote the value."$'\n' ;;
+    esac
+  done < <(sed -n '2,/^---$/p' "$f" | grep -E '^[a-zA-Z-]+:')
+done < <(skill_files)
+if [[ -n "$yaml_errs" ]]; then
+  report_fail "$CURRENT" \
+    "Frontmatter is parsed, not grepped. A syntax error costs the entire skill." \
+    "" "$yaml_errs"
+else
+  report_pass "$CURRENT"
+fi
+
+# ---------------------------------------------------------------------------
 # 7. No loose files at a shipped skill root (ADR 0002)
 # ---------------------------------------------------------------------------
 begin "no loose markdown outside a skill directory"
