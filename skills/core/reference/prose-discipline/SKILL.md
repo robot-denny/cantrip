@@ -1,6 +1,6 @@
 ---
 name: prose-discipline
-description: How toolkit prose should read for an audience that includes non-developers: plain language, sentence rhythm, the em-dash budget, the rule governing when magic vocabulary earns its place, and the constructions that make writing sound machine-generated. Consult when writing or editing a README, a concepts or installation doc, a feature doc, a spec summary, a skill description, release notes, or any prose a person outside the implementing team will read; and when reviewing changed markdown.
+description: How toolkit prose should read for an audience that includes non-developers — plain language, sentence rhythm, the em-dash budget, the rule governing when magic vocabulary earns its place, and the constructions that make writing sound machine-generated. Consult when writing or editing a README, a concepts or installation doc, a feature doc, a spec summary, a skill description, release notes, or any prose a person outside the implementing team will read; and when reviewing changed markdown.
 ---
 
 # Prose discipline
