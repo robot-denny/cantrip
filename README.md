@@ -40,43 +40,98 @@ explore → spec → plan → implement-step → feature → code-review → com
 
 ## Quick start
 
-```bash
-# 1. Install the core workflow — works on any project, no stack assumptions
-#    DISABLE_TELEMETRY=1 stops the installer uploading your skill files; keep it on every command
-DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --all
+Run one block from your project root, then cast `/setup` in Claude Code. It takes about five minutes.
 
-# 2. Add a stack pack only if one fits — they are independent, take any combination
-#    Umbraco 17 CMS work
-DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/umbraco-17 --all
-#    Umbraco Deploy, Cloud or on-premise
-DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/umbraco-cloud --all
-#    C# and .NET, CMS or not
-DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/dotnet --all
+**Branch first.** A skill silently shadows a project command of the same name, with no error and no
+fallback. On a branch that is contained, because switching back restores your commands intact.
 
-# 3. Register the three reviewers so /code-review runs them in parallel.
-#    Optional, and easy to skip forever, because nothing later tells you that you did.
-mkdir -p .claude/agents && for f in .claude/skills/reviewer-discipline/agents/*.md; do n=$(basename "$f"); ln -s "../skills/reviewer-discipline/agents/$n" ".claude/agents/$n"; done
-
-# 4. Configure it — reads what your repo already answers, asks only for the rest
-/setup
+```
+git checkout -b cantrip-install
 ```
 
-Step 3 is a copy rather than a link on Windows, and it errors on any reviewer name your project
-already uses, which is a case to leave alone rather than force.
-[Installing in detail](docs/installing.md) covers both.
+Both blocks below install the same thing. They differ only in how the shell sets a variable and
+copies files, so pick yours and **copy the whole block** rather than one line at a time.
 
-Then cast `/spec` on your next piece of work.
+### macOS or Linux
 
-`/setup` analyzes your codebase and writes what it learns into **`.agents/config/`** — four files
+```bash
+# Stop the installer uploading your skill files. Set it once; it holds for this terminal session.
+export DISABLE_TELEMETRY=1
+
+# 1. The core workflow. Works on any project and assumes no stack.
+npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -y
+
+# 2. A stack pack, only if one fits. See the table below, and run one line per pack.
+npx skills add robot-denny/cantrip/skills/umbraco-17 --skill '*' --agent claude-code -y
+
+# 3. Register the three reviewers so /code-review runs them at once.
+mkdir -p .claude/agents
+cp -n .claude/skills/reviewer-discipline/agents/*.md .claude/agents/
+```
+
+### Windows, in PowerShell
+
+```powershell
+# Stop the installer uploading your skill files. Set it once; it holds for this PowerShell session.
+$env:DISABLE_TELEMETRY = "1"
+
+# 1. The core workflow. Works on any project and assumes no stack.
+npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -y
+
+# 2. A stack pack, only if one fits. See the table below, and run one line per pack.
+npx skills add robot-denny/cantrip/skills/umbraco-17 --skill '*' --agent claude-code -y
+
+# 3. Register the three reviewers so /code-review runs them at once.
+New-Item -ItemType Directory -Force .claude\agents
+Get-ChildItem .claude\skills\reviewer-discipline\agents\*.md |
+  Where-Object { -not (Test-Path ".claude\agents\$($_.Name)") } |
+  Copy-Item -Destination .claude\agents\
+```
+
+Then cast `/setup` in Claude Code, and `/spec` on your next piece of work.
+
+### Which packs to add
+
+Packs are optional and independent. Take any combination, or none. Swap the pack name into step 2
+and run that line once per pack.
+
+| Pack | Add it when |
+|---|---|
+| `umbraco-17` | The project is an Umbraco 17 site |
+| `umbraco-cloud` | The project runs Umbraco Deploy, on Cloud or on your own servers |
+| `dotnet` | The project is C# or .NET, whether or not there is a CMS |
+
+A pack you install but never use still costs a little context, so skip the ones that do not apply.
+[What a reference costs](#packs--optional-add-on-references) has the numbers.
+
+### Three things the blocks do not explain
+
+**What `DISABLE_TELEMETRY` does.** The installer uploads the contents of your skill files by
+default. Setting the variable turns that off, which matters on client work, internal architecture,
+or unreleased plans. Set it once, before the first `npx skills` command, and every install in that
+window is covered. You do not repeat it per command. A new terminal window needs it again.
+
+**Why not `--all`.** `--all` serves several agent tools from one shared directory and wires them
+together with symlinks. It is worth having only if you use more than Claude Code, and on Windows it
+fails without saying so. The shape above writes real files to `.claude/` and nothing else, which is
+what a mixed team wants.
+[Choose your install shape](docs/installing.md#choose-your-install-shape) has the comparison.
+
+**Why the reviewers are copied rather than linked.** A copy works on every platform and survives a
+clone on Windows. The cost is that copies do not follow `/update-toolkit`, so that spell checks them and
+offers a refresh. Both forms above leave an existing agent of the same name alone, so a reviewer
+your project already tailored is safe.
+
+`/setup` analyzes your codebase and writes what it learns into **`.agents/config/`**, four files
 holding your paths, your existing commands, and your team's coding standards. That directory is the
 part you own and edit, and it is committed, so filling a slot answers it for your teammates too.
 [What you own](docs/concepts.md#what-you-own) says which file takes what.
 
-**Nothing is required to configure.** A fresh install works before `/setup` runs; every spell either
+**Nothing is required to configure.** A fresh install works before `/setup` runs. Every spell either
 does real work or asks for the single fact it is missing.
 
-Install edge cases — Windows symlinks, name collisions with existing commands, choosing an install
-shape — are in [Installing in detail](#installing-in-detail). Skip them until something looks wrong.
+Verifying the install, name collisions, the other install shape, and what to do when something looks
+wrong are in [Installing in detail](docs/installing.md). Skip them until you need them.
 
 ---
 
@@ -209,9 +264,9 @@ is in **[docs/layout.md](docs/layout.md)**.
 
 ## Installing in detail
 
-The two commands in [Quick start](#quick-start) cover most cases. For what lands where, how to verify
-it, the install shapes, and what to do when a skill name collides with one you already have, see
-**[docs/installing.md](docs/installing.md)**.
+[Quick start](#quick-start) covers a first install on a project. **[docs/installing.md](docs/installing.md)**
+covers the rest: verifying what landed, the second install shape and when it is worth it, name
+collisions with commands you already have, updating later, and the failures that give you no signal.
 
 ---
 

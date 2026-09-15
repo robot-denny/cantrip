@@ -1,6 +1,6 @@
 # 0004. Install layout — corrections from verifying the CLI
 
-**Status:** Accepted — supersedes two claims in [ADR 0002](0002-packaging-and-install-shape.md)
+**Status:** Accepted — supersedes two claims in [ADR 0002](0002-packaging-and-install-shape.md); decision 4's invocation superseded by [ADR 0019](0019-the-documented-default-install-shape.md)
 **Date:** 2026-08-03 — corrected 2026-09-04
 
 > **One claim below was wrong when written.** Decision 2 calls the inline sequential fallback "a
@@ -108,6 +108,12 @@ would have to be kept in sync with the real one for no gain.
 
 - Core only: `npx skills add <repo>/skills/core --all`
 - Plus a pack: `npx skills add <repo>/skills/umbraco-17 --all`
+
+> **The invocation shown here is superseded by [ADR 0019](0019-the-documented-default-install-shape.md)**
+> (2026-09-15). Subpath scoping itself is untouched and is what that record still relies on. What
+> changed is the shape documented alongside it: `--all` commits symlinks that a Windows clone does
+> not materialize, so the documented default became `--skill '*' --agent claude-code -y`. The `--all`
+> form above is still supported; it is no longer what a new reader is told to run.
 
 ## Consequences
 

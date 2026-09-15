@@ -81,6 +81,16 @@ buried.
   waiting for a second case. Records that prose ships as `prose-discipline` with no reviewer and no
   spell, and names the condition that would reverse that.
 
+- **0019 — the documented default install shape.** `--skill '*' --agent claude-code -y` becomes what a
+  new reader is told to run, on every platform, because `--all` commits symlinks that a Windows clone
+  does not materialize and one Mac install therefore breaks every Windows teammate in silence. The
+  wider rule the observation produced: the Quick start must be self-sufficient, with every decision
+  above the command that depends on it, since a correct warning two scrolls below the first command is
+  a warning nobody reads. Also moves telemetry from an inline per-command prefix to one statement per
+  shell in each shell's own syntax, which required scoping contract check 15 to the fenced block
+  rather than the line. Supersedes the invocation in [0004](0004-install-layout-corrections.md)'s
+  decision 4, and nothing else in it.
+
 ## Backfilled
 
 Five decisions predate this repository, having been settled in a direction document that is not in the
