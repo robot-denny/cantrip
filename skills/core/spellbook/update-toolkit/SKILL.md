@@ -93,13 +93,48 @@ the toolkit, not in the project.
 
 Apply nothing without confirmation.
 
-## Step 6 — Report
+## Step 6 — Refresh copied reviewer registrations
+
+Reviewer agents are registered in `.claude/agents/` as either symlinks or copies. A symlink picks up
+the update on its own. **A copy does not.** It keeps the old reviewer, and nothing reports that it
+did, so a stale copy is the most likely way an update half-lands. Copies are the documented default
+because they survive a clone on Windows, which makes this step the normal case rather than the edge.
+
+List the registrations whose content no longer matches the installed source:
+
+```
+for f in .claude/skills/reviewer-discipline/agents/*.md; do
+  n=$(basename "$f")
+  [ -e ".claude/agents/$n" ] && { cmp -s "$f" ".claude/agents/$n" || echo "differs: $n"; }
+done
+```
+
+A symlinked registration never appears in that list. A file that does appear has one of two causes,
+and they need opposite responses:
+
+- **A stale copy** the update left behind. Refresh it.
+- **A reviewer the project tailored** on purpose. Leave it alone. Overwriting it is the same
+  data loss this whole wrapper exists to prevent.
+
+Ask which it is before touching anything. For the stale ones, offer the refresh for the user's
+platform and apply nothing without confirmation:
+
+```
+cp -f .claude/skills/reviewer-discipline/agents/*.md .claude/agents/
+```
+
+```
+Copy-Item .claude\skills\reviewer-discipline\agents\*.md .claude\agents\ -Force
+```
+
+## Step 7 — Report
 
 ```
 Toolkit update
   Skills checked:     N
   Cleanly updated:    N
   Tailorings reverted: N   <- these need a decision
+  Reviewer copies stale: N <- these need a refresh
   Unchanged:          N
 
 Next: <the reconciliation decisions, or "nothing further — everything was current">

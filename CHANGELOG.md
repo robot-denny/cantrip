@@ -434,6 +434,50 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 ### Changed
 
+- **The install commands changed shape, and the README's Quick start now works start to finish on
+  Windows.** Watching a team install the toolkit found three failures that all shared one cause: the
+  Windows guidance was correct, complete, and on a page most readers never opened
+  ([ADR 0019](adr/0019-the-documented-default-install-shape.md)).
+  - **`--skill '*' --agent claude-code -y` is the documented default on every platform**, replacing
+    `--all`. `--all` builds one shared tree and commits symlinks into it; Git for Windows only
+    materializes a committed symlink when `core.symlinks=true`, which its installer turns off unless
+    the account can create them. **One Mac install therefore broke every Windows clone**, leaving a
+    text file where a skill directory should be, with no error at any point. `--all` is still
+    supported and still documented, now as the case for running several agent tools from one tree.
+    **Nothing asks an existing `--all` install to migrate.**
+  - **Telemetry is one statement per shell session, in that shell's own syntax**, rather than an
+    inline prefix repeated on every command. `DISABLE_TELEMETRY=1 npx skills ...` is bash: PowerShell
+    reads the whole first word as a command name and the line fails. The README carried the bash form
+    and said to repeat it per command, while the installation page said one setting covers a session.
+    Both were true in their own shell, and together they read as a contradiction. `export
+    DISABLE_TELEMETRY=1` and `$env:DISABLE_TELEMETRY = "1"` are now given side by side, set once
+    before the first install.
+  - **Reviewer agents are registered by copying on both platforms.** The README previously showed the
+    `ln -s` loop and deferred the Windows copy to the installation page, which readers reached after
+    running the link command. Both new forms **skip a file that already exists**, so a reviewer your
+    project tailored is not overwritten. The symlink loop stays documented for teams with no Windows
+    users.
+  - `docs/installing.md` is reorganized around what a reader needs *after* a working install:
+    verifying it, the other shape, name collisions, updating, and a table of the failures that give
+    you no signal. It also answers whether the machine you install from matters. It does, but for
+    your teammates rather than for you, and only until the install is committed.
+
+- **`/update-toolkit` gained a step for stale reviewer copies.** A symlinked reviewer follows an
+  update; a copied one keeps its old content and nothing reports that it did. Since copying is now the
+  documented default, step 6 lists registrations whose content no longer matches the installed source
+  and offers the refresh. It distinguishes a stale copy from a reviewer the project tailored on
+  purpose, and asks before overwriting either.
+
+- **`check-install.sh` prints the new shapes in its hints.** Its reinstall hints now emit a command
+  that runs as given, with `--agent claude-code -y` included, and its registration hint is a
+  non-clobbering `cp -n` rather than the symlink loop.
+
+- **Contract check 15 scopes telemetry coverage to the fenced block rather than the line.** Inside a
+  markdown code fence, an `npx skills` invocation passes when an earlier line of the same fence sets
+  `DISABLE_TELEMETRY`. Outside a fence, and in every `.sh` file, the inline prefix is still required,
+  because those are lines someone pastes on their own. The old line-level rule would have rejected
+  `export` and `$env:` and so enforced the one syntax that fails on Windows.
+
 - **The Test Coverage vocabulary gained two statuses, and that changes three core files you already
   have.** `templates/feature.md`, `/feature`, and `/spec` all carry them after this update, so a doc
   written or refreshed from here on can hold a row you have not seen before. Nothing rewrites the

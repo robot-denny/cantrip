@@ -770,6 +770,16 @@ fi
 # denylist over them would false-fail the moment a new archive appears. A gate that cries
 # wolf gets silenced, so this one fails silent instead: a documented invocation in a location
 # nobody added here is a coverage gap, not a broken build. Add the location when you make one.
+#
+# COVERAGE IS PER FENCED BLOCK IN MARKDOWN, not per line. The inline `VAR=1 cmd` prefix is bash
+# syntax: PowerShell reads the whole first word as a command name and the line fails, so a
+# Windows reader who copies it gets an error rather than an install. Documenting the shell's own
+# form (`export`, `$env:`) means the statement sits on its own line above the invocation, and a
+# line-level rule would reject exactly the form that works. So inside a ``` fence, an invocation
+# passes when an EARLIER line in the SAME fence sets DISABLE_TELEMETRY -- the block is what a
+# reader copies, and the block is therefore the unit that has to be safe. Outside a fence, and in
+# every .sh file, the prefix is still required inline: those are single lines someone pastes on
+# their own, with no block around them to carry the setting.
 begin "documented install commands disable telemetry"
 INVOCATION="npx skills (add|update)"
 install_doc_files() {
@@ -787,13 +797,22 @@ install_doc_files() {
 hits=$(
   while IFS= read -r f; do
     [[ -n "$f" ]] || continue
-    grep -inE "$INVOCATION" "$f" 2>/dev/null | grep -v 'DISABLE_TELEMETRY' | sed "s|^|$f:|"
+    md=0; [[ "$f" == *.md ]] && md=1
+    awk -v fname="$f" -v md="$md" -v inv="$INVOCATION" '
+      md && /^[[:space:]]*```/ { infence = !infence; covered = 0; next }
+      md && infence && /DISABLE_TELEMETRY/ { covered = 1 }
+      $0 ~ inv {
+        if ($0 ~ /DISABLE_TELEMETRY/) next
+        if (md && infence && covered) next
+        printf "%s:%d:%s\n", fname, NR, $0
+      }
+    ' "$f" 2>/dev/null
   done < <(install_doc_files)
 )
 if [[ -n "$hits" ]]; then
   report_fail "$CURRENT" \
     "ADR 0009: the installer uploads skill file contents, so a copied command must disable it." \
-    "Prefix the invocation with DISABLE_TELEMETRY=1." \
+    "Prefix the invocation with DISABLE_TELEMETRY=1, or set the variable on an earlier line of the same fenced block." \
     "If this line is a historical record rather than a command to run, it belongs in CHANGELOG.md, adr/, or _work/ — not here." \
     "" "$hits"
 else

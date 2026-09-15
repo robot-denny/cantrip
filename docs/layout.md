@@ -51,10 +51,11 @@ your-project/
 └── skills-lock.json             source + content hash per installed skill
 ```
 
-**Install shape note.** `--all` creates the canonical `.agents/skills/` tree with `.claude/skills/`
-symlinking into it. The Claude-Code-only shape puts real files in `.claude/skills/` and no `.agents/skills/`
-at all. **`.agents/config/` is where slots live either way** — it is configuration, not installed content,
-so nothing overwrites it on update.
+**Install shape note.** The documented shape, `--skill '*' --agent claude-code`, puts real files in
+`.claude/skills/` and creates no `.agents/skills/` at all. `--all` instead builds the canonical
+`.agents/skills/` tree with `.claude/skills/` symlinking into it. See
+[Choose your install shape](installing.md#choose-your-install-shape). **`.agents/config/` is where slots
+live either way** — it is configuration, not installed content, so nothing overwrites it on update.
 
 **Agent memory** is not shown with a fixed path on purpose: its location is set by
 `conventions.md → ## Memory`. Note that a project usually has *two* memory stores — the reviewers'

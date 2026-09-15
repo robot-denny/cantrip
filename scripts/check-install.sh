@@ -121,12 +121,12 @@ WIRED_NAMES=()
 reinstall_hint() {   # reinstall_hint <skill-name>
   local n
   for n in "${ROSTER_CORE[@]}"; do
-    [[ "$n" == "$1" ]] && { printf 'DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --skill %s' "$1"; return; }
+    [[ "$n" == "$1" ]] && { printf 'DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --skill %s --agent claude-code -y' "$1"; return; }
   done
   for n in "${PACK_SOURCE[@]}"; do
-    [[ "${n%%|*}" == "$1" ]] && { printf 'DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/%s --skill %s' "${n##*|}" "$1"; return; }
+    [[ "${n%%|*}" == "$1" ]] && { printf 'DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/%s --skill %s --agent claude-code -y' "${n##*|}" "$1"; return; }
   done
-  printf 'reinstall it from the pack that provides it — DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/<pack> --all'
+  printf 'reinstall it from the pack that provides it — DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/<pack> --skill %s --agent claude-code -y' "$1"
 }
 
 in_roster() {
@@ -139,7 +139,7 @@ in_roster() {
 # 1. Skills: present, readable, and whole
 # ---------------------------------------------------------------------------
 if [[ ! -d $SKILLS_DIR ]]; then
-  BROKEN+=("no $SKILLS_DIR directory — nothing is installed. Install with: DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --all")
+  BROKEN+=("no $SKILLS_DIR directory — nothing is installed. Install with: DISABLE_TELEMETRY=1 npx skills add robot-denny/cantrip/skills/core --skill '*' --agent claude-code -y")
 else
   while IFS= read -r entry; do
     [[ -z "$entry" ]] && continue
@@ -219,7 +219,10 @@ fi
 # ---------------------------------------------------------------------------
 # Unregistered reviewers mean /code-review and /retrofit run their passes inline instead
 # of in parallel. That is a working toolkit, so it must not affect the exit code.
-LINK_FIX='mkdir -p .claude/agents && for f in .claude/skills/reviewer-discipline/agents/*.md; do n=$(basename "$f"); ln -s "../skills/reviewer-discipline/agents/$n" ".claude/agents/$n"; done'
+# A COPY rather than a symlink: it clones identically on Windows, where a committed symlink
+# only materializes with core.symlinks=true. cp -n leaves a project's own reviewer alone.
+# PowerShell's equivalent is in the README's quick start, step 3.
+LINK_FIX='mkdir -p .claude/agents && cp -n .claude/skills/reviewer-discipline/agents/*.md .claude/agents/'
 
 # A name match is NOT a registration. A project may have its own agent under the same name
 # -- verified in the wild: a consumer had its own accessibility-reviewer and perf-reviewer,
@@ -245,7 +248,7 @@ for r in "${REVIEWERS[@]}"; do
 done
 
 if [[ ${#unreadable[@]} -gt 0 ]]; then
-  BROKEN+=("reviewer agents present but unreadable (${unreadable[*]}) — a broken link reads as configured while failing every dispatch. Re-link with: $LINK_FIX")
+  BROKEN+=("reviewer agents present but unreadable (${unreadable[*]}) — a broken link reads as configured while failing every dispatch. Re-register with: $LINK_FIX")
 fi
 
 if [[ ${#collided[@]} -gt 0 ]]; then
@@ -255,7 +258,7 @@ fi
 if [[ $registered -eq 0 && ${#collided[@]} -eq 0 ]]; then
   DEGRADED+=("reviewer agents are not registered — review still runs, but inline instead of in parallel. Register with: $LINK_FIX")
 elif [[ $registered -gt 0 && $((registered + ${#collided[@]})) -lt ${#REVIEWERS[@]} ]]; then
-  DEGRADED+=("only $registered of ${#REVIEWERS[@]} toolkit reviewer agents are registered — review will be partial. Link the rest with: $LINK_FIX")
+  DEGRADED+=("only $registered of ${#REVIEWERS[@]} toolkit reviewer agents are registered — review will be partial. Register the rest with: $LINK_FIX")
 fi
 
 # ---------------------------------------------------------------------------

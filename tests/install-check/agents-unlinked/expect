@@ -1,4 +1,4 @@
 exit: 0
 contains: not registered
-contains: ln -s
+contains: cp -n
 contains: worth fixing
