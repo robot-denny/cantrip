@@ -400,7 +400,7 @@ expect "$C" \
 # --- tokens-escaped-selector ----------------------------------------------------
 #
 # A backslash escapes the next character everywhere in CSS, not only inside a string, and a
-# scanner that tracks paren depth has to honour that or the depth goes wrong and stays wrong.
+# scanner that tracks paren depth has to honor that or the depth goes wrong and stays wrong.
 #
 # This case exists because the fix for tokens-string-terminator introduced exactly that bug and
 # the suite did not catch it. Gating the declaration position on `depth == 0` was right; counting
@@ -619,7 +619,7 @@ expect "$C" \
 # exactly like a declaration to a line-anchored pattern. Three of them here, and the file
 # declares two variables — a reader that cannot tell them apart says five.
 #
-# **`not_contains:` cannot state this claim, and adding those lines would be theatre.** The
+# **`not_contains:` cannot state this claim, and adding those lines would be theater.** The
 # preprocessor layer reports counts only — never a variable's name — so `$background` is absent
 # from the output whether the count is right or wrong, and an assertion that it is absent passes
 # against the bug it was written for. The count in the golden and in the `contains:` line below

@@ -68,7 +68,7 @@ What a document type needs and the register does not carry is the property edito
 **The third column is a worked example, not a rule.** It is how one shipped guides section renders
 these fields, written down because a project starting from nothing is better off knowing what worked
 somewhere than guessing. This pack ships no template, no markup and no class names — a project's own
-components decide the rendering — so nothing in that column is a behaviour this pack can be held to,
+components decide the rendering — so nothing in that column is a behavior this pack can be held to,
 and a project that renders these fields differently is not doing it wrong.
 
 **Read ownership from the register, never from this table's silence.** Only editor shape and that
@@ -136,7 +136,7 @@ first and third are stated here because this file is the only place they are wri
 2. **A person gets a summary instead of a diff of markup.** Keyed on the alias, a comparison is
    added / removed / changed / unchanged. Compared as one field it is rendered markup beside a list
    of rows — on a real page type roughly sixty lines against nineteen — and an approval nobody can
-   read is approval theatre.
+   read is approval theater.
 3. **A design change is one template edit rather than one edit per guide page.**
 
 ## The showcase element types
@@ -223,7 +223,7 @@ view, so nothing in it can check that a project's view honors it. It is written 
 failing it fails a review rather than a run.
 
 **A specimen keeps the semantics of what it shows.** A button specimen renders buttons, a form-field
-specimen renders labelled fields, a table specimen renders a table with its header cells marked as
+specimen renders labeled fields, a table specimen renders a table with its header cells marked as
 header cells. The elements are shown *as themselves*, which means as the elements — not as styled
 `div`s that happen to look like them, and not as a screenshot of the real thing. Two reasons, and the
 second is the one that makes this a rule rather than a preference:
@@ -233,7 +233,7 @@ second is the one that makes this a rule rather than a preference:
   team consults to find out what the system does.
 - **A styleguide is an exemplar, and exemplars are copied.** The greenfield refusal elsewhere in this
   capability exists because the first thing in a project sets its conventions whether or not anybody
-  decided to — and a showcase page full of unlabelled inputs and `div`-buttons is a pattern that
+  decided to — and a showcase page full of unlabeled inputs and `div`-buttons is a pattern that
   propagates into every block written after it. A specimen that gets this wrong is not one
   inaccessible page; it is the source every later page copies.
 
@@ -557,7 +557,7 @@ of explanation reading zero would teach its reader to skip past the part carryin
 
 `alias (Display Name)` — and the bare alias where there is no display name to print. That is rarer
 than it sounds: an orphan names the guide *page* in the parentheses, because the source it claims is
-gone and the page is what an operator acts on, and a page with no name of its own is labelled rather
+gone and the page is what an operator acts on, and a page with no name of its own is labeled rather
 than left blank. What does print bare is a documentable unit the project's own types do not declare —
 a block palette naming an alias nothing defines — which the inventory reports rather than refuses,
 and which therefore has no name anywhere to read.

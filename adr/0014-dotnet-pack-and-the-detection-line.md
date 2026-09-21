@@ -60,7 +60,7 @@ a file three directories down.
 **The recipe cannot live in core.** Setup's detection step is an L0 file, and check 8 forbids an L0
 file from naming a technology — so core cannot say to read `csharp_style_var_*`, because that is a
 technology name. The asymmetry is the mechanism rather than a limitation of it: **the pack owns the
-recipe, core owns the instruction to honour one.** Core follows a line it could not have written,
+recipe, core owns the instruction to honor one.** Core follows a line it could not have written,
 the same way it fills a slot heading whose name it must not know.
 
 ## Alternatives considered

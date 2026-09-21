@@ -31,7 +31,7 @@ The split is what makes the docs trustworthy:
 `/spec` classifies every piece of work as a **new capability**, a **change to** an existing one, or a
 **fix**, and that classification decides which artifacts it earns. A refactor does not get a feature doc
 named after the refactor; its observable behavior folds into the capability's existing doc, and its
-point-in-time criteria stay in the shipped spec. That one rule is what stops a capability catalogue
+point-in-time criteria stay in the shipped spec. That one rule is what stops a capability catalog
 turning into a changelog.
 
 ---
@@ -44,7 +44,7 @@ turning into a changelog.
 |---|---|
 | `code-reviewer` | Secrets, input validation, error handling, clarity, conventions, duplication |
 | `perf-reviewer` | Rendering and data-access cost, payload size, caching, client-side weight |
-| `accessibility-reviewer` | Semantics, focus, keyboard, labelling, assistive-technology behavior |
+| `accessibility-reviewer` | Semantics, focus, keyboard, labeling, assistive-technology behavior |
 
 The quality reviewer checks security against a named standard, the OWASP Top 10: every security
 finding cites the category it belongs to, and a clean review lists the areas the change actually had

@@ -1,6 +1,6 @@
 ---
 name: bdd-principles
-description: Behaviour-driven development principles — writing Given/When/Then scenarios that describe observable behavior in business language. Consult when writing or reviewing scenarios, drafting acceptance criteria, grouping scenarios under business rules, choosing domain vocabulary for a spec or feature doc, running Example Mapping or a Three Amigos session, or deciding whether a scenario belongs at the BDD level or is really a unit test. Covers ubiquitous language, specification by example, outside-in development, living documentation, and the common misconceptions about BDD versus TDD.
+description: Behavior-driven development principles — writing Given/When/Then scenarios that describe observable behavior in business language. Consult when writing or reviewing scenarios, drafting acceptance criteria, grouping scenarios under business rules, choosing domain vocabulary for a spec or feature doc, running Example Mapping or a Three Amigos session, or deciding whether a scenario belongs at the BDD level or is really a unit test. Covers ubiquitous language, specification by example, outside-in development, living documentation, and the common misconceptions about BDD versus TDD.
 ---
 
 # BDD Principles

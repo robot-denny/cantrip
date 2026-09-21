@@ -65,7 +65,7 @@ so the reader assembles the point themselves:
 > Retry handling is orthogonal to how work is delivered — the backoff helpers name no transport — so
 > keeping them inside the queue module meant a direct caller could not take them without queue
 > configuration alongside. The extracted module is transport-agnostic, which makes substitution
-> concrete: replacing the queue leaves retry behaviour untouched.
+> concrete: replacing the queue leaves retry behavior untouched.
 
 The second leads with what shipped, and the reasoning follows in half the words:
 
@@ -73,7 +73,7 @@ The second leads with what shipped, and the reasoning follows in half the words:
 > depending on the queue.
 >
 > They never referenced a transport, but living in the queue module meant pulling queue
-> configuration to reach them. Separated, replacing the queue leaves retry behaviour alone.
+> configuration to reach them. Separated, replacing the queue leaves retry behavior alone.
 
 The test: read only the first sentence. If it tells you what was committed, the shape is right.
 

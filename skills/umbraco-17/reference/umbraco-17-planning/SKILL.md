@@ -70,7 +70,7 @@ They ship as Claude Code plugins, enabled per project, and are **recommended com
 requirements** — this pack plans without them. But do not let the absence pass silently:
 
 - **Plan from the codebase's existing extension patterns instead**, and name the closest analogue you
-  used, so a reviewer can see what the plan was modelled on.
+  used, so a reviewer can see what the plan was modeled on.
 - **Record it in Key Decisions naming what is missing and how to fix it** — not merely that a skill was
   unavailable. Something like *"planned the dashboard from the existing `<name>` extension because
   `umbraco-cms-backoffice-skills` is not enabled; enabling it would give authoritative registry and

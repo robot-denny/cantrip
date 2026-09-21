@@ -258,12 +258,12 @@ ever writes, and a convention established here would set that failure as the pro
 - **The table's structure is conveyed in the markup, not by appearance alone** — a real table with
   real header cells, or a list whose grouping is in the elements rather than in the styling. A grid
   of divs that looks like a table is not one to anybody who cannot see it.
-- **"Required" is text.** A colour, an asterisk, or a border weight can carry it as well, but not
+- **"Required" is text.** A color, an asterisk, or a border weight can carry it as well, but not
   instead — an editor who cannot distinguish the styling still has to know which fields they must
   fill in.
 
 Where the closest exemplar does neither, follow it in every other respect and do these two anyway.
-That is not a licence to redesign: it is the one place where matching the project exactly would ship
+That is not a license to redesign: it is the one place where matching the project exactly would ship
 a guide an editor cannot use, and a guide an editor cannot use is not a guide.
 
 ## Step 7 — Show the difference, and write nothing
@@ -273,12 +273,12 @@ reason: a person cannot approve a sentence nobody has written, and the plan docu
 your prose — no register entry owes it, and a row's `information` note is excluded from the machine
 columns by design. So the purpose sentence, the when-to-use section and every added row's note are
 drafted, in full, before this step begins. Approval by category, where the words arrive afterwards,
-is the approval theatre this whole model exists to avoid.
+is the approval theater this whole model exists to avoid.
 
 Present, in this order: the no-op if there is one (and then stop), the statements the plan carries,
 then field by field — the field, its current value, and what is proposed, offered, or drafted for
 it. Print values **whole**: never wrapped, never truncated. A diff nobody can read is approval
-theatre.
+theater.
 
 Say plainly which of these the person is agreeing to, because they are different agreements:
 

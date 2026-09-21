@@ -76,8 +76,8 @@ file names its authorities and states that they are right on any disagreement.
 ## Alternatives considered
 
 - **A README beside each unit** — *rejected.* 32 hand-written files, which is the exact maintenance
-  the 2026-09-01 README split was trying to avoid. Its cost scales with the catalogue, and the
-  catalogue is not what varies.
+  the 2026-09-01 README split was trying to avoid. Its cost scales with the catalog, and the
+  catalog is not what varies.
 - **One orientation file per pack** — *rejected.* One file per pack forever, whether or not that pack
   has a wall in it, and general enough to be unactionable. It would not have told anybody to untick
   *mandatory*.

@@ -147,7 +147,7 @@ hold project facts and a project's paths did not change when its CMS did.
 
 ### 6. Portable criteria and stack-specific recipes split at the grep
 
-A unit may hold judgement that outlives its stack. The audit references are the case: what a
+A unit may hold judgment that outlives its stack. The audit references are the case: what a
 lifecycle stage is, which categories of documentation exist, what resilience means, and how a score
 is anchored are claims about codebases rather than about a platform. Those files are **seam files** —
 they sit in a pack but are written to L0's no-technology standard, so promoting them to core later is
@@ -155,7 +155,7 @@ a `git mv` and a roster edit rather than a rewrite.
 
 Applying that standard to a *whole* reference is where it breaks, and the rule that resolves it is:
 
-> **A judgement criterion is portable and stays in the seam file. A detection recipe is inherently
+> **A judgment criterion is portable and stays in the seam file. A detection recipe is inherently
 > stack-specific and moves to the pack-side file. The test for any one sentence: would it still say
 > something true if read against a codebase in another language?**
 
@@ -163,7 +163,7 @@ A criterion survives that reading. A grep pattern does not, because **a search t
 technology matches everything** — sanitizing one logging search from `Serilog\|UseSerilog\|ILogger<`
 down to `logger\|logging` took a real repository from 8 hits to 25, which is not a portable signal,
 it is noise. The recipe belongs where naming the technology is allowed; the criterion it serves stays
-where the judgement is.
+where the judgment is.
 
 Two constraints follow:
 
@@ -249,7 +249,7 @@ one that was wrong.
 
 **Scope the Deploy pack's description to Umbraco Cloud**, matching its directory name. Rejected for
 the reason §4 records: Deploy is licensed standalone for on-premise, so a Cloud-scoped description
-would refuse to fire for a project that has the artifacts, the drift, and the licence. The directory
+would refuse to fire for a project that has the artifacts, the drift, and the license. The directory
 name stays host-shaped because that is where a reader looks; the description is written about the
 product.
 

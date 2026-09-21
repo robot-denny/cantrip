@@ -238,7 +238,7 @@ declaration form without the guarantee, which is the worst of both.
 
 One cost worth knowing before a record becomes a dictionary key or gets compared inside a loop: the
 generated `Equals` and `GetHashCode` are structural, walking every public property on every call. That is
-the behaviour you asked for, and it is not free.
+the behavior you asked for, and it is not free.
 
 ## The modern syntax that is now the default
 

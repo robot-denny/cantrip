@@ -199,7 +199,7 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 - **`umbraco-cms-backoffice-testing-skills` is named** in the pack's routing and the README. It was
   enabled in practice and cited in no file, which mattered because `/plan` is TDD-first and that is the
   skill set covering extension test setup.
-- **Acknowledgements in the README**, plus [ADR 0013](adr/0013-attribution-for-adapted-external-work.md):
+- **Acknowledgments in the README**, plus [ADR 0013](adr/0013-attribution-for-adapted-external-work.md):
   credit for the two units adapted from published skills, and a three-tier rule for when a license notice
   must ship with a skill rather than merely be recorded. The contract now separates our own authorship —
   which never belongs in a shipped skill — from a third party's notice, which may be required to travel
@@ -234,7 +234,7 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   counts as an answer — so a question the repo already answers is proposed rather than asked. The
   contract's existing `**If empty:**` governs *use* time, when a spell needs the fact and finds the slot
   blank; nothing governed *configuration* time. Core never writes a recipe, because check 8 forbids an
-  L0 file from naming a technology: **the pack owns the recipe, core owns the instruction to honour
+  L0 file from naming a technology: **the pack owns the recipe, core owns the instruction to honor
   one.** Optional by design, so nothing pairs with it and no gate enforces it —
   [docs/contract.md](docs/contract.md) states the five rules it must follow instead, including that it
   goes *after* the fallback so check 4's three-line pairing window stays intact.
@@ -251,7 +251,7 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   install: `npx skills add robot-denny/cantrip/skills/umbraco-cloud --all`.
 - **`umbraco-17-audit-patterns` pack skill** — the Umbraco half of the architecture audit, staying in the
   CMS pack as assessment criteria: composition and service registration, schema-as-code discipline,
-  content and block patterns, and how ready a site is to serve a decoupled frontend. It is judgement
+  content and block patterns, and how ready a site is to serve a decoupled frontend. It is judgment
   criteria rather than a defect list and says so, so it does not compete with `umbraco-17-review-rules`
   over a diff.
 - **Gate check 14** — the audit's four stack-agnostic references are held to L0's no-technology rule
@@ -278,7 +278,7 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   - **The deterministic half is a script, not prose for a model to follow.**
     `skills/umbraco-17/spellbook/guide/scripts/guide.py` (Python 3, standard library only) owns
     extraction, the dossier, the inventory determiner, the audit's arithmetic, and the change plan.
-    The spell owns what needs judgement — the prose, the diff-and-approve conversation, rendering
+    The spell owns what needs judgment — the prose, the diff-and-approve conversation, rendering
     read from the project's own exemplars, and **every CMS write**. Property tables are a
     deterministic transform and never depend on a model, which is what lets the whole thing degrade
     to rendered files when no AI service is available.
@@ -433,6 +433,12 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
     the published source and a later bump stays a single edit.
 
 ### Changed
+
+- **US English is the default spelling for toolkit prose.** `prose-discipline` now says so on its
+  `If empty:` line and lists spelling as a voice rule, so a project that prefers another convention
+  overrides it in `conventions.md` under `## Documentation voice`. Shipped skills, docs, ADRs, and
+  feature docs were swept to match (behavior, color, judgment, license, catalog, labeled, theater).
+  Code identifiers such as `CancellationToken` and `aria-labelledby` are untouched.
 
 - **The install commands changed shape, and the README's Quick start now works start to finish on
   Windows.** Watching a team install the toolkit found three failures that all shared one cause: the
@@ -605,7 +611,7 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   naming `skills/umbraco-17/reference/architecture-audit/SKILL.md` names nothing now, and neither the
   installer nor `/update-toolkit` distinguishes a move from a deletion, so the fix is manual:
   `npx skills add robot-denny/cantrip/skills/dotnet --skill codebase-audit`.
-- **Detection recipes and judgement criteria are split inside the audit.** The criteria stay in the four
+- **Detection recipes and judgment criteria are split inside the audit.** The criteria stay in the four
   portable references; the greps that find the evidence moved to the pack-side hygiene reference, because
   **a search that names no technology matches everything** — one logging search sanitized down to the
   generic words went from 8 hits to 25 on a real repository, which is noise rather than a signal. The
@@ -623,7 +629,7 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   `skills/<pack>`, which was already unhelpful with one pack and unresolvable with three — nothing in the
   report said where a unit came from. A `PACK_SOURCE` map makes it answerable, so the hint answers it, and
   a unit in no map still falls back to the placeholder rather than confidently naming the wrong pack.
-- **The README, `docs/layout.md`, and the layer table carry three packs**, each labelled with the axis it
+- **The README, `docs/layout.md`, and the layer table carry three packs**, each labeled with the axis it
   is cut on — a CMS major, a product that spans majors, a language that only adds — since which axis a
   pack is cut on is what decides whether its name carries a version.
 

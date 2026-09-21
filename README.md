@@ -307,7 +307,7 @@ symlinked into every agent directory the CLI can find.
 
 ---
 
-## Acknowledgements
+## Acknowledgments
 
 Two units here are adaptations of skills published by
 **[Matt Pocock](https://github.com/mattpocock/skills)** (MIT):

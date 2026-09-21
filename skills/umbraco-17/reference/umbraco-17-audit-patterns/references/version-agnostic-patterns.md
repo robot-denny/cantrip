@@ -27,7 +27,7 @@ Patterns that hold across Umbraco majors. Written as assessment guidance: positi
 
 ### Content model
 
-- Document types, data types, templates, and (where the version supports it) AI/search/agent entities are serialized to schema artifact files and committed to git. **Schema is treated as code** — that judgement is what this file asserts.
+- Document types, data types, templates, and (where the version supports it) AI/search/agent entities are serialized to schema artifact files and committed to git. **Schema is treated as code** — that judgment is what this file asserts.
 - Something checks for unexpected schema drift before it is committed, whether a hook or a dedicated check.
 - Built-in entities are extracted at setup rather than left database-only, so the drift report means something.
 
