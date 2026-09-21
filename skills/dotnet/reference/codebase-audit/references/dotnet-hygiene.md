@@ -63,7 +63,7 @@ test -f <target>/Directory.Packages.props && echo "central" || echo "per-project
 ## Detection recipes for the seam references
 
 The stack-agnostic references — `lifecycle-stages.md`, `scoring-rubric.md`,
-`documentation-and-onboarding.md`, `resilience-and-ops.md` — state their judgement criteria in
+`documentation-and-onboarding.md`, `resilience-and-ops.md` — state their judgment criteria in
 technology-neutral terms, so the same criteria can be reused on a stack that is not .NET.
 
 **A detection recipe cannot be technology-neutral and still be useful.** It has to name the

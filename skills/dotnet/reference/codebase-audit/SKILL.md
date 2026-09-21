@@ -38,7 +38,7 @@ Before drafting any findings, read the reference files for the pillars you'll sc
 - [references/lifecycle-stages.md](references/lifecycle-stages.md) — applies to all pillars; gates how recommendations are framed
 - [references/scoring-rubric.md](references/scoring-rubric.md) — the 1–5 anchors per pillar
 
-**Recipes and criteria are split deliberately.** Four references — lifecycle stages, scoring, documentation and onboarding, resilience and operations — state their criteria without naming any technology, so the same judgement can be reused on a stack that is not .NET. A grep that names nothing matches everything, so the recipes for those pillars sit in `dotnet-hygiene.md` instead. Read both halves for Pillars 3 and 4.
+**Recipes and criteria are split deliberately.** Four references — lifecycle stages, scoring, documentation and onboarding, resilience and operations — state their criteria without naming any technology, so the same judgment can be reused on a stack that is not .NET. A grep that names nothing matches everything, so the recipes for those pillars sit in `dotnet-hygiene.md` instead. Read both halves for Pillars 3 and 4.
 
 Scalability & refactorability (Pillar 5) is synthesized from signals across multiple pillars; it doesn't have its own reference file by design.
 

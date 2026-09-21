@@ -1,12 +1,12 @@
 ---
 name: umbraco-17-audit-patterns
-description: Assessment criteria for judging whether an existing Umbraco codebase follows the platform's own conventions — composition and service registration, schema-as-code discipline, content access and block patterns, and how ready the site is to serve a decoupled frontend. Consult when auditing or inheriting an Umbraco codebase, comparing two Umbraco solutions, or deciding whether a site's structure is idiomatic rather than merely working. This is judgement criteria, not a defect list — for reviewing a specific diff, use the Umbraco review rules instead.
+description: Assessment criteria for judging whether an existing Umbraco codebase follows the platform's own conventions — composition and service registration, schema-as-code discipline, content access and block patterns, and how ready the site is to serve a decoupled frontend. Consult when auditing or inheriting an Umbraco codebase, comparing two Umbraco solutions, or deciding whether a site's structure is idiomatic rather than merely working. This is judgment criteria, not a defect list — for reviewing a specific diff, use the Umbraco review rules instead.
 ---
 
 # Umbraco 17 audit patterns
 
 Criteria for assessing an existing Umbraco codebase at the structural level: what an idiomatic
-solution looks like, what the warning signs are, and how the judgement shifts with the codebase's
+solution looks like, what the warning signs are, and how the judgment shifts with the codebase's
 lifecycle stage.
 
 A repo-level architecture audit, where one is installed, is the natural consumer — it covers the

@@ -141,7 +141,7 @@ Scenario: With nothing stated, the surrounding file decides
   And an editor config that says nothing about declaration style
   And surrounding files that declare locals with var throughout
   When a developer adds a local variable
-  Then it is declared the same way as its neighbours
+  Then it is declared the same way as its neighbors
   And no finding is raised about declaration style
 ```
 
@@ -308,7 +308,7 @@ Scenario: The first file in a new area
   Given a project with no recorded style decisions and no editor config
   When a developer adds the first C# file in a new area
   Then the guidance's own defaults apply
-  And no finding is raised for having no neighbours to match
+  And no finding is raised for having no neighbors to match
 ```
 
 ### Rule: A deferral must not become a loss
@@ -422,7 +422,7 @@ survives is the commit's own account of it rather than the capture.
 
 - 2026-08-13: Draft scenarios from initial spec
 - 2026-08-14: Verified against the shipped pack. Draft banner removed.
-- 2026-08-14: **One scenario was wrong and is corrected.** The draft had "work that cannot be cancelled is
+- 2026-08-14: **One scenario was wrong and is corrected.** The draft had "work that cannot be canceled is
   reported" under the failure modes this guidance owns. It does not own that: the shipped unit supplies
   the C# idiom and explicitly withholds a severity, because `reviewer-discipline` assigns cancellation on
   outbound work to the performance reviewer. It now has its own Rule about supplying an idiom for a rule

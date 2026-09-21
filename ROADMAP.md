@@ -219,7 +219,7 @@ written in second person to an agent, and nothing in an installed project tells 
 readable at all.
 
 **The 2026-09-01 README split narrowed this by exactly nothing**, which is worth stating plainly: it
-moved prose from one unshipped file to another and linked the catalogue to the units. That helps
+moved prose from one unshipped file to another and linked the catalog to the units. That helps
 somebody evaluating the toolkit on GitHub and does nothing for somebody who already installed it —
 the population that has committed to it. Options, none costed: ship a short per-unit README beside
 each `SKILL.md` (they would vendor, but 32 hand-written files is the maintenance the split was trying

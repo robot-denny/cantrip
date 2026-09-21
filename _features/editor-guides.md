@@ -672,7 +672,7 @@ Scenario: The run does the work that needs no guides section, then asks for the 
   longer regenerated at all: the purpose sentence and the when-to-use section are written once when
   the page is created and never rewritten, so "Rewriting machine-owned prose requires approval"
   became "An editor's rewritten description is never regenerated over", and the diff-and-approve
-  behaviour it described moved to the property table, which is what a regeneration actually
+  behavior it described moved to the property table, which is what a regeneration actually
   changes. And no serialization format records which dropdown option is the default — measured
   across two projects, 37 option lists, none carrying one — so the claim that Info is "marked as
   the default" was cut, with its own Rule added saying why none is marked. Four scenarios stay

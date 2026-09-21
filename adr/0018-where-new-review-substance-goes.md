@@ -47,7 +47,7 @@ and no `/revise` spell. The voice half of the demand decays to near zero once th
 what gets written. The durable half is accuracy drift and redundancy accretion in documents that
 already exist, and so far that has been a housekeeping nuisance rather than a cost.
 
-**The reversal condition, named so it can be recognised:** a stale document causing a real failure.
+**The reversal condition, named so it can be recognized:** a stale document causing a real failure.
 A wrong instruction followed, an onboarding blocked, a decision made from a doc that no longer
 described the system. Rate is not the trigger. A pile of mildly untidy files is what a manual
 pass is for.

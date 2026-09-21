@@ -53,7 +53,7 @@ For `/explore`, what was borrowed is interview *mechanics*, re-expressed and the
 stages that change what the skill is for: the source interrogates a plan you already have, while
 `/explore` runs before a decision exists and widens the option space.
 
-So both get credit in `README.md` under Acknowledgements, and the reasoning lives here. No notice ships,
+So both get credit in `README.md` under Acknowledgments, and the reasoning lives here. No notice ships,
 because none is owed.
 
 ## Alternatives considered

@@ -45,7 +45,7 @@ buried.
   pack of its own rather than part of the CMS pack, which makes it the first real test of 0003's promise
   that a new pack costs nothing in core. Also adds an optional `**Detect:**` line to a slot declaration,
   so a pack can tell `/setup` how to read an answer the repository already holds — the pack owns the
-  recipe, core owns the instruction to honour one.
+  recipe, core owns the instruction to honor one.
 
 - **0015 — what a stack pack is, and what it owes.** Why a pack is worth having at all: a model's
   knowledge of a platform is every version at once, and a pack pins the one in use so it stops

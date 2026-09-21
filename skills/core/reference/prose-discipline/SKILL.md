@@ -31,7 +31,7 @@ Aim each document at the moment just before someone decides. Explain enough to m
 and put the rest one link away.
 
 **Slot:** `.agents/config/conventions.md` → `## Documentation voice`
-**If empty:** apply this file as written.
+**If empty:** apply this file as written, in US English spelling: color, behavior, organize, license.
 **Detect:** a prose linter's configuration first, since one file settles the question and makes the
 rest of the scan unnecessary. Failing that, the register of the prose the project already ships in
 its README and top-level docs: average sentence length, whether it addresses the reader as "you",
@@ -47,7 +47,7 @@ The rules here fall into two kinds, and they behave differently when the slot is
 | Kind | Sections | What happens on conflict |
 |---|---|---|
 | **Legibility** | Say it plainly, Shape a document task-first | Applies regardless. A guideline that forbids defining a term on first use is a guideline with a bug |
-| **Voice** | Vary the rhythm, The em-dash budget, the hedge list, magic vocabulary | The project wins, in full, with no negotiation |
+| **Voice** | Vary the rhythm, The em-dash budget, the hedge list, magic vocabulary, spelling | The project wins, in full, with no negotiation |
 
 Three rules follow.
 

@@ -982,7 +982,7 @@ EOF
 #
 # The rung is the one legitimate difference between the cases, and it is asserted both ways
 # round: positively for its own value, negatively for the other's. The negative half catches
-# an adapter that read one format and labelled the dossier with the other -- which every
+# an adapter that read one format and labeled the dossier with the other -- which every
 # positive assertion in the suite would otherwise pass.
 COMMON=(
   "exit: 0"
@@ -2476,7 +2476,7 @@ expect "$C" \
 
 # --- the property table compared row by row --------------------------------------
 #
-# The behaviour the structured table exists for. A page storing its property table as ROWS gets
+# The behavior the structured table exists for. A page storing its property table as ROWS gets
 # an added/removed/changed summary keyed on the alias; the `plan-ownership` case beside this one
 # stores it as one value and gets a note saying so instead.
 #
@@ -3281,7 +3281,7 @@ expect "$C" \
 # arithmetic testable here rather than only against a running instance.
 #
 # The three sections are the spec's, and a fixture exists per section because each has a
-# neighbouring case it is easy to conflate with:
+# neighboring case it is easy to conflate with:
 #
 #   undocumented   a unit in the inventory that no guide's stored reference names
 #   orphaned       a guide naming an alias this project no longer declares
@@ -3521,7 +3521,7 @@ EOF
 # staleness comparison -- the fourth has no unit on the other side to compare against, so it is
 # counted in the guide-pages total and nowhere else. `audit.py` argues that at the branch: a
 # not-compared line saying four would say the reference lacked a signature when what it lacks
-# is a unit. The behaviour is the shipped one a guide for a settings model has always had, and
+# is a unit. The behavior is the shipped one a guide for a settings model has always had, and
 # this case is now the only fixture that states it.
 cat > "$C/expected-report.txt" <<EOF
 Guide audit, read at the deploy rung.
@@ -5374,7 +5374,7 @@ expect "$C" \
 
 # --- the same component, already arranged ---------------------------------------
 #
-# The rule the whole ownership model exists for, and the sharp half of this behaviour: a page
+# The rule the whole ownership model exists for, and the sharp half of this behavior: a page
 # already carrying an arrangement is REPORTED and never re-seeded. Both halves are asserted,
 # because either alone passes against an implementation that gets the other backwards -- the
 # arrangement comes back byte for byte in the left-alone list, AND the plan says the variant

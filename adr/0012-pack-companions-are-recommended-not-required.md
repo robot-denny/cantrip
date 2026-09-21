@@ -66,7 +66,7 @@ invisibly — the worst failure mode for a fact file whose whole value is being 
 **Make the marketplace a documented prerequisite.** Rejected on three grounds. It inverts ADR 0003's
 principle one layer out: if the pack can be absent without breaking core, a marketplace can be absent
 without breaking the pack. It taxes the majority for a minority path — the routing table fires only for
-extension work, and a project doing content modelling and templates never touches it. And it makes our
+extension work, and a project doing content modeling and templates never touches it. And it makes our
 install story depend on third-party distribution we do not control, which ADR 0004 already showed shifts
 fast: two of its four recorded findings were wrong within four days.
 

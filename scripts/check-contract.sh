@@ -971,7 +971,7 @@ fi
 # links were added.
 #
 # Two directions, and the second is the one that earns its keep. Forward: every unit has a
-# link, so a new spell cannot ship uncatalogued. Backward: every link resolves, so a unit
+# link, so a new spell cannot ship uncataloged. Backward: every link resolves, so a unit
 # that is RENAMED OR MOVED fails here instead of leaving a dead link nobody clicks -- the
 # same silent-move failure recorded on the roadmap for installed lockfiles, caught for the
 # one surface this repo controls.
@@ -980,12 +980,12 @@ if [[ ! -d skills ]]; then
   report_pass "$CURRENT"
 elif [[ ! -f README.md ]]; then
   report_fail "$CURRENT" \
-    "There are shipped units but no README to catalogue them in." \
+    "There are shipped units but no README to catalog them in." \
     "This check exists because the README is the only file a consumer reads before installing;" \
     "its absence is the most complete form of the failure, not an exemption from it."
 else
   # Fenced blocks are demonstration, not documentation -- a path shown inside an install
-  # snippet is not a catalogue entry. Check 12 learned this the hard way for companion
+  # snippet is not a catalog entry. Check 12 learned this the hard way for companion
   # names; the same reasoning applies to a link.
   readme_prose=$(awk '/^[[:space:]]*```/{fence=!fence; next} !fence' README.md)
 

@@ -237,7 +237,7 @@ would say the project has two systems, and the second one would be the one edito
 of a specimen that has nowhere else to come from: the reference gives the showcase element an optional
 caption for exactly this, and calls it the case where an empty one costs more than a missing sentence.
 Every other caption on this page is editorial — what a token is *for* — and an empty one costs a
-sentence. An unlabelled field is a control nobody using a screen reader or voice control can name, on
+sentence. An unlabeled field is a control nobody using a screen reader or voice control can name, on
 the page every later block is copied from. So ask at the same moment you ask which elements to
 include, and carry the answer into Step 7 with the rest.
 
@@ -271,7 +271,7 @@ written into this file would be fitted to whichever project its author had in fr
 from the project's own mechanism, say which you chose and what in the project decided it, and let
 the person say no.
 
-**This is your judgement at generation time, and it is the same deferral this spell already makes
+**This is your judgment at generation time, and it is the same deferral this spell already makes
 for markup.** It is expected to be refined once there are more worked examples than there are today.
 Until then, a run that states its reasoning is one somebody can correct, and a run that picks
 silently is one nobody can.
@@ -281,13 +281,13 @@ silently is one nobody can.
 **Everything you are about to present already exists.** The four steps above come first for that
 reason: the grouping, the swatch set, the specimen words, the elements list and the theme decision
 are all made before this step begins. Approval by category, where the substance arrives afterwards,
-is the approval theatre this model exists to avoid.
+is the approval theater this model exists to avoid.
 
 Present, in this order and whole — never truncated, never summarized into a count:
 
 **What "whole" means, since Step 4 has already reduced rows to names.** Never truncate the thing being
 approved: every swatch, every specimen, every element, every line to be written. The rule exists so a
-person is not asked to approve "the palette" and shown a number — that is the theatre it names. It was
+person is not asked to approve "the palette" and shown a number — that is the theater it names. It was
 never a promise to echo incidental repetition: a name declared in twelve places is one item on this
 list, with its twelve noted beside it. Reducing a dependency's duplication to a count is not
 summarizing what is being approved; **replacing a swatch set with "18 swatches" is.**
@@ -330,7 +330,7 @@ In this order, confirming each before the next:
    general palette, and *The showcase element types* gives the reason. **Of their own** is the part
    that matters operationally: the exclusion drops what this palette *alone* offers, so anything else
    put here that no other palette offers leaves the count too — while a component this palette shares
-   with a general one stays counted, which is the behaviour that makes sharing safe.
+   with a general one stays counted, which is the behavior that makes sharing safe.
 3. **The palette's name, written into the `## Editor guides` slot.** This is the whole of the fix
    above, and it is not optional. **Both readings of the project take the exclusion** — the
    inventory report and the audit build their counts separately — so one recorded name is what makes
@@ -473,7 +473,7 @@ Both commands answer this, and **they answer it in one wording**: `tokens` carri
 second wording is two texts to keep in step, and the day they diverge a caster gets a different
 remedy depending on which command they happened to run.
 
-**Relay it and stop. Do not offer a baked snapshot, not even a clearly labelled one.** Why a
+**Relay it and stop. Do not offer a baked snapshot, not even a clearly labeled one.** Why a
 build-time-only layer is refused rather than baked is argued in `scripts/styleguide.py`'s module
 docstring, beside the code that decides it. The operational consequence is the whole of what this
 step needs: no value read from a layer the browser never sees may reach a page, because a page of

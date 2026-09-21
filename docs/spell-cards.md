@@ -18,8 +18,8 @@ your work. A spell may suggest the next one on its `Then` line, and that is a su
 sequence anywhere, stop anywhere, use one piece without the rest.
 
 A **reference** is an opinion the toolkit holds, and the model picks it up by itself when the work in
-front of it matches. There is nothing to memorise and nothing to type. The card exists so you
-recognise the opinion when you see it turn up in the output.
+front of it matches. There is nothing to memorize and nothing to type. The card exists so you
+recognize the opinion when you see it turn up in the output.
 
 Both facts are worth surfacing on the card faces somehow. Together they are the toolkit's whole
 posture.
@@ -27,7 +27,7 @@ posture.
 ## How to read a card
 
 Each card is one `###` heading. The title is the spell's invocation name, like `/spec`, or the
-reference's name, like `workflow`. Under it sits a fixed set of labelled fields.
+reference's name, like `workflow`. Under it sits a fixed set of labeled fields.
 
 **Only `Type`, `Group`, and `Does` are required.** When a field is missing, that unit has nothing
 true to put there. Do not invent a value to balance the layout.
@@ -41,7 +41,7 @@ true to put there. Do not invent a value to balance the layout.
 | `Needs` | stat block | prerequisites: input artifact, slot, credentials | one line |
 | `Leaves` | stat block | what persists after it runs | one line |
 | `Does` | body | what it does and when to use it | 2 sentences, ≤40 words |
-| `Modes` | secondary body | flags and variant behaviours | ≤2 lines |
+| `Modes` | secondary body | flags and variant behaviors | ≤2 lines |
 | `Watch for` | callout | the one thing newcomers get wrong | one line |
 | `Then` / `Pairs with` | footer | the suggested next spell, or related units | one line |
 
@@ -112,7 +112,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Needs:** a spec, ideally
 - **Leaves:** `_work/<slug>/plan.md`
 - **Does:** Turns a spec into phased steps, each written test-first, each runnable on its own in a fresh context with a paste-ready prompt. Records the key decisions once, so no later step works them out again.
-- **Watch for:** the last step records durable behaviour. It is a spell you cast rather than a step you run.
+- **Watch for:** the last step records durable behavior. It is a spell you cast rather than a step you run.
 - **Then:** `/implement-step <slug> 1`
 
 ### /implement-step
@@ -224,15 +224,15 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Group:** Core reference
 - **Triggers:** writing or reviewing scenarios, drafting acceptance criteria, choosing domain vocabulary
 - **Holds:** Given/When/Then in business language, Example Mapping, specification by example, ubiquitous language
-- **Does:** Keeps scenarios about observable behaviour a stakeholder would recognise, grouped under business rules. It also tells you when a scenario is really a unit test.
+- **Does:** Keeps scenarios about observable behavior a stakeholder would recognize, grouped under business rules. It also tells you when a scenario is really a unit test.
 - **Pairs with:** `/spec`, `/feature`
 
 ### tdd-principles
 
 - **Type:** Reference
 - **Group:** Core reference
-- **Triggers:** writing a test, filling a step's Test-first block, or diagnosing a test that broke with no behaviour change
-- **Holds:** assert behaviour not implementation, independently-sourced expected values, one behaviour per cycle
+- **Triggers:** writing a test, filling a step's Test-first block, or diagnosing a test that broke with no behavior change
+- **Holds:** assert behavior not implementation, independently-sourced expected values, one behavior per cycle
 - **Does:** What a test should *assert* so it proves something and survives refactoring. Includes what counts as a RED→GREEN signal in a project with no test harness.
 - **Pairs with:** `/plan`, `/implement-step`
 
@@ -260,7 +260,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 
 - **Type:** Reference
 - **Group:** Core reference
-- **Triggers:** writing or reorganising agent memory; when a wrong finding keeps coming back
+- **Triggers:** writing or reorganizing agent memory; when a wrong finding keeps coming back
 - **Holds:** the MEMORY.md index plus topic files, the entry format with its Why and How-to-apply lines, the three entry types
 - **Does:** How an agent's persistent project memory stays small and calibrated. That includes recording its own false positives, so a finding you rejected once stops returning.
 - **Pairs with:** the three reviewers
@@ -292,7 +292,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 
 - **Type:** Reference
 - **Group:** umbraco-17
-- **Triggers:** writing or reviewing Umbraco code, debugging a silent failure, wondering whether behaviour is a bug or the platform
+- **Triggers:** writing or reviewing Umbraco code, debugging a silent failure, wondering whether behavior is a bug or the platform
 - **Holds:** Management API shapes and quirks, content-model traps where unset is indistinguishable from false, AI and Search configuration traps
 - **Does:** Verified platform facts that are easy to get wrong and usually **fail silently**. Each carries what it applies to and when it was last verified.
 
@@ -321,7 +321,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Group:** umbraco-17
 - **Triggers:** documenting an Umbraco capability with no spec, plan, or tests; resolving an alias to its implementation
 - **Holds:** locating the serialized schema (Deploy `.uda` or uSync `.config`), the generated model, and the Razor view; data-type UDI to readable field type
-- **Does:** How to reverse-engineer behavioural documentation from Umbraco code, parsing property structure and compositions out of either serialization format.
+- **Does:** How to reverse-engineer behavioral documentation from Umbraco code, parsing property structure and compositions out of either serialization format.
 - **Pairs with:** `/feature` in from-code mode
 
 ### umbraco-17-audit-patterns
@@ -331,7 +331,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Triggers:** auditing or inheriting an Umbraco codebase, or comparing two solutions
 - **Holds:** composition and service registration, schema-as-code discipline, content access and block patterns, decoupled-frontend readiness
 - **Does:** Criteria for judging whether a site is *idiomatic* rather than merely working.
-- **Watch for:** these are judgement criteria, not a defect list. For one diff, use the review rules instead.
+- **Watch for:** these are judgment criteria, not a defect list. For one diff, use the review rules instead.
 - **Pairs with:** `codebase-audit`
 
 ### umbraco-17-guide-scaffolding
@@ -399,7 +399,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Triggers:** reading or diffing `.uda` files, dashboard entries that will not clear, a transfer failing on schema mismatch
 - **Holds:** how `.uda` artifacts are written and read, why files and a database drift apart, which dashboard control genuinely imports, the API calls that clear stuck entries
 - **Does:** Deploy schema mechanics, and the remediation paths that actually work rather than the ones that look like they should.
-- **Watch for:** applies to any licensed Deploy install, not only Cloud. Cloud-only behaviours are marked as such.
+- **Watch for:** applies to any licensed Deploy install, not only Cloud. Cloud-only behaviors are marked as such.
 - **Pairs with:** `/check-uda`
 
 ### /check-uda
@@ -440,7 +440,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Group:** dotnet
 - **Triggers:** asked to audit an architecture, judge whether a solution is set up right, assess a repo you are inheriting, or compare two
 - **Holds:** five pillars: platform hygiene, architectural separation, documentation and onboarding, resilience and operations, suitability for agentic coding
-- **Leaves:** a markdown report with prioritised P0/P1/P2 recommendations, framed for the codebase's lifecycle stage
+- **Leaves:** a markdown report with prioritized P0/P1/P2 recommendations, framed for the codebase's lifecycle stage
 - **Does:** A structural verdict on a whole .NET codebase, staged to where it is in its life. Can run head-to-head against a second repository.
 - **Modes:** `--compare <path>` for a head-to-head, `--stage` to override the detected lifecycle stage, `--out` for the report path.
 - **Watch for:** a verdict on structure, not a line-level review of a diff.
