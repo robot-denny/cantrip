@@ -1,6 +1,6 @@
 # Cantrip spell cards
 
-Card content for a deck that teaches the toolkit. One card per unit, 34 in all. Read it to learn
+Card content for a deck that teaches the toolkit. One card per unit, 35 in all. Read it to learn
 what Cantrip offers without installing anything, or print it as a desk reference for the team.
 
 Every fact here is drawn from the units themselves. Nothing is invented.
@@ -56,7 +56,7 @@ Five group cards, if the deck wants them. Text for the back of each:
 
 - **Core spellbook** — Eleven spells. Nine are the workflow chain, two are configuration. Cast by name, never automatically.
 - **Core reference** — Eight opinions the toolkit holds. You never cast these; the model reaches for them.
-- **umbraco-17** — Optional pack, pinned to the CMS major. Six references, four spells.
+- **umbraco-17** — Optional pack, pinned to the CMS major. Seven references, four spells.
 - **umbraco-cloud** — Optional pack for Umbraco Deploy. Applies to any licensed install, not only Cloud.
 - **dotnet** — Optional pack for C# and .NET, CMS or not. Three references, no spells.
 
@@ -73,7 +73,7 @@ Everything else is either a later stage or an opinion you will meet when it appl
 
 ## When to regenerate the deck
 
-Written against the units in `skills/`: 16 spells and 18 references, 34 in all. The deck is a
+Written against the units in `skills/`: 16 spells and 19 references, 35 in all. The deck is a
 snapshot and it cannot tell when it has gone stale. A new spell or
 reference means a missing card, and nothing here will notice. Count the `SKILL.md` files under
 `skills/` against the `###` headings in this file before treating it as complete.
@@ -304,7 +304,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Holds:** inspect live backoffice schema before designing steps, the layer vocabulary a feature spans, the step order that usually works
 - **Does:** Stack-specific planning guidance, and the router: it sends dashboards, property editors, workspaces, trees, and block views to the authoritative extension skill for each.
 - **Watch for:** it routes to two companion plugin skill sets. Without them its extension guidance is thinner, and it says so.
-- **Pairs with:** `/plan`, `/block`
+- **Pairs with:** `/plan`, `/block`, `umbraco-17-block-authoring`
 
 ### umbraco-17-review-rules
 
@@ -344,15 +344,25 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Watch for:** you create the document types. Nothing here does it for you.
 - **Pairs with:** `/guide`
 
+### umbraco-17-block-authoring
+
+- **Type:** Reference
+- **Group:** umbraco-17
+- **Triggers:** planning or implementing a step that adds a block or element type, or casting `/block`
+- **Holds:** the test that proves an element type exists before it is built, copy the closest existing block and the sequence for a project with none, the exemplar's accessibility shape checked before it is copied, palette choice as the project's decision, schema files never hand-edited, done means the red test passes
+- **Does:** The discipline one block is built under, so a block planned by `/plan` and built by `/implement-step` gets what a block cast through `/block` gets.
+- **Watch for:** it holds no procedure and restates no platform fact. The steps are the plan's or `/block`'s; every fact it rests on is cited to `umbraco-17-starter-facts` by heading.
+- **Pairs with:** `/block`, `umbraco-17-planning`
+
 ### /block
 
 - **Type:** Spell
 - **Group:** umbraco-17
 - **Cast:** `/block <the block, its properties, and editor experience>`
 - **Needs:** an Umbraco project, and access to create the element type
-- **Leaves:** an element type, its palette registration, a view, and a test that went RED then GREEN
-- **Does:** Creates a block test-first. It derives names and aliases, writes a failing test, creates the element type, registers it in the right palette, copies the closest existing block's view, then builds to green.
-- **Watch for:** `level` is reserved, and unprefixed aliases like `content` collide. Both fail silently.
+- **Leaves:** an element type, its palette registration, a view, a test that went RED then GREEN, and a report naming the palette chosen
+- **Does:** Builds one block from a bare description, test-first, following `umbraco-17-block-authoring`. It derives names and aliases, writes a failing test, creates the element type, registers it in a palette, copies the closest existing block's view, then builds to green.
+- **Watch for:** a block that came through a spec is not cast here; plan it as ordinary steps and they get the same discipline from the reference. The exemplar's accessibility defects copy with it, so Step 5 checks that shape first. `/styleguide` hands its view authoring to Step 5.
 - **Then:** `/feature <elementTypeAlias>`
 
 ### /guide
