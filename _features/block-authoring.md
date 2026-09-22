@@ -1,8 +1,5 @@
 # Feature: Block Authoring
 
-> **Draft** — These scenarios have not yet been verified against an implementation. They will be
-> refined during planning and verified after implementation.
-
 A team building an Umbraco site can add a block to it through the normal flow of spec, plan, and
 implement, and the plan and the workers that carry it out follow the discipline a block needs: the
 block is proved to exist by a test before it is built, its view copies the closest block the project
@@ -21,12 +18,20 @@ The per-feature mini-roadmap: shipped increments, planned increments, and parkin
 Newest planned items first. When an item ships, flip the checkbox and point it at the archived
 increment.
 
-- [ ] The block-authoring reference: extract `/block`'s discipline into a model-invoked reference,
-      route block work to it from the pack's planning guidance, and thin `/block` to a cast that
-      follows it (`_work/umbraco-block-authoring-reference/spec.md` and `plan.md`)
-- [ ] Backfill this doc from code: `/block` has shipped since the phase-5 pack increment and this
-      doc covers only what the reference increment establishes. Run `/feature`'s from-code mode over
-      the spell to record the behavior it already had (no spec yet)
+- [ ] Backfill the rest of `/block`'s standing behavior from code. The spell has shipped since the
+      phase-5 pack increment; this doc records the discipline the reference increment established
+      and four code-derived rules read from the spell's slot fallbacks. The property-editor table
+      and the build step's surfacing of a misplaced view directory are still undocumented (no spec
+      yet)
+- [ ] An `Exemplar:` line in `/block`'s report, so a cast records which block it copied the way the
+      reference asks a planned worker to. Raised in review; the increment kept the report block
+      unchanged because `/styleguide` reads it (no spec yet)
+- [x] **Shipped 2026-09-22** — the block-authoring reference: `/block`'s discipline extracted into
+      the model-invoked `umbraco-17-block-authoring`, block work routed to it from
+      `umbraco-17-planning`, and `/block` thinned to a cast that follows it. The demo project's
+      live cast was not run; the increment's hand checks are in
+      `_work/umbraco-block-authoring-reference/assets/verification-log.md`
+      (`_work/umbraco-block-authoring-reference/spec.md`)
 
 ---
 
@@ -44,8 +49,8 @@ Scenario: Planning a Testimonial block names the guidance in every block step
   And a spec for a "Testimonial" block with a quote and an author name
   When the developer casts /plan on that spec
   Then the plan's Key Decisions says the block-authoring guidance was consulted
-  And the step that writes the block's test names the guidance in its prompt
-  And the steps that create the element type, register the palette entry, and author the view each name it too
+  And the schema step that creates the element type and registers it in a palette names the guidance in its prompt
+  And the step that authors the view and the step that writes the test each name it too
 ```
 
 ```scenario
@@ -63,7 +68,7 @@ Scenario: The test for the Testimonial block asserts presence with truthiness
   Given a plan whose Step 2 writes the failing test for the "Testimonial" element type
   When the developer casts /implement-step on Step 2
   Then the worker's test asserts the element type is truthy rather than not null
-  And it reads the element type's properties as a flat array
+  And it asserts the type is an element and reads its properties as a flat array
   And the worker reports the test ran RED before any element type was created
 ```
 
@@ -75,6 +80,14 @@ Scenario: The Testimonial view follows the existing Quote block
   When the worker authors the Testimonial view
   Then the worker's report names "Quote" as the block it copied
   And the Testimonial view uses the same model directive, folder placement, settings handling, and styling convention as Quote
+```
+
+```scenario
+Scenario: The exemplar's accessibility shape is checked before it is copied
+  Given a project whose closest existing block is "Quote"
+  When the worker prepares to author the Testimonial view from it
+  Then the worker says what it checks on Quote before copying: a real quotation element and a real citation element rather than styled containers
+  And if Quote looks suspect the worker says so plainly rather than reproducing it
 ```
 
 ```scenario
@@ -91,9 +104,9 @@ Scenario: The first block in a project is established deliberately, not absorbed
 ```scenario
 Scenario: Registering in one of two parity-kept palettes is confirmed first
   Given a project with a "Page Body" palette and a "Landing Sections" palette that share six blocks
-  When the worker registers the "Testimonial" block
-  Then the worker names both palettes as candidates
-  And the worker asks before adding Testimonial to only one of them
+  When the worker reaches the step that registers the "Testimonial" block
+  Then the worker names both palettes as candidates and notes that they are kept in parity
+  And it does not add Testimonial to only one of them until a person has confirmed the choice or the plan's Key Decisions records it
 ```
 
 ```scenario
@@ -114,6 +127,15 @@ Scenario: The Testimonial block is created through the API, not by editing files
   And the worker's report shows the test that failed in Step 2 now passing
 ```
 
+### Rule: A block's property aliases carry the block's name as a prefix
+
+```scenario
+Scenario: The Testimonial block's aliases are prefixed
+  Given a "Testimonial" block with a quote and an author name
+  When the developer or worker derives its property aliases
+  Then the aliases are "testimonialQuote" and "testimonialAuthor", not "quote" and "author"
+```
+
 ### Rule: Casting /block alone still lands a whole block
 
 ```scenario
@@ -131,37 +153,14 @@ Scenario: The styleguide's handoff still reaches view authoring
   Then the cast authors the view and does not propose creating the element type or the palette entry again
 ```
 
-### Rule: Every rule is held in exactly one place
-
-```scenario
-Scenario: The reference cites facts instead of restating them
-  Given the starter facts record that getByName() returns false and that properties are a flat array
-  When a reviewer reads the block-authoring reference
-  Then it points at the starter facts for both and states neither as its own claim
-```
-
-```scenario
-Scenario: The spell cites the reference instead of restating it
-  Given the block-authoring reference states the copy-the-closest-block rule
-  When a reviewer reads the thinned /block spell
-  Then the spell names the reference at the step that authors the view and does not re-argue the rule
-```
-
-### Rule: The unit is registered, and core is untouched
+### Rule: The block-authoring reference is registered like every unit of the pack
 
 ```scenario
 Scenario: A consuming project sees the new reference as wired
-  Given a project that installed the umbraco-17 pack after this increment ships
+  Given a project that installed the umbraco-17 pack after this increment shipped
   When the developer runs check-install.sh --verbose
   Then umbraco-17-block-authoring is listed as wired
   And the README's umbraco-17 pack table and the spell cards both carry it
-```
-
-```scenario
-Scenario: Core does not change
-  Given the increment's branch
-  When a reviewer diffs skills/core against main
-  Then the diff is empty
 ```
 
 ---
@@ -185,6 +184,24 @@ Scenario: A project's own block conventions win
   And the worker does not propose the per-block layout the reference describes as one common shape
 ```
 
+### Rule: A block cast without a plan proposes what it cannot find instead of settling it silently
+
+```scenario
+Scenario: A project with no tests gets a proposed test location, flagged as new
+  Given a project with no test files and an empty tests slot
+  When the developer casts /block for a "Testimonial" block
+  Then the cast proposes a location for the failing test and says plainly that it is establishing a convention
+  And it proposes recording that location in the project's stack configuration so the next block inherits it
+```
+
+```scenario
+Scenario: Views are located by search when the paths slot is empty
+  Given a project with existing blocks whose paths slot is empty
+  When the developer casts /block for a "Testimonial" block
+  Then the cast finds the views by their .cshtml files and the schema by its .uda or uSync files before asking a live instance
+  And a schema folder with no matching file is reported as a partial export, not as an empty schema
+```
+
 ---
 
 ## Test Coverage
@@ -193,20 +210,21 @@ Scenario: A project's own block conventions win
 |----------|-----------|--------|
 | Planning a Testimonial block names the guidance in every block step | — | Not covered |
 | Block work is planned as ordinary steps, not as a spell to cast | — | Not covered |
-| The test for the Testimonial block asserts presence with truthiness | — | Not covered |
+| The test for the Testimonial block asserts presence with truthiness | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
 | The Testimonial view follows the existing Quote block | — | Not covered |
+| The exemplar's accessibility shape is checked before it is copied | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
 | The first block in a project is established deliberately, not absorbed | — | Not covered |
-| Registering in one of two parity-kept palettes is confirmed first | — | Not covered |
-| A one-block palette is not reported as drift | — | Not covered |
-| The Testimonial block is created through the API, not by editing files | — | Not covered |
+| Registering in one of two parity-kept palettes is confirmed first | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| A one-block palette is not reported as drift | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| The Testimonial block is created through the API, not by editing files | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| The Testimonial block's aliases are prefixed | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
 | A one-line cast produces the same block as before | — | Not covered |
-| The styleguide's handoff still reaches view authoring | — | Not covered |
-| The reference cites facts instead of restating them | — | Not covered |
-| The spell cites the reference instead of restating it | — | Not covered |
-| A consuming project sees the new reference as wired | — | Not covered |
-| Core does not change | — | Not covered |
-| A project without the umbraco-17 pack plans as before | — | Not covered |
+| The styleguide's handoff still reaches view authoring | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| A consuming project sees the new reference as wired | `scripts/check-contract.sh:588` (check 13), `:966` (check 18) | Covered |
+| A project without the umbraco-17 pack plans as before | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
 | A project's own block conventions win | — | Not covered |
+| A project with no tests gets a proposed test location, flagged as new | — | Not covered (code-derived) |
+| Views are located by search when the paths slot is empty | — | Not covered (code-derived) |
 
 <!-- Status vocabulary. Each status is a claim about what is proved, not a stage in a process:
      read a row as its answer to "what does this entitle me to believe?"
@@ -233,8 +251,21 @@ Scenario: A project's own block conventions win
      syllable from "Not covered" and was misread as an ordinary gap every time somebody skimmed the
      table. A status that records a decision should not look like a status that records an absence. -->
 
+The manual checks are a dry-run worker probe and a structural walk of the two spells, both recorded
+with predictions first. The probe shows what a worker following the reference says it would write
+and ask; it does not show a block landing in a running site. "Covered" on the registration row means
+the contract gate asserts the roster and the README link on every commit; the spell-card entry is not
+gated.
+
 ---
 
 ## Revision Notes
 
 - 2026-09-22: Draft scenarios from initial spec
+- 2026-09-22: Verified against the shipped increment. Two scenarios from the spec, "The reference
+  cites facts instead of restating them" and "Core does not change", are point-in-time criteria of
+  the increment and stay in the spec rather than becoming Rules here. The palette scenario now says
+  what a dispatched worker can do: it cannot ask, so it records the choice for a person instead of
+  picking. One scenario added for the exemplar's accessibility shape, one Rule for alias prefixes,
+  and one code-derived Rule with two scenarios read from `/block`'s slot fallbacks. Coverage rows
+  point at the increment's verification log where a hand check exists.
