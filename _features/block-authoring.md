@@ -7,7 +7,7 @@ already has instead of inventing a shape, which palette it joins is treated as t
 and the block counts as done when its test passes. A developer who wants one block without a spec
 can still cast a single spell and get the same result.
 
-**Source**: `_work/umbraco-block-authoring-reference/spec.md`
+**Source**: `_work/shipped/umbraco-block-authoring-reference/spec.md`
 **Last verified**: 2026-09-22
 
 ---
@@ -30,8 +30,8 @@ increment.
       the model-invoked `umbraco-17-block-authoring`, block work routed to it from
       `umbraco-17-planning`, and `/block` thinned to a cast that follows it. The demo project's
       live cast was not run; the increment's hand checks are in
-      `_work/umbraco-block-authoring-reference/assets/verification-log.md`
-      (`_work/umbraco-block-authoring-reference/spec.md`)
+      `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md`
+      (`_work/shipped/umbraco-block-authoring-reference/spec.md`)
 
 ---
 
@@ -210,18 +210,18 @@ Scenario: Views are located by search when the paths slot is empty
 |----------|-----------|--------|
 | Planning a Testimonial block names the guidance in every block step | — | Not covered |
 | Block work is planned as ordinary steps, not as a spell to cast | — | Not covered |
-| The test for the Testimonial block asserts presence with truthiness | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| The test for the Testimonial block asserts presence with truthiness | `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
 | The Testimonial view follows the existing Quote block | — | Not covered |
-| The exemplar's accessibility shape is checked before it is copied | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| The exemplar's accessibility shape is checked before it is copied | `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
 | The first block in a project is established deliberately, not absorbed | — | Not covered |
-| Registering in one of two parity-kept palettes is confirmed first | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
-| A one-block palette is not reported as drift | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
-| The Testimonial block is created through the API, not by editing files | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
-| The Testimonial block's aliases are prefixed | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| Registering in one of two parity-kept palettes is confirmed first | `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| A one-block palette is not reported as drift | `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| The Testimonial block is created through the API, not by editing files | `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| The Testimonial block's aliases are prefixed | `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
 | A one-line cast produces the same block as before | — | Not covered |
-| The styleguide's handoff still reaches view authoring | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| The styleguide's handoff still reaches view authoring | `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
 | A consuming project sees the new reference as wired | `scripts/check-contract.sh:588` (check 13), `:966` (check 18) | Covered |
-| A project without the umbraco-17 pack plans as before | `_work/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
+| A project without the umbraco-17 pack plans as before | `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` | Not covered — manual check recorded |
 | A project's own block conventions win | — | Not covered |
 | A project with no tests gets a proposed test location, flagged as new | — | Not covered (code-derived) |
 | Views are located by search when the paths slot is empty | — | Not covered (code-derived) |

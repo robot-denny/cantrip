@@ -1,6 +1,6 @@
 # Plan: Umbraco Block Authoring Reference
 
-**Spec**: `_work/umbraco-block-authoring-reference/spec.md`
+**Spec**: `_work/shipped/umbraco-block-authoring-reference/spec.md`
 **Branch**: `robot-denny/umbraco-block-authoring-reference`
 **Work type**: new-capability
 **Feature doc**: `_features/block-authoring.md`
@@ -108,7 +108,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — Create the reference and register it
 
-> **Prompt**: Implement Step 1 of `_work/umbraco-block-authoring-reference/plan.md`. Create
+> **Prompt**: Implement Step 1 of `_work/shipped/umbraco-block-authoring-reference/plan.md`. Create
 > `skills/umbraco-17/reference/umbraco-17-block-authoring/SKILL.md`, a model-invoked reference that
 > holds the block discipline `skills/umbraco-17/spellbook/block/SKILL.md` currently carries, written
 > so that every platform fact is cited to `umbraco-17-starter-facts` by unit name and none is
@@ -193,7 +193,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 2 — Route block work from the planning reference
 
-> **Prompt**: Implement Step 2 of `_work/umbraco-block-authoring-reference/plan.md`. Edit
+> **Prompt**: Implement Step 2 of `_work/shipped/umbraco-block-authoring-reference/plan.md`. Edit
 > `skills/umbraco-17/reference/umbraco-17-planning/SKILL.md` so that a plan for Umbraco work that adds
 > a block or element type consults `umbraco-17-block-authoring` before the plan is written and names
 > it in the prompt of every step that writes the block's test, creates its element type, registers
@@ -244,7 +244,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 3 — Thin `/block` to a cast that follows the reference
 
-> **Prompt**: Implement Step 3 of `_work/umbraco-block-authoring-reference/plan.md`. Edit
+> **Prompt**: Implement Step 3 of `_work/shipped/umbraco-block-authoring-reference/plan.md`. Edit
 > `skills/umbraco-17/spellbook/block/SKILL.md` so that every sentence of block discipline it carries is
 > replaced by a citation of `umbraco-17-block-authoring`, while its eight steps, their numbering, its
 > slot declarations, its argument hint, its report block, and its `Next:` line are kept. Before
@@ -309,7 +309,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 4 — Card, changelog, and the roadmap
 
-> **Prompt**: Implement Step 4 of `_work/umbraco-block-authoring-reference/plan.md`. Add a card for
+> **Prompt**: Implement Step 4 of `_work/shipped/umbraco-block-authoring-reference/plan.md`. Add a card for
 > `umbraco-17-block-authoring` to `docs/spell-cards.md` after the `umbraco-17-guide-scaffolding` card,
 > in the deck's card format, and update the deck's count line under "When to regenerate the deck" to
 > 16 spells and 19 references, 35 in all. Add an entry under `## [Unreleased]` → `### Added` in
@@ -360,8 +360,8 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 5 — Verify by hand and record it
 
-> **Prompt**: Implement Step 5 of `_work/umbraco-block-authoring-reference/plan.md`. Write
-> `_work/umbraco-block-authoring-reference/assets/verification-log.md`, predictions first, then run
+> **Prompt**: Implement Step 5 of `_work/shipped/umbraco-block-authoring-reference/plan.md`. Write
+> `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md`, predictions first, then run
 > three checks and record their results verbatim. First, dispatch a fresh general-purpose worker
 > with a synthetic plan step for a "Testimonial" block (quote as rich text, author name as text) whose
 > prompt names `umbraco-17-block-authoring`, and ask it to report the test it would write and the
@@ -373,7 +373,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 **What to build**:
 
-- `_work/umbraco-block-authoring-reference/assets/verification-log.md` with: the working tree state
+- `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` with: the working tree state
   and gate baseline; a **Predictions** section written before anything runs; then one section per
   check with the exact prompt or command and the exact output.
   - **Worker probe.** Prediction: the worker lists `umbraco-17-block-authoring` among its skills,
@@ -411,7 +411,7 @@ finishes.
 > where the implementation diverged from the draft. Fill in the test coverage table with real test
 > paths and line numbers, or mark target tests pending if no harness exists yet; for scenarios proved
 > only by the verification log, point the Test File column at
-> `_work/umbraco-block-authoring-reference/assets/verification-log.md`. Remove the "Draft" banner.
+> `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md`. Remove the "Draft" banner.
 > Commit the verified doc.
 >
 > **Validation**: Every scenario matches observable behavior; the coverage table has no unexpected
@@ -432,5 +432,5 @@ finishes.
 | Modify | `docs/spell-cards.md` (new card, `/block` card, count line) |
 | Modify | `CHANGELOG.md` (Unreleased → Added) |
 | Modify | `ROADMAP.md` (entry removed from Next; dated entry added to Recently shipped) |
-| Create | `_work/umbraco-block-authoring-reference/assets/verification-log.md` |
+| Create | `_work/shipped/umbraco-block-authoring-reference/assets/verification-log.md` |
 | _(work type: `new-capability`)_ Update | `_features/block-authoring.md` (verified by the final step) |
