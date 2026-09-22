@@ -73,14 +73,20 @@ the closest existing block and carry these over from it rather than inventing th
 - the **styling convention**, whichever framework or token system the project uses
 - the **filename convention**, usually matching the element type alias
 
-Two shapes are common and both are valid: a flat, editor-agnostic folder with one view per block
-alias, bound to `IBlockReference<IPublishedElement, IPublishedElement>` so one view renders under a
-list and a grid editor alike; and a per-block folder inside a Razor class library, bound to the
-generated typed model. This file gives no verdict between them. The project already did.
+Look at the exemplar's accessibility shape before carrying it over, because it copies too. Alt text
+on a media property, a real heading element rather than a styled `div`, a control that works from
+the keyboard. A defect in any of these reproduces into every block copied from the exemplar. If the
+exemplar looks suspect, say so plainly rather than copying it quietly. What a reviewer checks for is
+stated in `umbraco-17-review-rules`, under *Accessibility*.
 
-Where views live is found in the plan's Key Decisions first, then in the project's paths slot
-(`.agents/config/paths.md` → `## Umbraco`, declared in `umbraco-17-planning`), and when neither has
-it, in the sequence below.
+Two shapes are common and both are valid. One is a flat, editor-agnostic folder with one view per
+block alias, bound to `IBlockReference<IPublishedElement, IPublishedElement>` so one view renders
+under a list and a grid editor alike. The other is a per-block folder inside a Razor class library,
+bound to the generated typed model. This file gives no verdict between them. The project already did.
+
+Where views live is found in the plan's Key Decisions first. Failing that, the project's paths slot
+(`.agents/config/paths.md` → `## Umbraco`, declared in `umbraco-17-planning`) names it. When neither
+has it, the sequence below applies.
 
 **When the project has no blocks, there is nothing to copy, and inventing a shape sets a convention
 by accident.** In order:
@@ -114,32 +120,35 @@ from the schema files the project commits.
 
 ## Schema files are never hand-edited
 
-Never hand-edit `.uda` files under Deploy or `.config` files under uSync. They are serialized output,
-regenerated from what the backoffice holds, so an edit made by hand is overwritten the next time
-that happens and nothing reports the loss. Author the change through the backoffice or the
-Management API and let the tooling write the file. The same rule covers generated model files; see
-*Generated models are not the place for hand edits* in `references/content-model.md`.
+Never hand-edit `.uda` files under Deploy or `.config` files under uSync. Author the change through
+the backoffice or the Management API and let the tooling write the file. The two formats fail in
+opposite directions, and both fail silently. Deploy exports `.uda` from what the backoffice holds, so
+a hand edit is lost on the next export and nothing reports it. uSync imports `.config` into the
+backoffice, so a hand edit is not lost: it is applied to the live content model on the next import,
+which is the worse outcome. The same rule covers generated model files; see *Generated models are
+not the place for hand edits* in `references/content-model.md`.
 
 ## A block is done when its test passes
 
 A block is done when the test that went red passes. It is not done when it compiles, and it is not
 done when the view renders in one place. If an assertion fails, diagnose and fix the block. Do not
-adjust the test to match what was built; the test was written first so that it could disagree.
+adjust the test to match what was built; the test was written first so that it could disagree. The
+test proves the schema. The view's markup is proved at review, against `umbraco-17-review-rules`.
 
 ## Alias hygiene is a set of facts, not a rule of this file
 
 The one rule that is discipline: prefix every property alias with the element name, so `alertContent`
-rather than `content`. Why that matters is three starter facts under two headings in
-`references/content-model.md`, cited rather than repeated: *`level` is a reserved property alias, and
-unprefixed generics collide*, and *The dropdown editor UI alias is `Umb.PropertyEditorUi.Dropdown`*.
-Each describes a failure that raises no error, which is why the prefix is a rule and not a preference.
+rather than `content`. Why that matters is three starter facts in `references/content-model.md`, cited
+rather than repeated. Two sit under *`level` is a reserved property alias, and unprefixed generics
+collide*. The third is *The dropdown editor UI alias is `Umb.PropertyEditorUi.Dropdown`*. Each
+describes a failure that raises no error, which is why the prefix is a rule and not a preference.
 
 ## How a plan uses this
 
-A block is planned as ordinary steps. The step that writes the test, creates the element type,
-registers the palette entry, or authors the view names this reference in its prompt, the way the
-worker envelope already names `tdd-principles`. A block is never planned as a step that casts
-`/block`: a spell is invisible to the model, and `/implement-step` hands such a step back.
+A block is planned as ordinary steps, never as a step that casts `/block`. The planning reference,
+`umbraco-17-planning`, says why. Each step that writes the test, creates the element type, registers
+the palette entry, or authors the view names this reference in its prompt. That is the mechanism the
+worker envelope already uses for `tdd-principles`.
 
 The worker records two things in its report. Which existing block it copied, so a reviewer can check
 the copy against its source. And which palette it chose, so the choice is visible as a decision

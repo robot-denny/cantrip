@@ -119,7 +119,8 @@ cites the facts rather than restating them.
   block copies rather than decides.
 - **The worker cannot load the reference.** A step prompt pasted into a fresh session on a machine
   without the pack, for instance. The step names the reference, so the worker can say it is missing
-  rather than silently improvising. The hedge is "where installed", per ADR 0015 §7.
+  rather than silently improvising. No "where installed" hedge is written for it: the reference is a
+  unit of the same pack, and same-pack citation is the pack's precedent.
 - **A plan step is written as "cast `/block`".** `/implement-step` refuses it and hands it back. The
   planning reference must make that the wrong shape for block work, so it does not get written.
 - **The project's own guidance already covers blocks.** An `AGENTS.md` with a "Where a new block goes"
@@ -226,7 +227,7 @@ Scenario: The first block in a project is established deliberately, not absorbed
 ### Rule: Which palette a block joins is the project's decision
 
 ```scenario
-Scenario: Registering in one of two paritied palettes is confirmed first
+Scenario: Registering in one of two parity-kept palettes is confirmed first
   Given a project with a "Page Body" palette and a "Landing Sections" palette that share six blocks
   When the worker registers the "Testimonial" block
   Then the worker names both palettes as candidates

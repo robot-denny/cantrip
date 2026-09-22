@@ -36,6 +36,26 @@ views by their `*.cshtml` files, and the extension root by its `umbraco-package.
 `*.uda` files exist, check `uSync/*/ContentTypes/*.config` for the same schema before falling
 back to MCP; a folder with no matching file is a partial export, not an empty schema.
 
+## Route block work to this pack's block-authoring reference
+
+If the work adds a block or element type, **consult `umbraco-17-block-authoring` before writing the
+plan.** It holds the test that proves an element type exists before anything is created, and the
+rule to copy the closest existing block. When the project has no blocks yet, it gives the sequence
+to follow instead of inventing a shape. It also holds palette choice as the project's decision, the
+rule that schema files are never hand-edited, and the definition of done.
+
+Record in Key Decisions that it was consulted, and record what it needs the worker to know. That is
+the view location and model binding, found through the paths slot above or by search; the closest
+existing block, by name; and the candidate palettes.
+
+**Every step that writes the block's test, creates its element type, registers its palette entry,
+or authors its view names `umbraco-17-block-authoring` in its prompt**, so the worker loads it. This
+is the same mechanism the worker envelope uses for `tdd-principles`.
+
+Block work is planned as ordinary steps. A step that reads "cast `/block`" is refused by
+`/implement-step` and handed back, because a spell is cast by a person and never by the model. Do
+not write one. `/block` is for a block built without a plan.
+
 ## Route backoffice extension work to its authoritative skill
 
 If the work involves a backoffice extension — dashboards, property editors, workspaces, modals,
@@ -97,7 +117,7 @@ what keeps core technology-agnostic while still making an external dependency vi
 | Layer | Governing constraint |
 |---|---|
 | **Schema** | The committed schema files are the source of truth — `.uda` under Deploy, uSync `.config` under uSync. Author via the backoffice or Management API, not by hand-editing. **Schema leads** — nothing downstream compiles against types that don't exist. |
-| **Slice (block or page type)** | A view model plus its Razor view, and for page types a controller. Follow the closest existing analogue in the project rather than a generic MVC split. If the project has no analogue yet, say so in Key Decisions and establish the shape deliberately rather than assuming one — the first slice sets the convention. |
+| **Slice (block or page type)** | A view model plus its Razor view, and for page types a controller. Follow the closest existing analogue in the project rather than a generic MVC split. If the project has no analogue yet, say so in Key Decisions and establish the shape deliberately rather than assuming one — the first slice sets the convention. For a block, the rule to copy the closest existing one and the sequence for a project with none are stated in `umbraco-17-block-authoring`. |
 | **Client-side components** | Built and bundled separately. Prefer a plain component; reach for a framework runtime only when reactivity justifies the cost. |
 | **Backoffice extension** | Loaded by the backoffice host via a package manifest — see the routing table above. |
 | **Tests** | Browser and Management API level. Deploy schema is environment-coupled, so prefer API lookups over hardcoded identifiers. |
@@ -110,6 +130,10 @@ what keeps core technology-agnostic while still making an external dependency vi
 4. **Client-side assets** — component plus its mount point, then a build plus browser check.
 5. **Tests** — write to RED, confirm GREEN after the prior steps.
 6. **Record behavior** — per the generic Step 4 rule 5.
+
+When the slice is a block, steps 1, 2, and 5 name `umbraco-17-block-authoring` in their prompts, and
+none of them is written as a step that casts `/block`. Registering the block in a palette edits a
+block-editor data type, so it is schema work and belongs in step 1, not in step 3.
 
 **Backoffice extensions follow their own order** — schema is usually not needed. Sequence as:
 extension registration → component → context and state → tests → record behavior.

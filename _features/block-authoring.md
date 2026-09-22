@@ -23,7 +23,7 @@ increment.
 
 - [ ] The block-authoring reference: extract `/block`'s discipline into a model-invoked reference,
       route block work to it from the pack's planning guidance, and thin `/block` to a cast that
-      follows it (`_work/umbraco-block-authoring-reference/spec.md`, no plan yet)
+      follows it (`_work/umbraco-block-authoring-reference/spec.md` and `plan.md`)
 - [ ] Backfill this doc from code: `/block` has shipped since the phase-5 pack increment and this
       doc covers only what the reference increment establishes. Run `/feature`'s from-code mode over
       the spell to record the behavior it already had (no spec yet)
@@ -89,7 +89,7 @@ Scenario: The first block in a project is established deliberately, not absorbed
 ### Rule: Which palette a block joins is the project's decision
 
 ```scenario
-Scenario: Registering in one of two paritied palettes is confirmed first
+Scenario: Registering in one of two parity-kept palettes is confirmed first
   Given a project with a "Page Body" palette and a "Landing Sections" palette that share six blocks
   When the worker registers the "Testimonial" block
   Then the worker names both palettes as candidates
@@ -196,7 +196,7 @@ Scenario: A project's own block conventions win
 | The test for the Testimonial block asserts presence with truthiness | — | Not covered |
 | The Testimonial view follows the existing Quote block | — | Not covered |
 | The first block in a project is established deliberately, not absorbed | — | Not covered |
-| Registering in one of two paritied palettes is confirmed first | — | Not covered |
+| Registering in one of two parity-kept palettes is confirmed first | — | Not covered |
 | A one-block palette is not reported as drift | — | Not covered |
 | The Testimonial block is created through the API, not by editing files | — | Not covered |
 | A one-line cast produces the same block as before | — | Not covered |
