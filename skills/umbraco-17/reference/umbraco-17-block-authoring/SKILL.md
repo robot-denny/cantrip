@@ -73,6 +73,9 @@ the closest existing block and carry these over from it rather than inventing th
 - the **styling convention**, whichever framework or token system the project uses
 - the **filename convention**, usually matching the element type alias
 
+If the block has a rich-text property, its view needs a `using` that the exemplar may not carry. See
+*Rich text needs an explicit `using` for its encoded-string type* in `references/content-model.md`.
+
 Look at the exemplar's accessibility shape before carrying it over, because it copies too. Alt text
 on a media property, a real heading element rather than a styled `div`, a control that works from
 the keyboard. A defect in any of these reproduces into every block copied from the exemplar. If the
@@ -115,8 +118,12 @@ a single parent, and measuring it against a page-body palette reports noise rath
 
 What counts as membership is a starter fact: *Only a block editor's top-level `blocks[]` is palette
 membership* in `references/content-model.md`. For the current state, `/check-uda` reports palette
-drift where the Deploy pack is installed. Without it, read each block-editor data type's `blocks[]`
-from the schema files the project commits.
+drift where the Deploy pack is installed. Without it, read the committed schema files first. Under
+Deploy, each block-editor data type's `Configuration.blocks[]` lists element types by key. Resolve
+each key against the `Udi` in the `document-type__*.uda` files to read them as aliases. Under uSync,
+the same block list sits in the `<Config>` payload of `uSync/*/DataTypes/*.config`. Go to the running
+instance only when no file matches the data type. A `DataTypes/` folder with no match for it is a
+partial export, not an empty palette, so say so rather than reporting no palette.
 
 ## Schema files are never hand-edited
 
