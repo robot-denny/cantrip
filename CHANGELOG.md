@@ -432,6 +432,30 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   - **The reference names the revision it pins**, in one place, so you can check any citation against
     the published source and a later bump stays a single edit.
 
+- **A block planned through the normal flow now gets the discipline `/block` carried —
+  `umbraco-17-block-authoring`** (2026-09-22). A spell is invisible to the model, and
+  `/implement-step` refuses a step that casts one. So a block that came through spec → plan →
+  implement got none of what `/block` knew. That discipline has moved to a model-invoked reference
+  in the `umbraco-17` pack. It holds the test that proves an element type exists before anything is
+  created, and the rule to copy the closest existing block, or to ask when there is none. It says to
+  check the exemplar's accessibility shape before copying it, since a missing alt text or a styled
+  `div` standing in for a heading copies into every block built from it. It holds palette choice as
+  the project's decision, the rule that schema files are never hand-edited, and what done means.
+  `umbraco-17-planning` routes block steps to it, and the worker a step dispatches
+  loads it by name. **It arrives with the `umbraco-17` pack, and there is nothing to configure.**
+  - **`/block` still works alone and follows the same reference.** It reads the reference once at
+    the start, and each of its eight steps names the section it applies instead of carrying a copy.
+    Step numbers and meanings are unchanged, so `/styleguide` still hands view authoring to Step 5.
+  - **A block is never planned as a step that casts `/block`.** `/implement-step` would hand that
+    step back. Block work is planned as ordinary steps, each naming the reference in its prompt, the
+    way the worker envelope already names `tdd-principles`.
+  - **The reference cites the starter facts rather than restating them.** What `getByName()` returns
+    on a miss, the flat properties array, `isElement: true`, the rich-text `using`, and the reserved
+    `level` alias were already in `umbraco-17-starter-facts`. Each rule names the fact it rests on
+    by heading, so a re-verified fact changes in one place.
+  - **A worker reports which block it copied and which palette it chose.** The copy can then be
+    checked against its source, and the palette reads as a decision rather than a data-type detail.
+
 ### Changed
 
 - **US English is the default spelling for toolkit prose.** `prose-discipline` now says so on its

@@ -316,32 +316,6 @@ still and misleading the day someone bumps the revision, because the gate will p
 stale name in it. Whatever closes this belongs with the bump rather than before it — a fetch-and-compare
 step, or a line in the reference telling the next editor what the gate will not do for them.
 
-**`/block` holds discipline that `/plan` and `/implement-step` cannot see.** Raised 2026-09-21
-while walking the spec → plan → implement flow for a feature that adds a block, and recorded here
-because the fix is a unit split rather than an edit.
-
-The spell carries two kinds of content. One is procedure: derive names, write a failing test, create
-the element type, register it, author the view, build, go green. `/plan` already produces that
-sequence for any feature. The other is discipline no plan step re-derives: the test shape and the two
-assertion traps under it (`getByName()` returns `false`, properties arrive as a flat array), the rule
-to copy the closest existing block and never invent a first one quietly, palette choice as a project
-decision, the `IHtmlEncodedString` using, and never hand-editing `.uda`. Four neighbouring facts
-already live in `umbraco-17-starter-facts`' `content-model.md`. These do not. A spell is invisible to
-the model, so a planned block gets none of it, and `/implement-step` refuses a step that says
-"cast `/block`" by design.
-
-In the demo project this never showed, because its `AGENTS.md` carried a "Where a new block goes"
-section and its conventions slot said the same. A consuming project with empty slots has neither.
-
-The shape that fits: extract the discipline into a reference at
-`skills/umbraco-17/reference/umbraco-17-block-authoring/`, pointing at `content-model.md` for the
-facts already there; add a block row to `umbraco-17-planning`'s routing table; and thin `/block` to a
-standalone cast that follows the reference for one block. The spell stays. `/styleguide`'s spec
-depends on it being one, and a block too small to earn a spec still needs a home. Verify one thing
-first: that a reference actually loads inside the worker `/implement-step` dispatches. If it does
-not, the plan template names the reference in the step prompt, the way the worker envelope already
-names `tdd-principles`.
-
 ---
 
 ## Later
@@ -496,6 +470,13 @@ against the first.
 ---
 
 ## Recently shipped
+
+- **2026-09-22** — **Block discipline reachable from the plan.** A model-invoked
+  `umbraco-17-block-authoring` reference holds what `/block` alone carried, `umbraco-17-planning`
+  routes block steps to it, and `/block` follows it as a standalone cast. The roadmap entry had
+  said several platform facts lived in no reference; they were already in the starter facts, so the
+  reference carries discipline and cites facts. Full detail in `CHANGELOG.md`
+  (`_work/shipped/umbraco-block-authoring-reference/spec.md`, `_features/block-authoring.md`).
 
 - **2026-09-08** — **Security review against a named standard.** A `security-review-rules` core
   reference holding the OWASP Top 10 table, and a quality reviewer that cites a category on every
