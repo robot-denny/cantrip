@@ -1,13 +1,13 @@
 ---
 name: implement-step
-description: Execute a single step from a plan in a clean, isolated context so the main conversation stays uncluttered across a long plan. Dispatches the step with just the context it needs, enforces the plan's TDD and validation contract, and relays a structured report. Third stage of the spec → plan → implement chain.
+description: Execute one plan step, or a range of steps in order, each in a clean, isolated context so the main conversation stays uncluttered across a long plan. Takes a single step (4), a closed range (1-3), or an open range to the last numbered step (3-). Dispatches each step with just the context it needs, one fresh worker per step, enforces the plan's TDD and validation contract, and relays a structured report per step. Third stage of the spec → plan → implement chain.
 disable-model-invocation: true
-argument-hint: "<plan> <step-number>"
+argument-hint: "<plan> <N | N-M | N->"
 allowed-tools: Read, Glob, Bash(ls:*), Bash(git status:*), Agent(*)
 ---
 
-You are dispatching a single plan step to a fresh context so the main conversation stays clean.
-The worker does the work; you orchestrate.
+You are dispatching one plan step, or a range of steps in order, to fresh contexts so the main
+conversation stays clean. Each step gets its own worker. The worker does the work; you orchestrate.
 
 Artifact locations follow the layout in the `workflow` skill — consult it rather than assuming
 paths.
@@ -19,28 +19,50 @@ User input: $ARGUMENTS
 Expect two whitespace-separated tokens:
 
 1. **plan** — the increment's plan (a slug or a path)
-2. **step_number** — an integer
+2. **steps** — which steps to run, in one of three forms:
+   - `4` runs step 4
+   - `1-3` runs steps 1, 2, and 3, in that order
+   - `3-` runs from step 3 to the plan's last numbered step
 
-If either is missing or malformed, abort with a one-line message showing the expected usage, and
-stop. If the plan doesn't exist on disk, abort with a one-line message and stop. **Do not guess at
-alternative paths.**
+The second token must match `^(\d+)(?:-(\d+)?)?$`. If either token is missing, or the second does
+not match, abort with a one-line message showing the expected usage, and stop. If the plan doesn't
+exist on disk, abort with a one-line message and stop. **Do not guess at alternative paths.**
 
-## Step 2 — Read the plan and locate the step
+Call the first number **first** and the second number **last**. A single number sets both to the
+same value. An open range such as `3-` has no `last` yet; Step 2 resolves it against the plan. The
+closed range `N-N` is the single-step form `N` spelled differently: run it and report it exactly as
+a single step, with no wording that announces a run.
+
+## Step 2 — Read the plan and locate the steps
 
 Read the plan in full.
 
-Locate the heading `### Step {step_number} — <title>`. Extract the block from that heading up to,
-but not including, whichever comes first: the next `### Step ` heading, the next top-level `---`
-that begins a new section, or end of file.
+Collect every heading of the form `### Step N — <title>`. Those N are the **steps found**. An
+unnumbered final step, `### Final — …`, is not one of them and never runs from here.
 
-Also extract:
+Resolve the bounds against the steps found, before anything else happens:
+
+- An open range resolves `last` to the highest step found. `3-` on a six-step plan is `3-6`.
+- `first` must be at least 1 and must be a step found. `last` must be a step found. `first` must
+  not be greater than `last`.
+- Every number from `first` to `last` must be a step found. A plan numbered 1, 2, 4, 5 has a gap,
+  and `1-5` on it would fail at step 3 with two workers already run; it aborts here instead.
+
+If any of those fails, abort with a message listing the step numbers you did find, and stop. No
+worker has started. A closed range never clamps: `3-9` on a six-step plan is an error, not `3-6`,
+because the developer named a step that is not there and should be told so before anything runs.
+Reversed (`4-2`) and zero (`0-2`) bounds abort with the same message.
+
+The steps to run are `first` through `last`, ascending. For each, locate its heading
+`### Step {N} — <title>` and extract the block from that heading up to, but not including,
+whichever comes first: the next `### Step ` heading, the next top-level `---` that begins a new
+section, or end of file.
+
+Also extract, once for the whole cast:
 
 - The **Context** section
 - The **Key Decisions** section
 - The plan's **Spec** path and **Branch** name, if listed near the top
-
-If the step number doesn't exist, abort with a message listing the step numbers you did find, and
-stop.
 
 **If the located step is a spell-cast rather than implementation work** — its content is "run
 `/feature update …`" or similar — **do not dispatch a worker.** Dispatching one would have a code worker
@@ -61,6 +83,19 @@ Run `git status --short`. If the tree is dirty, surface this before dispatching:
 Wait for confirmation. If the tree is clean, skip the prompt and proceed.
 
 ## Step 4 — Compose the worker prompt
+
+Steps 4, 5, and 6 run once per step in the run, in ascending order: compose step N's prompt,
+dispatch it, wait, relay its report, then move to step N+1. Compose a step's prompt only when it is
+about to be dispatched, never all of them up front. A single-step cast is a run of one.
+
+Once for the whole cast, before the first prompt is composed, check whether the project has standing
+rules the worker must respect — test resilience conventions, formatting discipline, structural
+requirements — and fold them into every step's envelope. The rules do not change between steps, so
+read them once.
+
+**Slot:** `.agents/config/conventions.md` → `## Implementation rules`
+**If empty:** rely on the project's guidance files, which the envelope already points the worker
+at. Do not invent rules.
 
 Build a **self-contained** prompt. The worker has no access to this conversation — everything it
 needs must be in the prompt.
@@ -135,18 +170,14 @@ plan's letter, a follow-up worth filing>
 ```
 ````
 
-Before dispatching, check whether the project has standing rules the worker must respect — test
-resilience conventions, formatting discipline, structural requirements — and fold them into the
-envelope.
-
-**Slot:** `.agents/config/conventions.md` → `## Implementation rules`
-**If empty:** rely on the project's guidance files, which the envelope already points the worker
-at. Do not invent rules.
-
 ## Step 5 — Dispatch
 
 Dispatch the composed prompt to a fresh general-purpose worker context, and wait for its result —
 you need it to relay.
+
+One worker at a time. In a run, the next step's worker starts only after this one has returned and
+its report has been relayed. Steps in a plan build on each other, so running them side by side
+would have a later worker editing files an earlier one has not finished with.
 
 Do **not** isolate to a worktree. The worker operates on the current checkout; if the user wanted
 isolation they would have arranged it before invoking this.
@@ -158,7 +189,11 @@ the prompt is self-contained.
 ## Step 6 — Relay the result
 
 Surface the worker's report **verbatim** — the `## Step N — DONE | BLOCKED` block is the
-load-bearing part. Then add a one-line `Next:` pointer:
+load-bearing part. In a run, surface each step's block as its worker returns, before the next step
+is dispatched, so the developer watches the run land one step at a time.
+
+The `Next:` line appears **once per cast**, after the last step's report, never after every step.
+Write it for the last step that ran, N:
 
 - **DONE**: `Next: review changes (git diff), run /code-review when satisfied, then
   /implement-step {plan} {N+1}.`
@@ -171,8 +206,9 @@ Do not print the worker's full transcript — only its final report block and yo
 
 ## Rules of thumb
 
-- This executes **one** step. If the user wants steps chained automatically, that is a different
-  tool — don't try to be clever.
+- This executes **the steps it was given**, one at a time, in order, and then stops. A range is the
+  developer choosing where the next pause falls. It is not a request to keep going past the range,
+  to skip a step, or to run steps side by side. Don't try to be clever.
 - The worker's context is bounded by what you pass. Too little and it works blind; the whole plan
   and you bloat it with irrelevant steps. **Context + Key Decisions + Step N is the right cut.**
 - The plan's **Validation** section is the truth about whether the step succeeded. Don't
