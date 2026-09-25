@@ -85,8 +85,9 @@ Wait for confirmation. If the tree is clean, skip the prompt and proceed.
 ## Step 4 — Compose the worker prompt
 
 Steps 4, 5, and 6 run once per step in the run, in ascending order: compose step N's prompt,
-dispatch it, wait, relay its report, then move to step N+1. Compose a step's prompt only when it is
-about to be dispatched, never all of them up front. A single-step cast is a run of one.
+dispatch it, wait, relay its report, then move to step N+1 only if that report says DONE. Step 6
+says what ends a run early. Compose a step's prompt only when it is about to be dispatched, never
+all of them up front. A single-step cast is a run of one.
 
 Once for the whole cast, before the first prompt is composed, check whether the project has standing
 rules the worker must respect — test resilience conventions, formatting discipline, structural
@@ -192,6 +193,19 @@ Surface the worker's report **verbatim** — the `## Step N — DONE | BLOCKED` 
 load-bearing part. In a run, surface each step's block as its worker returns, before the next step
 is dispatched, so the developer watches the run land one step at a time.
 
+Then read the block's outcome. It decides whether the run goes on:
+
+- **DONE**, and N is below `last`: return to Step 4 for step N+1.
+- **DONE**, and N is `last`: the run is complete. Write the `Next:` line.
+- **BLOCKED**: the run ends here. Do not compose or dispatch step N+1, however far the range
+  reaches past it. Every step that finished earlier in this run stays exactly as its worker left it;
+  revert nothing. Write the `Next:` line.
+- **No `## Step N —` block at all**: treat the step as BLOCKED. Relay the worker's final message as
+  it came, then add one sentence of your own saying that step N is treated as BLOCKED because no
+  report arrived. A run cannot tell an unfinished step from a finished one without the block, and
+  starting step N+1 on top of an unknown state is worse than stopping. Then write the `Next:` line
+  as for BLOCKED.
+
 The `Next:` line appears **once per cast**, after the last step's report, never after every step.
 Write it for the last step that ran, N:
 
@@ -199,10 +213,17 @@ Write it for the last step that ran, N:
   /implement-step {plan} {N+1}.`
   - If step N was the plan's final step: `Next: review changes (git diff), run /code-review, then
     /commit-message. After commit, archive the increment.`
-- **BLOCKED**: `Next: read the worker's notes, resolve the blocker, then re-invoke
-  /implement-step {plan} {N}.`
+- **BLOCKED**, single-step cast: `Next: read the worker's notes, resolve the blocker, then
+  re-invoke /implement-step {plan} {N}.`
+- **BLOCKED**, in a run: `Next: read the worker's notes, resolve the blocker, then re-invoke
+  /implement-step {plan} {N}-{last}.` Here `last` is the range's original end as Step 2 resolved
+  it, so `1-4` blocked at step 2 points at `2-4`, and `3-` on a six-step plan blocked at step 5
+  points at `5-6`. When N is `last` itself, write `{N}` alone: the resume is a single step, and
+  Step 1 already treats `N-N` as that step spelled differently.
 
 Do not print the worker's full transcript — only its final report block and your `Next:` line.
+The one exception is the no-report case above, where the final message is relayed because there is
+no block to relay instead.
 
 ## Rules of thumb
 
