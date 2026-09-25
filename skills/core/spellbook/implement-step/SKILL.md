@@ -101,6 +101,23 @@ at. Do not invent rules.
 Build a **self-contained** prompt. The worker has no access to this conversation — everything it
 needs must be in the prompt.
 
+From the second step of a run onward, the prompt gains a section headed `## Earlier in this run`.
+It carries the report block of every step that finished earlier in this run. Each block goes in
+whole and unchanged, inside its own code fence, in the order the steps ran. Make that fence one
+backtick longer than the longest run of backticks inside the block, and never shorter than three,
+so a fenced snippet a worker pasted as evidence cannot close the wrap early and spill the rest of
+the report into the prompt. This template's own outer fence uses four backticks for the same
+reason. That gives the worker
+what the developer would have read between two single-step casts. It may be a deviation from the
+plan, a convention chosen because a slot was empty, or an open question left in the notes. On the
+first step of a run, and on every single-step cast, leave the section out entirely, heading
+included. Carry only this run's reports. A report from an earlier cast against the same plan
+belongs to that cast, and the developer has already read it.
+
+The section has no cap. A plan is bounded and a report block is a few dozen lines, so the section
+cannot grow past what the plan allows. If a worker prompt ever proves too long to be useful, a cap
+on this section is the first thing to add.
+
 ````
 You are executing **Step {N}** of the plan at `{plan}`. The main conversation dispatched you so it
 can stay clean — work in this isolated context and report back.
@@ -112,6 +129,12 @@ can stay clean — work in this isolated context and report back.
 ## Key decisions already made (do not re-derive)
 
 {verbatim contents of the plan's Key Decisions section}
+
+## Earlier in this run
+
+{the full report block of every step finished earlier in this run, in run order, each inside its
+own code fence one backtick longer than any backtick run inside it; leave this whole section out on
+the first step of a run}
 
 ## Your step
 
@@ -169,6 +192,10 @@ When you finish, whether success or blocked, end your response with:
 <anything the next step or the human reviewer should know — an open question, a deviation from the
 plan's letter, a follow-up worth filing>
 ```
+
+Keep Notes to a handful of lines. Anything longer, such as full command output or a diff, goes in
+a file under the increment's working directory, and Notes names it by path. In a run, every report
+is carried into each later step's prompt, so a long one is paid once per remaining step.
 ````
 
 ## Step 5 — Dispatch
@@ -195,7 +222,8 @@ is dispatched, so the developer watches the run land one step at a time.
 
 Then read the block's outcome. It decides whether the run goes on:
 
-- **DONE**, and N is below `last`: return to Step 4 for step N+1.
+- **DONE**, and N is below `last`: return to Step 4 for step N+1, adding this block to the reports
+  that step's prompt carries under `## Earlier in this run`.
 - **DONE**, and N is `last`: the run is complete. Write the `Next:` line.
 - **BLOCKED**: the run ends here. Do not compose or dispatch step N+1, however far the range
   reaches past it. Every step that finished earlier in this run stays exactly as its worker left it;
@@ -231,6 +259,7 @@ no block to relay instead.
   developer choosing where the next pause falls. It is not a request to keep going past the range,
   to skip a step, or to run steps side by side. Don't try to be clever.
 - The worker's context is bounded by what you pass. Too little and it works blind; the whole plan
-  and you bloat it with irrelevant steps. **Context + Key Decisions + Step N is the right cut.**
+  and you bloat it with irrelevant steps. **Context + Key Decisions + this run's earlier reports +
+  Step N is the right cut.**
 - The plan's **Validation** section is the truth about whether the step succeeded. Don't
   second-guess it.
