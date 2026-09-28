@@ -10,7 +10,7 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**In flight: `robot-denny/implement-step-ranges`.**
+**Nothing in flight.**
 
 **Of what Next holds, the sidecar-delivery defect is the most urgent and the pack-authoring
 meta-skill is the highest-leverage.** The first is urgent because a shipped increment is currently
@@ -478,6 +478,13 @@ against the first.
 ---
 
 ## Recently shipped
+
+- **2026-09-28** — **Implement-step ranges.** `/implement-step` takes a single step, a closed range
+  like `1-3`, or an open range like `3-`. Each step runs in its own fresh worker, in order, a run
+  stops at the first blocked step and says where to resume, and later workers receive the earlier
+  reports of the run. `/plan`'s closing report lists every step and marks those that end in a manual
+  check, so a developer can choose where to pause without opening the plan. Full detail in
+  `CHANGELOG.md` (`_work/shipped/implement-step-ranges/spec.md`, `_features/plan-execution.md`).
 
 - **2026-09-22** — **Block discipline reachable from the plan.** A model-invoked
   `umbraco-17-block-authoring` reference holds what `/block` alone carried, `umbraco-17-planning`

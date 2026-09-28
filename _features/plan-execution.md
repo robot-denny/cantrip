@@ -5,7 +5,7 @@ report for each step. Each step runs in its own fresh context so the main conver
 The developer chooses where to pause, and the plan's own report shows where the manual checks fall so
 that choice is an informed one.
 
-**Source**: `_work/implement-step-ranges/spec.md`
+**Source**: `_work/shipped/implement-step-ranges/spec.md`
 **Last verified**: 2026-09-28
 
 ---
@@ -16,8 +16,7 @@ The per-feature mini-roadmap: shipped increments, planned increments, and parkin
 Newest planned items first. When an item ships, flip the checkbox and point it at the archived
 increment.
 
-- [ ] Implement-step ranges (`_work/implement-step-ranges/spec.md`, built on
-  `robot-denny/implement-step-ranges`, awaiting merge)
+- [x] 2026-09-28 — Implement-step ranges (`_work/shipped/implement-step-ranges/spec.md`)
 - [ ] Backfill the single-step behavior that predates this doc (`/feature` from-code mode, no spec)
 
 ---
@@ -249,7 +248,7 @@ Scenario: A carried report contains its own fenced block
 ## Test Coverage
 
 This repository ships no test harness for spells. Every `Covered` row below was proved by a stand-in
-script under `_work/implement-step-ranges/assets/` that applies the spell's stated rule to a fixture
+script under `_work/shipped/implement-step-ranges/assets/` that applies the spell's stated rule to a fixture
 plan, run and recorded in the named log at the named line. None was proved by a real cast in a
 session, and those casts remain owed to a person. The manual-check scenario's row proves only that
 the loop does not pause at a manual check; the evidence a worker attaches for that check is the
@@ -259,27 +258,27 @@ is not a test.
 
 | Scenario | Test File | Status |
 |----------|-----------|--------|
-| Three steps run from one cast | `_work/implement-step-ranges/assets/step1-validation-log.md:131` | Covered |
-| A range of one is the single-step cast | `_work/implement-step-ranges/assets/step1-validation-log.md:133` | Covered |
-| Running from step 3 to the end | `_work/implement-step-ranges/assets/step1-validation-log.md:132` | Covered |
-| One step, as before | `_work/implement-step-ranges/assets/step1-validation-log.md:136` | Covered |
-| The second step of a run blocks | `_work/implement-step-ranges/assets/step2-validation-log.md:134` | Covered |
-| A worker returns no report block | `_work/implement-step-ranges/assets/step2-validation-log.md:144` | Covered |
-| Running through the open-and-close check | `_work/implement-step-ranges/assets/step1-validation-log.md:171` | Covered |
-| A convention chosen in step 1 reaches step 2 | `_work/implement-step-ranges/assets/step3-validation-log.md:180` | Covered |
-| The first step of a run carries no earlier reports | `_work/implement-step-ranges/assets/step3-validation-log.md:200` | Covered |
-| No step committed | `_work/implement-step-ranges/assets/step4-validation-log.md:226` | Covered |
-| One step in the run committed | `_work/implement-step-ranges/assets/step4-validation-log.md:229` | Covered |
-| A clean tree at the start | `_work/implement-step-ranges/assets/step4-validation-log.md:104` | Covered |
-| A dirty tree at the start, declined | `_work/implement-step-ranges/assets/step4-validation-log.md:129` | Covered |
-| Choosing a range from the plan report | `_work/implement-step-ranges/assets/step5-validation-log.md:144` | Covered |
-| A plan with no manual checks | `_work/implement-step-ranges/assets/step5-validation-log.md:156` | Covered |
+| Three steps run from one cast | `_work/shipped/implement-step-ranges/assets/step1-validation-log.md:131` | Covered |
+| A range of one is the single-step cast | `_work/shipped/implement-step-ranges/assets/step1-validation-log.md:133` | Covered |
+| Running from step 3 to the end | `_work/shipped/implement-step-ranges/assets/step1-validation-log.md:132` | Covered |
+| One step, as before | `_work/shipped/implement-step-ranges/assets/step1-validation-log.md:136` | Covered |
+| The second step of a run blocks | `_work/shipped/implement-step-ranges/assets/step2-validation-log.md:134` | Covered |
+| A worker returns no report block | `_work/shipped/implement-step-ranges/assets/step2-validation-log.md:144` | Covered |
+| Running through the open-and-close check | `_work/shipped/implement-step-ranges/assets/step1-validation-log.md:171` | Covered |
+| A convention chosen in step 1 reaches step 2 | `_work/shipped/implement-step-ranges/assets/step3-validation-log.md:180` | Covered |
+| The first step of a run carries no earlier reports | `_work/shipped/implement-step-ranges/assets/step3-validation-log.md:200` | Covered |
+| No step committed | `_work/shipped/implement-step-ranges/assets/step4-validation-log.md:226` | Covered |
+| One step in the run committed | `_work/shipped/implement-step-ranges/assets/step4-validation-log.md:229` | Covered |
+| A clean tree at the start | `_work/shipped/implement-step-ranges/assets/step4-validation-log.md:104` | Covered |
+| A dirty tree at the start, declined | `_work/shipped/implement-step-ranges/assets/step4-validation-log.md:129` | Covered |
+| Choosing a range from the plan report | `_work/shipped/implement-step-ranges/assets/step5-validation-log.md:144` | Covered |
+| A plan with no manual checks | `_work/shipped/implement-step-ranges/assets/step5-validation-log.md:156` | Covered |
 | A reader learns the range form from the spell card | — | Not covered |
-| A range past the end of the plan | `_work/implement-step-ranges/assets/step1-validation-log.md:134` | Covered |
-| A reversed range | `_work/implement-step-ranges/assets/step1-validation-log.md:135` | Covered |
-| A range that spans a gap in the plan's numbering | `_work/implement-step-ranges/assets/step1-validation-log.md:153` | Covered |
-| An older plan numbers its behavior-recording step | `_work/implement-step-ranges/assets/step4-validation-log.md:349` | Covered |
-| A carried report contains its own fenced block | `_work/implement-step-ranges/assets/step3-validation-log.md:462` | Covered |
+| A range past the end of the plan | `_work/shipped/implement-step-ranges/assets/step1-validation-log.md:134` | Covered |
+| A reversed range | `_work/shipped/implement-step-ranges/assets/step1-validation-log.md:135` | Covered |
+| A range that spans a gap in the plan's numbering | `_work/shipped/implement-step-ranges/assets/step1-validation-log.md:153` | Covered |
+| An older plan numbers its behavior-recording step | `_work/shipped/implement-step-ranges/assets/step4-validation-log.md:349` | Covered |
+| A carried report contains its own fenced block | `_work/shipped/implement-step-ranges/assets/step3-validation-log.md:462` | Covered |
 
 <!-- Status vocabulary. Each status is a claim about what is proved, not a stage in a process:
      read a row as its answer to "what does this entitle me to believe?"

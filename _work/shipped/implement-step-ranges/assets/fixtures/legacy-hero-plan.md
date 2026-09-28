@@ -42,7 +42,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — Element type
 
-> **Prompt**: Implement Step 1 of `_work/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`.
+> **Prompt**: Implement Step 1 of `_work/shipped/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`.
 > Run `mkdir -p _scratch/legacy-hero`, then create `_scratch/legacy-hero/step-1.txt`
 > containing the single line `Element type`. Create nothing else and modify nothing else.
 
@@ -55,7 +55,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 2 — View
 
-> **Prompt**: Implement Step 2 of `_work/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`.
+> **Prompt**: Implement Step 2 of `_work/shipped/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`.
 > Run `mkdir -p _scratch/legacy-hero`, then create `_scratch/legacy-hero/step-2.txt`
 > containing the single line `View`. Create nothing else and modify nothing else.
 
@@ -68,7 +68,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 3 — Call to action
 
-> **Prompt**: Implement Step 3 of `_work/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`.
+> **Prompt**: Implement Step 3 of `_work/shipped/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`.
 > Run `mkdir -p _scratch/legacy-hero`, then create `_scratch/legacy-hero/step-3.txt`
 > containing the single line `Call to action`. Create nothing else and modify nothing else.
 
@@ -81,7 +81,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 4 — Styling
 
-> **Prompt**: Implement Step 4 of `_work/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`.
+> **Prompt**: Implement Step 4 of `_work/shipped/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`.
 > Run `mkdir -p _scratch/legacy-hero`, then create `_scratch/legacy-hero/step-4.txt`
 > containing the single line `Styling`. Create nothing else and modify nothing else.
 
