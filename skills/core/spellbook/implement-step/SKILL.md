@@ -49,14 +49,14 @@ Resolve the bounds against the steps found, before anything else happens:
   and `1-5` on it would fail at step 3 with two workers already run; it aborts here instead.
 
 If any of those fails, abort with a message listing the step numbers you did find, and stop. No
-worker has started. A closed range never clamps: `3-9` on a six-step plan is an error, not `3-6`,
-because the developer named a step that is not there and should be told so before anything runs.
+worker has started. A closed range never clamps: `3-9` on a six-step plan is an error, not `3-6`.
+The developer named a step that is not there and should be told so before anything runs.
 Reversed (`4-2`) and zero (`0-2`) bounds abort with the same message.
 
 The steps to run are `first` through `last`, ascending. For each, locate its heading
-`### Step {N} — <title>` and extract the block from that heading up to, but not including,
-whichever comes first: the next `### Step ` heading, the next top-level `---` that begins a new
-section, or end of file.
+`### Step {N} — <title>`. Extract the block from that heading up to, but not including, whichever
+comes first: the next `### Step ` heading, the next top-level `---` that begins a new section, or
+end of file.
 
 Also extract, once for the whole cast:
 
@@ -102,9 +102,9 @@ N+1 is not marked as a spell-cast. Step 6 says what ends a run early. Compose a 
 when it is about to be dispatched, never all of them up front. A single-step cast is a run of one.
 
 Once for the whole cast, before the first prompt is composed, check whether the project has standing
-rules the worker must respect — test resilience conventions, formatting discipline, structural
-requirements — and fold them into every step's envelope. The rules do not change between steps, so
-read them once.
+rules the worker must respect: test resilience conventions, formatting discipline, structural
+requirements. Fold them into every step's envelope. The rules do not change between steps, so read
+them once.
 
 **Slot:** `.agents/config/conventions.md` → `## Implementation rules`
 **If empty:** rely on the project's guidance files, which the envelope already points the worker
@@ -119,8 +119,8 @@ whole and unchanged, inside its own code fence, in the order the steps ran. Make
 backtick longer than the longest run of backticks inside the block, and never shorter than three,
 so a fenced snippet a worker pasted as evidence cannot close the wrap early and spill the rest of
 the report into the prompt. This template's own outer fence uses four backticks for the same
-reason. That gives the worker
-what the developer would have read between two single-step casts. It may be a deviation from the
+reason. Carrying the block forward this way gives the worker what the developer would have read
+between two single-step casts. It may be a deviation from the
 plan, a convention chosen because a slot was empty, or an open question left in the notes. On the
 first step of a run, and on every single-step cast, leave the section out entirely, heading
 included. Carry only this run's reports. A report from an earlier cast against the same plan
@@ -269,7 +269,7 @@ Write it for the last step that ran, N:
   re-invoke /implement-step {plan} {N}.`
 - **BLOCKED**, in a run: `Next: read the worker's notes, resolve the blocker, then re-invoke
   /implement-step {plan} {N}-{last}.` Here `last` is the range's original end as Step 2 resolved
-  it, so `1-4` blocked at step 2 points at `2-4`, and `3-` on a six-step plan blocked at step 5
+  it. So `1-4` blocked at step 2 points at `2-4`, and `3-` on a six-step plan blocked at step 5
   points at `5-6`. When N is `last` itself, write `{N}` alone: the resume is a single step, and
   Step 1 already treats `N-N` as that step spelled differently.
 

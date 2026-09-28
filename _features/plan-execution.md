@@ -251,7 +251,9 @@ Scenario: A carried report contains its own fenced block
 This repository ships no test harness for spells. Every `Covered` row below was proved by a stand-in
 script under `_work/implement-step-ranges/assets/` that applies the spell's stated rule to a fixture
 plan, run and recorded in the named log at the named line. None was proved by a real cast in a
-session, and those casts remain owed to a person. The one scenario with no script behind it was
+session, and those casts remain owed to a person. The manual-check scenario's row proves only that
+the loop does not pause at a manual check; the evidence a worker attaches for that check is the
+envelope's rule and no script models it. The one scenario with no script behind it was
 read by a person on 2026-09-28 and found correct, and is recorded as `Not covered` because reading
 is not a test.
 
@@ -263,7 +265,7 @@ is not a test.
 | One step, as before | `_work/implement-step-ranges/assets/step1-validation-log.md:136` | Covered |
 | The second step of a run blocks | `_work/implement-step-ranges/assets/step2-validation-log.md:134` | Covered |
 | A worker returns no report block | `_work/implement-step-ranges/assets/step2-validation-log.md:144` | Covered |
-| Running through the open-and-close check | `_work/implement-step-ranges/assets/step1-validation-log.md:132` | Covered |
+| Running through the open-and-close check | `_work/implement-step-ranges/assets/step1-validation-log.md:171` | Covered |
 | A convention chosen in step 1 reaches step 2 | `_work/implement-step-ranges/assets/step3-validation-log.md:180` | Covered |
 | The first step of a run carries no earlier reports | `_work/implement-step-ranges/assets/step3-validation-log.md:200` | Covered |
 | No step committed | `_work/implement-step-ranges/assets/step4-validation-log.md:226` | Covered |

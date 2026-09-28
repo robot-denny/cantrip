@@ -159,6 +159,22 @@ steps found: [1, 2, 4, 5, 6]; unnumbered final step present: True
 was added for. `1-2` and `4-` run, because no gap lies inside them. The gapped copy was deleted
 after the run.
 
+### A range that spans a manual check, added after the branch review
+
+The capability doc's scenario "Running through the open-and-close check" casts `1-5` across the
+fixture's step 4, which ends in a manual check. The transcript above had no `1-5` cast, so the row
+cited the `3-` line, which is a different cast. The same script, run for `1-5`:
+
+```
+$ python3 _work/implement-step-ranges/assets/step1-standin.py \
+    _work/implement-step-ranges/assets/fixtures/accordion-block-plan.md 1-5
+ 1-5: run [1, 2, 3, 4, 5] -> 5 worker(s), 5 report block(s), run, one Next: -> /implement-step <plan> 6
+```
+
+Five workers, five blocks, one `Next:` line: the loop does not pause at step 4. What the script does
+not model is the evidence step 4's worker attaches for the check; that is the envelope's rule and is
+followed by reading, not by this run.
+
 ### The fixture's steps are runnable and leave no trace
 
 Each fixture step's commands were run by hand for steps 1 through 3, then the directory removed.
