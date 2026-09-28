@@ -64,30 +64,42 @@ Also extract, once for the whole cast:
 - The **Key Decisions** section
 - The plan's **Spec** path and **Branch** name, if listed near the top
 
-**If the located step is a spell-cast rather than implementation work** — its content is "run
-`/feature update …`" or similar — **do not dispatch a worker.** Dispatching one would have a code worker
-execute a spell, which is the wrong mechanism. Say so and hand it back:
+**If a located step is a spell-cast rather than implementation work**, one whose content is "run
+`/feature update …`" or similar, **never dispatch a worker for it.** Dispatching one would have a
+code worker execute a spell, which is the wrong mechanism. Mark the step as a spell-cast and carry
+on; Step 4 stops the run before it. A numbered spell-cast step is a plan's behavior-recording step,
+so it is the last numbered step in every plan that has one, and nothing follows it. That is why a
+marked step that is the first step to run is always a single cast of it, with nothing to run before
+it. Hand it back now, with no worker started:
 
 > Step N is a spell-cast, not implementation work. Cast it directly: `/<spell> <args>`.
 
 A well-formed plan leaves the behavior-recording step unnumbered for exactly this reason, but older
-plans number it.
+plans number it. A range that reaches such a step is not an error. Every step before it runs as
+usual, the run ends there, and Step 6 hands the step back with the same message.
 
 ## Step 3 — Sanity-check the working tree
 
-Run `git status --short`. If the tree is dirty, surface this before dispatching:
+This check runs once per cast, before the first worker starts, and never again during the run.
+Between steps the tree is dirty by the run's own doing. Each finished step leaves its changes in
+place for the developer to review, and the next worker builds on them. Asking again would be
+asking about the run's own work.
 
-> Working tree is dirty. The worker will edit files on top of your uncommitted changes. Continue?
+Run `git status --short`. If the tree is dirty, surface this before the first worker starts:
+
+> Working tree is dirty. This cast will edit files on top of your uncommitted changes. Continue?
 > (yes/no)
 
-Wait for confirmation. If the tree is clean, skip the prompt and proceed.
+Wait for the answer. On "yes", go to Step 4 and do not return here for the rest of the cast. On
+"no", stop: no worker starts, nothing is relayed, and there is no `Next:` line. Say in one line
+that nothing ran. If the tree is clean, skip the prompt and proceed.
 
 ## Step 4 — Compose the worker prompt
 
 Steps 4, 5, and 6 run once per step in the run, in ascending order: compose step N's prompt,
-dispatch it, wait, relay its report, then move to step N+1 only if that report says DONE. Step 6
-says what ends a run early. Compose a step's prompt only when it is about to be dispatched, never
-all of them up front. A single-step cast is a run of one.
+dispatch it, wait, relay its report, then move to step N+1 only if that report says DONE and step
+N+1 is not marked as a spell-cast. Step 6 says what ends a run early. Compose a step's prompt only
+when it is about to be dispatched, never all of them up front. A single-step cast is a run of one.
 
 Once for the whole cast, before the first prompt is composed, check whether the project has standing
 rules the worker must respect — test resilience conventions, formatting discipline, structural
@@ -159,8 +171,9 @@ present, "Validation"}
 - **Do not commit — unless the step explicitly instructs it.** By default, leave changes in place: the
   user reviews, then runs `/code-review` and `/commit-message`. But some plans genuinely commit per step —
   a migration delivered as a sequence of pull requests, for instance. **If the step says to commit, the
-  step wins**, and say in your report that you did. What must not happen is the step and this envelope
-  quietly disagreeing, leaving it unclear whether a commit was expected.
+  step wins**, and write the line `Committed: yes` under **Notes** so the orchestrator can see it
+  without reading prose. What must not happen is the step and this envelope quietly disagreeing,
+  leaving it unclear whether a commit was expected.
 - **Stay inside the step's scope.** Do not refactor surrounding code, do not drive-by fix
   unrelated issues, do not add anything the step does not require. If you find something
   concerning, mention it in your report and move on.
@@ -222,9 +235,13 @@ is dispatched, so the developer watches the run land one step at a time.
 
 Then read the block's outcome. It decides whether the run goes on:
 
-- **DONE**, and N is below `last`: return to Step 4 for step N+1, adding this block to the reports
-  that step's prompt carries under `## Earlier in this run`.
+- **DONE**, N is below `last`, and step N+1 is not marked as a spell-cast: return to Step 4 for
+  step N+1, adding this block to the reports that step's prompt carries under `## Earlier in this
+  run`.
 - **DONE**, and N is `last`: the run is complete. Write the `Next:` line.
+- **DONE**, and step N+1 is marked as a spell-cast: the run ends here, however far the range
+  reaches past N+1. Do not compose or dispatch it. Print the spell-cast message from Step 2 for
+  step N+1, then write the `Next:` line as for a stop before a spell-cast.
 - **BLOCKED**: the run ends here. Do not compose or dispatch step N+1, however far the range
   reaches past it. Every step that finished earlier in this run stays exactly as its worker left it;
   revert nothing. Write the `Next:` line.
@@ -237,10 +254,17 @@ Then read the block's outcome. It decides whether the run goes on:
 The `Next:` line appears **once per cast**, after the last step's report, never after every step.
 Write it for the last step that ran, N:
 
-- **DONE**: `Next: review changes (git diff), run /code-review when satisfied, then
-  /implement-step {plan} {N+1}.`
-  - If step N was the plan's final step: `Next: review changes (git diff), run /code-review, then
-    /commit-message. After commit, archive the increment.`
+- **DONE**: `Next: review changes (git diff), run /code-review {scope} ({reason}) when satisfied,
+  then /implement-step {plan} {N+1}.`
+  - If step N was the plan's final step: `Next: review changes (git diff), run /code-review {scope}
+    ({reason}), then /commit-message. After commit, archive the increment.`
+- **DONE**, stopped before a spell-cast step S: step S is what comes next, so the line points at
+  casting it rather than at `/implement-step {plan} {S}`. The cast comes before the review because
+  the chain records behavior before it reviews. `Next: review changes (git diff), cast /<spell>
+  <args> directly, run /code-review {scope} ({reason}), then /commit-message. After commit, archive
+  the increment.` That ending is for S being the plan's last numbered step, which it is in every
+  plan that numbers its behavior-recording step. If steps follow S, end with `then /implement-step
+  {plan} {S+1}.` instead.
 - **BLOCKED**, single-step cast: `Next: read the worker's notes, resolve the blocker, then
   re-invoke /implement-step {plan} {N}.`
 - **BLOCKED**, in a run: `Next: read the worker's notes, resolve the blocker, then re-invoke
@@ -248,6 +272,19 @@ Write it for the last step that ran, N:
   it, so `1-4` blocked at step 2 points at `2-4`, and `3-` on a six-step plan blocked at step 5
   points at `5-6`. When N is `last` itself, write `{N}` alone: the resume is a single step, and
   Step 1 already treats `N-N` as that step spelled differently.
+
+`{scope}` is the argument `/code-review` takes, and the run's reports decide it. Read every report
+relayed in this cast for the line `Committed: yes` under its Notes, which the envelope requires of
+a worker whose step told it to commit. If none has it, the scope is
+`uncommitted` and the reason is `the run's changes are still uncommitted`. If any has it, the
+scope is `branch` and the reason is `a step in this run committed, so the uncommitted diff would
+miss it`. One such report anywhere in the run is enough. The reason travels in the line, in
+parentheses, so a developer who has never seen an empty review knows what would have gone wrong.
+A single-step cast is a run of one and gets the same line, decided by its one report. A run of
+three with no commits closes with:
+
+> Next: review changes (git diff), run /code-review uncommitted (the run's changes are still
+> uncommitted) when satisfied, then /implement-step {plan} 4.
 
 Do not print the worker's full transcript — only its final report block and your `Next:` line.
 The one exception is the no-report case above, where the final message is relayed because there is
