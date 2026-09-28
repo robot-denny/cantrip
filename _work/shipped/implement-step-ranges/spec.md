@@ -5,7 +5,7 @@
 > capability, an existing feature doc for a change, or a `docs/` runbook for a fix.
 
 branch: robot-denny/implement-step-ranges
-design reference (if any): `_work/implement-step-ranges/discovery.md`, the discovery this spec continues
+design reference (if any): `_work/shipped/implement-step-ranges/discovery.md`, the discovery this spec continues
 
 **Work type**: new-capability
 **Feature doc**: plan-execution

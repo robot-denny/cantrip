@@ -1,6 +1,6 @@
 # Plan: Implement-Step Ranges
 
-**Spec**: `_work/implement-step-ranges/spec.md`
+**Spec**: `_work/shipped/implement-step-ranges/spec.md`
 **Branch**: `robot-denny/implement-step-ranges`
 **Work type**: `new-capability` — copied verbatim from the spec's `**Work type**:` line; this decides
 how the final step records behavior
@@ -22,7 +22,7 @@ and updates every surface that says "one step per cast": the `workflow` skill, t
 row, `docs/layout.md`, and two spell cards. It ships no script. Core has never shipped an executable,
 and a spell's behavior is prose the model follows, so `tests/run.sh` gains no suite. The RED and GREEN
 signals are `./scripts/check-contract.sh` plus written-down manual checks against a fixture plan,
-evidenced in validation logs under `_work/implement-step-ranges/assets/`.
+evidenced in validation logs under `_work/shipped/implement-step-ranges/assets/`.
 
 ---
 
@@ -38,7 +38,7 @@ evidenced in validation logs under `_work/implement-step-ranges/assets/`.
 
 - **The fixture plan lives with the increment and is invoked by path.** `/implement-step` accepts a
   plan as a slug or a path. A fixture under `_work/accordion-block/` would read as a real increment,
-  so it lives at `_work/implement-step-ranges/assets/fixtures/accordion-block-plan.md` and is cast by
+  so it lives at `_work/shipped/implement-step-ranges/assets/fixtures/accordion-block-plan.md` and is cast by
   path. Its six steps each create one small file under `_scratch/accordion-block/`, which is
   git-ignored, and validate with `test -f`. Steps 4 and 6 carry a `[Manual]` line. Step 2 has a
   variant, `accordion-block-blocking-plan.md`, whose step 2 instructs the worker to report BLOCKED.
@@ -104,15 +104,15 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — The fixture plan, the range grammar, and an ordered run
 
-> **Prompt**: Implement Step 1 of `_work/implement-step-ranges/plan.md`. First create the fixture plan
-> `_work/implement-step-ranges/assets/fixtures/accordion-block-plan.md`: a plan in the format
+> **Prompt**: Implement Step 1 of `_work/shipped/implement-step-ranges/plan.md`. First create the fixture plan
+> `_work/shipped/implement-step-ranges/assets/fixtures/accordion-block-plan.md`: a plan in the format
 > `skills/core/spellbook/plan/SKILL.md` produces, with a Context section, a Key Decisions section, and
 > six numbered steps titled "Element type", "View", "Palette registration", "Open and close behavior",
 > "Nested content", and "Styling". Each step's prompt has the worker create one file
 > `_scratch/accordion-block/step-N.txt` containing the step title, and its Validation has
 > `[Automated]: test -f _scratch/accordion-block/step-N.txt`. Steps 4 and 6 also carry a `[Manual]`
 > line ("open the file and confirm it names the step"). Leave the behavior-recording step unnumbered.
-> Then write `_work/implement-step-ranges/assets/step1-validation-log.md` with the expected output
+> Then write `_work/shipped/implement-step-ranges/assets/step1-validation-log.md` with the expected output
 > for casts `1-3`, `3-`, `4-4`, `3-9`, `4-2`, `0-2`, and `-3` *before* editing the spell. Then edit
 > `skills/core/spellbook/implement-step/SKILL.md`: the description and `argument-hint` name the three
 > forms; Step 1 parses `^(\d+)(?:-(\d+)?)?$`, resolves an open end to the highest `### Step N` heading,
@@ -124,8 +124,8 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > worker envelope in this step. Run `./scripts/check-contract.sh` and record the stand-in dry run in
 > the log, labelled as a stand-in.
 
-**What to build**: `_work/implement-step-ranges/assets/fixtures/accordion-block-plan.md`;
-`_work/implement-step-ranges/assets/step1-validation-log.md`;
+**What to build**: `_work/shipped/implement-step-ranges/assets/fixtures/accordion-block-plan.md`;
+`_work/shipped/implement-step-ranges/assets/step1-validation-log.md`;
 `skills/core/spellbook/implement-step/SKILL.md` (frontmatter `description` and `argument-hint`,
 Step 1 parsing, the run loop across Steps 2, 4, 5, and 6, the *Rules of thumb* bullet).
 
@@ -142,7 +142,7 @@ Step 1 parsing, the run loop across Steps 2, 4, 5, and 6, the *Rules of thumb* b
 **Validation**:
 - [Automated]: `./scripts/check-contract.sh` — 22 checks pass.
 - [Automated]: `tests/run.sh` — every suite unchanged and green.
-- [Manual]: cast `/implement-step _work/implement-step-ranges/assets/fixtures/accordion-block-plan.md 1-3`
+- [Manual]: cast `/implement-step _work/shipped/implement-step-ranges/assets/fixtures/accordion-block-plan.md 1-3`
   in your own session. Confirm three report blocks in order, `ls _scratch/accordion-block/` shows
   `step-1.txt` through `step-3.txt`, and exactly one `Next:` line. Then cast `4-4` and `3-9` and
   confirm they match the log's expectations. Clear `_scratch/accordion-block/` between casts.
@@ -151,11 +151,11 @@ Step 1 parsing, the run loop across Steps 2, 4, 5, and 6, the *Rules of thumb* b
 
 ### Step 2 — A blocked step ends the run and says where to resume
 
-> **Prompt**: Implement Step 2 of `_work/implement-step-ranges/plan.md`. Create
-> `_work/implement-step-ranges/assets/fixtures/accordion-block-blocking-plan.md`, a copy of the
+> **Prompt**: Implement Step 2 of `_work/shipped/implement-step-ranges/plan.md`. Create
+> `_work/shipped/implement-step-ranges/assets/fixtures/accordion-block-blocking-plan.md`, a copy of the
 > six-step fixture whose step 2 prompt tells the worker to stop and report `## Step 2 — BLOCKED` with
 > the note "fixture: deliberate block". Write
-> `_work/implement-step-ranges/assets/step2-validation-log.md` with the expected output for a `1-4`
+> `_work/shipped/implement-step-ranges/assets/step2-validation-log.md` with the expected output for a `1-4`
 > cast on it *before* editing: step 1 DONE relayed, step 2 BLOCKED relayed, no worker started for
 > steps 3 or 4, `_scratch/accordion-block/step-1.txt` present and `step-3.txt` absent, and a `Next:`
 > line saying to resolve the blocker and re-invoke `/implement-step <plan> 2-4`. Also write the
@@ -166,8 +166,8 @@ Step 1 parsing, the run loop across Steps 2, 4, 5, and 6, the *Rules of thumb* b
 > pointer to the range's original end. Run `./scripts/check-contract.sh` and record the stand-in dry
 > run.
 
-**What to build**: `_work/implement-step-ranges/assets/fixtures/accordion-block-blocking-plan.md`;
-`_work/implement-step-ranges/assets/step2-validation-log.md`;
+**What to build**: `_work/shipped/implement-step-ranges/assets/fixtures/accordion-block-blocking-plan.md`;
+`_work/shipped/implement-step-ranges/assets/step2-validation-log.md`;
 `skills/core/spellbook/implement-step/SKILL.md` (Step 6, the BLOCKED and missing-report branches of
 the run, the resume pointer).
 
@@ -179,7 +179,7 @@ the run, the resume pointer).
 
 **Validation**:
 - [Automated]: `./scripts/check-contract.sh` — 22 checks pass.
-- [Manual]: cast `/implement-step _work/implement-step-ranges/assets/fixtures/accordion-block-blocking-plan.md 1-4`
+- [Manual]: cast `/implement-step _work/shipped/implement-step-ranges/assets/fixtures/accordion-block-blocking-plan.md 1-4`
   in your own session. Confirm the relay shows step 1 DONE then step 2 BLOCKED, `step-3.txt` does not
   exist, and the `Next:` line names `2-4`.
 
@@ -187,9 +187,9 @@ the run, the resume pointer).
 
 ### Step 3 — Earlier reports travel forward
 
-> **Prompt**: Implement Step 3 of `_work/implement-step-ranges/plan.md`. Write
-> `_work/implement-step-ranges/assets/step3-validation-log.md` with the expected composed prompts for
-> a `3-4` cast on `_work/implement-step-ranges/assets/fixtures/accordion-block-plan.md` *before*
+> **Prompt**: Implement Step 3 of `_work/shipped/implement-step-ranges/plan.md`. Write
+> `_work/shipped/implement-step-ranges/assets/step3-validation-log.md` with the expected composed prompts for
+> a `3-4` cast on `_work/shipped/implement-step-ranges/assets/fixtures/accordion-block-plan.md` *before*
 > editing: step 3's prompt has no `## Earlier in this run` section; step 4's prompt has one, placed
 > after `## Key decisions already made (do not re-derive)` and before `## Your step`, holding step 3's
 > full `## Step 3 — DONE` report block verbatim. Then edit
@@ -199,7 +199,7 @@ the run, the resume pointer).
 > `./scripts/check-contract.sh`. For evidence, have the stand-in write both composed prompts into the
 > log in full.
 
-**What to build**: `_work/implement-step-ranges/assets/step3-validation-log.md`;
+**What to build**: `_work/shipped/implement-step-ranges/assets/step3-validation-log.md`;
 `skills/core/spellbook/implement-step/SKILL.md` (Step 4, the `## Earlier in this run` section of the
 worker prompt template).
 
@@ -220,22 +220,22 @@ worker prompt template).
 
 ### Step 4 — The run envelope: dirty tree once, review scope named, spell-cast step ends the run
 
-> **Prompt**: Implement Step 4 of `_work/implement-step-ranges/plan.md`. Three behaviors, taken one at
+> **Prompt**: Implement Step 4 of `_work/shipped/implement-step-ranges/plan.md`. Three behaviors, taken one at
 > a time, each with its expectation written into
-> `_work/implement-step-ranges/assets/step4-validation-log.md` before its edit. First, the dirty-tree
+> `_work/shipped/implement-step-ranges/assets/step4-validation-log.md` before its edit. First, the dirty-tree
 > prompt: edit `skills/core/spellbook/implement-step/SKILL.md` Step 3 so the check runs once before
 > the first step of a run and not between steps, and declining it runs nothing. Second, the closing
 > line: edit Step 6 so the `Next:` line after a run says to review the diff and cast `/code-review`
 > with scope `uncommitted`, or `branch` when any step's report in the run says it committed, with a
 > one-clause reason in either case; after a run that reached the last numbered step, continue with
 > `/commit-message` and archiving as today. Third, an older plan's numbered spell-cast step: create
-> `_work/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`, five numbered steps whose step 5
+> `_work/shipped/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`, five numbered steps whose step 5
 > reads "Run `/feature update hero`", and edit Step 2 so a run reaching such a step stops before it,
 > relays what finished, and hands it back with the existing spell-cast message rather than aborting.
 > Run `./scripts/check-contract.sh` after each behavior and record each stand-in walk-through.
 
-**What to build**: `_work/implement-step-ranges/assets/step4-validation-log.md`;
-`_work/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`;
+**What to build**: `_work/shipped/implement-step-ranges/assets/step4-validation-log.md`;
+`_work/shipped/implement-step-ranges/assets/fixtures/legacy-hero-plan.md`;
 `skills/core/spellbook/implement-step/SKILL.md` (Step 3 once-per-run; Step 6 closing line and scope
 rule; Step 2 spell-cast step inside a run).
 
@@ -261,9 +261,9 @@ rule; Step 2 spell-cast step inside a run).
 
 ### Step 5 — The plan report marks the steps that end in a manual check
 
-> **Prompt**: Implement Step 5 of `_work/implement-step-ranges/plan.md`. Write
-> `_work/implement-step-ranges/assets/step5-validation-log.md` with the expected closing report for
-> the six-step fixture `_work/implement-step-ranges/assets/fixtures/accordion-block-plan.md` *before*
+> **Prompt**: Implement Step 5 of `_work/shipped/implement-step-ranges/plan.md`. Write
+> `_work/shipped/implement-step-ranges/assets/step5-validation-log.md` with the expected closing report for
+> the six-step fixture `_work/shipped/implement-step-ranges/assets/fixtures/accordion-block-plan.md` *before*
 > editing: after `Steps: 6`, six lines of the form `  N  <title>`, with `(manual check)` appended to
 > steps 4 and 6 only, then the existing `Branch:` and `Next:` lines. Also write the expectation for a
 > plan with no `[Manual]` lines: every step listed, no marks. Then edit
@@ -272,7 +272,7 @@ rule; Step 2 spell-cast step inside a run).
 > mark is derived, so a plan author adds nothing. Run `./scripts/check-contract.sh`. For evidence,
 > have the stand-in produce the report for both fixtures into the log.
 
-**What to build**: `_work/implement-step-ranges/assets/step5-validation-log.md`;
+**What to build**: `_work/shipped/implement-step-ranges/assets/step5-validation-log.md`;
 `skills/core/spellbook/plan/SKILL.md` (Step 7, the report format).
 
 **Test first**:
@@ -290,7 +290,7 @@ rule; Step 2 spell-cast step inside a run).
 
 ### Step 6 — Every surface describes the range, and the changelog and roadmap record it
 
-> **Prompt**: Implement Step 6 of `_work/implement-step-ranges/plan.md`. Update every surface that
+> **Prompt**: Implement Step 6 of `_work/shipped/implement-step-ranges/plan.md`. Update every surface that
 > describes `/implement-step` as one step per cast so it describes the range as an ordinary form:
 > `skills/core/reference/workflow/SKILL.md` line 25; the `/implement-step` row in `README.md`'s
 > spellbook table; `docs/layout.md`'s chain diagram line; and in `docs/spell-cards.md` the
@@ -327,7 +327,7 @@ finishes.
 
 > **Prompt**: Run `/feature update plan-execution` to verify the living behavioral doc reflects the
 > actual implementation. Review each scenario against the edited spells and the validation logs under
-> `_work/implement-step-ranges/assets/`. Update any scenario where the implementation diverged from
+> `_work/shipped/implement-step-ranges/assets/`. Update any scenario where the implementation diverged from
 > the draft. Fill in the test coverage table: this repo has no harness for spells, so each row points
 > at the validation log that evidenced it, or stays `Not covered` where no evidence was captured.
 > Remove the "Draft" banner. Commit the verified doc.
@@ -341,10 +341,10 @@ finishes.
 
 | Action | File |
 |--------|------|
-| Create | `_work/implement-step-ranges/assets/fixtures/accordion-block-plan.md` |
-| Create | `_work/implement-step-ranges/assets/fixtures/accordion-block-blocking-plan.md` |
-| Create | `_work/implement-step-ranges/assets/fixtures/legacy-hero-plan.md` |
-| Create | `_work/implement-step-ranges/assets/step1-validation-log.md` through `step5-validation-log.md` |
+| Create | `_work/shipped/implement-step-ranges/assets/fixtures/accordion-block-plan.md` |
+| Create | `_work/shipped/implement-step-ranges/assets/fixtures/accordion-block-blocking-plan.md` |
+| Create | `_work/shipped/implement-step-ranges/assets/fixtures/legacy-hero-plan.md` |
+| Create | `_work/shipped/implement-step-ranges/assets/step1-validation-log.md` through `step5-validation-log.md` |
 | Modify | `skills/core/spellbook/implement-step/SKILL.md` |
 | Modify | `skills/core/spellbook/plan/SKILL.md` |
 | Modify | `skills/core/reference/workflow/SKILL.md` |
