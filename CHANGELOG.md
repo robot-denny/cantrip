@@ -456,6 +456,26 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   - **A worker reports which block it copied and which palette it chose.** The copy can then be
     checked against its source, and the palette reads as a decision rather than a data-type detail.
 
+- **`/implement-step` takes a range of steps, and `/plan`'s report shows where the manual checks
+  fall** (2026-09-28). A single step still casts as `/implement-step <plan> 4`. You can now write
+  `1-3` to run steps 1 to 3, or `3-` to run from step 3 to the plan's last numbered step. Each step
+  still gets its own worker, dispatched fresh for that step, and the steps run in order.
+  Each report is relayed as it lands. One `Next:` line closes the cast. It points at review, names
+  the `/code-review` scope with the reason, then names the next single step.
+  - **A run stops at the first blocked step.** A worker that returns no report block counts as
+    blocked too. Finished steps stay as their workers left them, and the closing line says which
+    range to re-invoke, such as `2-4` when `1-4` stopped at step 2.
+  - **Later workers in a run read the earlier reports.** From the second step on, the worker prompt
+    carries every report from this run under `## Earlier in this run`, so a convention chosen in
+    step 1 reaches step 3.
+  - **The dirty-tree question is asked once per cast**, before the first step. Between steps the
+    tree is dirty by design.
+  - **An older plan with a numbered spell-cast step still works.** A range that reaches it stops
+    before it and hands the step back to you, the same way a single cast already did.
+  - **`/plan`'s closing report lists every numbered step** and appends `(manual check)` to a step
+    whose Validation block carries a `- [Manual]` line. The list is there so you can pick a range
+    that ends where you want to look, without opening the plan.
+
 ### Changed
 
 - **US English is the default spelling for toolkit prose.** `prose-discipline` now says so on its

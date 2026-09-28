@@ -303,8 +303,23 @@ Report in this format:
 ```
 Plan: <path to the saved plan>
 Steps: N
+  1  <title of step 1>
+  2  <title of step 2> (manual check)
+  ...
+  N  <title of step N>
 Branch: <current branch>
 Next: /implement-step <feature_slug> 1  (run each step in a fresh context to keep the main one clean)
 ```
+
+Under `Steps:`, list every numbered step on its own line, in plan order: two spaces, the step
+number, two spaces, and the title from its `### Step N — <title>` heading. The unnumbered final
+step is not listed. Append `(manual check)` to a step whose **Validation** block carries a line
+beginning `- [Manual]`. The mark is derived from the plan you just wrote, so a plan author adds
+nothing to earn it and cannot forget to. A step with no such line gets a plain line, including one
+whose Validation reads `none`.
+
+The list is for the developer choosing how far to run before pausing. `/implement-step` accepts a
+range of steps. A manual check is where a person wants to stop and look, so the report shows where
+those fall without the plan file being opened.
 
 Do not print the full plan to chat — just the summary above. The plan lives in the file.

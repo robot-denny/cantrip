@@ -10,7 +10,7 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Nothing in flight.**
+**In flight: `robot-denny/implement-step-ranges`.**
 
 **Of what Next holds, the sidecar-delivery defect is the most urgent and the pack-authoring
 meta-skill is the highest-leverage.** The first is urgent because a shipped increment is currently
@@ -427,6 +427,14 @@ before-and-after artifacts earn a commit, and answered differently — `review-f
 140K, `dotnet-pack` left 364K uncommitted and said why. Whatever the rule turns out to be, the two
 should end up consistent. Recorded in `_work/shipped/review-failure-modes/spec.md` with the reasoning
 on both sides.
+
+**A plan long enough to be tedious is usually a spec holding several increments, and nothing says so
+at plan time.** Raised 2026-09-28 while giving `/implement-step` a range of steps. The range was asked
+for because a fourteen-step plan made casting one step at a time tedious, and the range answers that.
+It does not answer the question underneath, which is whether a spec that plans out to fourteen steps
+should have been two or three specs. `/plan` counts the steps in its closing report and says nothing
+about the count. Seen once, so this is a note rather than a rule. If it happens again, the place to
+say so is `/plan`'s Step 6 validation, as a warning the developer can read past.
 
 ---
 

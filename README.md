@@ -145,7 +145,7 @@ them by name.
 | [/explore](skills/core/spellbook/explore/SKILL.md) | Interview-driven discovery *before* a decision. Widens the option space instead of narrowing it. |
 | [/spec](skills/core/spellbook/spec/SKILL.md) | Turns an idea into a spec with acceptance criteria, draft BDD scenarios, and a work-type classification. |
 | [/plan](skills/core/spellbook/plan/SKILL.md) | Turns a spec into TDD-first steps, each runnable in a fresh context, each with a paste-ready prompt. |
-| [/implement-step](skills/core/spellbook/implement-step/SKILL.md) | Runs one plan step in an isolated context, then reports back. |
+| [/implement-step](skills/core/spellbook/implement-step/SKILL.md) | Runs one plan step in an isolated context, then reports back. Give it a range, `1-3` or `3-`, and it runs those steps in order, one fresh context each. |
 | [/feature](skills/core/spellbook/feature/SKILL.md) | Writes or updates a living behavioral doc. Also backfills one from code alone. |
 | [/testify](skills/core/spellbook/testify/SKILL.md) | The other half of that doc: `/feature` records what a behavioral doc *claims*, this asks what nothing *proves*. Reports the scenarios no test covers, then writes and runs tests only for the rows you approve. `/testify audit` sweeps the whole project and writes nothing. |
 | [/code-review](skills/core/spellbook/code-review/SKILL.md) | Three reviewers in parallel, merged into one report with an ordered action plan. |

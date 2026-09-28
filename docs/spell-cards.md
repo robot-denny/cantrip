@@ -112,19 +112,19 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Needs:** a spec, ideally
 - **Leaves:** `_work/<slug>/plan.md`
 - **Does:** Turns a spec into phased steps, each written test-first, each runnable on its own in a fresh context with a paste-ready prompt. Records the key decisions once, so no later step works them out again.
-- **Watch for:** the last step records durable behavior. It is a spell you cast rather than a step you run.
+- **Watch for:** the last step records durable behavior. It is a spell you cast rather than a step you run. The closing report lists every step and marks those that end in a manual check, so you can pick a range for `/implement-step` without opening the plan.
 - **Then:** `/implement-step <slug> 1`
 
 ### /implement-step
 
 - **Type:** Spell
 - **Group:** Core spellbook
-- **Cast:** `/implement-step <plan> <step-number>`
+- **Cast:** `/implement-step <plan> <step>`, where the step is one number (`4`), a closed range (`1-3`), or an open range to the last step (`3-`)
 - **Needs:** a saved plan
 - **Leaves:** the code change, plus a DONE or BLOCKED report
-- **Does:** Runs one step in a separate context, so a long plan never clutters your main conversation. It holds the step to the plan's test-first and validation contract, then relays a short structured report.
-- **Watch for:** one step per cast. The isolation is the point.
-- **Then:** the next step; `/code-review` once the plan is done
+- **Does:** Runs one step in a separate context, so a long plan never clutters your main conversation. Given a range, it runs each step the same way, in order, with a fresh context per step, and relays each report as it lands. It holds every step to the plan's test-first and validation contract.
+- **Watch for:** one fresh context per step, whether you cast one step or a range. The isolation is the point. A run stops at the first blocked step and says which range to re-invoke, and one `Next:` line closes the cast with the `/code-review` scope named.
+- **Then:** the next step, alone or as the start of a range; `/code-review` once the plan is done
 
 ### /feature
 

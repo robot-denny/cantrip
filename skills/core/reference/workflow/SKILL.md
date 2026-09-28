@@ -15,16 +15,17 @@ whole feature.
 
 ## Entry points
 
-`/spec <slug>` → `/plan <slug>` → `/implement-step <slug> N` (per step) → `/feature update
-<slug>` → `/code-review`
+`/spec <slug>` → `/plan <slug>` → `/implement-step <slug> N` (per step, or a range) → `/feature
+update <slug>` → `/code-review`
 
 `/explore` sits upstream of `/spec` for work where the approach is not yet decided; `/retrofit` is the
 entry point for a change that skipped the chain entirely. `/setup` and `/update-toolkit` are not stages —
 they configure and maintain the toolkit itself.
 
-`/implement-step` runs one step at a time against a fresh context so the main thread stays
-clean across a long plan — either dispatched to a subagent or by pasting the step's prompt
-into a new session, whichever suits the setup.
+`/implement-step` runs one step against a fresh context so the main thread stays clean across
+a long plan. It also takes a range, `1-3` or `3-`, and runs those steps in order, one fresh
+context each. Either way a step runs in a dispatched subagent, or you paste its prompt into a
+new session, whichever suits the setup.
 
 **Every spell ends with a `Next:` line pointing at the next stage. Spells suggest; they never
 invoke each other.** This is what keeps the toolkit a toolbox rather than a funnel, and it is
