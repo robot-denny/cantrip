@@ -132,6 +132,63 @@ that raised them.
   when more worked examples exist across projects** — if they converge this becomes a rule, and if
   they do not the deferral was right. Recorded in `_work/shipped/styleguide/spec.md` and in the spell.
 
+**A styleguide generated on a client project renders the system correctly and explains none of
+it.** Reviewed 2026-10-05. The page did what the increment promised: every swatch and specimen reads
+its token live, the element specimens render through the editor's own stylesheet using the styles
+editors can pick, and heading tags sit beside heading styles. What it did not do is serve anyone but
+a developer who already knows the token names. Editors, designers, marketing and QA, at the agency
+and on the client side, each arrive with a question the page cannot answer. The gaps split by who
+owns the fix.
+
+**The spell's to close:**
+
+- **The purpose sentence is left empty.** The guide page already has the field and the index reuses
+  it, but `/styleguide` never proposes one. So the page opens on a grid of swatches with no
+  statement of what it is, that it reads the live stylesheet and therefore outranks a design file or
+  a PDF, or who to ask about a change. The spell should draft it at the ask, like any other approved
+  write.
+- **Every caption is empty, and nothing says so.** The caption is optional so a scaffolded page can
+  be saved, which is right, but the run never asked for one either, and a reader cannot tell `-tint`
+  from `-light` from `-signature`. The grouping step is where a person is already saying what tokens
+  are for, so it should ask for captions on the role tokens there, and the closing report should
+  count the ones left empty. The reference currently says nothing is reported when a caption is
+  empty, so this is a decision to reverse, not a fix.
+- **Role tokens and the raw palette arrive as one list.** The page put `--color-text-primary` and
+  `--color-surface-card` under the same heading as the gray ramp. The script already reports
+  `aliasOf`, which is the signal: a token that aliases another is a role. The grouping proposal
+  should lead with the roles as the names to write, and put the ramps beneath them as the underlying
+  palette.
+- **The unclassified set never reached the page.** Spacing, radii, shadows, font families, weights
+  and breakpoints were reported and then dropped, because no showcase type holds them. Either a
+  fourth type (a token name rendered with its computed value) or a stated decision that they stay off
+  an editor-facing page.
+- **Element specimens speak developer.** Their labels come from token and class names. A specimen
+  should carry the name an editor sees in the style menu, and its caption the one-line rule for
+  using it: a real heading for a new section, a heading style for size alone.
+
+**The reference's to state**, as requirements on a project's view, enforced nowhere, the same shape
+as the unresolved-token rule in *The showcase element types*:
+
+- **A swatch shows its resolved value.** A view can print what the browser computes at render time
+  without storing anything, so *a showcase element stores a name, never a value* still holds.
+  Designers checking against a design file, marketing building assets off the site and QA checking a
+  rendered color all need the hex. A contrast ratio against the page's text and surface colors would
+  answer the accessibility question on the same swatch. A type specimen wants the same: computed
+  size, line height and family.
+- **A specimen can show the classes behind it.** Developers and QA need to know the notice is
+  `alert-brand`, not only what it looks like.
+- **Sections are linkable.** The view generated ids like `styleguide-1`, so nobody can send a link to
+  the colors. Ids taken from the heading, plus a short jump list, are what make the page a shared
+  reference.
+
+**It is also the second worked example the themes question above is waiting for.** The project
+carries four brand themes. The page showed role tokens under one of them and bare ramps for the
+other three, so nobody can see what `--color-brand-primary` becomes under any other brand. What this
+page needed was the role tokens rendered once per theme.
+
+**Not toolkit work:** the missing form fields, interaction states and buttons on a dark background
+are content choices on that one page, and nothing in the spell prevents them.
+
 **Two questions the coverage spell leaves open**, both about the Test Coverage table rather than
 about `/testify`, which is why neither belongs to the increment that raised them. The rest of that
 increment's *Open Questions* stay in `_work/shipped/testify/spec.md`, because they only matter to
