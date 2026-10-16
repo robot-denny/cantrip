@@ -28,6 +28,12 @@ before enumerating a collection, and before dereferencing a picked item.
 renders empty rather than erroring, and the dropdown UI alias has a plausible wrong value that fails
 to render. All three are in the starter facts.
 
+**Razor views render; they do not compute.** `@inject` or `@functions` in a `.cshtml` file, or a
+`@{ }` block that looks things up or assigns working variables, is **Major**. The work cannot be
+unit-tested where it sits, and the view it lives in becomes the exemplar the next block copies. It
+belongs in a view component, a controller or the view model. A project may exempt something its
+view imports provide, such as `UmbracoHelper`; check its review rules before flagging that.
+
 **Authorization on custom endpoints.** Umbraco's own routing does not protect a custom controller or
 minimal API you added. Check that every new endpoint has an explicit authorization decision, and treat
 an unauthenticated write endpoint as a Blocker.

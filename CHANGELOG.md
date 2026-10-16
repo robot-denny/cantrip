@@ -478,6 +478,23 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 ### Changed
 
+- **Umbraco 17 Razor views render and do not compute.** Three pack skills now say where data shaping
+  belongs, so a planner, a block author and a reviewer give the same answer.
+  - **`umbraco-17-block-authoring`** says that whichever block shape a project uses, the view reads
+    the typed model and nothing more. A block that needs C# to shape its data gets a view component
+    that builds a view model. `@inject`, `@functions` and a working `@{ }` block do not belong in a
+    block view, and an exemplar that has them is named rather than copied.
+  - **`umbraco-17-planning`**'s Slice layer says a step that needs C# to build what a block renders
+    adds a view component rather than injecting a service into the view.
+  - **`umbraco-17-review-rules`** flags `@inject`, `@functions` or a computing `@{ }` block in a
+    `.cshtml` file as **Major**, with an exemption for what a project's view imports provide, such as
+    `UmbracoHelper`.
+
+  **The skills alone did not stop the pattern in testing.** Where every existing block view injected a
+  builder, "copy the closest existing block" won over the new guidance. It held only once the project's
+  `conventions.md` named the legacy views as ones not to copy and named a compliant one to copy
+  instead. A project with views like that should record both under `## Planning gotchas`.
+
 - **US English is the default spelling for toolkit prose.** `prose-discipline` now says so on its
   `If empty:` line and lists spelling as a voice rule, so a project that prefers another convention
   overrides it in `conventions.md` under `## Documentation voice`. Shipped skills, docs, ADRs, and
