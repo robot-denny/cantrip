@@ -87,6 +87,14 @@ block alias, bound to `IBlockReference<IPublishedElement, IPublishedElement>` so
 under a list and a grid editor alike. The other is a per-block folder inside a Razor class library,
 bound to the generated typed model. This file gives no verdict between them. The project already did.
 
+**Whichever shape, the view renders and does not compute.** A block that only shows its own
+properties renders them straight off the typed model in its view. A block that needs C# to shape its
+data, such as resolving media, choosing a variant or calling a service, gets a view component that
+builds a view model and returns the view. Do not `@inject` a service or builder into a block view,
+and do not write `@functions` or a working `@{ }` block there. That logic cannot be unit-tested, and
+it copies into every block made from this one. Where the exemplar does either, say so rather than
+carrying it over.
+
 Where views live is found in the plan's Key Decisions first. Failing that, the project's paths slot
 (`.agents/config/paths.md` → `## Umbraco`, declared in `umbraco-17-planning`) names it. When neither
 has it, the sequence below applies.
