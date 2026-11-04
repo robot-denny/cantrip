@@ -154,9 +154,9 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 
 - **Type:** Spell
 - **Group:** Core spellbook
-- **Cast:** `/commit-message`, which reads your staged changes
-- **Needs:** something staged
-- **Leaves:** a proposed message, awaiting approval; it never commits
+- **Cast:** `/commit-message`, which reads your staged and unstaged changes and any new files
+- **Needs:** something to commit, staged or not
+- **Leaves:** a proposed message and the files it would add, awaiting approval; it stages and commits only when you approve
 - **Does:** Opens with a plain-language summary of what shipped, then briefly records the reasoning a future reader could not recover from the code. Follows your project's own commit convention.
 - **Then:** push, or `/retrofit` if this change skipped the flow
 
