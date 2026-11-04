@@ -207,10 +207,11 @@ What these show, against the expectations above:
 - **Scenario 7 (new file):** met by A and C. Each included a new, untracked file, and each message
   described what that file holds.
 
-Still owed:
+Verified afterwards by the developer, by hand, and reported on 2026-11-04 (the individual casts
+were not recorded here):
 
-- **Scenario 4 ("just what's staged"):** no real cast yet.
-- **An unrelated file left out:** no cast had one, so the "exclude" direction of the judgment is
-  untested.
-- **No permission prompt on staging:** the casts staged without the agent reporting a prompt, but
-  only the developer's screen shows whether one appeared, and it was not recorded.
+- **Scenario 4 ("just what's staged"):** verified.
+- **An unrelated file left out:** verified, so the judgment is now exercised in both directions.
+- **No permission prompt on staging:** verified.
+
+No manual check from the plan remains owed.

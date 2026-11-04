@@ -19,7 +19,6 @@ Newest planned items first. When an item ships, flip the checkbox and point it a
 increment.
 
 - [ ] Verify the code-derived message-shape and convention rules below with real casts
-- [ ] Real casts still owed: "just what's staged", and a tree with an unrelated file to leave out
 - [x] 2026-11-04 — Stage related files by default (`_work/shipped/commit-message-stage-by-default/spec.md`)
 
 ---
@@ -169,8 +168,9 @@ spell by a stand-in in `_work/shipped/commit-message-stage-by-default/assets/ste
 reads the spell and follows it; a walk-through is not a test, so those rows stay `Not covered`.
 Three real casts on 2026-11-04 are recorded under **Real casts** in the same log. Between them they
 exercised "Nothing staged", "A brand-new file is judged by what it says", "Developer declines" and
-"Developer approves" (commits `16de057` and `a092f1a`). A cast is not a test either, so those rows
-also stay `Not covered`. Rows marked code-derived were read from the spell's text and never
+"Developer approves" (commits `16de057` and `a092f1a`). The developer later verified "Opting out in
+plain language", an unrelated file being left out, and staging without a permission prompt by hand.
+A cast is not a test either, so those rows also stay `Not covered`. Rows marked code-derived were read from the spell's text and never
 specified.
 
 | Scenario | Test File | Status |
