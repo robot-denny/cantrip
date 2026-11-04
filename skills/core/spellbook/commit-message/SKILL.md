@@ -1,16 +1,17 @@
 ---
 name: commit-message
-description: Analyze staged changes and propose a commit message that opens with a plain-language summary of what shipped, then briefly records the reasoning a future reader could not recover from the code. Follows the project's own commit conventions. Shows a summary, proposes the message, and waits for approval — never auto-commits.
+description: Analyze staged, unstaged, and new files, propose which belong in the commit, and propose a commit message that opens with a plain-language summary of what shipped, then briefly records the reasoning a future reader could not recover from the code. Follows the project's own commit conventions. Shows the files and the message, and stages and commits only on approval — never auto-commits.
 disable-model-invocation: true
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git commit:*)
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*)
 ---
 
 ## Context
 
 - Current git status: !`git status`
 - Currently staged diff: !`git diff --staged`
+- Unstaged changes: !`git diff --stat`
 
-Analyze the staged changes above and create a commit message. **Open with a plain-language
+Analyze the changes above and create a commit message. **Open with a plain-language
 summary of what shipped, then compress the reasoning behind it.** Present tense throughout.
 
 A commit message serves two readers, and one shape serves both. Someone scanning history wants
@@ -20,7 +21,13 @@ Lead with the first so the second is optional depth rather than a toll gate. A m
 mid-argument makes every reader pay the reconstruction cost, including the ones who only wanted
 to know what changed.
 
-If nothing is staged, say so and stop.
+Unstaged and new files are candidates too. Decide which of them belong in this commit alongside
+what is already staged; that is your judgment to make. Read what you need to decide: the diff of
+an unstaged file, or the contents of a new one, which no diff shows. A file goes in whole or not
+at all. If the
+developer says, in any words, to commit only what is already staged, leave everything else out.
+
+If there is nothing to commit at all, say so and stop.
 
 ## Format
 
@@ -88,14 +95,16 @@ none, add none — do not introduce a trailer convention the project hasn't adop
 
 ## Output
 
-1. Show a summary of what is currently staged
+1. Show a summary of what is already staged, and list the unstaged or new files you would add
 2. Propose the commit message
-3. Ask for confirmation before committing
+3. Ask for confirmation before staging and committing
 
 Before proposing, reread the draft against **Body shape**: does the first sentence say what
 shipped, and is the body inside its budget? If the why has crowded out the summary, or the body
 has run long, tighten it before showing it — not after the user asks.
 
-**Do not auto-commit.** Wait for approval, and only commit if the user says so.
+**Do not auto-commit.** Wait for approval, and only commit if the user says so. Stage the files
+you listed only after approval, immediately before committing, naming each file by path; never
+`git add -A`, `.`, `-f`, or `-p`. If the user declines, stage nothing.
 
 `Next: push, or /retrofit if this change skipped the workflow`

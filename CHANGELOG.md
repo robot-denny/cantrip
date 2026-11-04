@@ -478,6 +478,12 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 ### Changed
 
+- **`/commit-message` no longer stops when nothing is staged.** It reads unstaged changes and new
+  files as well, and alongside the proposed message it lists the files it would add to the commit.
+  It stages them only when you approve, naming each file by path, right before committing; if you
+  decline, your staging is left exactly as it was. To commit only what you already staged, say so in
+  any words when you cast it. The spell can now run `git add` without a permission prompt.
+
 - **Umbraco 17 Razor views render and do not compute.** Three pack skills now say where data shaping
   belongs, so a planner, a block author and a reviewer give the same answer.
   - **`umbraco-17-block-authoring`** says that whichever block shape a project uses, the view reads
