@@ -186,3 +186,31 @@ the unstaged file's diff on demand instead of finding it in Context.
 $ ./scripts/check-contract.sh
 22 checks passed.
 ```
+
+## Real casts
+
+Three casts of the edited spell, made by the developer in a live session on this increment's
+branch on 2026-11-04. Each started with nothing staged.
+
+| # | Tree before the cast | Proposal | Developer | Result |
+|---|---|---|---|---|
+| A | `SKILL.md` modified; `assets/step1-validation-log.md` new and untracked | Both files listed to add, with a message | Approved | Commit `16de057` holds exactly those two files |
+| B | `CHANGELOG.md`, `docs/spell-cards.md` modified; `_features/commit-message.md` new and untracked | All three listed to add, with a message | Declined | `git status --short` unchanged: two ` M` lines and one `??` line, nothing staged |
+| C | Same tree as B | Same three files | Approved | Commit `a092f1a` holds exactly those three files (`git show --stat`) |
+
+What these show, against the expectations above:
+
+- **Scenario 1 (nothing staged):** met by A, B and C. None stopped.
+- **Scenario 2 (related unstaged file joins the commit):** met in spirit by A and C. Every changed
+  file was related, so the agent's judgment was exercised only in the "include" direction.
+- **Scenario 3 (decline changes nothing):** met by B.
+- **Scenario 7 (new file):** met by A and C. Each included a new, untracked file, and each message
+  described what that file holds.
+
+Still owed:
+
+- **Scenario 4 ("just what's staged"):** no real cast yet.
+- **An unrelated file left out:** no cast had one, so the "exclude" direction of the judgment is
+  untested.
+- **No permission prompt on staging:** the casts staged without the agent reporting a prompt, but
+  only the developer's screen shows whether one appeared, and it was not recorded.

@@ -536,6 +536,12 @@ against the first.
 
 ## Recently shipped
 
+- **2026-11-04** — **`/commit-message` stages related files on approval.** The spell no longer stops
+  when nothing is staged. It considers unstaged and new files, lists the ones it would add beside the
+  message, and stages them by path only once the developer approves; declining changes nothing.
+  Which files belong is left to the agent's judgment. Full detail in `CHANGELOG.md`
+  (`_work/shipped/commit-message-stage-by-default/spec.md`, `_features/commit-message.md`).
+
 - **2026-09-28** — **Implement-step ranges.** `/implement-step` takes a single step, a closed range
   like `1-3`, or an open range like `3-`. Each step runs in its own fresh worker, in order, a run
   stops at the first blocked step and says where to resume, and later workers receive the earlier

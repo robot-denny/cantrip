@@ -1,6 +1,6 @@
 # Plan: Commit Message Stages Related Files by Default
 
-**Spec**: `_work/commit-message-stage-by-default/spec.md`
+**Spec**: `_work/shipped/commit-message-stage-by-default/spec.md`
 **Branch**: `robot-denny/commit-message-stage-by-default`
 **Work type**: `change-to commit-message` — copied verbatim from the spec's `**Work type**:` line;
 this decides how the final step records behavior
@@ -72,8 +72,8 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — Let the spell stage related files on approval
 
-> **Prompt**: Implement Step 1 of `_work/commit-message-stage-by-default/plan.md`. First write
-> `_work/commit-message-stage-by-default/assets/step1-validation-log.md` with the expected outcome of
+> **Prompt**: Implement Step 1 of `_work/shipped/commit-message-stage-by-default/plan.md`. First write
+> `_work/shipped/commit-message-stage-by-default/assets/step1-validation-log.md` with the expected outcome of
 > each of the spec's four draft scenarios plus the old "staging any files necessary" phrasing,
 > asserting on what the developer sees, not on spell wording. Then edit
 > `skills/core/spellbook/commit-message/SKILL.md` exactly as the plan's first Key Decision describes:
@@ -85,7 +85,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 > log, and run `./scripts/check-contract.sh`.
 
 **What to build**:
-- `_work/commit-message-stage-by-default/assets/step1-validation-log.md`: expected outcomes first,
+- `_work/shipped/commit-message-stage-by-default/assets/step1-validation-log.md`: expected outcomes first,
   stand-in results after.
 - `skills/core/spellbook/commit-message/SKILL.md`: the four touches in Key Decisions, plus the
   `description` line.
@@ -110,7 +110,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 2 — Update the docs that describe the spell, and dogfood it
 
-> **Prompt**: Implement Step 2 of `_work/commit-message-stage-by-default/plan.md`. The
+> **Prompt**: Implement Step 2 of `_work/shipped/commit-message-stage-by-default/plan.md`. The
 > `/commit-message` spell now considers unstaged and new files and stages related ones on approval.
 > Update the surfaces that say otherwise: in `docs/spell-cards.md`, the `/commit-message` card's
 > **Cast** line ("reads your staged changes") and **Needs** line ("something staged") should say it
@@ -157,7 +157,7 @@ finishes.
 
 | Action | File |
 |--------|------|
-| Create | `_work/commit-message-stage-by-default/assets/step1-validation-log.md` |
+| Create | `_work/shipped/commit-message-stage-by-default/assets/step1-validation-log.md` |
 | Modify | `skills/core/spellbook/commit-message/SKILL.md` |
 | Modify | `docs/spell-cards.md` |
 | Modify | `CHANGELOG.md` |

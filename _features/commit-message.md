@@ -5,7 +5,7 @@ decides which changed files belong in the commit, proposes a message that says w
 it says why, and stages and commits only when the developer approves. It follows the project's own
 commit conventions rather than imposing one.
 
-**Source**: `_work/commit-message-stage-by-default/spec.md` for the staging rules; the message-shape
+**Source**: `_work/shipped/commit-message-stage-by-default/spec.md` for the staging rules; the message-shape
 and convention rules are derived from `skills/core/spellbook/commit-message/SKILL.md` (2026-11-04)
 with no originating spec
 **Last verified**: 2026-11-04
@@ -18,8 +18,9 @@ The per-feature mini-roadmap: shipped increments, planned increments, and parkin
 Newest planned items first. When an item ships, flip the checkbox and point it at the archived
 increment.
 
-- [ ] Stage related files by default (`_work/commit-message-stage-by-default/spec.md`, in flight)
 - [ ] Verify the code-derived message-shape and convention rules below with real casts
+- [ ] Real casts still owed: "just what's staged", and a tree with an unrelated file to leave out
+- [x] 2026-11-04 — Stage related files by default (`_work/shipped/commit-message-stage-by-default/spec.md`)
 
 ---
 
@@ -164,11 +165,12 @@ Scenario: Casting with "staging any files necessary"
 ## Test Coverage
 
 This repository ships no test harness for spells. The staging scenarios were walked against the
-spell by a stand-in in `_work/commit-message-stage-by-default/assets/step1-validation-log.md`, which
+spell by a stand-in in `_work/shipped/commit-message-stage-by-default/assets/step1-validation-log.md`, which
 reads the spell and follows it; a walk-through is not a test, so those rows stay `Not covered`.
-One real cast on 2026-11-04 proposed two unstaged files beside its message and committed both on
-approval (commit `16de057`), which exercises "Nothing staged" and "Developer approves" but is not
-yet recorded in the log. Rows marked code-derived were read from the spell's text and never
+Three real casts on 2026-11-04 are recorded under **Real casts** in the same log. Between them they
+exercised "Nothing staged", "A brand-new file is judged by what it says", "Developer declines" and
+"Developer approves" (commits `16de057` and `a092f1a`). A cast is not a test either, so those rows
+also stay `Not covered`. Rows marked code-derived were read from the spell's text and never
 specified.
 
 | Scenario | Test File | Status |
