@@ -717,6 +717,16 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 ### Fixed
 
+- **The docs had drifted behind the toolkit.**
+  - `docs/layout.md` undercounted references and ADRs, and still said reviewers are linked rather than
+    copied.
+  - `docs/contract.md` listed `.agents/skills/` and a nonexistent `.agents/memory/` as project-owned.
+  - The spell cards gave `/styleguide` the wrong next step and an incomplete account of what it needs
+    and writes.
+  - The guides-section runbook said `/guide` rewrites five columns without asking. It compares four
+    and writes only after approval.
+  - The README now says how to enable the pre-commit hook.
+
 - **`umbraco-17-feature-backfill` looked for element types under a filename that does not exist**, so
   following it would have found none on any Deploy project. It told you to locate
   `element-type__*.uda` and said the kind was in the filename for Deploy. Deploy serializes element

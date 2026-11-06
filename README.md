@@ -122,8 +122,8 @@ clone on Windows. The cost is that copies do not follow `/update-toolkit`, so th
 offers a refresh. Both forms above leave an existing agent of the same name alone, so a reviewer
 your project already tailored is safe.
 
-`/setup` analyzes your codebase and writes what it learns into **`.agents/config/`**, four files
-holding your paths, your existing commands, and your team's coding standards. That directory is the
+`/setup` analyzes your codebase and writes what it learns into **`.agents/config/`**, three files and
+a `reviewer-rules/` folder holding your paths, your existing commands, and your team's coding standards. That directory is the
 part you own and edit, and it is committed, so filling a slot answers it for your teammates too.
 [What you own](docs/concepts.md#what-you-own) says which file takes what.
 
@@ -162,7 +162,7 @@ outside the chain, because they are not stages of doing work:
 | [/setup](skills/core/spellbook/setup/SKILL.md) | Configures the toolkit for a project. Run once after installing. |
 | [/update-toolkit](skills/core/spellbook/update-toolkit/SKILL.md) | Updates the installed toolkit behind a git guard, because the bare installer silently overwrites local modifications. |
 
-**Spells chain by suggestion, never invocation.** Every spell ends with a `Next:` line; none of them
+**Spells chain by suggestion, never invocation.** Every workflow spell ends with a `Next:` line; none of them
 calls another. That is what keeps this a toolbox rather than a funnel.
 
 ---
@@ -334,7 +334,8 @@ either way — see [ADR 0007](adr/0007-repository-ownership.md) if you are curio
 
 This repo is public and draws on real client projects. Content harvested from client work is scrubbed
 of client-identifying information **before** it is committed — see [AGENTS.md](AGENTS.md).
-`scripts/check-contract.sh` enforces that plus the layer contract, and runs before every commit.
+`scripts/check-contract.sh` enforces that plus the layer contract. Enable it as a pre-commit hook once
+per clone with `git config core.hooksPath .githooks`.
 
 Decisions are recorded as ADRs in [adr/](adr/); user-visible changes go in
 [CHANGELOG.md](CHANGELOG.md). What is planned next is in [ROADMAP.md](ROADMAP.md).

@@ -13,7 +13,7 @@ your-project/
 │
 ├── .claude/                     ADAPTER LAYER — regenerable, safe to delete and reinstall
 │   ├── skills/                    the installed spells and references
-│   ├── agents/                    reviewer agents, linked once (see README)
+│   ├── agents/                    reviewer agents, copied once (see README)
 │   └── settings.json              enabled plugins, including any pack companions
 │
 ├── .agents/
@@ -104,10 +104,10 @@ cantrip/
 ├── skills/
 │   ├── core/                    L0 — technology-agnostic, works on any project
 │   │   ├── spellbook/             11 user-cast spells
-│   │   └── reference/             6 model-invoked references (+ the reviewer agents)
+│   │   └── reference/             8 model-invoked references (+ the reviewer agents)
 │   ├── umbraco-17/              L1 — the CMS, pinned to a major
 │   │   ├── spellbook/             4 spells
-│   │   └── reference/             6 references
+│   │   └── reference/             7 references
 │   ├── umbraco-cloud/           L1 — Umbraco Deploy, versionless
 │   │   ├── spellbook/             1 spell
 │   │   └── reference/             1 reference
@@ -115,9 +115,9 @@ cantrip/
 │       └── reference/             3 references
 │
 ├── docs/                        contract, layout, durable reference
-├── adr/                         16 decision records
+├── adr/                         19 decision records
 ├── scripts/                     check-contract.sh · check-install.sh · check-preserved.py
-├── tests/                       install-verification fixtures
+├── tests/                       install, /guide and /styleguide check suites
 ├── _work/ · _features/          the toolkit dogfooding its own workflow
 └── .githooks/pre-commit         runs the contract gate before every commit
 ```
@@ -125,7 +125,7 @@ cantrip/
 In words, since the tree above carries it only in indentation: `skills/` holds one directory per layer
 — `core/` for L0, then one directory per stack pack. Each of those contains a `reference/` for
 model-invoked units and, **only if the pack has spells to name**, a `spellbook/` beside it. `umbraco-17`
-has both, with 3 spells and 6 references; `umbraco-cloud` has both, with 1 each; `dotnet` has
+has both, with 4 spells and 7 references; `umbraco-cloud` has both, with 1 each; `dotnet` has
 `reference/` alone, holding 3 units, because a language earns references rather than repeatable
 operations. Every unit is a directory holding a `SKILL.md`, whatever depth it sits at.
 

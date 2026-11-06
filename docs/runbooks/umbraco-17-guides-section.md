@@ -54,8 +54,10 @@ editor meets it.
 | `group` | Textstring | The group within that tab |
 | `information` | Rich Text Editor | What an editor needs to know about this field |
 
-The first five get rewritten for you whenever your component's schema changes. **`information` never
-does.** Once someone has written in it, it's theirs. Nothing compares it, nothing suggests a
+`alias` is fixed: if a field's alias changes, its old row goes and a new one arrives. When your
+component's schema changes, `/guide` compares `label`, `required`, `tab` and `group` against it and
+shows you the difference. It writes the update only once you approve. **`information` is never
+compared.** Once someone has written in it, it's theirs. Nothing compares it, nothing suggests a
 replacement, and nothing overwrites it. If a row ever has to be removed while carrying one of those
 notes, you'll be asked first rather than told afterwards.
 
@@ -270,7 +272,7 @@ guide yet, which guides name a component the project no longer holds, and which 
 **A run fails partway through, or a page won't save.** Check that nothing from Step 1 or Step 2 is
 marked mandatory. This is the most common setup mistake, and it doesn't show up until late.
 
-**The audit says every component is undocumented.** The recorded key didn't resolve to anything. The
+**The audit stops and says the recorded key didn't resolve.** The key points at nothing. The
 node was deleted, or moved, or the key belongs to another environment's copy of the site. The audit
 stops rather than reporting an empty section, because an empty section and a missing one look
 identical in the count and mean opposite things.

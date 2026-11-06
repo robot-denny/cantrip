@@ -91,7 +91,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Leaves:** `_work/<slug>/discovery.md`
 - **Does:** Asks you one question at a time to *widen* the range of options before anyone commits. It frames the problem, generates and stress-tests rival options, then probes their knock-on effects.
 - **Watch for:** it withholds its own recommendation while framing, on purpose.
-- **Then:** `/spec <slug>`
+- **Then:** commit the discovery doc, then `/spec <slug>`, which stops on uncommitted changes
 
 ### /spec
 
@@ -99,7 +99,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Group:** Core spellbook
 - **Cast:** `/spec <short feature description>`
 - **Needs:** an idea, or a discovery doc to continue from
-- **Leaves:** `_work/<slug>/spec.md`, a working branch, a work-type line
+- **Leaves:** `_work/<slug>/spec.md`, a working branch, a work-type line, and a draft feature doc for a new capability
 - **Does:** Turns an idea into a spec with acceptance criteria and draft Given/When/Then scenarios. It classifies the work as a new capability, a change to one, or a fix, and that decides which durable docs it earns.
 - **Watch for:** only a new capability gets its own feature doc. A change folds into the existing one.
 - **Then:** `/plan <slug>`
@@ -124,7 +124,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Leaves:** the code change, plus a DONE or BLOCKED report
 - **Does:** Runs one step in a separate context, so a long plan never clutters your main conversation. Given a range, it runs each step the same way, in order, with a fresh context per step, and relays each report as it lands. It holds every step to the plan's test-first and validation contract.
 - **Watch for:** one fresh context per step, whether you cast one step or a range. The isolation is the point. A run stops at the first blocked step and says which range to re-invoke, and one `Next:` line closes the cast with the `/code-review` scope named.
-- **Then:** the next step, alone or as the start of a range; `/code-review` once the plan is done
+- **Then:** `/code-review` on what the cast changed, then the next step, alone or as the start of a range; after the last step, `/code-review` then `/commit-message`
 
 ### /feature
 
@@ -143,7 +143,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Type:** Spell
 - **Group:** Core spellbook
 - **Cast:** `/code-review [uncommitted | branch]`
-- **Needs:** a diff; reviewers linked into `.claude/agents/` for parallel runs
+- **Needs:** a diff; reviewers copied into `.claude/agents/` for parallel runs
 - **Leaves:** one merged, de-duplicated report and an ordered action plan
 - **Does:** Runs the accessibility, code-quality, and performance reviewers over the same diff, then merges their findings onto one severity scale. Changes nothing without your explicit approval.
 - **Modes:** `uncommitted` (default) is `git diff` plus staged. `branch` is everything since the upstream fork point, plus uncommitted and untracked.
@@ -200,7 +200,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Group:** Core spellbook
 - **Cast:** `/update-toolkit`
 - **Needs:** git, because it builds a safety net before touching anything
-- **Leaves:** newer skills, plus a list of your local tailorings that were reverted
+- **Leaves:** newer skills, a list of your local tailorings that were reverted, and an offer to refresh reviewer copies that are now stale
 - **Does:** Wraps the skills installer behind a git guard, because the bare update overwrites local modifications with no warning. Makes every change reviewable and helps move tailoring where updates cannot reach it.
 - **Watch for:** editing an installed file is a divergence rather than a workflow. If tailoring needs a core edit, that is a missing slot.
 
@@ -243,7 +243,7 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Triggers:** performing a review, calibrating a finding's severity, authoring a new reviewer
 - **Holds:** diff-only scope, the Blocker/Major/Minor/Nit scale, the evidence standard, the report shape, and the three reviewer agents
 - **Does:** The contract all three reviewers share. It exists to stop the failure modes that make review output worthless: speculation about unseen code, invented severities, findings with no file and line.
-- **Watch for:** the agents ship here but must be linked into `.claude/agents/` once, or review runs inline instead of in parallel.
+- **Watch for:** the agents ship here but must be copied into `.claude/agents/` once, or review runs inline instead of in parallel.
 - **Pairs with:** `/code-review`, `/retrofit`
 
 ### security-review-rules
@@ -381,12 +381,12 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 
 - **Type:** Spell
 - **Group:** umbraco-17
-- **Cast:** `/styleguide`
-- **Needs:** a design system already in place: a token layer a rendered page can read, and an existing view to take conventions from
-- **Leaves:** one guide page whose showcase sections read the project's tokens live
+- **Cast:** `/styleguide [page name]`
+- **Needs:** a design system already in place: a token layer a rendered page can read, and an existing view to take conventions from. Also a guides section recorded in the `## Editor guides` slot
+- **Leaves:** one guide page whose showcase sections read the project's tokens live, plus the three showcase element types, their block palette, and the palette's name recorded in `conventions.md`
 - **Does:** Writes a styleguide page that stays current without regeneration, because its swatches read the design tokens rather than copying their values.
-- **Watch for:** it stops when either half of the precondition is missing, and names which half. A build-time-only token layer is refused rather than baked into a snapshot.
-- **Then:** `/guide --audit`
+- **Watch for:** it stops when either half of the precondition is missing, and names which half. It also stops when no guides section is recorded, or when the project already has a hand-built styleguide page. A build-time-only token layer is refused rather than baked into a snapshot.
+- **Then:** `/block` on the swatch showcase element, to author its view
 
 ### /umbraco-edit
 

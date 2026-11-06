@@ -64,9 +64,9 @@ own.
 ### The guide scaffolding reference
 
 Measured 2026-08-28 at 436 lines / ~28K; **remeasured 2026-09-01 at 623 / 44K**, grown by the
-styleguide increment's showcase element types and its `## Design tokens` slot. Against
-`umbraco-17-feature-backfill` at 242 / 16K that is 2.6x the next largest reference, up from 1.7x —
-and the frontmatter trigger widened with the file, so a schema-only task now pays for the audit's
+styleguide increment's showcase element types and its `## Design tokens` slot. That is
+2.6x the next largest reference in its pack, `umbraco-17-feature-backfill` at 242 / 16K, up from 1.7x.
+Across the whole toolkit the next largest was `bdd-principles` at 340 lines, about 1.8x. And the frontmatter trigger widened with the file, so a schema-only task now pays for the audit's
 report format, the document types *and* the showcase schema.
 
 The proposed seam is `## The audit's report shape`: it documents report output rather than schema,

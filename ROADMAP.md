@@ -419,7 +419,7 @@ feature doc says so.
 
 **Check 1 greps file by file, and it is two thirds of the commit gate.** The scrub check spawns two
 or three `grep` processes per scanned file, so its cost tracks file *count* rather than content — one
-batched `grep` over the same list finished in under 0.01s. At 936 files the full gate is ≈9.4s and
+batched `grep` over the same list finished in under 0.01s. At 787 files the full gate is ≈9.4s and
 still growing linearly with every fixture tree an increment ships. Figures, and the projection that
 came in 3x low, in [docs/measurements.md](docs/measurements.md#the-commit-gate--scriptscheck-contractsh).
 

@@ -14,7 +14,7 @@ version, and `scripts/check-contract.sh` automates most of it.
 |---|---|---|---|
 | **L0 Core** | `skills/core/` | this repo | Workflow spine, spellbook, references, templates, agent skeletons |
 | **L1 Stack pack** | `skills/<pack>/` | this repo | Tech-specific spells, rules, starter facts |
-| **L2 Project** | `.agents/config/`, `.agents/skills/`, `.agents/memory/` | the consuming project | Every fact about *this* project |
+| **L2 Project** | `.agents/config/` | the consuming project | Every fact about *this* project |
 
 **The invariant, stated once:** an L0 or L1 file contains no fact about any specific project.
 Not a path, not a port, not a build command, not a client name, not a project's architectural
@@ -30,8 +30,7 @@ the facts found in the source repos cluster into exactly these four kinds:
 
 ### `.agents/config/paths.md` — where things live
 
-Workspace paths (`_work/`, `_features/`, `docs/audits/`, shipped archives, template
-locations) and code layout by kind (where a block lives, where a page type lives, where
+Workspace paths (`_work/`, `_features/`, `docs/audits/`, shipped archives) and code layout by kind (where a block lives, where a page type lives, where
 generated models are written, where schema files are kept). Also which paths are *generated
 output* rather than authored source, so review and retrofit can skip bundles.
 
