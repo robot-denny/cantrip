@@ -1,5 +1,5 @@
 {
-  "inventoryVersion": 1,
+  "inventoryVersion": 2,
   "rung": "deploy",
   "contentTypesRead": 6,
   "elementFlagged": 6,
@@ -7,6 +7,7 @@
   "palettesRead": 2,
   "rule": {
     "components": "A content type named as a palette entry's content block, in one of the project's block-editor data types. Read from the palette, never from the element-type flag.",
+    "globalBlocks": "A document type whose name ends in the word \"Block\", or whose alias the project lists. A reusable block stored as a document: pages reuse it by reference, so it is documented like a block and never proposed as a page. The name rule is a heuristic, so each entry names the signal that caught it: name, listed, or both.",
     "settingsModels": "An element type named only as a palette entry's settings model and never as a content block. The settings half of a block already counted, not a block of its own.",
     "unpalettedElementTypes": "An element type no palette offers. Read into an owning component's property table as a composition, never documented on its own.",
     "unresolvedPaletteEntries": "A palette offers a content type this export does not hold, so its name and its fields cannot be read and it is counted here rather than among the components. An element type is a database row, never a class, so a package that creates one at boot can legitimately leave it out: the export may ignore that package's schema deliberately, the environment may not be a schema source at all, or the type may exist only where nobody booted locally. Re-export from an environment that holds it to document these.",
@@ -62,6 +63,8 @@
       "signature": "sha256:<computed>"
     }
   ],
+  "globalBlocks": [],
+  "globalBlocksListed": [],
   "settingsModels": [
     {
       "alias": "mediaRowSettings",

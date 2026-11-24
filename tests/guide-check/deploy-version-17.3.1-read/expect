@@ -1,0 +1,6 @@
+exit: 0
+args: extract alertBanner
+stdout_matches: expected-dossier.json
+mask: "sourceSignature":
+not_contains: was not read
+contains: "inheritedFrom": "baseSettings"

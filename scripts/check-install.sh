@@ -56,6 +56,7 @@ ROSTER_CORE=(
 ROSTER_PACK=(
   umbraco-17-planning umbraco-17-feature-backfill umbraco-17-review-rules
   umbraco-17-starter-facts umbraco-17-audit-patterns umbraco-17-guide-scaffolding umbraco-17-block-authoring
+  umbraco-17-guide-generator
   block umbraco-edit guide styleguide
   check-uda umbraco-deploy-facts
   dotnet-conventions dotnet-review-rules codebase-audit
@@ -80,6 +81,7 @@ PACK_SOURCE=(
   "umbraco-17-audit-patterns|umbraco-17"
   "umbraco-17-guide-scaffolding|umbraco-17"
   "umbraco-17-block-authoring|umbraco-17"
+  "umbraco-17-guide-generator|umbraco-17"
   "block|umbraco-17"
   "umbraco-edit|umbraco-17"
   "guide|umbraco-17"

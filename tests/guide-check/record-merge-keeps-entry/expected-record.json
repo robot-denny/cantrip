@@ -1,0 +1,10 @@
+{
+  "recordVersion": 1,
+  "fields": {
+    "guideWhenToUse": "sha256:keptwhentousefingerprint"
+  },
+  "rows": {
+    "promoHeading": "sha256:8390012dc3407ab69bc05dc1db03bac985aa704803475a9ae8801ed3429bab7c",
+    "promoSpacing": "sha256:keptspacingfingerprint"
+  }
+}

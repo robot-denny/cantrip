@@ -1,0 +1,4 @@
+exit: 0
+args: mark promoTile --page page.json --dossier dossier.json --ignored alertBanner
+stdout_matches: expected-source.json
+not_contains: Traceback

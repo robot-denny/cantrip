@@ -1,0 +1,5 @@
+exit: 1
+args: audit --guides guides.json --inventory inventory.json
+contains: ignored[1]
+contains: not an alias
+not_contains: Guide audit

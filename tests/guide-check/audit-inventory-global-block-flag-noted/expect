@@ -1,0 +1,4 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json --global-block siteSettings
+contains: note: --global-block names siteSettings, and this run reads a prepared inventory
+contains: Findings: none.

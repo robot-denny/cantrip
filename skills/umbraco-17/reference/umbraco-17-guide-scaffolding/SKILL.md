@@ -1,6 +1,6 @@
 ---
 name: umbraco-17-guide-scaffolding
-description: The schema an editor-facing guides section needs in Umbraco 17 — the single guide document type that serves generated and hand-authored guides alike, the property-row element type and which of its six columns tooling may write, the showcase element types a token-reading styleguide page is built from, the stored source reference, and why ownership follows a page's provenance rather than a field's declaration. Consult when creating or changing a guides section's document types, when scaffolding or rendering a styleguide page, when deciding whether a value on a guide page may be overwritten, or when building anything that reads or writes editor-facing guide pages.
+description: The schema an editor-facing guides section needs in Umbraco 17 — the single guide document type that serves generated and hand-authored guides alike, the property-row element type and which of its six columns tooling may write, the showcase element types a token-reading styleguide page is built from, the stored source reference, the record of generated text, the ignore list on the guides node, and why ownership follows a page's provenance rather than a field's declaration. Consult when creating or changing a guides section's document types, when scaffolding or rendering a styleguide page, when deciding whether a value on a guide page may be overwritten, or when building anything that reads or writes editor-facing guide pages.
 ---
 
 # Guide scaffolding: the document types a guides section needs
@@ -64,6 +64,9 @@ second thing to be wrong about which field an editor's work lives in, and being 
 costs somebody their writing.
 
 What a document type needs and the register does not carry is the property editor each field takes.
+The table below covers the fields an editor reads. The two the tooling keeps for itself, the stored
+reference and the record of generated text, have sections of their own below (*The stored
+reference*, *The record of generated text*).
 
 **The third column is a worked example, not a rule.** It is how one shipped guides section renders
 these fields, written down because a project starting from nothing is better off knowing what worked
@@ -105,7 +108,7 @@ row**:
 | `required` | true/false | Machine-owned |
 | `tab` | text | Machine-owned |
 | `group` | text | Machine-owned |
-| `information` | rich text | **Seeded-once** — a person's prose from the moment it is written |
+| `information` | rich text | **Seeded-once** — a person's prose from the moment anyone edits it |
 
 - **The alias is the identity, so it is never rewritten in place.** Rows are matched on the alias,
   case-folded: a label changes, a tab moves, and it is still the same field an editor fills in. A
@@ -117,7 +120,10 @@ row**:
 - **Rows are flat, each carrying its own `tab` and `group` as fields.** So a property moving between
   tabs is a field change on one row rather than a row migrating between nested containers — a smaller
   diff and a smaller schema both.
-- **`information` is never compared, never proposed, and never overwritten.** Option lists and
+- **`information` is never compared against the source, and never overwritten once edited.** The one
+  exception is a note the page's record shows is still exactly what the tooling wrote: nobody has
+  touched it, so a regeneration may rewrite it (see *The record of generated text*). The record keys
+  notes by the row's alias, so a renamed label keeps its note's protection. Option lists and
   recommendations belong inside this prose, not in structured sub-fields: no serialization format
   records an option's default, so a structured option field could only ever carry one by inventing
   it. The prose can say `(Default)` because a person put it there.
@@ -285,6 +291,40 @@ explicitly; a producer that failed to read the property says nothing at all. Col
 a failed read into "every guide here was written by hand" — so a read that produced nothing is
 refused, and an explicit "none" is read as a hand-authored page.
 
+## The record of generated text
+
+`guideGenerated` records which text on a guide page the tooling wrote, so a later run can tell text
+nobody touched from text somebody rewrote. It is machine-owned (the register says so, and says why),
+and **read-only to editors**: a label, or a plain text editor, holding a small piece of JSON. An
+editor has nothing to write in it, and a record somebody edited by hand is a record that protects the
+wrong text.
+
+```json
+{"recordVersion": 1,
+ "fields": {"guidePurpose": "sha256:…", "guideWhenToUse": "sha256:…"},
+ "rows":   {"<property alias>": "sha256:…"}}
+```
+
+| Part | What it holds |
+|---|---|
+| `recordVersion` | The shape's version. A record without one was not written by this tooling, and is refused rather than trusted |
+| `fields` | One fingerprint per prose field the tooling wrote: the purpose sentence and the when-to-use section |
+| `rows` | One fingerprint per property row note the tooling wrote, keyed by the row's alias rather than its label, so a renamed label keeps its note's protection |
+
+**A fingerprint is `sha256:` plus the hex SHA-256 of the exact stored value.** It is taken from what
+the CMS stored, read back after the write, never from what was sent: a rich text editor that tidies
+markup on save would otherwise make fresh text read as edited on the very next run. The definition,
+and why nothing is normalized first, are in the `guide` spell's `scripts/guidelib/fingerprint.py`.
+Read them there.
+
+**A field or row with no entry has no record, and is kept.** The absence of a record is never read as
+permission to rewrite. The live examples are never in the record either: they are an arrangement a
+person makes, not text a model wrote.
+
+**The record is stored once, on the page, for the reason the stored reference is.** It travels with
+the page between environments, and anything that reads it (the spell, or a dashboard a project
+builds) reads the same record.
+
 ## Ownership is a consequence of provenance
 
 **A field's declaration does not say who owns its value; the page's provenance does.** The model is
@@ -296,7 +336,7 @@ class:
 | Class | What it means |
 |---|---|
 | Machine-owned | Regenerated when the source signature changes, presented as a difference, and written only after a person approves it |
-| Seeded-once | Written when the page was created and never touched again. Reported when it may have gone stale, never replaced |
+| Seeded-once | Written when the page was created. Reported when it may have gone stale, and replaced only where the page's record shows nobody has edited it |
 | Never-touched | The page's name, address and visibility settings, the editorial levers, the media a person uploaded, and every field the register does not name |
 
 **On a page carrying no reference there are no machine-owned fields at all.** Nothing on it was
@@ -306,6 +346,23 @@ in at once — no field is declared human-owned, a *page* is. Ownership declared
 describe both kinds of page on one document type, which is why one document type is enough.
 
 So the register is read for **what a field is for**, and never for permission to write it.
+
+**Provenance has a third input, and it works one field at a time: the record.** The stored reference
+says whether the tooling generated the page; the register says what each field is for; the record of
+generated text says whether the tooling wrote this field's current text. It decides one thing only,
+whether a seeded prose field may be refreshed when the source changes. The purpose sentence, the
+when-to-use section and each row's information note are read against it, in one of three states:
+
+| State | What it means | What a regeneration does |
+|---|---|---|
+| as generated | The value still has its recorded fingerprint, so nobody has edited it | Rewrites it, after a person approves |
+| edited | The value differs from its fingerprint, by any amount | Keeps it, and proposes nothing in its place |
+| no record | The record holds no entry for it | Keeps it, exactly as an edited field |
+
+The record never widens the first input. On a page carrying no reference nothing is rewritten,
+whatever the record holds, because a hand-written page has no machine-owned text to refresh. And the
+live examples are seeded but never refreshed, record or not. The states are implemented in the
+`guide` spell's `scripts/guidelib/changeplan.py`, beside the register.
 
 **The classes apply per column inside a row, not only per field.** One `editorGuidePropertyRow` is
 machine-owned in five columns and seeded-once in the sixth, at the same time — which is the property
@@ -354,6 +411,17 @@ They will normally agree, and nothing reconciles them: the stored reference's ki
 a guide moved between containers is regrouped by the move alone — no field to update, and no run
 needed to make it true.
 
+**A global block's guide is filed with blocks.** Some projects build a reusable block as a document
+an editor creates once and pages pick by reference, rather than as an element type. Its dossier
+reports a document type, but an editor places it and needs a guide for it as they would any block,
+so its guide goes under the container that holds block guides, not the page-type one. A document type
+is a global block when its name ends in the word "Block", or when the `## Editor guides` slot lists
+its alias. The name rule reads only the last space-separated word, so "PromoBlock", "Hero-Block"
+and "Promo Block (legacy)" are missed and a page named "Building Block" is caught: list the
+misses in the slot, and treat a wrong catch as something to rename. The rule is argued in the `guide` spell's `scripts/guidelib/inventory.py`, which reports
+global blocks in a list of their own. The stored reference's kind is still what the dossier said: it
+is opaque, and the container is what groups the guide.
+
 **A kind with no container is a container to create, not a name to go looking for.** Where no child
 of the guides node carries the kind, that container does not exist yet. Falling back to a
 similarly-named node is how a guide ends up filed under something unrelated.
@@ -373,7 +441,8 @@ is not one a tool should resolve by accident.
 of the tree, wrong from the moment an editor adds, renames, unpublishes or reorders a guide — so the
 index would need a regeneration run to be correct and would be quietly incorrect between runs.
 Derived, publishing a guide is the whole of adding it to the index. It follows that an index page
-carries no `guideSource` either: nothing generated it, so there is nothing to record.
+carries no `guideSource` either: nothing generated it, so there is nothing to record. Its one field
+is the ignore list (see *The ignore list* below), which names components rather than guides.
 
 **The editorial levers live on the guide page, not on the index** — the index blurb (`guideBlurb`),
 the guide's own name, and its sort order among its siblings. Two reasons. A lever on the index is a
@@ -405,6 +474,26 @@ prose is rendered somewhere other than the guide.
 
 This pack ships no template, so this is a constraint on what a project's own index component may
 resolve, not markup a project has to adopt.
+
+### The ignore list
+
+`guideIgnored`, on the guides node, names the components a project has decided need no guide: a
+spacer, a wrapper only developers place, a type kept for old content. The audit reports them apart,
+never as undocumented or stale, and the `guide` spell stops rather than generate a guide for one.
+
+**It stores one alias per line, as plain text, and it is read-only to editors.** A label or a plain
+text editor will hold it. The list changes through `/guide --ignore` and `/guide --unignore`, which
+check an alias against the project before adding it and show the change before writing it; a list
+typed straight into the field skips both. Aliases are compared ignoring case. A project that already
+stores the list in another form keeps that form: the spell writes the list back in whatever form the
+field held.
+
+**The field is optional, and a node without it ignores nothing.** The first `/guide --ignore` on such
+a node stops and asks for the field to be added to the guides node's document type, because the
+spell writes content and never schema. It is not a render-time field, so the
+index template never reads it. It lives on the guides node rather than in a project's configuration
+so that it travels with the guides between environments, and so the spell and any dashboard a project
+builds read one list.
 
 ## The three slots a guides section needs
 
@@ -466,8 +555,11 @@ The slot records the guides node's key and the aliases the project actually used
 | index page type | `editorGuideIndex` |
 | stored reference property | `guideSource` |
 | index blurb property | `guideBlurb` |
+| record of generated text property, on the guide page | `guideGenerated` |
+| ignore list property, on the guides node | `guideIgnored` |
 | showcase element types | `styleguideColorSwatch`, `styleguideTypeSpecimen`, `styleguideElementSpecimen` |
 | the styleguide's showcase palette | `styleguideShowcase` **to create, never to assume** — see below |
+| global blocks the project lists | **no default** — the aliases of document types built as reusable blocks that the name rule does not catch |
 
 Every row is a default, for the reason this file opens with: two document types cannot share an
 alias, so a project that already used one of these names for something unrelated picked another, and
@@ -478,8 +570,8 @@ a guide needs both — where to look and what to look for — so two headings wo
 and the other forgotten, and a filled alias list against an unrecorded node reads as a configured
 project that finds no guides.
 
-**The showcase palette is the one row here that is read rather than written.** The other rows tell a
-tool what to create and where; this one tells whatever counts documentable units what to leave out —
+**The showcase palette is read rather than written, like the listed global blocks below.** The other
+rows tell a tool what to create and where; this one tells whatever counts documentable units what to leave out —
 both the inventory report and the audit, which count separately (see *The showcase element types*).
 It is a palette name rather than the three element aliases beside it because one name is one thing to
 record, and a fourth showcase element added later inherits the exclusion without a fifth line
@@ -493,6 +585,13 @@ shape refuses (see *The audit's report shape*). So a project that has not record
 wrong line rather than a wrong count: its showcases are reported as undocumented, which is visible
 and has a one-line fix. That is the same direction this file chose for the guides node's key — a fact
 only the project can supply is asked for rather than guessed at, and its absence shows.
+
+**The listed global blocks are read the same way, and have no default at all.** They tell whatever
+counts documentable units which document types to treat as blocks beyond those whose name ends in the
+word "Block" (see *Where guides live*). The spell passes each one to `inventory` and `audit` as
+`--global-block <alias>`, and both reports name every listed alias, including one that matched
+nothing. A slot listing none leaves the name rule alone deciding, which is a normal state and not a
+missing fact.
 
 **Slot:** `.agents/config/stack.md` → `## Design tokens`
 **If empty:** detect the token layers the repository holds and read from the authoritative one. **A

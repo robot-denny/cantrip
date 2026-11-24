@@ -1,0 +1,9 @@
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": {"alias": "alertBanner", "kind": "element", "signature": "sha256:promotileasgenerated", "rung": "deploy"},
+  "fields": {
+    "guidePurpose": "Use a promo tile to point at something an editor wants noticed.",
+    "name": "How to use a Promo Tile"
+  }
+}

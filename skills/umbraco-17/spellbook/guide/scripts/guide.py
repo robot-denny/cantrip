@@ -50,10 +50,14 @@ declared once in `guidelib/__init__.py`.
     guide.py extract   <alias> [--project-root DIR] [--adapter deploy|usync|models]
     guide.py signature <alias> [--project-root DIR] [--adapter deploy|usync|models]
     guide.py inventory [--json] [--project-root DIR] [--adapter deploy|usync|models]
-                       [--exclude-palette NAME]
+                       [--exclude-palette NAME] [--global-block ALIAS ...]
     guide.py audit     --guides FILE [--inventory FILE] [--strict]
                        [--project-root DIR] [--adapter RUNG] [--exclude-palette NAME]
+                       [--global-block ALIAS ...]
     guide.py plan      <alias> --page FILE [--dossier FILE] [--json]
+                       [--project-root DIR] [--adapter RUNG]
+    guide.py record    --page FILE [--field NAME ...] [--row ALIAS ...]
+    guide.py mark      <alias> --page FILE [--ignored ALIAS ...] [--dossier FILE]
                        [--project-root DIR] [--adapter RUNG]
 
 `extract` prints the whole dossier; `signature` prints its `sourceSignature` and nothing else,
@@ -105,6 +109,23 @@ reference — the write that makes a page's machine-owned fields machine-owned f
 reported as pending approval rather than as a value to write. `comparison` reads `noReference`
 and `proposeOnly` is true, so a consumer never has to infer any of that.
 
+`record` runs after the spell has written a page and read it back. It prints the page's new
+record of generated text -- the value the spell writes into the page's `guideGenerated` field --
+fingerprinting the read-back values of exactly the model-authored fields (`--field`) and row
+notes (`--row`) the spell just wrote, and keeping every other entry the page's record already
+held -- except an entry naming a row the page's table no longer holds, which is dropped. A
+later run compares those fingerprints to tell text nobody edited, which may be
+refreshed, from text somebody rewrote, which is kept. `guidelib/fingerprint.py` defines the
+fingerprint and carries the reasoning.
+
+`mark` is "mark up to date": a person has looked at a stale guide and decided it still holds.
+It prints the page's new stored reference -- the same alias, kind and rung with the source's
+current signature -- as the JSON the spell writes into `guideSource`, and only when the plan's
+comparison says `differs`. It refuses, with the reason on stderr and nothing on stdout, for a
+page with no reference, one already matching, one that cannot be compared (another rung, or no
+signature on either side), a read that cannot be completed, and an alias `--ignored` names.
+A refusal exits 1.
+
 `--project-root` defaults to the current directory, and the serialization folder is searched
 for beneath it (the `paths.md → ## Umbraco` slot's fallback). `--adapter` defaults to whichever
 format the project carries. No path, host or version is hardcoded; the spell reads the slots
@@ -136,6 +157,7 @@ from guidelib import changeplan    # noqa: E402
 from guidelib import deploy        # noqa: E402
 from guidelib import dossier       # noqa: E402
 from guidelib import drain_notes   # noqa: E402
+from guidelib import fingerprint   # noqa: E402
 from guidelib import inventory     # noqa: E402
 from guidelib import models        # noqa: E402
 from guidelib import usync         # noqa: E402
@@ -306,7 +328,8 @@ def cmd_inventory(args):
         # report does not pay for values it never prints.
         doc = inventory.determine(adapter, args.project_root,
                                   with_signatures=args.json,
-                                  exclude_palette=args.exclude_palette)
+                                  exclude_palette=args.exclude_palette,
+                                  global_blocks=args.global_block)
     finally:
         report_read_notes()
     print(json.dumps(doc, indent=2) if args.json else inventory.report(doc))
@@ -336,7 +359,7 @@ def cmd_audit(args):
     # record a duplicate the operator wants to know about even when the project read then
     # fails, and a note computed and thrown away with the exception is a note nobody sees.
     try:
-        guides = audit.load_guides(args.guides)
+        guides, ignored = audit.load_guides(args.guides)
         if args.inventory:
             # A supplied inventory was read somewhere else, so whatever it excluded is already
             # in it and this run has nothing to apply. Said out loud rather than ignored: a
@@ -351,6 +374,13 @@ def cmd_audit(args):
                     "  The exclusion that document was written under is the one in force — "
                     "this flag applies only where the project is read here."
                     % (PROG, args.exclude_palette, args.inventory), file=sys.stderr)
+            if args.global_block:
+                print(
+                    "%s: note: --global-block names %s, and this run reads a prepared "
+                    "inventory from %s rather than the project.\n"
+                    "  The global blocks that document was written with are the ones in force "
+                    "— this flag applies only where the project is read here."
+                    % (PROG, ", ".join(args.global_block), args.inventory), file=sys.stderr)
             doc = audit.load_inventory(args.inventory)
         else:
             adapter = resolve_adapter(args.project_root, args.adapter)
@@ -358,8 +388,9 @@ def cmd_audit(args):
             # one place they are read rather than printed, so this is the caller paying for
             # them.
             doc = inventory.determine(adapter, args.project_root, with_signatures=True,
-                                      exclude_palette=args.exclude_palette)
-        result = audit.run(doc, guides)
+                                      exclude_palette=args.exclude_palette,
+                                      global_blocks=args.global_block)
+        result = audit.run(doc, guides, ignored)
         rendered = audit.report(result)
     finally:
         report_read_notes()
@@ -397,6 +428,49 @@ def cmd_plan(args):
     finally:
         report_read_notes()
     print(rendered)
+    return 0
+
+
+def cmd_record(args):
+    """The page's record of generated text, after the spell wrote some of it.
+
+    One input, and it is the page as the CMS now holds it: the spell reads every written field
+    back before calling this, so what is fingerprinted is what was stored rather than what was
+    sent. A rich-text editor that reformats markup on save would otherwise make the text the
+    spell just wrote read as "edited" on the next run.
+
+    Prints the whole record, merged, as the value to write -- not a fragment to merge on the
+    other side of the seam, where a merge done in prose is a merge done differently each time.
+    Nothing is written here either.
+    """
+    page = changeplan.load_written_page(args.page)
+    fields, rows = changeplan.written_values(
+        args.page, page, args.field or [], args.row or [])
+    record = fingerprint.build_record(page["generated"], fields, rows,
+                                      changeplan.held_row_aliases(page))
+    print(json.dumps(record, indent=2))
+    return 0
+
+
+def cmd_mark(args):
+    """The stored reference to write when a person marks a stale guide up to date.
+
+    Prints the new `source` as JSON, the value the spell writes verbatim, and nothing else on
+    stdout. Every refusal is an error on stderr with no reference printed, so a caller that
+    writes whatever it is handed cannot write one that was refused. Nothing is written here.
+    """
+    try:
+        changeplan.refuse_if_ignored(args.alias, args.ignored)
+        page = changeplan.load_page(args.page, args.alias)
+        if args.dossier:
+            entry = changeplan.load_dossier(args.dossier, args.alias)
+        else:
+            adapter = resolve_adapter(args.project_root, args.adapter)
+            entry = adapter.extract(args.project_root, args.alias)
+        source = changeplan.mark(page, entry)
+    finally:
+        report_read_notes()
+    print(json.dumps(source, indent=2))
     return 0
 
 
@@ -488,10 +562,50 @@ def build_parser():
              % ", ".join(sorted(ADAPTERS)))
     plan_cmd.set_defaults(handler=cmd_plan)
 
+    record_cmd = subparsers.add_parser(
+        "record",
+        help="print a guide page's record of generated text after the spell wrote some of it")
+    record_cmd.add_argument(
+        "--page", required=True, metavar="FILE",
+        help="JSON the spell reads back from the CMS after writing: the page file `plan` "
+             "reads, carrying the page's existing record as 'generated'")
+    record_cmd.add_argument(
+        "--field", action="append", metavar="NAME",
+        help="a model-authored field the spell just wrote (%s); repeatable"
+             % ", ".join(changeplan.MODEL_AUTHORED_FIELDS))
+    record_cmd.add_argument(
+        "--row", action="append", metavar="ALIAS",
+        help="the property alias of a row whose information note the spell just wrote; "
+             "repeatable")
+    record_cmd.set_defaults(handler=cmd_record)
+
+    mark_cmd = subparsers.add_parser(
+        "mark",
+        help="print the stored reference that marks a stale guide up to date, or refuse")
+    mark_cmd.add_argument("alias", help="the component's document-type or element-type alias")
+    mark_cmd.add_argument(
+        "--page", required=True, metavar="FILE",
+        help="JSON the spell reads from the CMS: the page file `plan` reads")
+    mark_cmd.add_argument(
+        "--ignored", action="append", metavar="ALIAS",
+        help="an alias on the guides node's ignore list; repeatable. A component it names is "
+             "refused")
+    # Exclusive for `plan`'s reason: a supplied dossier names no format to force.
+    mark_source = mark_cmd.add_mutually_exclusive_group()
+    mark_source.add_argument(
+        "--dossier", default=None, metavar="FILE",
+        help="compare against a pre-extracted dossier (as `extract` emits one) instead of "
+             "reading the project")
+    mark_source.add_argument(
+        "--adapter", default=None, metavar="RUNG",
+        help="force a serialization format instead of detecting one: %s"
+             % ", ".join(sorted(ADAPTERS)))
+    mark_cmd.set_defaults(handler=cmd_mark)
+
     # Shared by every subcommand that reads the project rather than a supplied JSON file.
-    # `audit` and `plan` take `--project-root` here and declare their own `--adapter` above,
-    # where the mutually exclusive group can hold it.
-    for sub in (extract, signature, inventory_cmd, audit_cmd, plan_cmd):
+    # `audit`, `plan` and `mark` take `--project-root` here and declare their own `--adapter`
+    # above, where the mutually exclusive group can hold it.
+    for sub in (extract, signature, inventory_cmd, audit_cmd, plan_cmd, mark_cmd):
         sub.add_argument(
             "--project-root", default=".", metavar="DIR",
             help="the project to read (default: the current directory)")
@@ -508,6 +622,13 @@ def build_parser():
             help="a block-editor palette whose content blocks are not documentable units — "
                  "the palette a project registers its styleguide showcase elements in. Named "
                  "in the report, never applied silently")
+        # Registered on both for the same reason, and repeatable: a project lists its global
+        # blocks one alias at a time, from its own config.
+        sub.add_argument(
+            "--global-block", action="append", default=[], metavar="ALIAS",
+            help="a document type the project builds as a reusable block, beside those whose "
+                 "name ends in the word Block. Repeatable. Named in the report, and one that "
+                 "matches no document type is reported")
     for sub in (extract, signature, inventory_cmd):
         sub.add_argument(
             "--adapter", default=None, metavar="RUNG",

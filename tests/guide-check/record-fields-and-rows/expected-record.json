@@ -1,0 +1,10 @@
+{
+  "recordVersion": 1,
+  "fields": {
+    "guidePurpose": "sha256:2bbedb8f8aec4e8eeb26b3f83403eab6264c50df1c289221ce1325c78b516e44"
+  },
+  "rows": {
+    "promoHeading": "sha256:8390012dc3407ab69bc05dc1db03bac985aa704803475a9ae8801ed3429bab7c",
+    "promoLegacyStyle": "sha256:b1760c4bcbcae9f29e903c394f45f093981060543a019e10c8d66e0c4cf3efde"
+  }
+}

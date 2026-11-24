@@ -1,0 +1,24 @@
+Guide audit, read at the deploy rung.
+  4 documentable units: 1 component + 2 global blocks + 1 proposed page type.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+  A document type whose name ends in the word "Block", or whose alias the project lists.
+  A reusable block stored as a document: pages reuse it by reference, so it is documented
+  like a block and never proposed as a page. The name rule is a heuristic, so each entry
+  names the signal that caught it: name, listed, or both.
+  Listed by the project: siteSettings.
+  3 guide pages read: 3 claim a source, 0 claim none.
+  Not compared: 3 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 1
+  A documentable unit that no guide page's stored reference names: a component an editor
+  can place from a block-editor palette, or a document type proposed as a page. Matched
+  on the alias, case-insensitively, never on a page's name or its address.
+    promoBlock (Promo Block)
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: 1 undocumented, 0 orphaned, 0 stale.

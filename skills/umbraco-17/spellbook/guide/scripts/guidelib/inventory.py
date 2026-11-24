@@ -69,6 +69,32 @@ splits what it did not propose into the two shapes it distinguishes — reachabl
 (a folder or a container) and reachable from nowhere (an abstract base). A wrong determiner that
 states its rule is fixable by the person reading it; one that decides quietly is not.
 
+## Global blocks: a block stored as a document
+
+Some projects build a reusable block as a content node rather than an element type: a document
+type an editor creates once, usually under a folder, which pages then pick by reference. It is
+placed like a block and an editor needs a guide for it like one, and no palette names it, so the
+palette rule above never counts it. Left to the page-type rule it is wrong in both directions:
+proposed as a page when it carries a template, filed as a folder or a base when it does not.
+
+So a document type is a **global block** when its name ends in the word "Block", or when the
+project lists its alias. The name rule is a heuristic and is stated as one: it is a word, matched
+case-insensitively, so "Promo Block" is caught and "Blockade Page" is not, and an element type's
+name is never read for it (a palette already decides what an element type is). The word is the
+last one the name splits into on spaces, so it misses what a person would call a block --
+"PromoBlock", "Hero-Block", "Promo Block (legacy)" -- and catches a page somebody named
+"Building Block". Those are what the listed aliases are for. A type a palette also offers is
+counted once, as a component: the palette is the stronger signal. The listed
+aliases are a project fact and arrive through a flag, like the excluded palette's name. **The
+report says which signal caught each global block, and names every listed alias**, including
+one that caught nothing because it names an element type or no content type at all: a typed
+alias that silently matched nothing would leave a block reported as a folder with no hint why.
+
+Global blocks are a list of their own rather than more `components`: a consumer that has always
+read `components` as palette blocks is not handed document types there. They are documentable,
+and taken out of the page-type proposals and the naming convention's measurement, since neither
+is about them.
+
 ## Why the counts are reported before anything acts on them
 
 The audit's primary output is a set difference against this inventory, so the report states
@@ -104,7 +130,9 @@ from guidelib import note
 # module name would be shadowed by it inside exactly the function that needs it.
 from guidelib import report as rpt
 
-INVENTORY_VERSION = 1
+# 2 added `globalBlocks` and `globalBlocksListed`. The audit reads both versions; a version-1
+# document simply holds no global blocks.
+INVENTORY_VERSION = 2
 
 # How many templated document types it takes before a shared alias suffix means anything, and
 # how large a share of them the suffix has to cover. Two and a half: one templated type shares
@@ -123,6 +151,19 @@ ALIAS_SEGMENT_RE = re.compile(r"[A-Z]+(?![a-z])|[A-Z][a-z0-9]*|[a-z0-9]+")
 # The reason codes attached to a document type this determiner did not propose. Codes rather
 # than sentences, because a consumer branches on them; the sentences are below.
 REASON_CONTAINER = "folder-or-container"
+
+# The two signals that make a document type a global block, as a consumer branches on them.
+SIGNAL_NAME = "name"
+SIGNAL_LISTED = "listed"
+
+# The word a global block's name ends in. A word rather than a suffix, so "Blockade Page" and a
+# one-word "Roadblock" are not caught.
+GLOBAL_BLOCK_WORD = "block"
+
+# What a listed alias matched, carried per alias in `globalBlocksListed`. None for no content
+# type at all.
+MATCHED_DOCUMENT = "document-type"
+MATCHED_ELEMENT = "element-type"
 REASON_BASE = "abstract-base-or-composition"
 
 # --- the rules, stated once and rendered twice ---------------------------------
@@ -166,6 +207,21 @@ RULE_EXCLUDED_PALETTE = (
     "exclusion that changed a count silently would be worse than the wrong line it fixes.",
 )
 
+RULE_GLOBAL_BLOCKS = (
+    'A document type whose name ends in the word "Block", or whose alias the project lists.',
+    "A reusable block stored as a document: pages reuse it by reference, so it is documented",
+    "like a block and never proposed as a page. The name rule is a heuristic, so each entry",
+    "names the signal that caught it: name, listed, or both.",
+)
+# The project's own values, kept off the fixed lines above for the reason the excluded
+# palette's are.
+GLOBAL_LISTED_LINE = "Listed by the project: %s."
+GLOBAL_UNMATCHED_CAPTION = "Listed, and caught nothing: %d"
+GLOBAL_UNMATCHED_REASON = {
+    MATCHED_ELEMENT: "%s, which names an element type, not a document type",
+    None: "%s, which names nothing in this read",
+}
+
 RULE_PAGE_TYPES = (
     "PROPOSED, not decided. No flag separates a page type from a folder, a container, or an",
     "abstract base, so a document type is proposed when it carries a template or matches the",
@@ -184,6 +240,7 @@ CAPTION_COMPONENTS = "Components an editor can place"
 CAPTION_SETTINGS = "Excluded, the settings half of a block"
 CAPTION_UNPALETTED = "Excluded, offered by no palette"
 CAPTION_UNRESOLVED = "Offered by a palette, absent from this export"
+CAPTION_GLOBAL_BLOCKS = "Global blocks, reusable blocks stored as documents"
 
 CAPTION_PAGE_TYPES = "Page types PROPOSED for a human to confirm"
 CAPTION_NOT_PROPOSED = {
@@ -192,7 +249,8 @@ CAPTION_NOT_PROPOSED = {
 }
 
 
-def determine(adapter, project_root, with_signatures=True, exclude_palette=None):
+def determine(adapter, project_root, with_signatures=True, exclude_palette=None,
+              global_blocks=()):
     """Classify every component in the project and return the inventory document.
 
     The whole project is read once, through one catalog, which is then handed to every
@@ -207,6 +265,11 @@ def determine(adapter, project_root, with_signatures=True, exclude_palette=None)
     therefore arrives from the caller rather than being guessed at here. **A name that matches
     no palette excludes nothing and still prints its line**: the exclusion is declared, so a
     name typed wrongly has to be visible rather than absent.
+
+    `global_blocks` is the same kind of project fact: aliases of document types the project
+    builds as reusable blocks, beside the ones this determiner catches by name. Each listed
+    alias is carried with what it matched, so one naming an element type or nothing is
+    reported rather than dropped.
     """
     catalog = adapter.Catalog(project_root)
     # First, because it is the one call a rung may refuse outright. Reading the components
@@ -269,13 +332,25 @@ def determine(adapter, project_root, with_signatures=True, exclude_palette=None)
                   if e["alias"].lower() not in lower_content
                   and e["alias"].lower() not in lower_settings]
 
-    convention = _naming_convention(document_types)
-    proposed, not_proposed = _page_types(document_types, listed, convention["suffix"])
+    globals_found, globals_listed = _global_blocks(document_types, by_alias, global_blocks)
+    # A type an editor places from a palette is a component, whatever its name says. Umbraco
+    # offers only element types in a palette, so a serialized palette naming a document type is
+    # unusual, but counting one type in both lists would put it into the documentable total
+    # twice. The palette is the stronger signal, so the component wins.
+    placed = {c["alias"].lower() for c in components}
+    globals_found = [g for g in globals_found if g["alias"].lower() not in placed]
+    caught = {entry["alias"].lower() for entry in globals_found}
+    # Out of the page-type question entirely, the convention's measurement included: a global
+    # block is not a page, so its template or its alias suffix is no evidence about pages.
+    page_candidates = [e for e in document_types if e["alias"].lower() not in caught]
+
+    convention = _naming_convention(page_candidates)
+    proposed, not_proposed = _page_types(page_candidates, listed, convention["suffix"])
 
     # Only when a machine is going to read them. The text report never prints a signature, so
     # computing one per component there is a full extract each for a value that is discarded.
     if with_signatures:
-        for entry in proposed:
+        for entry in globals_found + proposed:
             entry["signature"] = _signature(adapter, project_root, catalog, entry["alias"])
 
     doc = {
@@ -287,6 +362,7 @@ def determine(adapter, project_root, with_signatures=True, exclude_palette=None)
         "palettesRead": len(palettes),
         "rule": {
             "components": " ".join(RULE_COMPONENTS),
+            "globalBlocks": " ".join(RULE_GLOBAL_BLOCKS),
             "settingsModels": " ".join(RULE_SETTINGS),
             "unpalettedElementTypes": " ".join(RULE_UNPALETTED),
             "unresolvedPaletteEntries": " ".join(RULE_UNRESOLVED),
@@ -303,6 +379,8 @@ def determine(adapter, project_root, with_signatures=True, exclude_palette=None)
             for palette in sorted(palettes, key=lambda p: (p["name"], p["editor"]))
         ],
         "components": components,
+        "globalBlocks": globals_found,
+        "globalBlocksListed": globals_listed,
         "settingsModels": [_named(by_alias, alias) for alias in settings_only],
         "unpalettedElementTypes": [_named(by_alias, alias)
                                    for alias in sorted(unpaletted, key=str.lower)],
@@ -414,6 +492,65 @@ def _excluded_aliases(palettes, name):
             if alias and alias != dossier.PALETTE_UNRESOLVED:
                 target.add(alias.lower())
     return named - elsewhere, matched or name
+
+
+def _global_blocks(document_types, by_alias, listed_aliases):
+    """`(global_blocks, listed)`: the document types caught, and every listed alias's match.
+
+    A global block carries the signals that caught it, `name` before `listed`, so a reader can
+    tell the heuristic's catches from the project's own. Listed aliases are matched
+    case-insensitively, deduped in the order given, and the project's own spelling is what the
+    entry carries.
+    """
+    wanted, listed = set(), []
+    for alias in listed_aliases or ():
+        alias = alias.strip()
+        if not alias or alias.lower() in wanted:
+            continue
+        wanted.add(alias.lower())
+        entry = by_alias.get(alias.lower())
+        if entry is None:
+            matched = None
+        elif entry["kind"] == dossier.KIND_ELEMENT:
+            matched = MATCHED_ELEMENT
+        else:
+            matched = MATCHED_DOCUMENT
+        listed.append({"alias": alias, "matched": matched})
+
+    found = []
+    for entry in sorted(document_types, key=lambda e: e["alias"].lower()):
+        signals = []
+        words = (entry["name"] or "").split()
+        if words and words[-1].lower() == GLOBAL_BLOCK_WORD:
+            signals.append(SIGNAL_NAME)
+        if entry["alias"].lower() in wanted:
+            signals.append(SIGNAL_LISTED)
+        if signals:
+            found.append({
+                "alias": entry["alias"],
+                "name": entry["name"],
+                "kind": entry["kind"],
+                "signals": signals,
+            })
+    return found, listed
+
+
+def global_block_lines(listed):
+    """The listed aliases' report lines: the line naming them, then any that caught nothing.
+
+    Rendered here and printed by both reports, for the reason `excluded_palette_lines` is. The
+    aliases are wrapped, unlike the fixed rule lines, because their length is the project's.
+    """
+    if not listed:
+        return ()
+    lines = textwrap.wrap(GLOBAL_LISTED_LINE % ", ".join(i["alias"] for i in listed),
+                          rpt.WRAP_WIDTH)
+    missed = [i for i in listed if i["matched"] != MATCHED_DOCUMENT]
+    if missed:
+        lines.append(GLOBAL_UNMATCHED_CAPTION % len(missed))
+        lines.extend("  " + GLOBAL_UNMATCHED_REASON[i["matched"]] % i["alias"]
+                     for i in missed)
+    return tuple(lines)
 
 
 def excluded_palette_lines(doc):
@@ -595,6 +732,19 @@ def report(doc):
         for line in RULE_UNRESOLVED:
             lines.append("    %s" % line)
 
+    # Printed when anything was caught or listed, and silent otherwise: a section reading zero
+    # with nothing listed has no count it changed to explain.
+    if doc["globalBlocks"] or doc["globalBlocksListed"]:
+        lines.append("")
+        lines.append("%s: %d" % (CAPTION_GLOBAL_BLOCKS, len(doc["globalBlocks"])))
+        lines.extend("  " + line for line in RULE_GLOBAL_BLOCKS)
+        held = global_block_lines(doc["globalBlocksListed"])
+        # The listed line, then the blocks, then what the list caught nothing with.
+        lines.extend("  " + line for line in held[:1])
+        for item in doc["globalBlocks"]:
+            lines.append("    %s: %s" % (rpt.item(item), ", ".join(item["signals"])))
+        lines.extend("  " + line for line in held[1:])
+
     lines.append("")
     lines.append("%s: %d of %d document types"
                  % (CAPTION_PAGE_TYPES, len(doc["pageTypesProposed"]),
@@ -625,13 +775,25 @@ def report(doc):
             lines.append("      %s" % rpt.item(item))
 
     lines.append("")
-    lines.append("Documentable: %d component%s + %d proposed page type%s = %d."
-                 % (len(doc["components"]),
-                    "" if len(doc["components"]) == 1 else "s",
-                    len(doc["pageTypesProposed"]),
-                    "" if len(doc["pageTypesProposed"]) == 1 else "s",
-                    len(doc["components"]) + len(doc["pageTypesProposed"])))
+    lines.append("Documentable: %s = %d."
+                 % (documentable_terms(len(doc["components"]), len(doc["globalBlocks"]),
+                                       len(doc["pageTypesProposed"])),
+                    len(doc["components"]) + len(doc["globalBlocks"])
+                    + len(doc["pageTypesProposed"])))
     return "\n".join(lines)
+
+
+def documentable_terms(components, global_blocks, pages):
+    """`N components [+ N global blocks] + N proposed page types`, shared by both reports.
+
+    The global-block term appears only when there is one, so a project without any reads
+    exactly as it did before global blocks were counted.
+    """
+    terms = ["%d component%s" % (components, "" if components == 1 else "s")]
+    if global_blocks:
+        terms.append("%d global block%s" % (global_blocks, "" if global_blocks == 1 else "s"))
+    terms.append("%d proposed page type%s" % (pages, "" if pages == 1 else "s"))
+    return " + ".join(terms)
 
 
 def _section(lines, caption, rule, items):

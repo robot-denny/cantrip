@@ -1,0 +1,8 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json
+contains: removed   promoLegacyStyle (Promo Legacy Style)
+contains: carries an information note — removal needs your approval
+contains: its note's entry in the record of generated text goes with the row
+contains: No prose on this page is rewritten
+not_contains: a model rewrites
+not_contains: Traceback

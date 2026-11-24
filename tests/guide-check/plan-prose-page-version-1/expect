@@ -1,0 +1,3 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json --json
+same_stdout_as: plan-prose-no-record

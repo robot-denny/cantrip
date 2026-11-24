@@ -1,0 +1,6 @@
+exit: 0
+args: inventory --adapter deploy --global-block siteSettings
+contains: Components an editor can place: 2
+contains: Global blocks, reusable blocks stored as documents: 1
+not_contains: promoBlock (Promo Block): name
+contains: Documentable: 2 components + 1 global block + 1 proposed page type = 4.

@@ -1,0 +1,11 @@
+{
+  "guidesVersion": 2,
+  "ignored": [],
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element",
+                  "signature": "sha256:oldnoticebar", "rung": "deploy" }
+    }
+  ]
+}

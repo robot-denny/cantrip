@@ -1,0 +1,83 @@
+{
+  "inventoryVersion": 2,
+  "rung": "deploy",
+  "contentTypesRead": 4,
+  "elementFlagged": 1,
+  "documentTypesRead": 3,
+  "palettesRead": 1,
+  "rule": {
+    "components": "A content type named as a palette entry's content block, in one of the project's block-editor data types. Read from the palette, never from the element-type flag.",
+    "globalBlocks": "A document type whose name ends in the word \"Block\", or whose alias the project lists. A reusable block stored as a document: pages reuse it by reference, so it is documented like a block and never proposed as a page. The name rule is a heuristic, so each entry names the signal that caught it: name, listed, or both.",
+    "settingsModels": "An element type named only as a palette entry's settings model and never as a content block. The settings half of a block already counted, not a block of its own.",
+    "unpalettedElementTypes": "An element type no palette offers. Read into an owning component's property table as a composition, never documented on its own.",
+    "unresolvedPaletteEntries": "A palette offers a content type this export does not hold, so its name and its fields cannot be read and it is counted here rather than among the components. An element type is a database row, never a class, so a package that creates one at boot can legitimately leave it out: the export may ignore that package's schema deliberately, the environment may not be a schema source at all, or the type may exist only where nobody booted locally. Re-export from an environment that holds it to document these.",
+    "pageTypesProposed": "PROPOSED, not decided. No flag separates a page type from a folder, a container, or an abstract base, so a document type is proposed when it carries a template or matches the project's own page-naming convention. Tree reachability is read as evidence and is not a gate, because a folder is reachable by definition."
+  },
+  "namingConvention": {
+    "suffix": null,
+    "templated": 1,
+    "matched": 0,
+    "why": "not derived. 1 document type carries a template, and at least 2 are needed to measure a shared suffix."
+  },
+  "palettes": [
+    {
+      "name": "[BlockList] Page Body",
+      "editor": "Umbraco.BlockList",
+      "contentBlocks": 1,
+      "settingsModels": 0
+    }
+  ],
+  "components": [
+    {
+      "alias": "cardBlock",
+      "name": "Card Block",
+      "kind": "element",
+      "palettes": [
+        "[BlockList] Page Body"
+      ],
+      "signature": "sha256:<computed>"
+    }
+  ],
+  "globalBlocks": [
+    {
+      "alias": "promoBlock",
+      "name": "Promo Block",
+      "kind": "document",
+      "signals": [
+        "name"
+      ],
+      "signature": "sha256:<computed>"
+    },
+    {
+      "alias": "siteSettings",
+      "name": "Site Settings",
+      "kind": "document",
+      "signals": [
+        "listed"
+      ],
+      "signature": "sha256:<computed>"
+    }
+  ],
+  "globalBlocksListed": [
+    {
+      "alias": "siteSettings",
+      "matched": "document-type"
+    }
+  ],
+  "settingsModels": [],
+  "unpalettedElementTypes": [],
+  "unresolvedPaletteEntries": 0,
+  "pageTypesProposed": [
+    {
+      "alias": "blockadePage",
+      "name": "Blockade Page",
+      "kind": "document",
+      "signals": [
+        "template",
+        "reachable"
+      ],
+      "signature": "sha256:<computed>"
+    }
+  ],
+  "notProposed": []
+}

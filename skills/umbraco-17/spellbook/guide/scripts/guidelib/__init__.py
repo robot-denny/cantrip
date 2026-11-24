@@ -88,7 +88,15 @@ def missing_alias_error(source, alias, locations, declared_count,
 # `__version` and every uSync export measured carries `usync.config`, so a file without one
 # is outside the measured evidence entirely and refusing it would rest on nothing. Both
 # formats treat absence the same way, so the rule stays one rule.
-ACCEPTED_DEPLOY_VERSIONS = ("17.0.2", "17.1.0", "17.2.0", "17.2.1")
+#
+# **Two more Deploy versions were measured later, each against an accepted one.** 17.3.1
+# comes from a production Umbraco Cloud project, whose export holds 56 document types and 36
+# data types at 17.3.1 beside 7 and 36 at 17.2.1. 17.0.1 comes from the demo project, whose
+# 42 document types and 21 data types all carry it. In both, every key this adapter reads is
+# present with the same JSON type as at 17.2.1, top-level, in each property and in each
+# group. What differs is unread: a 17.3.1 data type carries a top-level `Parent` (33 of 36;
+# no 17.2.1 one does), and a 17.0.1 property carries no `ValueType`.
+ACCEPTED_DEPLOY_VERSIONS = ("17.0.1", "17.0.2", "17.1.0", "17.2.0", "17.2.1", "17.3.1")
 ACCEPTED_USYNC_FORMATS = ("10.7.0",)
 
 

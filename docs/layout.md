@@ -107,7 +107,7 @@ cantrip/
 │   │   └── reference/             8 model-invoked references (+ the reviewer agents)
 │   ├── umbraco-17/              L1 — the CMS, pinned to a major
 │   │   ├── spellbook/             4 spells
-│   │   └── reference/             7 references
+│   │   └── reference/             8 references
 │   ├── umbraco-cloud/           L1 — Umbraco Deploy, versionless
 │   │   ├── spellbook/             1 spell
 │   │   └── reference/             1 reference
@@ -125,7 +125,7 @@ cantrip/
 In words, since the tree above carries it only in indentation: `skills/` holds one directory per layer
 — `core/` for L0, then one directory per stack pack. Each of those contains a `reference/` for
 model-invoked units and, **only if the pack has spells to name**, a `spellbook/` beside it. `umbraco-17`
-has both, with 4 spells and 7 references; `umbraco-cloud` has both, with 1 each; `dotnet` has
+has both, with 4 spells and 8 references; `umbraco-cloud` has both, with 1 each; `dotnet` has
 `reference/` alone, holding 3 units, because a language earns references rather than repeatable
 operations. Every unit is a directory holding a `SKILL.md`, whatever depth it sits at.
 

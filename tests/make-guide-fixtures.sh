@@ -1373,6 +1373,32 @@ expect "$C" \
   "contains: declares the alias" \
   'not_contains: "dossierVersion"'
 
+# Two versions measured after the first four, each against an accepted version's files: 17.3.1
+# from a production Umbraco Cloud project, beside its 17.2.1 artifacts, and 17.0.1 from the
+# demo project. Every key the adapter reads is present in both, with the same JSON type.
+#
+# Every artifact in the tree is restamped, not just the requested one, so the dossier comes
+# out whole only if the composition and each data type are read at the new version too. A
+# skipped data type refuses the read as a partial export, and a skipped composition drops the
+# inherited property, so neither can pass by reading the one file that was asked for.
+deploy_tree_at_version() {  # deploy_tree_at_version <case-root> <version>
+  deploy_tree "$1"
+  local f
+  for f in "$1/src/Web/umbraco/Deploy/Revision"/*.uda; do restamp "$f" "$2"; done
+}
+
+for V in 17.3.1 17.0.1; do
+  C="$CASES/deploy-version-$V-read"; mkdir -p "$C"; deploy_tree_at_version "$C" "$V"
+  expected_dossier "$C" deploy
+  expect "$C" \
+    "exit: 0" \
+    "args: extract alertBanner" \
+    "stdout_matches: expected-dossier.json" \
+    'mask: "sourceSignature":' \
+    "not_contains: was not read" \
+    'contains: "inheritedFrom": "baseSettings"'
+done
+
 
 # ==============================================================================
 # The lowest rung: committed generated model classes, and nothing else
@@ -2244,7 +2270,7 @@ EOF
 expected_inventory() {  # expected_inventory <case-root> <rung>
   cat > "$1/expected-inventory.json" <<EOF
 {
-  "inventoryVersion": 1,
+  "inventoryVersion": 2,
   "rung": "$2",
   "contentTypesRead": 6,
   "elementFlagged": 6,
@@ -2252,6 +2278,7 @@ expected_inventory() {  # expected_inventory <case-root> <rung>
   "palettesRead": 2,
   "rule": {
     "components": "A content type named as a palette entry's content block, in one of the project's block-editor data types. Read from the palette, never from the element-type flag.",
+    "globalBlocks": "A document type whose name ends in the word \"Block\", or whose alias the project lists. A reusable block stored as a document: pages reuse it by reference, so it is documented like a block and never proposed as a page. The name rule is a heuristic, so each entry names the signal that caught it: name, listed, or both.",
     "settingsModels": "An element type named only as a palette entry's settings model and never as a content block. The settings half of a block already counted, not a block of its own.",
     "unpalettedElementTypes": "An element type no palette offers. Read into an owning component's property table as a composition, never documented on its own.",
     "unresolvedPaletteEntries": "A palette offers a content type this export does not hold, so its name and its fields cannot be read and it is counted here rather than among the components. An element type is a database row, never a class, so a package that creates one at boot can legitimately leave it out: the export may ignore that package's schema deliberately, the environment may not be a schema source at all, or the type may exist only where nobody booted locally. Re-export from an environment that holds it to document these.",
@@ -2307,6 +2334,8 @@ expected_inventory() {  # expected_inventory <case-root> <rung>
       "signature": "sha256:<computed>"
     }
   ],
+  "globalBlocks": [],
+  "globalBlocksListed": [],
   "settingsModels": [
     {
       "alias": "mediaRowSettings",
@@ -3553,6 +3582,474 @@ expect "$C" \
   "not_contains: styleguideColorSwatch" \
   "not_contains: styleguideTypeSpecimen"
 
+# ==============================================================================
+# Global blocks — reusable blocks stored as documents
+# ==============================================================================
+#
+# A project can build a reusable block as a CONTENT NODE rather than an element type: a
+# document type an editor creates once, under a folder, and that pages then pick by reference.
+# It is placed like a block and documented like one, and no palette names it, so the palette
+# rule never counts it — and as a document type it lands in the page-type proposals, where it
+# is wrong in both directions: proposed as a page when it carries a template, or filed as a
+# folder or an abstract base when it does not.
+#
+# Two ways in, and the cast holds one of each plus the two near misses that keep the name rule
+# honest:
+#
+#   cardBlock      element type "Card Block", offered by a palette   -> a component, NOT a
+#                  global block. The rule is about document types; an element type's name
+#                  says nothing here.
+#   promoBlock     document type "Promo Block", no template          -> global block, by name
+#   siteSettings   document type "Site Settings", allowed at root,   -> global block when the
+#                  no template                                          project lists it, a
+#                                                                       folder when it does not
+#   blockadePage   document type "Blockade Page", templated, root    -> a proposed page. "Block"
+#                  is in the name and is not its last word.
+#
+# Deploy only. The classification reads the name, the alias and the kind, which both adapters
+# already hand the determiner in format-blind terms; the palette and page-type pairs above are
+# what pin the adapters.
+U_CARDB=9a1a11119a1a11119a1a111111111111    ; G_CARDB=9a1a1111-9a1a-1111-9a1a-111111111111
+U_PROMOB=9b2b22229b2b22229b2b222222222222   ; G_PROMOB=9b2b2222-9b2b-2222-9b2b-222222222222
+U_SITESET=9c3c33339c3c33339c3c333333333333
+U_BLOCKADE=9d4d44449d4d44449d4d444444444444
+
+# A document type with one property, so its extraction resolves. `templated` writes a template
+# assignment the way Deploy does (both keys), `root` writes `AllowedAtRoot`, which Deploy emits
+# only when true.
+inv_deploy_document() {  # inv_deploy_document <rev> <udi> <alias> <name> <prop-alias> <prop-name> <templated|untemplated> <root|nested>
+  local key="${2:0:8}" templates="" default="" root=""
+  if [[ "$7" == templated ]]; then
+    templates="
+    \"umb://template/$2\"
+  "
+    default="
+  \"DefaultTemplate\": \"umb://template/$2\","
+  fi
+  if [[ "$8" == root ]]; then
+    root="
+    \"AllowedAtRoot\": true,"
+  fi
+  cat > "$1/document-type__$2.uda" <<EOF
+{
+  "Name": "$4",
+  "Alias": "$3",
+  "AllowedTemplates": [$templates],$default
+  "HistoryCleanup": {},
+  "Icon": "icon-document color-blue",
+  "Thumbnail": "folder.png",
+  "Permissions": {$root
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [
+    {
+      "Key": "$key-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": [
+        {
+          "Key": "$key-0101-4000-8000-000000000101",
+          "Alias": "$5",
+          "DataType": "umb://data-type/$U_TEXT",
+          "ValueType": "System.String",
+          "Description": "",
+          "Name": "$6",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/$2",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/$U_TEXT",
+      "Ordering": true
+    }
+  ],
+  "__type": "$DEPLOY_ARTIFACT_TYPE",
+  "__version": "$DEPLOY_VERSION"
+}
+EOF
+}
+
+inv_deploy_global_tree() {  # inv_deploy_global_tree <case-root>
+  local rev="$1/src/Web/umbraco/Deploy/Revision"
+  mkdir -p "$rev"
+  deploy_data_type "$rev" "$U_TEXT" "Textstring" "Umbraco.TextBox" \
+    "Umb.PropertyEditorUi.TextBox" "Nvarchar" '{}'
+  inv_deploy_element "$rev" "$U_CARDB" cardBlock "Card Block" cardHeading "Card Heading"
+  inv_deploy_palette "$rev" "$U_PBODY" "$INV_PALETTE_A" \
+    "Umbraco.BlockList" "Umb.PropertyEditorUi.BlockList" "[
+      {
+        \"contentElementTypeKey\": \"$G_CARDB\"
+      }
+    ]"
+  inv_deploy_document "$rev" "$U_PROMOB" promoBlock "Promo Block" \
+    promoHeading "Promo Heading" untemplated nested
+  inv_deploy_document "$rev" "$U_SITESET" siteSettings "Site Settings" \
+    siteName "Site Name" untemplated root
+  inv_deploy_document "$rev" "$U_BLOCKADE" blockadePage "Blockade Page" \
+    blockadeHeading "Blockade Heading" templated root
+}
+
+# The rule's report lines, written once here because three goldens print them: the inventory's
+# section and the audit's header state the same rule, and the audit defers to the inventory's
+# wording rather than restating it.
+GLOBAL_RULE='  A document type whose name ends in the word "Block", or whose alias the project lists.
+  A reusable block stored as a document: pages reuse it by reference, so it is documented
+  like a block and never proposed as a page. The name rule is a heuristic, so each entry
+  names the signal that caught it: name, listed, or both.'
+
+PAGE_RULE='  PROPOSED, not decided. No flag separates a page type from a folder, a container, or an
+  abstract base, so a document type is proposed when it carries a template or matches the
+  project'"'"'s own page-naming convention. Tree reachability is read as evidence and is not a
+  gate, because a folder is reachable by definition.
+  Naming convention: not derived.
+    1 document type carries a template, and at least 2 are needed to measure a shared
+    suffix.'
+
+# --- both signals, read by the inventory -----------------------------------------
+#
+# The text report, because the claim is about what a person reads: the global blocks have a
+# section of their own, the rule is stated beside its count, the listed alias is named, and
+# each entry says which signal caught it. Neither global block appears among the page types,
+# proposed or not -- `siteSettings` is allowed at root with no template, the exact shape of a
+# folder, and listing it is what moves it. cardBlock stays a component.
+C="$CASES/inventory-global-blocks"; mkdir -p "$C"
+inv_deploy_global_tree "$C"
+cat > "$C/expected-report.txt" <<EOF
+Inventory of documentable units, read at the deploy rung.
+  4 content types read: 1 carries the element-type flag, 3 do not.
+  1 block-editor data type carries a block list.
+
+Components an editor can place: 1
+  A content type named as a palette entry's content block, in one of the project's
+  block-editor data types. Read from the palette, never from the element-type flag.
+    cardBlock (Card Block)
+
+Global blocks, reusable blocks stored as documents: 2
+$GLOBAL_RULE
+  Listed by the project: siteSettings.
+    promoBlock (Promo Block): name
+    siteSettings (Site Settings): listed
+
+Page types PROPOSED for a human to confirm: 1 of 3 document types
+$PAGE_RULE
+    blockadePage (Blockade Page): template, reachable
+
+Documentable: 1 component + 2 global blocks + 1 proposed page type = 4.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: inventory --adapter deploy --global-block siteSettings" \
+  "stdout_matches: expected-report.txt" \
+  "not_contains: Not proposed"
+
+# A palette naming a type the name rule would also catch: the palette is the stronger signal,
+# so promoBlock is counted once, as a component, and the total does not count it twice.
+C="$CASES/inventory-global-block-in-palette"; mkdir -p "$C"
+inv_deploy_global_tree "$C"
+inv_deploy_palette "$C/src/Web/umbraco/Deploy/Revision" "$U_PBODY" "$INV_PALETTE_A" \
+  "Umbraco.BlockList" "Umb.PropertyEditorUi.BlockList" "[
+    {
+      \"contentElementTypeKey\": \"$G_CARDB\"
+    },
+    {
+      \"contentElementTypeKey\": \"$G_PROMOB\"
+    }
+  ]"
+expect "$C" \
+  "exit: 0" \
+  "args: inventory --adapter deploy --global-block siteSettings" \
+  "contains: Components an editor can place: 2" \
+  "contains: Global blocks, reusable blocks stored as documents: 1" \
+  "not_contains: promoBlock (Promo Block): name" \
+  "contains: Documentable: 2 components + 1 global block + 1 proposed page type = 4."
+
+# --- the same read, for a machine -------------------------------------------------
+#
+# A separate list rather than more entries under `components`, so a consumer that has always
+# read `components` as "palette blocks" is not handed document types there, and the version is
+# 2 because the key is new. `globalBlocksListed` carries every listed alias with what it
+# matched, so a mistyped alias is in the document as well as in the report.
+C="$CASES/inventory-global-blocks-json"; mkdir -p "$C"
+inv_deploy_global_tree "$C"
+cat > "$C/expected-inventory.json" <<EOF
+{
+  "inventoryVersion": 2,
+  "rung": "deploy",
+  "contentTypesRead": 4,
+  "elementFlagged": 1,
+  "documentTypesRead": 3,
+  "palettesRead": 1,
+  "rule": {
+    "components": "A content type named as a palette entry's content block, in one of the project's block-editor data types. Read from the palette, never from the element-type flag.",
+    "globalBlocks": "A document type whose name ends in the word \"Block\", or whose alias the project lists. A reusable block stored as a document: pages reuse it by reference, so it is documented like a block and never proposed as a page. The name rule is a heuristic, so each entry names the signal that caught it: name, listed, or both.",
+    "settingsModels": "An element type named only as a palette entry's settings model and never as a content block. The settings half of a block already counted, not a block of its own.",
+    "unpalettedElementTypes": "An element type no palette offers. Read into an owning component's property table as a composition, never documented on its own.",
+    "unresolvedPaletteEntries": "A palette offers a content type this export does not hold, so its name and its fields cannot be read and it is counted here rather than among the components. An element type is a database row, never a class, so a package that creates one at boot can legitimately leave it out: the export may ignore that package's schema deliberately, the environment may not be a schema source at all, or the type may exist only where nobody booted locally. Re-export from an environment that holds it to document these.",
+    "pageTypesProposed": "PROPOSED, not decided. No flag separates a page type from a folder, a container, or an abstract base, so a document type is proposed when it carries a template or matches the project's own page-naming convention. Tree reachability is read as evidence and is not a gate, because a folder is reachable by definition."
+  },
+  "namingConvention": {
+    "suffix": null,
+    "templated": 1,
+    "matched": 0,
+    "why": "not derived. 1 document type carries a template, and at least 2 are needed to measure a shared suffix."
+  },
+  "palettes": [
+    {
+      "name": "$INV_PALETTE_A",
+      "editor": "Umbraco.BlockList",
+      "contentBlocks": 1,
+      "settingsModels": 0
+    }
+  ],
+  "components": [
+    {
+      "alias": "cardBlock",
+      "name": "Card Block",
+      "kind": "element",
+      "palettes": [
+        "$INV_PALETTE_A"
+      ],
+      "signature": "sha256:<computed>"
+    }
+  ],
+  "globalBlocks": [
+    {
+      "alias": "promoBlock",
+      "name": "Promo Block",
+      "kind": "document",
+      "signals": [
+        "name"
+      ],
+      "signature": "sha256:<computed>"
+    },
+    {
+      "alias": "siteSettings",
+      "name": "Site Settings",
+      "kind": "document",
+      "signals": [
+        "listed"
+      ],
+      "signature": "sha256:<computed>"
+    }
+  ],
+  "globalBlocksListed": [
+    {
+      "alias": "siteSettings",
+      "matched": "document-type"
+    }
+  ],
+  "settingsModels": [],
+  "unpalettedElementTypes": [],
+  "unresolvedPaletteEntries": 0,
+  "pageTypesProposed": [
+    {
+      "alias": "blockadePage",
+      "name": "Blockade Page",
+      "kind": "document",
+      "signals": [
+        "template",
+        "reachable"
+      ],
+      "signature": "sha256:<computed>"
+    }
+  ],
+  "notProposed": []
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: inventory --json --adapter deploy --global-block siteSettings" \
+  "stdout_matches: expected-inventory.json" \
+  'mask: "signature":'
+
+# --- listed aliases that catch nothing --------------------------------------------
+#
+# A listed alias is a project fact typed by a person, so it can be wrong two ways and both are
+# printed rather than dropped: one names an element type (cardBlock, which stays a component —
+# listing does not move a palette block), and one names nothing in the read at all. With
+# siteSettings no longer listed, it falls back to what its shape says, a folder, while
+# promoBlock is still caught by its name alone. The whole report is compared, because "cardBlock
+# is still a component and not a global block" is a claim about which section it sits in.
+C="$CASES/inventory-global-blocks-unmatched"; mkdir -p "$C"
+inv_deploy_global_tree "$C"
+cat > "$C/expected-report.txt" <<EOF
+Inventory of documentable units, read at the deploy rung.
+  4 content types read: 1 carries the element-type flag, 3 do not.
+  1 block-editor data type carries a block list.
+
+Components an editor can place: 1
+  A content type named as a palette entry's content block, in one of the project's
+  block-editor data types. Read from the palette, never from the element-type flag.
+    cardBlock (Card Block)
+
+Global blocks, reusable blocks stored as documents: 1
+$GLOBAL_RULE
+  Listed by the project: cardBlock, retiredBanner.
+    promoBlock (Promo Block): name
+  Listed, and caught nothing: 2
+    cardBlock, which names an element type, not a document type
+    retiredBanner, which names nothing in this read
+
+Page types PROPOSED for a human to confirm: 1 of 3 document types
+$PAGE_RULE
+    blockadePage (Blockade Page): template, reachable
+
+  Not proposed, a folder or a container: 1
+    Reachable in the content tree, but carries no template and matches no naming convention.
+      siteSettings (Site Settings)
+
+Documentable: 1 component + 1 global block + 1 proposed page type = 3.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: inventory --adapter deploy --global-block cardBlock --global-block retiredBanner" \
+  "stdout_matches: expected-report.txt"
+
+# --- the audit counts a global block like any other block -------------------------
+#
+# Guides for the component, the page, and the listed global block — none for promoBlock. The
+# audit derives its own inventory, so the flag has to reach it too, and the undocumented
+# global block is named exactly as an undocumented palette block would be. The header names the
+# rule and the listed alias for the reason it names an excluded palette: it is the line that
+# explains the documentable count.
+C="$CASES/audit-global-block-undocumented"; mkdir -p "$C"
+inv_deploy_global_tree "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Card Block",
+      "source": { "alias": "cardBlock", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Blockade Page",
+      "source": { "alias": "blockadePage", "kind": "document", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Site Settings",
+      "source": { "alias": "siteSettings", "kind": "document", "signature": null, "rung": "deploy" }
+    }
+  ]
+}
+EOF
+cat > "$C/expected-report.txt" <<EOF
+Guide audit, read at the deploy rung.
+  4 documentable units: 1 component + 2 global blocks + 1 proposed page type.
+  Counted from the project's own block-editor palettes and the page types it proposes,
+  never from the element-type flag. Run inventory for that rule in full, with its own
+  counts.
+$GLOBAL_RULE
+  Listed by the project: siteSettings.
+  3 guide pages read: 3 claim a source, 0 claim none.
+  Not compared: 3 guides record no stored signature.
+
+Undocumented, present in code with no guide page: 1
+  A documentable unit that no guide page's stored reference names: a component an editor
+  can place from a block-editor palette, or a document type proposed as a page. Matched
+  on the alias, case-insensitively, never on a page's name or its address.
+    promoBlock (Promo Block)
+
+Orphaned, claiming a source this project no longer holds: 0
+
+Stale, whose stored signature no longer matches its source: 0
+
+Findings: 1 undocumented, 0 orphaned, 0 stale.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --adapter deploy --global-block siteSettings" \
+  "stdout_matches: expected-report.txt"
+
+# --- a supplied inventory, at both versions ----------------------------------------
+#
+# `audit --inventory` reads a document another process wrote, so the version bump has three
+# cases: a version-2 document's global blocks are counted (promoBlock undocumented, beside a
+# palette block with a guide), a version-2 document with no `globalBlocks` key is refused —
+# absent is not "none", the discipline every other list here follows — and a version this
+# script has not been written against is refused by number. Version 1 stays accepted; every
+# other supplied-inventory case in this suite is version 1 and is the proof.
+audit_v2_inventory() {  # audit_v2_inventory <case-root> <global-blocks-json-or-ABSENT>
+  local global=""
+  if [[ "$2" != ABSENT ]]; then
+    global="
+  \"globalBlocks\": $2,"
+  fi
+  cat > "$1/inventory.json" <<EOF
+{
+  "inventoryVersion": 2,
+  "rung": "deploy",
+  "components": [
+    {
+      "alias": "cardBlock",
+      "name": "Card Block",
+      "kind": "element",
+      "signature": "sha256:currentcardblock"
+    }
+  ],$global
+  "pageTypesProposed": []
+}
+EOF
+  cat > "$1/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Card Block",
+      "source": { "alias": "cardBlock", "kind": "element", "signature": null, "rung": "deploy" }
+    }
+  ]
+}
+EOF
+}
+
+C="$CASES/audit-inventory-v2-global-blocks"; mkdir -p "$C"
+audit_v2_inventory "$C" '[
+    { "alias": "promoBlock", "name": "Promo Block", "kind": "document", "signals": ["name"] }
+  ]'
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: 2 documentable units: 1 component + 1 global block + 0 proposed page types." \
+  "contains: Undocumented, present in code with no guide page: 1" \
+  "contains:     promoBlock (Promo Block)" \
+  "not_contains: cardBlock (Card Block)"
+
+C="$CASES/audit-inventory-v2-no-global-blocks"; mkdir -p "$C"
+audit_v2_inventory "$C" ABSENT
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: holds no 'globalBlocks' key" \
+  "not_contains: Guide audit"
+
+C="$CASES/audit-inventory-version-unknown"; mkdir -p "$C"
+audit_v2_inventory "$C" '[]'
+sed -i.bak 's/"inventoryVersion": 2/"inventoryVersion": 3/' "$C/inventory.json"; rm "$C/inventory.json.bak"
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: declares inventoryVersion 3" \
+  "not_contains: Guide audit"
+
+# A listed alias reaches only a project this run reads. Handed a prepared inventory, the flag
+# has nothing to apply to, and says so rather than doing nothing quietly — the same remark
+# `--exclude-palette` makes.
+C="$CASES/audit-inventory-global-block-flag-noted"; mkdir -p "$C"
+audit_v2_inventory "$C" '[]'
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json --global-block siteSettings" \
+  "contains: note: --global-block names siteSettings, and this run reads a prepared inventory" \
+  "contains: Findings: none."
+
 # --- a styleguide page the audit has nothing to say about ------------------------
 #
 # **This case needs no code, and that is why it is here.** A styleguide is an `editorGuide`
@@ -4289,6 +4786,199 @@ expect "$C" \
   "exit: 0" \
   "args: audit --guides guides.json --inventory inventory.json --strict" \
   "contains: Findings: none."
+
+# --- the ignore list: guides file version 2 ----------------------------------------
+#
+# Version 2 adds one top-level key, `ignored`: the aliases a team has decided need no guide,
+# read by the spell from the guides node's `guideIgnored` field. An ignored component the
+# inventory holds is reported by name in its own section and never counted as undocumented,
+# stale or orphaned. An ignored alias the inventory does not hold is reported as naming
+# nothing -- and it hides nothing: a guide claiming that alias is still an orphan, because
+# there is no component left for the list to be about.
+#
+# All five pair a guides file with the same one-component inventory, so the only thing that
+# differs between a case and its twin is the guides file.
+
+# The undocumented component, ignored. Without the list this is `audit-strict-exit`: one
+# undocumented finding. With it, no finding, and the component is still named -- in the
+# ignored section, not silently dropped.
+C="$CASES/audit-ignored-undocumented"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 2,
+  "ignored": ["noticeBar"],
+  "guides": []
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json --strict" \
+  "contains: Undocumented, present in code with no guide page: 0" \
+  "contains: Ignored, on the guides node's ignore list: 1" \
+  "contains:     noticeBar (Notice Bar)" \
+  "contains: Findings: none."
+
+# A guide whose stored signature differs from the component's current one, at the same rung.
+# The twin with an empty list proves the guide IS stale; the ignored one proves the list
+# keeps it out of that section. Matched case-insensitively, as every alias here is.
+audit_stale_guide() {  # audit_stale_guide <case-root> <ignored-json>
+  audit_tiny_inventory "$1"
+  cat > "$1/guides.json" <<EOF
+{
+  "guidesVersion": 2,
+  "ignored": $2,
+  "guides": [
+    {
+      "page": "Notice Bar",
+      "source": { "alias": "noticeBar", "kind": "element",
+                  "signature": "sha256:oldnoticebar", "rung": "deploy" }
+    }
+  ]
+}
+EOF
+}
+
+C="$CASES/audit-ignored-stale-control"; mkdir -p "$C"; audit_stale_guide "$C" '[]'
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: Stale, whose stored signature no longer matches its source: 1" \
+  "contains: Findings: 0 undocumented, 0 orphaned, 1 stale." \
+  "not_contains: Ignored"
+
+C="$CASES/audit-ignored-with-guide"; mkdir -p "$C"; audit_stale_guide "$C" '["NOTICEBAR"]'
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json --strict" \
+  "contains: Stale, whose stored signature no longer matches its source: 0" \
+  "contains: Ignored, on the guides node's ignore list: 1" \
+  "contains:     noticeBar (Notice Bar)" \
+  "contains: Findings: none."
+
+# An ignored alias no content type declares, and a guide claiming that same alias. The list
+# entry is reported as naming nothing; the guide is still an orphan; and the one real
+# component, not on the list, is still undocumented.
+C="$CASES/audit-ignored-names-nothing"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 2,
+  "ignored": ["retiredBanner"],
+  "guides": [
+    {
+      "page": "Retired Banner",
+      "source": { "alias": "retiredBanner", "kind": "element", "signature": null,
+                  "rung": "deploy" }
+    }
+  ]
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: Ignored, on the guides node's ignore list: 1" \
+  "contains:     retiredBanner, which names nothing in this read" \
+  "contains: Orphaned, claiming a source this project no longer holds: 1" \
+  "contains:     retiredBanner (Retired Banner)" \
+  "contains: Findings: 1 undocumented, 1 orphaned, 0 stale."
+
+# Version 2 with an empty list reads exactly as version 1 does: the same bytes as
+# `audit-strict-exit`, whose guides file is version 1 with the same empty guide set.
+C="$CASES/audit-ignored-empty-v2"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 2,
+  "ignored": [],
+  "guides": []
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "same_stdout_as: audit-strict-exit"
+
+# The refusals. Each refuses the whole file, for the reason every guides-file refusal does: a
+# list read in part moves the components its dropped entries named back into the undocumented
+# list, and nothing in the report would say so.
+#
+# A non-string entry: an alias is a string, and a number is not a guess worth making.
+C="$CASES/audit-ignored-non-string"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 2,
+  "ignored": ["noticeBar", 7],
+  "guides": []
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: ignored[1]" \
+  "contains: not an alias" \
+  'not_contains: Guide audit'
+
+# Not an array at all.
+C="$CASES/audit-ignored-not-list"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 2,
+  "ignored": "noticeBar",
+  "guides": []
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: 'ignored' holds str" \
+  'not_contains: Guide audit'
+
+# Version 2 with no `ignored` key. Refused rather than read as an empty list, on the line
+# `source` draws: an empty list is a fact about the guides node, an absent key is a fact about
+# the producer -- a spell that failed to read the field would otherwise report every ignored
+# component as undocumented again.
+C="$CASES/audit-ignored-key-absent"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 2,
+  "guides": []
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: no 'ignored' key" \
+  'not_contains: Guide audit'
+
+# An `ignored` list in a version-1 file. Version 1 reads as nothing ignored, so a list there
+# is one the file's own version says is not there; refused rather than either obeyed or
+# dropped, because both would be a guess about which of the two claims was meant.
+# A boolean is not a version: `True in (1, 2)` would read this file as version 1.
+C="$CASES/audit-guides-version-true"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": true,
+  "guides": []
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: guidesVersion True" \
+  'not_contains: Guide audit'
+
+C="$CASES/audit-ignored-in-v1"; mkdir -p "$C"; audit_tiny_inventory "$C"
+cat > "$C/guides.json" <<'EOF'
+{
+  "guidesVersion": 1,
+  "ignored": ["noticeBar"],
+  "guides": []
+}
+EOF
+expect "$C" \
+  "exit: 1" \
+  "args: audit --guides guides.json --inventory inventory.json" \
+  "contains: guidesVersion 1" \
+  "contains: ignored" \
+  'not_contains: Guide audit'
 
 
 # ==============================================================================
@@ -5639,5 +6329,1243 @@ expect "$C" \
   "not_contains: Live examples the source's variant set implies"
 
 
+
+# ==============================================================================
+# The record of AI-written text -- `record`
+# ==============================================================================
+#
+# `record` answers one question after the spell has written and read back a page: what does
+# the page's `guideGenerated` record say now? It fingerprints the values the CMS stored, for
+# exactly the model-authored fields and row notes the spell names, and merges them over the
+# record the page already held.
+#
+# **Every expected fingerprint below was computed outside the script**, with shasum, when the
+# case was written -- never by running the subject. A hash the subject computed and the test
+# then asserted would agree with a wrong hash by construction. The commands, so anyone can
+# check them:
+#
+#   printf %s 'Use a promo tile to send a visitor somewhere else on the site — one offer, one link.' | shasum -a 256
+#     2bbedb8f8aec4e8eeb26b3f83403eab6264c50df1c289221ce1325c78b516e44
+#   printf %s '<p>The line a visitor reads first.</p>' | shasum -a 256
+#     8390012dc3407ab69bc05dc1db03bac985aa704803475a9ae8801ed3429bab7c
+#   printf '%s\n' '<p>Left over from the old build. Ask before using it.</p>' | shasum -a 256
+#     b1760c4bcbcae9f29e903c394f45f093981060543a019e10c8d66e0c4cf3efde
+#
+# Two of the values are chosen to pin "the exact stored value, UTF-8, no normalization": the
+# purpose sentence carries an em dash, so a hash over an escaped or differently encoded form
+# misses; and one note ends in a newline, so a hash over a stripped value misses.
+
+record_page() {  # record_page <case-root> <page-version> <generated-json-or-ABSENT>
+  local root=$1 version=$2 generated=$3 line
+  if [ "$generated" = "ABSENT" ]; then line=""; else line="  \"generated\": $generated,"; fi
+  {
+    cat <<EOF
+{
+  "pageVersion": $version,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotilebeforethechange",
+    "rung": "deploy"
+  },
+EOF
+    [ -n "$line" ] && printf '%s\n' "$line"
+    cat <<'EOF'
+  "fields": {
+    "guidePurpose": "Use a promo tile to send a visitor somewhere else on the site — one offer, one link.",
+    "guideExamples": "<p>An arrangement somebody placed.</p>",
+    "guideProperties": [
+      {
+        "alias": "promoHeading",
+        "label": "Promo Heading",
+        "required": false,
+        "tab": "Content",
+        "group": "",
+        "information": "<p>The line a visitor reads first.</p>"
+      },
+      {
+        "alias": "promoLegacyStyle",
+        "label": "Promo Legacy Style",
+        "required": false,
+        "tab": "Content",
+        "group": "",
+        "information": "<p>Left over from the old build. Ask before using it.</p>\n"
+      },
+      {
+        "alias": "promoSpacing",
+        "label": "Promo Spacing",
+        "required": false,
+        "tab": "Settings",
+        "group": "",
+        "information": ""
+      }
+    ]
+  }
+}
+EOF
+  } > "$root/page.json"
+  if [ "$version" = "ABSENT" ]; then
+    grep -v '"pageVersion"' "$root/page.json" > "$root/page.json.tmp" && mv "$root/page.json.tmp" "$root/page.json"
+  fi
+}
+
+# A purpose sentence and two row notes, on a page that held no record yet. The whole record is
+# compared, so a fingerprint landing under the wrong key fails as surely as a wrong hash.
+C="$CASES/record-fields-and-rows"; mkdir -p "$C"; record_page "$C" 2 null
+cat > "$C/expected-record.json" <<'EOF'
+{
+  "recordVersion": 1,
+  "fields": {
+    "guidePurpose": "sha256:2bbedb8f8aec4e8eeb26b3f83403eab6264c50df1c289221ce1325c78b516e44"
+  },
+  "rows": {
+    "promoHeading": "sha256:8390012dc3407ab69bc05dc1db03bac985aa704803475a9ae8801ed3429bab7c",
+    "promoLegacyStyle": "sha256:b1760c4bcbcae9f29e903c394f45f093981060543a019e10c8d66e0c4cf3efde"
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: record --page page.json --field guidePurpose --row promoHeading --row promoLegacyStyle" \
+  "stdout_matches: expected-record.json"
+
+# `record` is a write path, and only a version-2 page file states its record structurally. A
+# version-1 or unversioned file read as "no record" would have the merge drop every entry the
+# page held, after which those fields read as unrecorded and are kept forever. The spell writes
+# version 2, so anything else is refused rather than guessed at.
+C="$CASES/record-page-version-1"; mkdir -p "$C"; record_page "$C" 1 ABSENT
+expect "$C" \
+  "exit: 1" \
+  "args: record --page page.json --field guidePurpose --row promoHeading --row promoLegacyStyle" \
+  "contains: pageVersion" \
+  "not_contains: recordVersion" \
+  "not_contains: Traceback"
+
+C="$CASES/record-page-unversioned"; mkdir -p "$C"; record_page "$C" ABSENT ABSENT
+expect "$C" \
+  "exit: 1" \
+  "args: record --page page.json --field guidePurpose" \
+  "contains: pageVersion" \
+  "not_contains: recordVersion" \
+  "not_contains: Traceback"
+
+# A boolean is not a version number, though Python's `True in (1, 2)` says otherwise.
+C="$CASES/record-page-version-true"; mkdir -p "$C"; record_page "$C" true null
+expect "$C" \
+  "exit: 1" \
+  "args: record --page page.json --field guidePurpose" \
+  "contains: pageVersion" \
+  "not_contains: recordVersion" \
+  "not_contains: Traceback"
+
+# The record's own version gates what may be rewritten, so `true` is refused there too.
+C="$CASES/record-version-true"; mkdir -p "$C"
+record_page "$C" 2 '{"recordVersion": true, "fields": {}, "rows": {}}'
+expect "$C" \
+  "exit: 1" \
+  "args: record --page page.json --field guidePurpose" \
+  "contains: recordVersion" \
+  "not_contains: sha256" \
+  "not_contains: Traceback"
+
+# A read-back value that cannot be encoded (a lone surrogate, which JSON can carry) is a clean
+# refusal naming the field, never a traceback.
+C="$CASES/record-value-unencodable"; mkdir -p "$C"; record_page "$C" 2 null
+python3 - "$C/page.json" <<'PYEOF'
+import sys
+path = sys.argv[1]
+text = open(path, encoding="utf-8").read()
+text = text.replace("one offer, one link.", "one offer, one link.\\ud800")
+open(path, "w", encoding="utf-8").write(text)
+PYEOF
+expect "$C" \
+  "exit: 1" \
+  "args: record --page page.json --field guidePurpose" \
+  "contains: guidePurpose" \
+  "not_contains: recordVersion" \
+  "not_contains: Traceback"
+
+# A kept entry whose key carries stray whitespace names a row the readers match (`plan` strips
+# and folds case), so the merge must judge it by the same fold. Judged by case alone, the
+# held-rows filter would drop " PromoSpacing " as a row the page no longer holds, and the
+# spacing note would read as unrecorded from then on.
+C="$CASES/record-merge-folds-key"; mkdir -p "$C"
+record_page "$C" 2 '{"recordVersion": 1, "fields": {}, "rows": {" PromoSpacing ": "sha256:keptspacingfingerprint", " PromoHeading ": "sha256:staleheadingfingerprint"}}'
+cat > "$C/expected-record.json" <<'EOF'
+{
+  "recordVersion": 1,
+  "fields": {},
+  "rows": {
+    " PromoSpacing ": "sha256:keptspacingfingerprint",
+    "promoHeading": "sha256:8390012dc3407ab69bc05dc1db03bac985aa704803475a9ae8801ed3429bab7c"
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: record --page page.json --row promoHeading" \
+  "stdout_matches: expected-record.json"
+
+# The merge. The page already holds a record: a when-to-use entry and a spacing-row entry the
+# spell did not rewrite this time, which must come back exactly as they were, and a stale
+# heading-row entry that this write replaces. The kept values are deliberately not hashes of
+# anything on the page -- a record entry is the fingerprint of what was generated THEN, and
+# recomputing it from today's value is the bug that would mark an edited field as generated.
+C="$CASES/record-merge-keeps-entry"; mkdir -p "$C"
+record_page "$C" 2 '{"recordVersion": 1, "fields": {"guideWhenToUse": "sha256:keptwhentousefingerprint"}, "rows": {"promoSpacing": "sha256:keptspacingfingerprint", "promoHeading": "sha256:staleheadingfingerprint"}}'
+cat > "$C/expected-record.json" <<'EOF'
+{
+  "recordVersion": 1,
+  "fields": {
+    "guideWhenToUse": "sha256:keptwhentousefingerprint"
+  },
+  "rows": {
+    "promoHeading": "sha256:8390012dc3407ab69bc05dc1db03bac985aa704803475a9ae8801ed3429bab7c",
+    "promoSpacing": "sha256:keptspacingfingerprint"
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: record --page page.json --row promoHeading" \
+  "stdout_matches: expected-record.json" \
+  "not_contains: staleheadingfingerprint"
+
+# A row the spell says it wrote and the page does not hold. Recording it would protect a note
+# nobody can find, so it is refused, and no record is printed for the spell to write.
+C="$CASES/record-row-not-on-page"; mkdir -p "$C"; record_page "$C" 2 null
+expect "$C" \
+  "exit: 1" \
+  "args: record --page page.json --field guidePurpose --row promoMissing" \
+  "contains: promoMissing" \
+  "not_contains: recordVersion" \
+  "not_contains: Traceback"
+
+# `guideExamples` is seeded once and never refreshed, so it is never recorded: an entry for it
+# would claim a field this tooling may rewrite.
+C="$CASES/record-field-not-model-authored"; mkdir -p "$C"; record_page "$C" 2 null
+expect "$C" \
+  "exit: 1" \
+  "args: record --page page.json --field guideExamples" \
+  "contains: guideExamples" \
+  "not_contains: recordVersion" \
+  "not_contains: Traceback"
+
+# Version 2 states the record structurally, and an absent key is refused for the reason an
+# absent `source` is: it cannot be told from a producer that failed to read the field, and a
+# merge over "no record" would drop every entry the page did hold.
+C="$CASES/record-generated-absent"; mkdir -p "$C"; record_page "$C" 2 ABSENT
+expect "$C" \
+  "exit: 1" \
+  "args: record --page page.json --row promoHeading" \
+  "contains: generated" \
+  "not_contains: recordVersion" \
+  "not_contains: Traceback"
+
+# ==============================================================================
+# `plan` reads the page's record of generated text for its prose fields
+# ==============================================================================
+#
+# A page-file version 2 carries `generated`: the record `record` builds, or null. For each
+# model-authored prose field the page holds, `plan` reports one of three states:
+#
+#   asGenerated   the field's value still has its recorded fingerprint: nobody edited it, so
+#                 it is proposed for the model to rewrite and `modelCallNeeded` says so
+#   edited        it differs from its fingerprint, by any amount: kept, nothing proposed
+#   noRecord      no fingerprint for it at all: kept, exactly as an edited field is
+#
+# The fingerprints below are computed outside the script, so a case cannot agree with a wrong
+# hash by construction:
+#
+#   printf %s 'Use a promo tile to point at one thing worth noticing.' | shasum -a 256
+#     e4a2d347d3336e2f712082bda10765c6ebb62addbd7cbce3d0a390aa6094d5ce
+#
+# The edited case's purpose sentence differs from that one by a single word ("noticing" became
+# "seeing"), which is the spec's "edited by one word".
+
+prose_page() {  # prose_page <case-root> <page-version> <generated-json-or-ABSENT> <purpose> <stored-signature>
+  local root=$1 version=$2 generated=$3 purpose=$4 signature=$5 line
+  if [ "$generated" = "ABSENT" ]; then line=""; else line="  \"generated\": $generated,"; fi
+  {
+    cat <<EOF
+{
+  "pageVersion": $version,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "$signature",
+    "rung": "deploy"
+  },
+EOF
+    [ -n "$line" ] && printf '%s\n' "$line"
+    cat <<EOF
+  "fields": {
+    "guidePurpose": "$purpose",
+    "guideWhenToUse": "Reach for a promo tile when a page needs a pointer rather than a paragraph.",
+    "guideProperties": "<table><tr><td>Promo Heading</td></tr></table>",
+    "guideExamples": "<promo-tile>two instances an editor arranged</promo-tile>",
+    "name": "How to use a Promo Tile"
+  }
+}
+EOF
+  } > "$root/page.json"
+}
+
+PURPOSE_AS_WRITTEN="Use a promo tile to point at one thing worth noticing."
+PURPOSE_ONE_WORD="Use a promo tile to point at one thing worth seeing."
+PURPOSE_RECORD='{"recordVersion": 1, "fields": {"guidePurpose": "sha256:e4a2d347d3336e2f712082bda10765c6ebb62addbd7cbce3d0a390aa6094d5ce"}, "rows": {}}'
+
+prose_inputs() {  # prose_inputs <case-root> <page-version> <generated-json-or-ABSENT> <purpose>
+  plan_dossier "$1" "sha256:promotilewithbody" ',
+        {
+          "alias": "promoBody",
+          "name": "Promo Body",
+          "description": "Two or three lines under the heading.",
+          "editor": "Umbraco.TextArea",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }'
+  prose_page "$1" "$2" "$3" "$4" "sha256:promotileasgenerated"
+}
+
+# --- as generated: the purpose sentence is proposed for the model to rewrite --------
+#
+# The record holds the purpose sentence's fingerprint and the page still holds exactly that
+# text, so it moves out of "left alone" and into the proposals, owed by the spell, and the
+# model-call sentence counts it as prose. The when-to-use section has no entry in the record,
+# so it stays left alone, marked as having no record. Asserted as the whole report because
+# which section each prose field lands in is the claim.
+C="$CASES/plan-prose-as-generated"; mkdir -p "$C"
+prose_inputs "$C" 2 "$PURPOSE_RECORD" "$PURPOSE_AS_WRITTEN"
+cat > "$C/expected-plan.txt" <<'EOF'
+Change plan for promoTile (Promo Tile), read at the deploy rung.
+  Guide page: How to use a Promo Tile
+  Stored signature: sha256:promotileasgenerated, recorded at the deploy rung.
+  Current signature: sha256:promotilewithbody
+  The stored signature differs from the source's current signature: the component
+  changed shape after this guide was generated, so every machine-owned field is
+  regenerated below.
+
+A model call is needed. 1 machine-owned field needs prose this script cannot write, and 1
+carries content the spell renders in the project's own markup.
+
+Machine-owned, regenerated and proposed for approval: 3
+  Regenerated when the source signature changes, shown as a difference against the
+  current value, and written only after a person approves it. This script writes
+  nothing.
+  Three kinds of proposal, named per field below:
+    computed here — a value produced in full; write it as it stands.
+    content computed here — the rows are deterministic and the markup is not, so the
+      spell renders them from the project's own components. This toolkit ships no
+      markup.
+    owed by the spell — prose a model writes. This script cannot propose it and says so,
+      because a field left silently out of a plan reads as "no change needed".
+  Marked as generated: the page's record of generated text shows this field still
+  holds exactly what the tooling wrote, so nobody has edited it and a model rewrites it.
+  Every value is printed as the page carries it, never wrapped and never shortened: a
+  value nobody can read whole is a value nobody can approve.
+    guideSource: computed here
+      current:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotileasgenerated
+        rung: deploy
+      proposed:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotilewithbody
+        rung: deploy
+    guideProperties: content computed here, markup rendered by the spell
+      changes:
+        This page stores its property table as one value rather than as rows, so the two sides
+        cannot be compared field by field and no summary of what changed is available here.
+        The spell renders the table from the project's own components; a page rebuilt with a
+        property row list gets an added/removed/changed summary instead of this note.
+    guidePurpose (as generated): owed by the spell, which is where the model is
+      current:
+        Use a promo tile to point at one thing worth noticing.
+      proposed:
+        (none here — a model writes this one, in the spell)
+
+Left alone: 3
+  Written when the page was created and never touched again. Reported when it may have
+  gone stale, never replaced: what somebody wrote is their work, not a value to
+  overwrite.
+  The page's own name, address and visibility settings, the editorial levers, the media
+  a person uploaded, and every field this register does not name.
+  Marked no record: the page's record of generated text holds no entry for the field,
+  so nothing says the tooling wrote it. It is kept, exactly as an edited field is.
+  Every value below is reproduced exactly as the page carries it, which is what "left
+  alone" means here: this plan proposes no write against any of them.
+    guideWhenToUse (seeded-once, no record)
+      Reach for a promo tile when a page needs a pointer rather than a paragraph.
+    guideExamples (seeded-once)
+      <promo-tile>two instances an editor arranged</promo-tile>
+    name (never-touched)
+      How to use a Promo Tile
+
+Live examples the source's variant set implies: 1
+  Seeded once, when the page is created, and never re-seeded: an editor arranges these
+  instances, and an arrangement is a person's work rather than a value to overwrite. The
+  set is derived from the source's own variation axis, and the rule that derived it is
+  printed with it — a wrong rule has to be visible beside the number it produced.
+  No property on this component carries an option list and none of them is a toggle,
+  so the source records no variation to enumerate: one instance of the component
+  itself, which is the least a guide page can show an editor.
+    (one instance, nothing set — the CMS applies its own defaults)
+  The instance above sets nothing, so its values are whatever the CMS applies. This
+  script records no default for an option list or a toggle — two real projects carry
+  none — so it has none to apply and does not invent one: the values that instance
+  ends up with are the CMS's, not this plan's.
+  This page already carries an arrangement, so nothing above is seeded and nothing
+  above is proposed: the set is listed to be read beside what is on the page. Which
+  variants that arrangement holds is not something this script can read — an
+  arrangement is markup or a block list, and it is a person's work either way.
+  This component records no variation axis now, and the stored signature says its schema
+  moved since this page was seeded — so the arrangement on the page may be built from an
+  option list the component no longer carries. Which of those it is cannot be read here,
+  and the arrangement is left alone either way — this prints so a person goes and looks.
+
+Nothing was written. This document is a proposal: every write happens in the spell,
+after a person approves it.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "stdout_matches: expected-plan.txt" \
+  "not_contains: Traceback"
+
+# The same inputs as the document the spell reads: the state is addressable per field, the
+# purpose sentence is owed, and `modelCallNeeded` is true.
+C="$CASES/plan-prose-as-generated-json"; mkdir -p "$C"
+prose_inputs "$C" 2 "$PURPOSE_RECORD" "$PURPOSE_AS_WRITTEN"
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"generatedState\": \"asGenerated\"" \
+  "contains: \"proposal\": \"owed\"" \
+  "contains: \"generatedState\": \"noRecord\"" \
+  "contains: \"modelCallNeeded\": true" \
+  "not_contains: \"generatedState\": \"edited\"" \
+  "not_contains: Traceback"
+
+# --- edited by one word: kept, and nothing is proposed for it ---------------------
+#
+# The record says the tooling wrote "…worth noticing." and the page now says "…worth seeing.".
+# That one word is an edit, so the sentence is left alone exactly as the editor wrote it and no
+# prose is owed. The model-call sentence is the no-prose form, worded for a page that holds a
+# record: it must not claim prose is never regenerated, because on this page it could be.
+C="$CASES/plan-prose-edited"; mkdir -p "$C"
+prose_inputs "$C" 2 "$PURPOSE_RECORD" "$PURPOSE_ONE_WORD"
+cat > "$C/expected-plan.txt" <<'EOF'
+Change plan for promoTile (Promo Tile), read at the deploy rung.
+  Guide page: How to use a Promo Tile
+  Stored signature: sha256:promotileasgenerated, recorded at the deploy rung.
+  Current signature: sha256:promotilewithbody
+  The stored signature differs from the source's current signature: the component
+  changed shape after this guide was generated, so every machine-owned field is
+  regenerated below.
+
+A model call is needed, and not for prose. 1 machine-owned field carries content the
+spell renders in the project's own markup. No prose on this page is rewritten: a prose
+field is rewritten only while it still holds exactly what the tooling wrote, and each
+one this page carries was edited since or has no record of it, so each is kept below.
+
+Machine-owned, regenerated and proposed for approval: 2
+  Regenerated when the source signature changes, shown as a difference against the
+  current value, and written only after a person approves it. This script writes
+  nothing.
+  Two kinds of proposal, named per field below:
+    computed here — a value produced in full; write it as it stands.
+    content computed here — the rows are deterministic and the markup is not, so the
+      spell renders them from the project's own components. This toolkit ships no
+      markup.
+  Every value is printed as the page carries it, never wrapped and never shortened: a
+  value nobody can read whole is a value nobody can approve.
+    guideSource: computed here
+      current:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotileasgenerated
+        rung: deploy
+      proposed:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotilewithbody
+        rung: deploy
+    guideProperties: content computed here, markup rendered by the spell
+      changes:
+        This page stores its property table as one value rather than as rows, so the two sides
+        cannot be compared field by field and no summary of what changed is available here.
+        The spell renders the table from the project's own components; a page rebuilt with a
+        property row list gets an added/removed/changed summary instead of this note.
+
+Left alone: 4
+  Written when the page was created and never touched again. Reported when it may have
+  gone stale, never replaced: what somebody wrote is their work, not a value to
+  overwrite.
+  The page's own name, address and visibility settings, the editorial levers, the media
+  a person uploaded, and every field this register does not name.
+  Marked edited: the field differs from what the page's record says the tooling wrote,
+  by any amount, so it is somebody's now. It is kept, and nothing is proposed for it.
+  Marked no record: the page's record of generated text holds no entry for the field,
+  so nothing says the tooling wrote it. It is kept, exactly as an edited field is.
+  Every value below is reproduced exactly as the page carries it, which is what "left
+  alone" means here: this plan proposes no write against any of them.
+    guidePurpose (seeded-once, edited)
+      Use a promo tile to point at one thing worth seeing.
+    guideWhenToUse (seeded-once, no record)
+      Reach for a promo tile when a page needs a pointer rather than a paragraph.
+    guideExamples (seeded-once)
+      <promo-tile>two instances an editor arranged</promo-tile>
+    name (never-touched)
+      How to use a Promo Tile
+
+Live examples the source's variant set implies: 1
+  Seeded once, when the page is created, and never re-seeded: an editor arranges these
+  instances, and an arrangement is a person's work rather than a value to overwrite. The
+  set is derived from the source's own variation axis, and the rule that derived it is
+  printed with it — a wrong rule has to be visible beside the number it produced.
+  No property on this component carries an option list and none of them is a toggle,
+  so the source records no variation to enumerate: one instance of the component
+  itself, which is the least a guide page can show an editor.
+    (one instance, nothing set — the CMS applies its own defaults)
+  The instance above sets nothing, so its values are whatever the CMS applies. This
+  script records no default for an option list or a toggle — two real projects carry
+  none — so it has none to apply and does not invent one: the values that instance
+  ends up with are the CMS's, not this plan's.
+  This page already carries an arrangement, so nothing above is seeded and nothing
+  above is proposed: the set is listed to be read beside what is on the page. Which
+  variants that arrangement holds is not something this script can read — an
+  arrangement is markup or a block list, and it is a person's work either way.
+  This component records no variation axis now, and the stored signature says its schema
+  moved since this page was seeded — so the arrangement on the page may be built from an
+  option list the component no longer carries. Which of those it is cannot be read here,
+  and the arrangement is left alone either way — this prints so a person goes and looks.
+
+Nothing was written. This document is a proposal: every write happens in the spell,
+after a person approves it.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "stdout_matches: expected-plan.txt" \
+  "not_contains: owed by the spell" \
+  "not_contains: Traceback"
+
+C="$CASES/plan-prose-edited-json"; mkdir -p "$C"
+prose_inputs "$C" 2 "$PURPOSE_RECORD" "$PURPOSE_ONE_WORD"
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"generatedState\": \"edited\"" \
+  "contains: \"generatedState\": \"noRecord\"" \
+  "not_contains: \"generatedState\": \"asGenerated\"" \
+  "not_contains: \"proposal\": \"owed\"" \
+  "not_contains: Traceback"
+
+# --- no record: the page states it holds none, and every prose field is kept ------
+#
+# The purpose sentence is word for word the text the as-generated case recorded, and here that
+# is the point: with no record nothing says the tooling wrote it, so it is kept. Matching text
+# is never read as permission without the fingerprint that says whose text it is.
+C="$CASES/plan-prose-no-record"; mkdir -p "$C"
+prose_inputs "$C" 2 null "$PURPOSE_AS_WRITTEN"
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"generatedState\": \"noRecord\"" \
+  "not_contains: \"generatedState\": \"asGenerated\"" \
+  "not_contains: \"generatedState\": \"edited\"" \
+  "not_contains: \"proposal\": \"owed\"" \
+  "not_contains: Traceback"
+
+# A version-1 page file predates the record and reads as `"generated": null`: the same page,
+# the same document, byte for byte.
+C="$CASES/plan-prose-page-version-1"; mkdir -p "$C"
+prose_inputs "$C" 1 ABSENT "$PURPOSE_AS_WRITTEN"
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "same_stdout_as: plan-prose-no-record"
+
+# A boolean is not a version: Python's `True in (1, 2)` would read the page as version 1.
+C="$CASES/plan-prose-page-version-true"; mkdir -p "$C"
+prose_inputs "$C" true null "$PURPOSE_AS_WRITTEN"
+expect "$C" \
+  "exit: 1" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: pageVersion True" \
+  "not_contains: generatedState" \
+  "not_contains: Traceback"
+
+# Version 2 states the record structurally, and an absent key is refused for `source`'s
+# reason: it cannot be told from a producer that failed to read the field, and planning as
+# though the page held no record would keep every field it says may be refreshed.
+C="$CASES/plan-prose-generated-absent"; mkdir -p "$C"
+prose_inputs "$C" 2 ABSENT "$PURPOSE_AS_WRITTEN"
+expect "$C" \
+  "exit: 1" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: no 'generated' key" \
+  "not_contains: declares pageVersion" \
+  "not_contains: Change plan for" \
+  "not_contains: Traceback"
+
+# The record stated twice, structurally and as a field, is refused for the reason a doubled
+# `source` is: two copies of one value can disagree, and the copy believed would not be the one
+# a reader of the file picks.
+C="$CASES/plan-prose-generated-twice"; mkdir -p "$C"
+prose_inputs "$C" 2 null "$PURPOSE_AS_WRITTEN"
+sed -i.bak 's|^  "fields": {$|  "fields": {\n    "guideGenerated": "{}",|' "$C/page.json" && rm "$C/page.json.bak"
+expect "$C" \
+  "exit: 1" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: guideGenerated" \
+  "contains: twice" \
+  "not_contains: Change plan for" \
+  "not_contains: Traceback"
+
+# --- an unchanged source with an as-generated purpose is still a no-op ------------
+#
+# Only a changed source triggers a refresh. The purpose sentence is exactly as generated, and
+# the signature matches, so nothing is proposed and no model is called: the document is the
+# one `plan-noop` pins, byte for byte.
+C="$CASES/plan-prose-as-generated-noop"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotileasgenerated" ""
+prose_page "$C" 2 "$PURPOSE_RECORD" "$PURPOSE_AS_WRITTEN" "sha256:promotileasgenerated"
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "same_stdout_as: plan-noop"
+
+# ==============================================================================
+# `plan` reads the page's record of generated text for each property row's note
+# ==============================================================================
+#
+# The record's `rows` map holds a fingerprint per property alias, and each row the page holds
+# gets the same three states a prose field does: `asGenerated` (the note still has its
+# fingerprint, so a model rewrites it), `edited` (it differs, so it is kept) and `noRecord`
+# (no entry, so it is kept). Keyed on the alias, never the label, so a row whose label changed
+# keeps its note's state.
+#
+# The page holds three rows against a source that renamed one, dropped one and added one:
+#
+#   promoHeading      label "Promo Heading" on the page, "Promo Headline" in the source
+#   promoLegacyStyle  on the page, gone from the source: a removed row
+#   promoSpacing      unchanged
+#   promoBody         in the source only: an added row
+#
+# Fingerprints computed outside the script:
+#
+#   printf %s '<p>The line a visitor reads first.</p>' | shasum -a 256
+#     8390012dc3407ab69bc05dc1db03bac985aa704803475a9ae8801ed3429bab7c
+#   printf %s '<p>Left over from the old build. Ask before using it.</p>' | shasum -a 256
+#     cb3ccce91a5ac1421b412e769f89a5ed18c254bf3052e2f1f917f1857ea9431f
+#   printf %s '<p>Pick Loose when the tile sits alone.</p>' | shasum -a 256
+#     bb0f71321f73f80ea52d6a657f2e75b564b238aeae1708c095888c0a346c5623
+#   printf %s '<p>Pick Loose when the tile stands alone.</p>' | shasum -a 256
+#     4eb01b7c135016742d03d0c371a92eff5da833883635fe2372d3b31462510586
+#
+# The last is the note as the tooling wrote it; the page now says "sits", one word changed.
+
+ROW_HEADING_FP="sha256:8390012dc3407ab69bc05dc1db03bac985aa704803475a9ae8801ed3429bab7c"
+ROW_LEGACY_FP="sha256:cb3ccce91a5ac1421b412e769f89a5ed18c254bf3052e2f1f917f1857ea9431f"
+ROW_SPACING_FP="sha256:bb0f71321f73f80ea52d6a657f2e75b564b238aeae1708c095888c0a346c5623"
+ROW_SPACING_BEFORE_EDIT_FP="sha256:4eb01b7c135016742d03d0c371a92eff5da833883635fe2372d3b31462510586"
+
+# rows_inputs <case-root> <generated-json> <prose: with|without>
+#
+# `without` leaves both prose fields off the page, so a JSON case's `generatedState` can only
+# have come from a row: a prose field the page does not carry has no state.
+rows_inputs() {
+  local root=$1 generated=$2 prose=$3 prose_lines=""
+  if [ "$prose" = "with" ]; then
+    prose_lines='    "guidePurpose": "Use a promo tile to point at one thing worth noticing.",
+    "guideWhenToUse": "Reach for a promo tile when a page needs a pointer rather than a paragraph.",'
+  fi
+  cat > "$root/page.json" <<EOF
+{
+  "pageVersion": 2,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotilebeforethechange",
+    "rung": "deploy"
+  },
+  "generated": $generated,
+  "fields": {
+$prose_lines
+    "guideExamples": "<promo-tile>two instances an editor arranged</promo-tile>",
+    "guideProperties": [
+      {
+        "alias": "promoHeading",
+        "label": "Promo Heading",
+        "required": true,
+        "tab": "Content",
+        "group": "",
+        "information": "<p>The line a visitor reads first.</p>"
+      },
+      {
+        "alias": "promoLegacyStyle",
+        "label": "Promo Legacy Style",
+        "required": false,
+        "tab": "Content",
+        "group": "",
+        "information": "<p>Left over from the old build. Ask before using it.</p>"
+      },
+      {
+        "alias": "promoSpacing",
+        "label": "Promo Spacing",
+        "required": false,
+        "tab": "Settings",
+        "group": "",
+        "information": "<p>Pick Loose when the tile sits alone.</p>"
+      }
+    ]
+  }
+}
+EOF
+  cat > "$root/dossier.json" <<'EOF'
+{
+  "dossierVersion": 1,
+  "rung": "deploy",
+  "alias": "promoTile",
+  "name": "Promo Tile",
+  "kind": "element",
+  "icon": "",
+  "description": "",
+  "structureAvailable": true,
+  "compositions": [],
+  "tabs": [
+    {
+      "alias": "content",
+      "name": "Content",
+      "sortOrder": 10,
+      "properties": [
+        {
+          "alias": "promoHeading",
+          "name": "Promo Headline",
+          "description": "",
+          "editor": "Umbraco.TextBox",
+          "mandatory": true,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        },
+        {
+          "alias": "promoBody",
+          "name": "Promo Body",
+          "description": "",
+          "editor": "Umbraco.TextArea",
+          "mandatory": false,
+          "sortOrder": 20,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    },
+    {
+      "alias": "settings",
+      "name": "Settings",
+      "sortOrder": 20,
+      "properties": [
+        {
+          "alias": "promoSpacing",
+          "name": "Promo Spacing",
+          "description": "",
+          "editor": "Umbraco.TextBox",
+          "mandatory": false,
+          "sortOrder": 10,
+          "options": [],
+          "inheritedFrom": null
+        }
+      ],
+      "groups": []
+    }
+  ],
+  "sourceSignature": "sha256:promotileafterthechange"
+}
+EOF
+}
+
+# --- an as-generated note on an unchanged row is proposed for rewriting -----------
+#
+# The spacing row's columns are all unchanged, so before the record it was counted among the
+# untouched rows. Its note still has its recorded fingerprint, so it is listed and marked for a
+# model to rewrite, and the model-call sentence says a model is needed for that note -- not
+# "not for prose", which would be false on this page. Asserted as the whole report.
+C="$CASES/plan-row-note-as-generated"; mkdir -p "$C"
+rows_inputs "$C" "{\"recordVersion\": 1, \"fields\": {}, \"rows\": {\"promoSpacing\": \"$ROW_SPACING_FP\"}}" with
+cat > "$C/expected-plan.txt" <<'EOF'
+Change plan for promoTile (Promo Tile), read at the deploy rung.
+  Guide page: How to use a Promo Tile
+  Stored signature: sha256:promotilebeforethechange, recorded at the deploy rung.
+  Current signature: sha256:promotileafterthechange
+  The stored signature differs from the source's current signature: the component
+  changed shape after this guide was generated, so every machine-owned field is
+  regenerated below.
+
+A model call is needed. 1 machine-owned field carries content the spell renders in the
+project's own markup, and 1 property-row note still holds exactly what the tooling
+wrote, so a model rewrites it. No prose field on this page is rewritten: each
+one it carries was edited since or has no record of it, so each is kept below.
+
+Machine-owned, regenerated and proposed for approval: 2
+  Regenerated when the source signature changes, shown as a difference against the
+  current value, and written only after a person approves it. This script writes
+  nothing.
+  Two kinds of proposal, named per field below:
+    computed here — a value produced in full; write it as it stands.
+    content computed here — the rows are deterministic and the markup is not, so the
+      spell renders them from the project's own components. This toolkit ships no
+      markup.
+  Every value is printed as the page carries it, never wrapped and never shortened: a
+  value nobody can read whole is a value nobody can approve.
+    guideSource: computed here
+      current:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotilebeforethechange
+        rung: deploy
+      proposed:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotileafterthechange
+        rung: deploy
+    guideProperties: content computed here, markup rendered by the spell
+      changes:
+        added     promoBody (Promo Body)
+        removed   promoLegacyStyle (Promo Legacy Style)
+          carries an information note — removal needs your approval
+        changed   promoHeading (Promo Headline) — label
+        unchanged promoSpacing (Promo Spacing)
+          information note as generated — a model rewrites it, in the spell
+
+Left alone: 3
+  Written when the page was created and never touched again. Reported when it may have
+  gone stale, never replaced: what somebody wrote is their work, not a value to
+  overwrite.
+  Every value below is reproduced exactly as the page carries it, which is what "left
+  alone" means here: this plan proposes no write against any of them.
+    guidePurpose (seeded-once)
+      Use a promo tile to point at one thing worth noticing.
+    guideWhenToUse (seeded-once)
+      Reach for a promo tile when a page needs a pointer rather than a paragraph.
+    guideExamples (seeded-once)
+      <promo-tile>two instances an editor arranged</promo-tile>
+
+Live examples the source's variant set implies: 1
+  Seeded once, when the page is created, and never re-seeded: an editor arranges these
+  instances, and an arrangement is a person's work rather than a value to overwrite. The
+  set is derived from the source's own variation axis, and the rule that derived it is
+  printed with it — a wrong rule has to be visible beside the number it produced.
+  No property on this component carries an option list and none of them is a toggle,
+  so the source records no variation to enumerate: one instance of the component
+  itself, which is the least a guide page can show an editor.
+    (one instance, nothing set — the CMS applies its own defaults)
+  The instance above sets nothing, so its values are whatever the CMS applies. This
+  script records no default for an option list or a toggle — two real projects carry
+  none — so it has none to apply and does not invent one: the values that instance
+  ends up with are the CMS's, not this plan's.
+  This page already carries an arrangement, so nothing above is seeded and nothing
+  above is proposed: the set is listed to be read beside what is on the page. Which
+  variants that arrangement holds is not something this script can read — an
+  arrangement is markup or a block list, and it is a person's work either way.
+  This component records no variation axis now, and the stored signature says its schema
+  moved since this page was seeded — so the arrangement on the page may be built from an
+  option list the component no longer carries. Which of those it is cannot be read here,
+  and the arrangement is left alone either way — this prints so a person goes and looks.
+
+Nothing was written. This document is a proposal: every write happens in the spell,
+after a person approves it.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "stdout_matches: expected-plan.txt" \
+  "not_contains: Traceback"
+
+# The same record as the document the spell reads. The page carries no prose field, so the one
+# `asGenerated` state in it is the row's.
+C="$CASES/plan-row-note-as-generated-json"; mkdir -p "$C"
+rows_inputs "$C" "{\"recordVersion\": 1, \"fields\": {}, \"rows\": {\"promoSpacing\": \"$ROW_SPACING_FP\"}}" without
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"generatedState\": \"asGenerated\"" \
+  "contains: \"generatedState\": \"noRecord\"" \
+  "contains: \"modelCallNeeded\": true" \
+  "not_contains: \"generatedState\": \"edited\"" \
+  "not_contains: \"proposal\": \"owed\"" \
+  "not_contains: Traceback"
+
+# --- a note edited by one word is kept, and nothing is proposed for it ----------
+#
+# The record holds the note the tooling wrote ("stands alone"); the page says "sits alone". The
+# note is kept and marked edited, and no prose is owed. The record holds row entries only, and
+# the model-call sentence is the form for a page with a record: "no prose on a guide page is
+# regenerated at all" would be false here, because a row note still as generated would be.
+C="$CASES/plan-row-note-edited"; mkdir -p "$C"
+rows_inputs "$C" "{\"recordVersion\": 1, \"fields\": {}, \"rows\": {\"promoSpacing\": \"$ROW_SPACING_BEFORE_EDIT_FP\"}}" with
+cat > "$C/expected-plan.txt" <<'EOF'
+Change plan for promoTile (Promo Tile), read at the deploy rung.
+  Guide page: How to use a Promo Tile
+  Stored signature: sha256:promotilebeforethechange, recorded at the deploy rung.
+  Current signature: sha256:promotileafterthechange
+  The stored signature differs from the source's current signature: the component
+  changed shape after this guide was generated, so every machine-owned field is
+  regenerated below.
+
+A model call is needed, and not for prose. 1 machine-owned field carries content the
+spell renders in the project's own markup. No prose on this page is rewritten: a prose
+field is rewritten only while it still holds exactly what the tooling wrote, and each
+one this page carries was edited since or has no record of it, so each is kept below.
+
+Machine-owned, regenerated and proposed for approval: 2
+  Regenerated when the source signature changes, shown as a difference against the
+  current value, and written only after a person approves it. This script writes
+  nothing.
+  Two kinds of proposal, named per field below:
+    computed here — a value produced in full; write it as it stands.
+    content computed here — the rows are deterministic and the markup is not, so the
+      spell renders them from the project's own components. This toolkit ships no
+      markup.
+  Every value is printed as the page carries it, never wrapped and never shortened: a
+  value nobody can read whole is a value nobody can approve.
+    guideSource: computed here
+      current:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotilebeforethechange
+        rung: deploy
+      proposed:
+        alias: promoTile
+        kind: element
+        signature: sha256:promotileafterthechange
+        rung: deploy
+    guideProperties: content computed here, markup rendered by the spell
+      changes:
+        added     promoBody (Promo Body)
+        removed   promoLegacyStyle (Promo Legacy Style)
+          carries an information note — removal needs your approval
+        changed   promoHeading (Promo Headline) — label
+        unchanged promoSpacing (Promo Spacing)
+          information note edited since it was generated — kept as it stands
+
+Left alone: 3
+  Written when the page was created and never touched again. Reported when it may have
+  gone stale, never replaced: what somebody wrote is their work, not a value to
+  overwrite.
+  Every value below is reproduced exactly as the page carries it, which is what "left
+  alone" means here: this plan proposes no write against any of them.
+    guidePurpose (seeded-once)
+      Use a promo tile to point at one thing worth noticing.
+    guideWhenToUse (seeded-once)
+      Reach for a promo tile when a page needs a pointer rather than a paragraph.
+    guideExamples (seeded-once)
+      <promo-tile>two instances an editor arranged</promo-tile>
+
+Live examples the source's variant set implies: 1
+  Seeded once, when the page is created, and never re-seeded: an editor arranges these
+  instances, and an arrangement is a person's work rather than a value to overwrite. The
+  set is derived from the source's own variation axis, and the rule that derived it is
+  printed with it — a wrong rule has to be visible beside the number it produced.
+  No property on this component carries an option list and none of them is a toggle,
+  so the source records no variation to enumerate: one instance of the component
+  itself, which is the least a guide page can show an editor.
+    (one instance, nothing set — the CMS applies its own defaults)
+  The instance above sets nothing, so its values are whatever the CMS applies. This
+  script records no default for an option list or a toggle — two real projects carry
+  none — so it has none to apply and does not invent one: the values that instance
+  ends up with are the CMS's, not this plan's.
+  This page already carries an arrangement, so nothing above is seeded and nothing
+  above is proposed: the set is listed to be read beside what is on the page. Which
+  variants that arrangement holds is not something this script can read — an
+  arrangement is markup or a block list, and it is a person's work either way.
+  This component records no variation axis now, and the stored signature says its schema
+  moved since this page was seeded — so the arrangement on the page may be built from an
+  option list the component no longer carries. Which of those it is cannot be read here,
+  and the arrangement is left alone either way — this prints so a person goes and looks.
+
+Nothing was written. This document is a proposal: every write happens in the spell,
+after a person approves it.
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "stdout_matches: expected-plan.txt" \
+  "not_contains: a model rewrites" \
+  "not_contains: Traceback"
+
+C="$CASES/plan-row-note-edited-json"; mkdir -p "$C"
+rows_inputs "$C" "{\"recordVersion\": 1, \"fields\": {}, \"rows\": {\"promoSpacing\": \"$ROW_SPACING_BEFORE_EDIT_FP\"}}" without
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"generatedState\": \"edited\"" \
+  "not_contains: \"generatedState\": \"asGenerated\"" \
+  "not_contains: Traceback"
+
+# --- no record: every row's note is kept --------------------------------------
+#
+# The page states it holds no record. Each row on it reads `noRecord`, and none is proposed.
+C="$CASES/plan-row-note-no-record"; mkdir -p "$C"
+rows_inputs "$C" null without
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"generatedState\": \"noRecord\"" \
+  "not_contains: \"generatedState\": \"asGenerated\"" \
+  "not_contains: \"generatedState\": \"edited\"" \
+  "not_contains: Traceback"
+
+# --- a renamed label keeps its note's state, because the key is the alias ---------
+#
+# The heading row's label changed in the source, and its note is still as generated. The row is
+# reported changed for its label AND its note is proposed for rewriting. The purpose sentence is
+# as generated too, so the model-call sentence counts the prose field and adds the row note.
+C="$CASES/plan-row-note-renamed-label"; mkdir -p "$C"
+rows_inputs "$C" "{\"recordVersion\": 1, \"fields\": {\"guidePurpose\": \"sha256:e4a2d347d3336e2f712082bda10765c6ebb62addbd7cbce3d0a390aa6094d5ce\"}, \"rows\": {\"promoHeading\": \"$ROW_HEADING_FP\"}}" with
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: changed   promoHeading (Promo Headline) — label" \
+  "contains: information note as generated — a model rewrites it, in the spell" \
+  "contains: A model call is needed. 1 machine-owned field needs prose this script cannot write, and 1" \
+  "contains: 1 property-row note still holds exactly what the tooling wrote, so a model" \
+  "contains: rewrites it too." \
+  "contains: guidePurpose (as generated): owed by the spell" \
+  "not_contains: Traceback"
+
+# --- a removed row's record entry goes with the row ------------------------------
+#
+# The legacy row is gone from the source and its note has a record entry. The row's removal
+# still needs approval, as any row carrying a note does, and the report says its record entry
+# goes with it. A removed row's note is not rewritten, so it owes no model call: the record
+# holds row entries only and the sentence is the recorded no-prose form.
+C="$CASES/plan-row-note-removed"; mkdir -p "$C"
+rows_inputs "$C" "{\"recordVersion\": 1, \"fields\": {}, \"rows\": {\"promoLegacyStyle\": \"$ROW_LEGACY_FP\"}}" with
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json" \
+  "contains: removed   promoLegacyStyle (Promo Legacy Style)" \
+  "contains: carries an information note — removal needs your approval" \
+  "contains: its note's entry in the record of generated text goes with the row" \
+  "contains: No prose on this page is rewritten" \
+  "not_contains: a model rewrites" \
+  "not_contains: Traceback"
+
+C="$CASES/plan-row-note-removed-json"; mkdir -p "$C"
+rows_inputs "$C" "{\"recordVersion\": 1, \"fields\": {}, \"rows\": {\"promoLegacyStyle\": \"$ROW_LEGACY_FP\"}}" without
+expect "$C" \
+  "exit: 0" \
+  "args: plan promoTile --page page.json --dossier dossier.json --json" \
+  "contains: \"state\": \"removed\"" \
+  "contains: \"generatedState\": \"asGenerated\"" \
+  "not_contains: Traceback"
+
+# `record` is what drops the entry. After the spell writes the approved table the removed row
+# is gone from the page, and the record printed for that page names no row it does not hold.
+# The page here holds promoHeading, promoLegacyStyle and promoSpacing; the existing record
+# names a retired row besides them, which is dropped, and a spacing entry, which is kept.
+C="$CASES/record-drops-row-not-on-page"; mkdir -p "$C"
+record_page "$C" 2 '{"recordVersion": 1, "fields": {}, "rows": {"promoRetired": "sha256:retiredrowfingerprint", "promoSpacing": "sha256:keptspacingfingerprint"}}'
+cat > "$C/expected-record.json" <<'EOF'
+{
+  "recordVersion": 1,
+  "fields": {},
+  "rows": {
+    "promoHeading": "sha256:8390012dc3407ab69bc05dc1db03bac985aa704803475a9ae8801ed3429bab7c",
+    "promoSpacing": "sha256:keptspacingfingerprint"
+  }
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: record --page page.json --row promoHeading" \
+  "stdout_matches: expected-record.json" \
+  "not_contains: promoRetired"
+
+# ==============================================================================
+# Mark up to date: `mark`
+# ==============================================================================
+#
+# A person who has looked at a stale guide and decided nothing on it needs rewriting marks it
+# up to date: the page keeps every word, and only its stored reference moves to the source's
+# current signature. `mark` decides whether that is allowed and prints the new reference.
+#
+# It is allowed on exactly one comparison, `differs`, which is the plan's own word for a stale
+# page. Every other answer refuses, saying why, and prints no reference: a matched page has
+# nothing to mark, a page with no reference has nothing to move, and a reference stored at
+# another rung, or one compared against a read that produced no signature, cannot be called
+# stale or current at all -- writing the current signature over it would claim a comparison
+# nobody made.
+#
+# The signatures are hand-authored opaque strings, as in the plan cases, so the expected
+# reference is written from the inputs rather than from a run.
+
+# mark_page <case-root> <source-json>
+mark_page() {
+  cat > "$1/page.json" <<EOF
+{
+  "pageVersion": 1,
+  "page": "How to use a Promo Tile",
+  "source": $2,
+  "fields": {
+    "guidePurpose": "Use a promo tile to point at something an editor wants noticed.",
+    "name": "How to use a Promo Tile"
+  }
+}
+EOF
+}
+
+MARK_STALE_SOURCE='{"alias": "promoTile", "kind": "element", "signature": "sha256:promotileasgenerated", "rung": "deploy"}'
+
+# --- a stale page, marked: the same reference with the current signature ---------
+#
+# `--ignored` names a different component, so the case also pins that the ignore check
+# refuses on the alias it names and on nothing else.
+C="$CASES/mark-stale"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotilenow" ""
+mark_page "$C" "$MARK_STALE_SOURCE"
+cat > "$C/expected-source.json" <<'EOF'
+{
+  "alias": "promoTile",
+  "kind": "element",
+  "signature": "sha256:promotilenow",
+  "rung": "deploy"
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: mark promoTile --page page.json --dossier dossier.json --ignored alertBanner" \
+  "stdout_matches: expected-source.json" \
+  "not_contains: Traceback"
+
+# --- the same, reading the project off disk ---------------------------------------
+#
+# The expected signature is what `guide.py signature alertBanner --adapter deploy` printed for
+# this tree before `mark` existed; it is copied in here, not computed by the code under test.
+C="$CASES/mark-project-read"; mkdir -p "$C"
+deploy_tree "$C"
+cat > "$C/page.json" <<'EOF'
+{
+  "pageVersion": 1,
+  "page": "How to use an Alert Banner",
+  "source": {
+    "alias": "alertBanner",
+    "kind": "element",
+    "signature": "sha256:alertbannerasgeneratedthreeweeksago",
+    "rung": "deploy"
+  },
+  "fields": {}
+}
+EOF
+cat > "$C/expected-source.json" <<'EOF'
+{
+  "alias": "alertBanner",
+  "kind": "element",
+  "signature": "sha256:37478f626856ed393a8e42f834d8d6fd6e51530623bda826d496f2f59ded610c",
+  "rung": "deploy"
+}
+EOF
+expect "$C" \
+  "exit: 0" \
+  "args: mark alertBanner --page page.json --adapter deploy" \
+  "stdout_matches: expected-source.json"
+
+# --- refusal: the page carries no reference ---------------------------------------
+C="$CASES/mark-refuses-no-reference"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotilenow" ""
+mark_page "$C" "null"
+expect "$C" \
+  "exit: 1" \
+  "args: mark promoTile --page page.json --dossier dossier.json" \
+  "contains: carries no stored reference" \
+  "not_contains: \"signature\"" \
+  "not_contains: Traceback"
+
+# --- refusal: the signatures already match ----------------------------------------
+C="$CASES/mark-refuses-matched"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotileasgenerated" ""
+mark_page "$C" "$MARK_STALE_SOURCE"
+expect "$C" \
+  "exit: 1" \
+  "args: mark promoTile --page page.json --dossier dossier.json" \
+  "contains: already up to date" \
+  "not_contains: \"signature\"" \
+  "not_contains: Traceback"
+
+# --- refusal: the reference was stored at another rung ----------------------------
+#
+# Identical signature strings, different rungs: a mark that skipped the rung test would see
+# "matched" and refuse for the wrong reason, or see nothing and stamp a live-rung page with a
+# deploy signature.
+C="$CASES/mark-refuses-other-rung"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotilenow" ""
+mark_page "$C" '{"alias": "promoTile", "kind": "element", "signature": "sha256:promotileasgenerated", "rung": "live"}'
+expect "$C" \
+  "exit: 1" \
+  "args: mark promoTile --page page.json --dossier dossier.json" \
+  "contains: stored at the 'live' rung and this read is at 'deploy'" \
+  "not_contains: \"signature\"" \
+  "not_contains: Traceback"
+
+# --- refusal: the schema could not be read -----------------------------------------
+#
+# Two shapes. A project with no serialization the script can read refuses before any
+# comparison; a supplied dossier carrying no signature of its own cannot be compared.
+C="$CASES/mark-refuses-schema-unreadable"; mkdir -p "$C/src"
+mark_page "$C" "$MARK_STALE_SOURCE"
+expect "$C" \
+  "exit: 1" \
+  "args: mark promoTile --page page.json" \
+  "contains: no readable schema serialization" \
+  "not_contains: \"signature\"" \
+  "not_contains: Traceback"
+
+C="$CASES/mark-refuses-no-current-signature"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotilenow" ""
+sed 's/"sourceSignature": "sha256:promotilenow"/"sourceSignature": null/' "$C/dossier.json" > "$C/dossier.tmp"
+mv "$C/dossier.tmp" "$C/dossier.json"
+mark_page "$C" "$MARK_STALE_SOURCE"
+expect "$C" \
+  "exit: 1" \
+  "args: mark promoTile --page page.json --dossier dossier.json" \
+  "contains: this read produced no signature of its own" \
+  "not_contains: \"signature\"" \
+  "not_contains: Traceback"
+
+# --- refusal: the alias is on the guides node's ignore list -------------------------
+#
+# Named in another case than the stored alias, because the ignore list is matched
+# case-insensitively, as the audit matches it.
+C="$CASES/mark-refuses-ignored"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotilenow" ""
+mark_page "$C" "$MARK_STALE_SOURCE"
+expect "$C" \
+  "exit: 1" \
+  "args: mark promoTile --page page.json --dossier dossier.json --ignored alertBanner --ignored PROMOTILE" \
+  "contains: on the ignore list" \
+  "not_contains: \"signature\"" \
+  "not_contains: Traceback"
+
+# --- refusal: the page documents a different component -------------------------------
+C="$CASES/mark-refuses-other-alias"; mkdir -p "$C"
+plan_dossier "$C" "sha256:promotilenow" ""
+mark_page "$C" '{"alias": "alertBanner", "kind": "element", "signature": "sha256:promotileasgenerated", "rung": "deploy"}'
+expect "$C" \
+  "exit: 1" \
+  "args: mark promoTile --page page.json --dossier dossier.json" \
+  "contains: stores a reference to 'alertBanner'" \
+  "not_contains: \"signature\"" \
+  "not_contains: Traceback"
 
 echo "regenerated $(find "$CASES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') fixtures"

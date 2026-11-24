@@ -1,0 +1,5 @@
+exit: 1
+args: mark promoTile --page page.json --dossier dossier.json
+contains: stored at the 'live' rung and this read is at 'deploy'
+not_contains: "signature"
+not_contains: Traceback

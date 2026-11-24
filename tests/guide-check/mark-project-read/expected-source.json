@@ -1,0 +1,6 @@
+{
+  "alias": "alertBanner",
+  "kind": "element",
+  "signature": "sha256:37478f626856ed393a8e42f834d8d6fd6e51530623bda826d496f2f59ded610c",
+  "rung": "deploy"
+}

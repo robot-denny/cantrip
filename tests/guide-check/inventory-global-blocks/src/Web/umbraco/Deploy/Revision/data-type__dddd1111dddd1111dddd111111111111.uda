@@ -1,0 +1,11 @@
+{
+  "Name": "Textstring",
+  "EditorAlias": "Umbraco.TextBox",
+  "EditorUiAlias": "Umb.PropertyEditorUi.TextBox",
+  "DatabaseType": "Nvarchar",
+  "Configuration": {},
+  "Udi": "umb://data-type/dddd1111dddd1111dddd111111111111",
+  "Dependencies": [],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.DataTypeArtifact",
+  "__version": "17.2.0"
+}
