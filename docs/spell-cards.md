@@ -1,6 +1,6 @@
 # Cantrip spell cards
 
-Card content for a deck that teaches the toolkit. One card per unit, 35 in all. Read it to learn
+Card content for a deck that teaches the toolkit. One card per unit, 40 in all. Read it to learn
 what Cantrip offers without installing anything, or print it as a desk reference for the team.
 
 Every fact here is drawn from the units themselves. Nothing is invented.
@@ -35,7 +35,7 @@ true to put there. Do not invent a value to balance the layout.
 | Field | Card region | Holds | Cap |
 |---|---|---|---|
 | `Type` | header badge | `Spell` (you cast it) or `Reference` (the model reaches for it) | one word |
-| `Group` | header badge / deck suit | Core spellbook · Core reference · umbraco-17 · umbraco-cloud · dotnet | — |
+| `Group` | header badge / deck suit | Core spellbook · Core reference · umbraco-17 · umbraco-cloud · optimizely-12 · dotnet | — |
 | `Cast` | stat block | exact invocation, spells only | one line |
 | `Triggers` | stat block | when the model reaches for it, references only | one line |
 | `Needs` | stat block | prerequisites: input artifact, slot, credentials | one line |
@@ -52,12 +52,13 @@ like "where do tests live" once rather than every time.
 
 ## Deck dividers
 
-Five group cards, if the deck wants them. Text for the back of each:
+Six group cards, if the deck wants them. Text for the back of each:
 
 - **Core spellbook** — Eleven spells. Nine are the workflow chain, two are configuration. Cast by name, never automatically.
-- **Core reference** — Eight opinions the toolkit holds. You never cast these; the model reaches for them.
-- **umbraco-17** — Optional pack, pinned to the CMS major. Seven references, four spells.
+- **Core reference** — Nine opinions the toolkit holds. You never cast these; the model reaches for them.
+- **umbraco-17** — Optional pack, pinned to the CMS major. Eight references, five spells.
 - **umbraco-cloud** — Optional pack for Umbraco Deploy. Applies to any licensed install, not only Cloud.
+- **optimizely-12** — Optional pack, pinned to the CMS major. One reference, one spell.
 - **dotnet** — Optional pack for C# and .NET, CMS or not. Three references, no spells.
 
 **The chain, for the box lid:**
@@ -73,7 +74,7 @@ Everything else is either a later stage or an opinion you will meet when it appl
 
 ## When to regenerate the deck
 
-Written against the units in `skills/`: 16 spells and 19 references, 35 in all. The deck is a
+Written against the units in `skills/`: 18 spells and 22 references, 40 in all. The deck is a
 snapshot and it cannot tell when it has gone stale. A new spell or
 reference means a missing card, and nothing here will notice. Count the `SKILL.md` files under
 `skills/` against the `###` headings in this file before treating it as complete.
@@ -284,6 +285,16 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Watch for:** the magic vocabulary is fixed at spell, cast, spellbook, and reference. Adding to it costs the reader more than it gives.
 - **Pairs with:** `/feature`, `/commit-message`, `/spec`
 
+### test-content-principles
+
+- **Type:** Reference
+- **Group:** Core reference
+- **Triggers:** writing, refreshing or reviewing a test-content recipe, editing a project's test-content rules, or building the code that turns recipes into test pages
+- **Holds:** the general variation rules G1 to G12, asking about gray areas one at a time, the recipe format and its tokens, page-type recipes, what a builder owes a recipe, and a starter rules file for QA
+- **Does:** Decides which variations of a component a QA test page shows, and how a recipe writes them down. A pack's `/test-content` spell applies it.
+- **Watch for:** never rename an item id that has been built. A renamed id is a new item, and the old one is removed.
+- **Pairs with:** `/test-content`
+
 ---
 
 # umbraco-17 pack
@@ -398,6 +409,27 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Does:** Edits document properties, or invokes a configured AI agent, through the Management API. For work that would normally be a backoffice click but needs doing from the terminal.
 - **Watch for:** tokens expire in 299 seconds. Re-authenticate per group of operations, not once per session.
 
+### umbraco-17-test-content-builder
+
+- **Type:** Reference
+- **Group:** umbraco-17
+- **Triggers:** a project adopting test-content recipes with no builder yet, or planning or reviewing a change to one
+- **Holds:** the builder's modules and the Umbraco 17 services each uses, stable keys, the build order, the stored value forms the backoffice accepts, and what keeps a build safe on a shared environment
+- **Does:** The design input for building, once, the code that turns committed recipes into test pages, through `/spec` and `/plan`.
+- **Watch for:** store a toggle as `1` or `0`. A stored `true` saves and renders locally, then was refused on Umbraco Cloud when the backoffice opened the page.
+- **Pairs with:** `/test-content`, `/spec`
+
+### /test-content
+
+- **Type:** Spell
+- **Group:** umbraco-17
+- **Cast:** `/test-content <component alias>`, after building or changing a block or page type
+- **Needs:** a test-content builder, a QA-owned rules file, and the `## Test content` slot or its defaults
+- **Leaves:** one committed recipe file, checked by the builder's validator
+- **Does:** Writes or refreshes the recipe for one component, asking about every gray area one at a time. The project's builder turns it into test pages later.
+- **Watch for:** it never writes to the CMS. Nothing appears on a test page until someone builds the recipe from the dashboard.
+- **Then:** `/commit-message`
+
 ---
 
 # umbraco-cloud pack
@@ -421,6 +453,31 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Leaves:** a risk-rated report with remediation for each finding
 - **Does:** Finds Deploy schema conflicts before they reach a commit: accidental local regeneration, unpulled remote changes, both-modified files. With credentials it also catches database-versus-file drift that git cannot see.
 - **Watch for:** Umbraco regenerates `.uda` files on startup, so a change you are about to stage may not be yours.
+
+---
+
+# optimizely-12 pack
+
+### optimizely-12-test-content-builder
+
+- **Type:** Reference
+- **Group:** optimizely-12
+- **Triggers:** an Optimizely CMS 12 project adopting test-content recipes with no builder yet, or planning or reviewing a change to one
+- **Holds:** the builder's modules and the CMS 12 APIs each uses, stable content GUIDs, blocks kept in each test page's own assets folder, the publishing side effects and validators a build meets
+- **Does:** The design input for building, once, the code that turns committed recipes into test pages, through `/spec` and `/plan`.
+- **Watch for:** a publish runs the site's own handlers. Keep test content out of search at the indexer before the first build on a shared environment.
+- **Pairs with:** `/test-content`, `/spec`
+
+### /test-content
+
+- **Type:** Spell
+- **Group:** optimizely-12
+- **Cast:** `/test-content <content type class name>`, after building or changing a block or page type
+- **Needs:** a test-content builder, a QA-owned rules file, and the `## Test content` slot or its defaults
+- **Leaves:** one committed recipe file, checked by the builder's validator
+- **Does:** Reads the content type's class and views, then writes or refreshes its recipe, asking about every gray area one at a time. The project's builder turns it into test pages later.
+- **Watch for:** a dropdown whose options come from a service at edit time has no fixed list. The spell asks how to treat it.
+- **Then:** `/commit-message`
 
 ---
 
