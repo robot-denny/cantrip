@@ -91,6 +91,12 @@ buried.
   rather than the line. Supersedes the invocation in [0004](0004-install-layout-corrections.md)'s
   decision 4, and nothing else in it.
 
+- **0020 — test content: a recipe the toolkit writes, a builder the project owns.** Each CMS pack ships
+  a `/test-content` spell that writes a committed recipe of a component's variations, and a builder
+  blueprint the project uses once to build the code that turns recipes into test pages. The variation
+  method is a core reference both packs defer to, and the page grid stays the project's. Adds the
+  `optimizely-12` pack and records why there is no `optimizely-13` yet.
+
 ## Backfilled
 
 Five decisions predate this repository, having been settled in a direction document that is not in the

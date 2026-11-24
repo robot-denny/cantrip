@@ -42,7 +42,7 @@ CONFIG_DIR=".agents/config"
 # is the only place the comparison is possible.
 ROSTER_CORE=(
   bdd-principles design-system-authoring memory-discipline prose-discipline
-  reviewer-discipline security-review-rules tdd-principles workflow
+  reviewer-discipline security-review-rules tdd-principles test-content-principles workflow
   code-review commit-message explore feature implement-step plan retrofit setup spec
   testify update-toolkit
 )
@@ -58,8 +58,11 @@ ROSTER_PACK=(
   umbraco-17-starter-facts umbraco-17-audit-patterns umbraco-17-guide-scaffolding umbraco-17-block-authoring
   umbraco-17-guide-generator
   block umbraco-edit guide styleguide
+  umbraco-17-test-content-builder
+  block umbraco-edit guide styleguide test-content
   check-uda umbraco-deploy-facts
   dotnet-conventions dotnet-review-rules codebase-audit
+  optimizely-12-test-content-builder
 )
 ROSTER=( "${ROSTER_CORE[@]}" "${ROSTER_PACK[@]}" )
 
@@ -73,6 +76,8 @@ ROSTER=( "${ROSTER_CORE[@]}" "${ROSTER_PACK[@]}" )
 # A unit absent here still verifies normally and falls back to the pack-less hint below -- worth
 # less, never wrong. Keep it in step with ROSTER_PACK by hand; contract check 13 holds the roster
 # to what the toolkit ships, and the roster is what this list follows.
+# `test-content` is deliberately absent: two packs ship a spell of that name (one per CMS), and
+# this list can name only one, so it takes the pack-less hint. Less help, never the wrong pack.
 PACK_SOURCE=(
   "umbraco-17-planning|umbraco-17"
   "umbraco-17-feature-backfill|umbraco-17"
@@ -86,11 +91,13 @@ PACK_SOURCE=(
   "umbraco-edit|umbraco-17"
   "guide|umbraco-17"
   "styleguide|umbraco-17"
+  "umbraco-17-test-content-builder|umbraco-17"
   "check-uda|umbraco-cloud"
   "umbraco-deploy-facts|umbraco-cloud"
   "dotnet-conventions|dotnet"
   "dotnet-review-rules|dotnet"
   "codebase-audit|dotnet"
+  "optimizely-12-test-content-builder|optimizely-12"
 )
 
 # Assets each skill must be able to read. A skill whose SKILL.md is present but whose
@@ -99,6 +106,7 @@ assets_for() {
   case "$1" in
     workflow)            echo "templates/spec.md templates/feature.md" ;;
     reviewer-discipline) echo "agents/accessibility-reviewer.md agents/code-reviewer.md agents/perf-reviewer.md" ;;
+    test-content-principles) echo "templates/test-content-rules.md" ;;
     *)                   echo "" ;;
   esac
 }
@@ -119,8 +127,9 @@ WIRED_NAMES=()
 # shipping they cannot -- nothing in the report says which pack a unit came from. PACK_SOURCE makes
 # it answerable, so the hint answers it.
 #
-# A unit in no list at all still gets the old placeholder. That only happens for a unit added to
-# ROSTER_PACK and not to PACK_SOURCE, and less help is better than confidently naming the wrong pack.
+# A unit in no list at all still gets the old placeholder. That happens for a unit added to
+# ROSTER_PACK and not to PACK_SOURCE, and deliberately for a unit two packs ship (see the note above
+# PACK_SOURCE). Less help is better than confidently naming the wrong pack.
 reinstall_hint() {   # reinstall_hint <skill-name>
   local n
   for n in "${ROSTER_CORE[@]}"; do
@@ -335,6 +344,7 @@ PACK_SLOTS=(
   "conventions.md|Editor guides|styleguide"
   "stack.md|Design tokens|umbraco-17-guide-scaffolding"
   "stack.md|Design tokens|styleguide"
+  "paths.md|Test content|test-content"
 )
 for entry in "${PACK_SLOTS[@]}"; do
   IFS='|' read -r pf ph pskill <<<"$entry"

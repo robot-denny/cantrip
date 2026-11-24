@@ -10,7 +10,13 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Nothing in flight.**
+**Test-content recipes, on `robot-denny/test-content`, in review.** The core method reference, a
+`/test-content` spell and builder blueprint in `umbraco-17` and in the new `optimizely-12` pack, and
+[ADR 0020](adr/0020-test-content-recipes-and-builders.md). It landed out of flow and was reconciled
+by `/retrofit`, and dry-run by hand on a demo-project block, with the four corrections the run found
+applied ([validation log](_work/test-content/validation.md)), then reviewed by all three
+reviewers with the agreed fixes applied. The capability doc is
+[_features/test-content.md](_features/test-content.md).
 
 **Of what Next holds, the sidecar-delivery defect is the most urgent and the pack-authoring
 meta-skill is the highest-leverage.** The first is urgent because a shipped increment is currently
@@ -372,6 +378,17 @@ against the published source, done once when the table was authored. That is fin
 still and misleading the day someone bumps the revision, because the gate will pass on a table with a
 stale name in it. Whatever closes this belongs with the bump rather than before it — a fetch-and-compare
 step, or a line in the reference telling the next editor what the gate will not do for them.
+
+**Test content: two follow-ups the first increment leaves open.** Each is tracked in the
+Increments list of [_features/test-content.md](_features/test-content.md).
+
+- **The client project adopts this format's names.** Its builder predates the toolkit's format and
+  spells several tokens and keys differently; the exact rename list is in the capability doc. The
+  work is in that project, and until it lands, recipes written by the toolkit's spell will not build
+  there.
+- **The Optimizely side is checked against one codebase's shape, not a working builder.** The first
+  CMS 12 builder built from the blueprint should feed its corrections back. An `optimizely-13` pack
+  waits for a CMS 13 project to check against, per ADR 0020.
 
 ---
 

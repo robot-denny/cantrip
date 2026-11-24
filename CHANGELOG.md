@@ -24,6 +24,16 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
 
 ### Added
 
+- **Test content** ([ADR 0020](adr/0020-test-content-recipes-and-builders.md)). A way to get every
+  meaningful variation of a block or page type onto QA test pages without building them by hand.
+  - **`test-content-principles`**, a core reference: the general variation rules, the recipe format,
+    and what a builder owes a recipe. Its template starts a project's QA-owned rules file.
+  - **`/test-content`** in the `umbraco-17` pack and the new `optimizely-12` pack. It writes or
+    refreshes one component's recipe, asks about every gray area, and checks it with the project's
+    validator. It writes the recipe only.
+  - **`umbraco-17-test-content-builder`** and **`optimizely-12-test-content-builder`**, blueprints
+    for the builder a project writes once, through `/spec` and `/plan`, to turn recipes into pages.
+  - Projects without a builder get a clear stop from `/test-content`, pointing at the blueprint.
 - Repository scaffold: layer directories, ADR log, changelog, and contributor guidance.
 - **The layer contract** ([docs/contract.md](docs/contract.md), ADR 0001): four L2 slot files,
   the `**Slot:**` / `**If empty:**` reference pattern, graceful degradation as a hard
