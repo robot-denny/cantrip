@@ -1,0 +1,5 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json
+contains: Stale, whose stored signature no longer matches its source: 1
+contains: Findings: 0 undocumented, 0 orphaned, 1 stale.
+not_contains: Ignored

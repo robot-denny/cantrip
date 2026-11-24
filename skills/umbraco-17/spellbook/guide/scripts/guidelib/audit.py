@@ -53,6 +53,9 @@ backlog with a phantom item in it is worse than no backlog.
     an entry has no `source` key           refused: absent is not the same as "explicitly none"
     a `source` carries no `alias`          refused: a reference to nothing cannot be classified
     a `signature` or `rung` is not a string  refused: an unusable value, not a missing one
+    version 2 with no `ignored` key        refused: absent is not the same as "nothing ignored"
+    `ignored` not an array of aliases      refused, naming the entry's position
+    an `ignored` list in a version-1 file  refused: the file's version says it is not there
 
 Two shapes are **not** refused, because both are answerable:
 
@@ -65,6 +68,36 @@ Two shapes are **not** refused, because both are answerable:
 
 The line is the same one the extraction ladder draws: a value that cannot be resolved refuses,
 and a value that is merely thin is reported.
+
+## Global blocks
+
+A global block (a reusable block stored as a document; `guidelib/inventory.py` has the rule) is
+counted like a palette block: documentable, undocumented when no guide names it, compared for
+staleness, and never an orphan's subject. A supplied inventory at version 1 predates the list
+and holds none; at version 2 the `globalBlocks` key is required, since an absent list and an
+empty one say different things. The header states the rule and the listed aliases when there
+is anything to state, for the reason it states an excluded palette.
+
+## The ignore list
+
+Guides file version 2 adds a top-level `ignored` array: aliases a team has decided need no
+guide, which the spell reads from the guides node's `guideIgnored` field. Version 1, and a bare
+array, read as nothing ignored. Matched on the alias, case-insensitively, like everything here.
+
+    an ignored alias the inventory holds   named in its own section, and counted as none of
+                                           undocumented, stale or orphaned. Any content type
+                                           the read declares counts as held, documentable or not
+    an ignored alias it does not hold      named in the same section as naming nothing. It hides
+                                           nothing: a guide claiming that alias is still an
+                                           orphan, since no component is left for the list to
+                                           be about
+
+Neither is a finding. The list is a decision someone made, and `--strict` gates on work, so
+an ignored alias changes no exit code; one naming nothing is printed so a stale list is seen.
+The section prints only when the list has entries, so a report from a file that ignores
+nothing reads exactly as it did before the list existed. The audit has no JSON output; the
+section is carried on the document `run` returns (`ignored`, `ignoredNamingNothing`) for a
+caller that wants it.
 """
 
 import json
@@ -88,7 +121,10 @@ AUDIT_VERSION = 1
 # The guides-file shapes this module has been written against. One so far, and absence is
 # accepted for the reason `version_recognized` gives for a serialization version: absence is
 # not a claim to be unrecognized, and refusing over it would rest on nothing.
-ACCEPTED_GUIDES_VERSIONS = (1,)
+ACCEPTED_GUIDES_VERSIONS = (1, 2)
+
+# The first version whose file carries an `ignored` list. Before it, nothing is ignored.
+IGNORED_SINCE_VERSION = 2
 
 # The label an entry gets when it names no page. Cosmetic — it reaches the report only beside an
 # alias that already identifies the finding — so a missing page name is not worth refusing over.
@@ -159,6 +195,14 @@ STATEMENT_UNKNOWN_RUNG = (
 CAPTION_UNDOCUMENTED = "Undocumented, present in code with no guide page"
 CAPTION_ORPHANED = "Orphaned, claiming a source this project no longer holds"
 CAPTION_STALE = "Stale, whose stored signature no longer matches its source"
+CAPTION_IGNORED = "Ignored, on the guides node's ignore list"
+
+RULE_IGNORED = (
+    "Aliases a team decided need no guide, read from the guides node. Each is left out of",
+    "the undocumented and stale sections, and a guide claiming one is never an orphan. Not",
+    "findings: the list is a decision, so it adds to no finding count and no exit code. An",
+    "alias no content type in this read declares names nothing, and hides nothing either.",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -166,7 +210,10 @@ CAPTION_STALE = "Stale, whose stored signature no longer matches its source"
 # ---------------------------------------------------------------------------
 
 def load_guides(path):
-    """Read and validate a guides file, returning one normalized entry per guide page.
+    """Read and validate a guides file: `(entries, ignored)`.
+
+    `entries` is one normalized entry per guide page, and `ignored` the file's ignore list as
+    trimmed aliases, deduped case-insensitively in the order given (empty before version 2).
 
     Each entry is `{"page": label, "source": None | {"alias", "kind", "signature", "rung"}}`.
 
@@ -198,11 +245,14 @@ def load_guides(path):
     # A bare array is what a one-line shell filter over an API response produces, and the
     # object form is what carries a version. Both are accepted; nothing else is, because a
     # third shape would be a guess about which key held the guides.
+    ignored = []
     if isinstance(payload, list):
         listed = payload
     elif isinstance(payload, dict):
         declared = payload.get("guidesVersion")
-        if declared is not None and declared not in ACCEPTED_GUIDES_VERSIONS:
+        # A boolean is refused by type: `True in (1, 2)` holds, and `true` is not a version.
+        if declared is not None and (isinstance(declared, bool)
+                                     or declared not in ACCEPTED_GUIDES_VERSIONS):
             raise GuideError(
                 "%s declares guidesVersion %r, which this script has not been written "
                 "against.\n"
@@ -218,6 +268,7 @@ def load_guides(path):
                 "empty guide set is written as an empty array, which reports the whole "
                 "inventory as a backlog — that is a different statement from a missing key."
                 % path)
+        ignored = _ignored(path, declared, payload)
     else:
         raise GuideError(
             "%s holds %s at the top level, not an object or an array of guide entries."
@@ -229,7 +280,48 @@ def load_guides(path):
 
     entries = [_entry(path, index, raw) for index, raw in enumerate(listed)]
     _note_duplicates(entries)
-    return entries
+    return entries, ignored
+
+
+def _ignored(path, declared, payload):
+    """The ignore list a guides object carries, validated like every other list in the file.
+
+    Required from version 2 on, because an empty list and an absent key say opposite things --
+    "nothing is ignored" about the guides node, "I did not read the field" about the producer --
+    and defaulting the second to the first would put every ignored component back in the
+    undocumented list with nothing in the report saying why. Refused in a version-1 file, whose
+    version claims no such list. A file with no version makes no claim either way, so its list
+    is read when present.
+    """
+    if declared is not None and declared < IGNORED_SINCE_VERSION:
+        if "ignored" in payload:
+            raise GuideError(
+                "%s declares guidesVersion %r and carries an 'ignored' list.\n"
+                "  Version %d reads as nothing ignored, so the list is one the file's own "
+                "version says is not there. Declare guidesVersion %d to have it read."
+                % (path, declared, declared, IGNORED_SINCE_VERSION))
+        return []
+    if "ignored" not in payload:
+        if declared is None:
+            return []
+        raise GuideError(
+            "%s declares guidesVersion %r and holds no 'ignored' key.\n"
+            "  Nothing ignored is written as an empty array. An absent key cannot be told from "
+            "a guides node whose ignore field the producer failed to read." % (path, declared))
+    value = payload["ignored"]
+    if not isinstance(value, list):
+        raise GuideError("%s: 'ignored' holds %s, not an array of aliases."
+                         % (path, type(value).__name__))
+    seen, kept = set(), []
+    for index, alias in enumerate(value):
+        if not isinstance(alias, str) or not alias.strip():
+            raise GuideError("%s: ignored[%d] is %r, not an alias."
+                             % (path, index, alias))
+        folded = alias.strip().lower()
+        if folded not in seen:
+            seen.add(folded)
+            kept.append(alias.strip())
+    return kept
 
 
 def _entry(path, index, raw):
@@ -285,6 +377,14 @@ def _note_duplicates(entries):
 # The inventory this audits against
 # ---------------------------------------------------------------------------
 
+# The inventory documents this audit reads. Version 1 predates `globalBlocks`; it is still what
+# a prepared inventory written before the list may hold, and reads as holding none.
+ACCEPTED_INVENTORY_VERSIONS = (1, 2)
+
+# The first inventory version that carries global blocks.
+GLOBAL_BLOCKS_SINCE_VERSION = 2
+
+
 def load_inventory(path):
     """Read a pre-computed inventory document, as `inventory --json` emits one.
 
@@ -309,13 +409,18 @@ def load_inventory(path):
                          % (path, type(doc).__name__))
 
     declared = doc.get("inventoryVersion")
-    if declared != inventory.INVENTORY_VERSION:
+    # `bool` is an int subclass, and `True in (1, 2)` holds; a version is never a boolean.
+    if isinstance(declared, bool) or declared not in ACCEPTED_INVENTORY_VERSIONS:
         raise GuideError(
-            "%s declares inventoryVersion %r, and this script reads %d.\n"
+            "%s declares inventoryVersion %r, and this script reads %s.\n"
             "  Regenerate it with `inventory --json`, or supply a document written by a "
             "matching version — the lists this audit reads are the ones a version bump would "
-            "move." % (path, declared, inventory.INVENTORY_VERSION))
-    for key in ("rung", "components", "pageTypesProposed"):
+            "move." % (path, declared,
+                       " or ".join(str(v) for v in ACCEPTED_INVENTORY_VERSIONS)))
+    required = ["rung", "components", "pageTypesProposed"]
+    if declared >= GLOBAL_BLOCKS_SINCE_VERSION:
+        required.append("globalBlocks")
+    for key in required:
         if key not in doc:
             raise GuideError("%s holds no '%s' key; that is not an inventory document."
                              % (path, key))
@@ -332,6 +437,7 @@ def load_inventory(path):
                 "%s declares an 'excludedPalette' of %r; an excluded palette is named by a "
                 "non-empty string, and its name is what the report prints to explain the "
                 "documentable count." % (path, doc["excludedPalette"]))
+    doc["globalBlocksListed"] = _check_listed(path, doc.get("globalBlocksListed"))
     for key in DECLARED_LISTS:
         if key in doc:
             # Replaced, not merely checked: every count downstream reads these lists, so the
@@ -339,6 +445,28 @@ def load_inventory(path):
             # disagree with itself.
             doc[key] = _check_named_list(path, key, doc[key])
     return doc
+
+
+def _check_listed(path, value):
+    """A supplied inventory's `globalBlocksListed`, or an empty list where it has none.
+
+    Optional, like `excludedPalette`, and refused where present and unreadable for the same
+    reason: the report prints these aliases to explain a count.
+    """
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise GuideError("%s holds 'globalBlocksListed' as %s; it is an array."
+                         % (path, type(value).__name__))
+    allowed = (inventory.MATCHED_DOCUMENT, inventory.MATCHED_ELEMENT, None)
+    for index, item in enumerate(value):
+        where = "%s: globalBlocksListed[%d]" % (path, index)
+        if (not isinstance(item, dict) or not isinstance(item.get("alias"), str)
+                or not item["alias"].strip() or item.get("matched") not in allowed):
+            raise GuideError(
+                "%s is %r; each entry is {\"alias\": <alias>, \"matched\": %s}."
+                % (where, item, " | ".join(json.dumps(a) for a in allowed)))
+    return value
 
 
 def _check_named_list(path, key, value):
@@ -394,16 +522,16 @@ def _check_named_list(path, key, value):
 # showcase element a project excluded by palette is still a content type that project declares,
 # so a guide naming one is no orphan — it simply closes no gap, which is the same answer this
 # audit already gives a guide for a settings model or a composition.
-DECLARED_LISTS = ("components", "pageTypesProposed", "settingsModels",
+DECLARED_LISTS = ("components", "globalBlocks", "pageTypesProposed", "settingsModels",
                   "unpalettedElementTypes", "notProposed", "excludedPaletteComponents")
 
-# The two lists a guide can close a gap in. The inventory's own summary line adds exactly these
-# two, so the audit's documentable count and the inventory's cannot drift.
-DOCUMENTABLE_LISTS = ("components", "pageTypesProposed")
+# The lists a guide can close a gap in. The inventory's own summary line adds exactly these, so
+# the audit's documentable count and the inventory's cannot drift.
+DOCUMENTABLE_LISTS = ("components", "globalBlocks", "pageTypesProposed")
 
 
-def run(inventory_doc, guides):
-    """Compute the audit document from an inventory and a guide set.
+def run(inventory_doc, guides, ignored=()):
+    """Compute the audit document from an inventory, a guide set and its ignore list.
 
     Pure arithmetic over two inputs: no file is read here and none is written anywhere, so a
     caller can hand this a hand-authored pair and get the report a project would have produced.
@@ -412,10 +540,20 @@ def run(inventory_doc, guides):
     for key in DOCUMENTABLE_LISTS:
         for item in inventory_doc.get(key) or []:
             units[item["alias"].lower()] = item
-    declared = set()
+    declared = {}
     for key in DECLARED_LISTS:
         for item in inventory_doc.get(key) or []:
-            declared.add(item["alias"].lower())
+            declared.setdefault(item["alias"].lower(), item)
+
+    skipped = set()
+    ignored_held, ignored_nothing = [], []
+    for alias in ignored:
+        item = declared.get(alias.lower())
+        if item is None:
+            ignored_nothing.append({"alias": alias})
+        else:
+            skipped.add(alias.lower())
+            ignored_held.append(item)
 
     read_rung = inventory_doc.get("rung")
     documented, orphaned, stale = set(), [], []
@@ -433,6 +571,10 @@ def run(inventory_doc, guides):
             # An orphan names the page rather than a display name: the source it claims is gone,
             # so there is no name left to read, and the page is what the operator acts on.
             orphaned.append({"alias": alias, "name": entry["page"]})
+            continue
+        if folded in skipped:
+            # Ignored, and held: its guide is no orphan (the alias is declared), and it is
+            # compared for nothing. Named in the ignored section instead.
             continue
         unit = units.get(folded)
         if unit is None:
@@ -469,7 +611,8 @@ def run(inventory_doc, guides):
             stale.append({"alias": alias,
                           "name": (unit or {}).get("name") or entry["page"]})
 
-    undocumented = [units[folded] for folded in units if folded not in documented]
+    undocumented = [units[folded] for folded in units
+                    if folded not in documented and folded not in skipped]
 
     return {
         "auditVersion": AUDIT_VERSION,
@@ -480,6 +623,9 @@ def run(inventory_doc, guides):
         # name alone, which is all a supplied inventory holds — see `RUNG_GAPS`.
         "structureGaps": list(rung_gaps(read_rung)),
         "componentsRead": len(inventory_doc.get("components") or []),
+        "globalBlocksRead": len(inventory_doc.get("globalBlocks") or []),
+        # Carried through for the header, which names them beside the count they explain.
+        "globalBlocksListed": list(inventory_doc.get("globalBlocksListed") or []),
         "pageTypesProposed": len(inventory_doc.get("pageTypesProposed") or []),
         "documentableUnits": len(units),
         # Carried through rather than recomputed. Where the inventory arrived as a file this
@@ -499,10 +645,13 @@ def run(inventory_doc, guides):
             "undocumented": " ".join(RULE_UNDOCUMENTED),
             "orphaned": " ".join(RULE_ORPHANED),
             "stale": " ".join(RULE_STALE),
+            "ignored": " ".join(RULE_IGNORED),
         },
         "undocumented": _sorted(undocumented),
         "orphaned": _sorted(orphaned),
         "stale": _sorted(stale),
+        "ignored": _sorted(ignored_held),
+        "ignoredNamingNothing": _sorted(ignored_nothing),
     }
 
 
@@ -549,13 +698,18 @@ def report(doc):
     """
     lines = []
     lines.append("Guide audit, read at the %s rung." % doc["rung"])
-    lines.append("  %d documentable %s: %d component%s + %d proposed page type%s."
+    lines.append("  %d documentable %s: %s."
                  % (doc["documentableUnits"],
                     rpt.plural(doc["documentableUnits"], "unit", "units"),
-                    doc["componentsRead"], "" if doc["componentsRead"] == 1 else "s",
-                    doc["pageTypesProposed"],
-                    "" if doc["pageTypesProposed"] == 1 else "s"))
+                    inventory.documentable_terms(doc["componentsRead"], doc["globalBlocksRead"],
+                                                 doc["pageTypesProposed"])))
     lines.extend("  " + line for line in RULE_DOCUMENTABLE)
+    # The global-block rule and the listed aliases, worded by `inventory`, for the reason the
+    # excluded palette below is: they explain a count the line above printed.
+    if doc["globalBlocksRead"] or doc["globalBlocksListed"]:
+        lines.extend("  " + line for line in inventory.RULE_GLOBAL_BLOCKS)
+        lines.extend("  " + line
+                     for line in inventory.global_block_lines(doc["globalBlocksListed"]))
     # With the determiner's rule, because it is part of that rule: the count above left a
     # palette out, and the one place a reader looks to find out how the count was reached is
     # the line that explains it. Rendered by `inventory` so the two reports cannot word one
@@ -602,6 +756,7 @@ def report(doc):
     _section(lines, CAPTION_UNDOCUMENTED, RULE_UNDOCUMENTED, doc["undocumented"])
     _section(lines, CAPTION_ORPHANED, RULE_ORPHANED, doc["orphaned"])
     _section(lines, CAPTION_STALE, RULE_STALE, doc["stale"])
+    _ignored_section(lines, doc)
 
     lines.append("")
     if findings(doc):
@@ -647,6 +802,25 @@ def _structure_statement(lines, rung):
     for gap in gaps:
         lines.append("    " + gap[0])
         lines.extend("      " + line for line in gap[1:])
+
+
+def _ignored_section(lines, doc):
+    """The ignore list, printed only when it has entries.
+
+    Unlike the three counted sections, an empty one prints nothing: it is not a finding, and a
+    report from a file that ignores nothing should read exactly as it did before the list
+    existed. Held aliases first, by name; then the ones naming nothing.
+    """
+    held, nothing = doc["ignored"], doc["ignoredNamingNothing"]
+    if not held and not nothing:
+        return
+    lines.append("")
+    lines.append("%s: %d" % (CAPTION_IGNORED, len(held) + len(nothing)))
+    lines.extend("  " + line for line in RULE_IGNORED)
+    for item in held:
+        lines.append("    %s" % rpt.item(item))
+    for item in nothing:
+        lines.append("    %s, which names nothing in this read" % item["alias"])
 
 
 def _section(lines, caption, rule, items):

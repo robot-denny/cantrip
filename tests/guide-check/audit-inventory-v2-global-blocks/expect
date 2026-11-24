@@ -1,0 +1,6 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json
+contains: 2 documentable units: 1 component + 1 global block + 0 proposed page types.
+contains: Undocumented, present in code with no guide page: 1
+contains:     promoBlock (Promo Block)
+not_contains: cardBlock (Card Block)

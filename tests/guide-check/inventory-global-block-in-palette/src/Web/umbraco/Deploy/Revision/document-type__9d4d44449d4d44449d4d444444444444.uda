@@ -1,0 +1,46 @@
+{
+  "Name": "Blockade Page",
+  "Alias": "blockadePage",
+  "AllowedTemplates": [
+    "umb://template/9d4d44449d4d44449d4d444444444444"
+  ],
+  "DefaultTemplate": "umb://template/9d4d44449d4d44449d4d444444444444",
+  "HistoryCleanup": {},
+  "Icon": "icon-document color-blue",
+  "Thumbnail": "folder.png",
+  "Permissions": {
+    "AllowedAtRoot": true,
+    "AllowedChildContentTypes": []
+  },
+  "CompositionContentTypes": [],
+  "PropertyGroups": [
+    {
+      "Key": "9d4d4444-0001-4000-8000-000000000001",
+      "Name": "Content",
+      "SortOrder": 10,
+      "Type": 1,
+      "Alias": "content",
+      "PropertyTypes": [
+        {
+          "Key": "9d4d4444-0101-4000-8000-000000000101",
+          "Alias": "blockadeHeading",
+          "DataType": "umb://data-type/dddd1111dddd1111dddd111111111111",
+          "ValueType": "System.String",
+          "Description": "",
+          "Name": "Blockade Heading",
+          "SortOrder": 10
+        }
+      ]
+    }
+  ],
+  "PropertyTypes": [],
+  "Udi": "umb://document-type/9d4d44449d4d44449d4d444444444444",
+  "Dependencies": [
+    {
+      "Udi": "umb://data-type/dddd1111dddd1111dddd111111111111",
+      "Ordering": true
+    }
+  ],
+  "__type": "Umbraco.Deploy.Infrastructure,Umbraco.Deploy.Infrastructure.Artifacts.ContentType.DocumentTypeArtifact",
+  "__version": "17.2.0"
+}

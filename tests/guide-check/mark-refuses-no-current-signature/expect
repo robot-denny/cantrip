@@ -1,0 +1,5 @@
+exit: 1
+args: mark promoTile --page page.json --dossier dossier.json
+contains: this read produced no signature of its own
+not_contains: "signature"
+not_contains: Traceback

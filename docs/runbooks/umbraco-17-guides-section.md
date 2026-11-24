@@ -82,6 +82,7 @@ your team writes entirely by hand.
 | `guideScreenshots` | Media Picker (multiple) | What a live example can't show: a property panel, a settings screen |
 | `guideBlurb` | Textstring | Optional. Changes the index listing's wording only |
 | `guideSource` | Textarea | The tooling's bookkeeping. See the note below |
+| `guideGenerated` | Label (long string), or Textarea | The tooling's record of which text it wrote. Read-only to editors |
 
 **Leave every one of these optional. Don't mark anything mandatory.** A required field here breaks
 three things that all need to work:
@@ -99,6 +100,11 @@ property that can store and hand back a small piece of JSON. A Textarea does the
 doesn't insist on that particular choice. Two things it *does* insist on. Keep the reference in one
 property and nowhere else, because two copies can drift apart and nothing afterwards can tell you
 which was written last. And treat the signature as opaque, since it gets compared but never read.
+
+**A note on `guideGenerated`.** When `/guide` writes the purpose sentence, the when-to-use section
+or a row's note, it stores a fingerprint of that text here. On a later run, text that still matches
+its fingerprint is text nobody edited, so it can be refreshed. Anything you've changed is kept. Use
+a Label so editors can't change it by accident; a Textarea works too.
 
 **Give `guideExamples` your real block palette, not a special one.** A live example is a genuine
 instance of the block, sitting in the page and rendered by your site like any other content. It is
@@ -125,8 +131,15 @@ it.
 
 **Create → Document Type *with* Template.**
 
-The section's landing page. It needs **no properties at all**. It works out its list of guides when
-it renders.
+The section's landing page. It works out its list of guides when it renders, so it needs no property
+for that. It takes one optional property:
+
+| Property alias | Editor | What it is |
+|---|---|---|
+| `guideIgnored` | Label (long string), or Textarea | Components your team has decided need no guide, one alias per line. Read-only to editors: `/guide --ignore` and `/guide --unignore` change it |
+
+You can leave it off until the first time you want to ignore something. `/guide --ignore` will tell
+you to add it then.
 
 Under **Structure**, allow `editorGuideGroup` as a child. Then open your **Home** document type (or
 wherever you want the section to sit) and add `editorGuideIndex` to *its* allowed children.

@@ -1,0 +1,6 @@
+exit: 1
+args: plan promoTile --page page.json --dossier dossier.json
+contains: no 'generated' key
+not_contains: declares pageVersion
+not_contains: Change plan for
+not_contains: Traceback

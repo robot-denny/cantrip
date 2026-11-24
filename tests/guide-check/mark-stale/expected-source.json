@@ -1,0 +1,6 @@
+{
+  "alias": "promoTile",
+  "kind": "element",
+  "signature": "sha256:promotilenow",
+  "rung": "deploy"
+}

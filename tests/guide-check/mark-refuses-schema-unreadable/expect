@@ -1,0 +1,5 @@
+exit: 1
+args: mark promoTile --page page.json
+contains: no readable schema serialization
+not_contains: "signature"
+not_contains: Traceback

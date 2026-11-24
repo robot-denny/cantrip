@@ -1,0 +1,14 @@
+{
+  "inventoryVersion": 3,
+  "rung": "deploy",
+  "components": [
+    {
+      "alias": "cardBlock",
+      "name": "Card Block",
+      "kind": "element",
+      "signature": "sha256:currentcardblock"
+    }
+  ],
+  "globalBlocks": [],
+  "pageTypesProposed": []
+}

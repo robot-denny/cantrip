@@ -1,0 +1,4 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json
+stdout_matches: expected-plan.txt
+not_contains: Traceback

@@ -32,7 +32,8 @@ lives in.
     machine-owned    regenerated when the source signature changes, presented as a difference,
                      written only after a person approves
     seeded-once      written when the page was created and never touched again; reported when
-                     it may have gone stale, never replaced
+                     it may have gone stale, never replaced -- unless it is model-authored prose
+                     the page's record shows nobody edited (below)
     never-touched    the page's name, address and visibility settings, the editorial levers,
                      the media a person uploaded, and every field not named above
 
@@ -91,11 +92,28 @@ truth. So every machine-owned entry declares which kind of proposal it carries.
     owed        prose a model writes. The script says so and carries no value, rather than
                 being silent about a field it knows has to change.
 
-**No register entry is `owed` today, and the kind is still declared.** Every prose field on a
-guide page is seeded once when the page is created — the purpose sentence and the when-to-use
-section both — so nothing left in the machine-owned class needs words. What a plan still needs
-a model for is the property table's markup, and `STATEMENT_MODEL_NEEDED_NO_PROSE` is the
-sentence that says so instead of printing a nought.
+**No register entry is `owed`; a prose field becomes owed only by the page's record.** Every
+prose field on a guide page is seeded once when the page is created — the purpose sentence and
+the when-to-use section both — so nothing in the machine-owned class needs words by its
+declaration. What a plan needs a model for otherwise is the property table's markup, and
+`STATEMENT_MODEL_NEEDED_NO_PROSE` is the sentence that says so instead of printing a nought.
+
+## Prose the tooling wrote and nobody edited
+
+The page carries a record of generated text (`guidelib/fingerprint.py`): a fingerprint of each
+model-authored field as the CMS stored it when the tooling wrote it. On a regeneration — and
+only then, never on a no-op — each prose field the page carries is read against it:
+
+    asGenerated   the value still has its fingerprint, so nobody edited it. It is proposed,
+                  `owed`, in the machine-owned section: ownership follows provenance, and the
+                  record is the provenance of this one field.
+    edited        it differs, by any amount. Left alone, and nothing is proposed in its place.
+    noRecord      the record holds no entry for it. Left alone exactly as an edited field is.
+
+A field the page never got is reported as unwritten, as before. `guideExamples` is seeded too,
+and is never in the record and never refreshed: it is an arrangement, not text a model wrote.
+The record itself (`guideGenerated`) is machine-owned and computed, by `record` after the write
+from the read-back values, so no plan carries a value for it.
 
 The property tables are `content` and not `computed` for the reason the spec gives in one
 line: the tooling supplies no markup, no class names, no view conventions. The rows are the
@@ -157,6 +175,11 @@ crashing with a traceback.
     the file is not JSON, or is not an object  refused
     `pageVersion` is not one known here      refused, naming the version found
     no `source` key                          refused: absent is not "explicitly none"
+    no `generated` key on a version-2 file   refused, for the same reason; on a version-1 or
+                                             unversioned file it reads as holding no record,
+                                             and a `generated` key there is read like any other
+                                             (`record` refuses anything but version 2)
+    `generated` is not a record or null      refused, by `fingerprint.stored_record`
     `source` is null                          read as a hand-written page: the adoption path
     `source.alias` is not the requested alias  refused: planning a page against the wrong
                                               component is how a guide gets overwritten
@@ -168,6 +191,7 @@ crashing with a traceback.
                                               would report a page's whole content as absent
     `fields` is not an object                refused
     `fields` names the reference field too   refused: two copies of one value can disagree
+    `fields` names the record field too      refused, for the same reason
     `structureAvailable` is not a boolean    refused: it is what says whether the option
                                              lists were read in full, and the seed set is
                                              derived from those lists
@@ -185,6 +209,7 @@ import textwrap
 from guidelib import GuideError
 from guidelib import REFERENCE_CONSEQUENCE_PLAN
 from guidelib import dossier
+from guidelib import fingerprint
 from guidelib import stored_reference
 # Aliased, because both renderers define a function called `report` and the bare module name
 # would be shadowed by it inside exactly the function that needs it.
@@ -193,8 +218,13 @@ from guidelib import report as rpt
 PLAN_VERSION = 1
 
 # The page-file shapes this module has been written against. Absence is accepted for the reason
-# a serialization version's absence is: absence is not a claim to be unrecognized.
-ACCEPTED_PAGE_VERSIONS = (1,)
+# a serialization version's absence is: absence is not a claim to be unrecognized. Version 2 adds
+# the structural `generated` key, the page's record of generated text; a version-1 file predates
+# it, so its absent key reads as `"generated": null` and existing producers keep working; a
+# record it does carry is read like any other. `record` alone requires version 2.
+ACCEPTED_PAGE_VERSIONS = (1, 2)
+# The one version `record` reads: the only one that states the record structurally.
+RECORD_PAGE_VERSION = 2
 
 # The label a page gets when it names itself nothing. Cosmetic — it reaches the output beside an
 # alias that already identifies the page — so it is not worth refusing over.
@@ -253,7 +283,8 @@ COMPARISON_NO_REFERENCE = "noReference"
 # Order is the order the plan lists them, chosen so a reader meets the bookkeeping first, then
 # the deterministic content, then the prose in the order a guide page displays it, then the
 # fields nothing here rewrites. No entry names a field a model owes: every prose field on a
-# guide page is seeded once, which is what `STATEMENT_MODEL_NEEDED_NO_PROSE` reports.
+# guide page is seeded once, which is what `STATEMENT_MODEL_NEEDED_NO_PROSE` reports, and only
+# the page's record of generated text can make one owed on a given run (`_prose_states`).
 # Grouped by class rather than by subject, because the plan prints the machine-owned fields and
 # the left-alone ones in two separate sections and each reads down in this order.
 #
@@ -266,6 +297,10 @@ FIELD_PROPERTIES = "guideProperties"
 # both speak about this one field, and two spellings of it would let a plan seed instances
 # into a field the register classifies under the other name.
 FIELD_EXAMPLES = "guideExamples"
+# The record of generated text. Named for `FIELD_SOURCE`'s reason: its current value does not
+# come out of `fields` either, because the page file states it once, structurally, as
+# `generated`.
+FIELD_GENERATED = "guideGenerated"
 
 REGISTER = (
     {
@@ -275,6 +310,16 @@ REGISTER = (
         "why": "the tooling's own bookkeeping: which component this guide documents, at which "
                "signature, read at which rung. Optional on the document type like every "
                "machine-populated field, so an editor can still hand-create a guide.",
+    },
+    {
+        "field": FIELD_GENERATED,
+        "ownership": MACHINE_OWNED,
+        "proposal": PROPOSAL_COMPUTED,
+        "why": "the record of generated text: a fingerprint of each prose field and row note "
+               "the tooling wrote, as the CMS stored it. It is what tells text nobody edited, "
+               "which a regeneration may rewrite, from text somebody did, which it keeps. "
+               "Computed by `record` from the values read back after a write, so a plan "
+               "carries no value for it: it is written after the fields it describes.",
     },
     {
         "field": FIELD_PROPERTIES,
@@ -291,7 +336,9 @@ REGISTER = (
         "why": "one sentence saying what this component is for, written when the page is "
                "created. A script cannot write it and a model only drafts it: the sentence an "
                "editor reads first is the one they rewrite in their own words, and words "
-               "somebody chose are not a value to regenerate over.",
+               "somebody chose are not a value to regenerate over. Only text the page's record "
+               "shows is still exactly as generated is rewritten when the source changes; "
+               "edited text, and text with no record, is kept.",
     },
     {
         "field": "guideWhenToUse",
@@ -300,8 +347,10 @@ REGISTER = (
         "why": "when to reach for this component and when to reach for another, written when "
                "the page is created. A judgment call about a project, so a model drafts it and "
                "an editor rewrites it for the editors they know — and a rewrite is not a value "
-               "to regenerate over, which is the whole of why the prose on a guide page is "
-               "seeded rather than machine-owned.",
+               "to regenerate over, which is why the prose on a guide page is seeded rather "
+               "than machine-owned. Only text the page's record shows is still exactly as "
+               "generated is rewritten when the source changes; edited text, and text with no "
+               "record, is kept.",
     },
     {
         "field": FIELD_EXAMPLES,
@@ -329,6 +378,65 @@ REGISTER = (
 )
 
 BY_FIELD = dict((entry["field"], entry) for entry in REGISTER)
+
+# The page-level fields a model drafts, and so the page-level fields the record of generated
+# text (`guidelib/fingerprint.py`) may hold an entry for. Each row's `information` note is the
+# third kind of model-authored text, and is recorded per row rather than named here.
+# `guideExamples` is seeded too but is not model-authored: it is instances an editor arranges,
+# never refreshed, so a record entry for it would claim a field nothing may rewrite.
+MODEL_AUTHORED_FIELDS = ("guidePurpose", "guideWhenToUse")
+
+# The column on a property row that holds its note.
+ROW_INFORMATION = "information"
+
+# The three states of a model-authored field the page carries, read against the page's record.
+# Only `asGenerated` lets a regeneration touch the field, and it is the one state that needs a
+# positive fact -- a recorded fingerprint the current value still has. Both of the others keep
+# the field, so the absence of a record is never read as permission, and neither is text that
+# merely happens to read like something the tooling would write.
+#
+#   asGenerated   the value still has its recorded fingerprint: nobody edited it, so it is
+#                 proposed for the model to rewrite
+#   edited        the value differs from its fingerprint, by any amount: kept, nothing proposed
+#   noRecord      no fingerprint for it at all: kept, exactly as an edited field is
+#
+# A field the page does not carry has no state: there is no value to compare, and it is
+# reported as unwritten exactly as it was before the record existed.
+GENERATED_AS_GENERATED = "asGenerated"
+GENERATED_EDITED = "edited"
+GENERATED_NO_RECORD = "noRecord"
+
+# How each state reads on a field's line in the report. The meaning of each is printed once, in
+# the section the field sits in, rather than per field.
+GENERATED_STATE_WORDS = {
+    GENERATED_AS_GENERATED: "as generated",
+    GENERATED_EDITED: "edited",
+    GENERATED_NO_RECORD: "no record",
+}
+RULE_GENERATED_STATE = {
+    GENERATED_AS_GENERATED: (
+        "Marked as generated: the page's record of generated text shows this field still",
+        "holds exactly what the tooling wrote, so nobody has edited it and a model rewrites it.",
+    ),
+    GENERATED_EDITED: (
+        "Marked edited: the field differs from what the page's record says the tooling wrote,",
+        "by any amount, so it is somebody's now. It is kept, and nothing is proposed for it.",
+    ),
+    GENERATED_NO_RECORD: (
+        "Marked no record: the page's record of generated text holds no entry for the field,",
+        "so nothing says the tooling wrote it. It is kept, exactly as an edited field is.",
+    ),
+}
+# The order the states are explained in a section: the one that rewrites first, then the two
+# that keep, in the order a reader would ask about them.
+GENERATED_STATE_ORDER = (GENERATED_AS_GENERATED, GENERATED_EDITED, GENERATED_NO_RECORD)
+
+# The per-field reason on a prose field this run proposes. Not the register's `why`, which
+# describes the field's class: on this run the record has decided the field is the tooling's own
+# text, so it is machine-owned here, and the reason says what decided that.
+AS_GENERATED_WHY = ("still exactly the text the tooling wrote, by the page's record of "
+                    "generated text, so nobody has edited it: a model rewrites it from the "
+                    "changed source, and the spell writes it only after a person approves it.")
 
 # The reason a field the register does not name is left alone. It is the spec's own catch-all —
 # page name, address, visibility settings, and everything not named above — and it is stated per
@@ -604,11 +712,37 @@ STATEMENT_MODEL_NEEDED = (
 # it can state the policy and must not describe a value: the first wording said "every prose
 # field is written once when the page is created and left alone" fifty lines above a section
 # naming a prose field never written at all.
+#
+# **That form is for a page whose prose nothing records as generated.** There it stays true:
+# a prose field with no record is never rewritten, so on that page none ever is. A page whose
+# record says the tooling wrote some of its prose, which an editor has since changed, gets the
+# form below instead -- the first form's "no prose on a guide page is regenerated at all" would
+# be false there, because on that page a field still as generated would be.
 STATEMENT_MODEL_NEEDED_NO_PROSE = (
     "A model call is needed, and not for prose. %d machine-owned %s content the",
     "spell renders in the project's own markup. No prose on a guide page is regenerated at",
     "all: a prose field is written once, when the page is created, and this script never",
     "rewrites one afterwards — so whether each one carries words yet is reported below.",
+)
+STATEMENT_MODEL_NEEDED_NO_PROSE_RECORDED = (
+    "A model call is needed, and not for prose. %d machine-owned %s content the",
+    "spell renders in the project's own markup. No prose on this page is rewritten: a prose",
+    "field is rewritten only while it still holds exactly what the tooling wrote, and each",
+    "one this page carries was edited since or has no record of it, so each is kept below.",
+)
+# The no-prose form for a page whose record says a property row's note is still exactly what
+# the tooling wrote. "Not for prose" would be false there: a model rewrites that note. The
+# count rides on the property table, which is content, so `content` is never nought here.
+STATEMENT_MODEL_NEEDED_NOTES = (
+    "A model call is needed. %d machine-owned %s content the spell renders in the",
+    "project's own markup, and %d property-row %s exactly what the tooling",
+    "wrote, so a model rewrites %s. No prose field on this page is rewritten: each",
+    "one it carries was edited since or has no record of it, so each is kept below.",
+)
+# Added after whichever form counts owed prose, when row notes are rewritten as well.
+STATEMENT_NOTES_TOO = (
+    "%d property-row %s exactly what the tooling wrote, so a model",
+    "rewrites %s too.",
 )
 # The mirror of the form above, and unreachable for the mirror reason: no register entry can
 # leave `content` nought while something still owes prose. Written anyway, because "unreachable
@@ -829,15 +963,22 @@ CAPTION_SEED_TOGGLES = (
 def load_page(path, alias):
     """Read and validate the guide page the spell read from the CMS.
 
-    Returns `{"page": label, "source": {...}, "fields": {...}}`. `alias` is the component the
-    caller asked to plan for, and a page whose stored reference names a different one is
-    refused: a plan is a list of writes against one page, and one built from the wrong
-    component's shape would propose overwriting a guide with another guide's property table.
+    Returns `{"page": label, "source": {...}, "generated": record or None, "fields": {...}}`.
+    `alias` is the component the caller asked to plan for, and a page whose stored reference
+    names a different one is refused: a plan is a list of writes against one page, and one built
+    from the wrong component's shape would propose overwriting a guide with another guide's
+    property table.
+
+    `generated` is the page's record of generated text, read by `_stored_generated` under the
+    same rules `record` reads it by: absent on a version-2 file is refused, and absent on a
+    version-1 or unversioned file reads as holding none.
     """
     payload = _load_object(path, "page")
 
     declared = payload.get("pageVersion")
-    if declared is not None and declared not in ACCEPTED_PAGE_VERSIONS:
+    # A boolean is refused by type: `True in (1, 2)` holds in Python, and `true` is not a version.
+    if declared is not None and (isinstance(declared, bool)
+                                 or declared not in ACCEPTED_PAGE_VERSIONS):
         raise GuideError(
             "%s declares pageVersion %r, which this script has not been written against.\n"
             "  Known versions: %s. A version bump means the entry shape changed, so reading it "
@@ -870,6 +1011,8 @@ def load_page(path, alias):
             "component's — so the two have to be the same component, matched on the alias "
             "case-insensitively." % (path, label, source["alias"], alias.strip()))
 
+    generated = _stored_generated(path, label, payload, declared)
+
     if "fields" not in payload:
         raise GuideError(
             "%s ('%s') holds no 'fields' key.\n"
@@ -891,8 +1034,176 @@ def load_page(path, alias):
             "  It is read from 'source', which is the structured form this script compares "
             "against. Two copies of one value can disagree, and the one that would be believed "
             "is not the one a reader of the file would pick." % (path, label, FIELD_SOURCE))
+    if FIELD_GENERATED in fields:
+        raise GuideError(
+            "%s ('%s') states its record of generated text twice: as 'generated' and as a '%s' "
+            "field.\n"
+            "  It is read from 'generated', the structured form this script compares against. "
+            "Two copies of one record can disagree, and the one believed would decide which "
+            "text this plan proposes to rewrite." % (path, label, FIELD_GENERATED))
 
-    return {"page": label, "source": source, "fields": fields}
+    return {"page": label, "source": source, "generated": generated, "fields": fields}
+
+
+def _stored_generated(path, label, payload, declared):
+    """The page file's record of generated text, validated, or None where it holds none.
+
+    **An absent `generated` key on a version-2 file is refused** for the reason an absent
+    `source` is: it cannot be told from a producer that failed to read the field. Read as "no
+    record", it would keep every field the record says may be refreshed -- and `record`, merging
+    over it, would drop every entry the page held, after which those fields read as unrecorded
+    and are kept forever, however stale.
+
+    A version-1 or unversioned file predates the record, so its absent key reads as no record,
+    and a record it does carry is read as written. Both `plan` and `record` read the record
+    here, so the two cannot disagree about what a page holds; `record` additionally refuses any
+    page file that is not version 2 before it gets here.
+    """
+    if declared == 2 and "generated" not in payload:
+        raise GuideError(
+            "%s ('%s') has no 'generated' key.\n"
+            "  A version-2 page file states the page's record of generated text, or states "
+            "explicitly that it has none (\"generated\": null). An absent key cannot be told from "
+            "a record the producer failed to read, and reading it as \"no record\" would decide "
+            "every prose field on the page by a record nobody looked at." % (path, label))
+    return fingerprint.stored_record(path, label, payload.get("generated"))
+
+
+def load_written_page(path):
+    """Read the page file `record` is given: a page the spell has just written and read back.
+
+    The same file shape `plan` reads, held to the same discipline where `record` depends on it:
+    `fields` must be present, the file must be version 2, and it must state its record as
+    `generated`, null where the page holds none. **An absent `generated` key is refused** for the reason an absent
+    `source` is: it cannot be told from a producer that failed to read the field, and a record
+    merged over "no record" would silently drop every entry the page did hold -- after which
+    each of those fields reads as unrecorded and is kept forever, however stale.
+
+    A version-1 or unversioned file is refused rather than read as holding no record: `record`
+    is a write path, and the spell that calls it always writes version 2. The stored reference
+    is not read: a record does not depend on it.
+
+    Returns `{"page": label, "generated": record or None, "fields": {...}}`.
+    """
+    payload = _load_object(path, "page")
+
+    declared = payload.get("pageVersion")
+    if isinstance(declared, bool) or declared != RECORD_PAGE_VERSION:
+        raise GuideError(
+            "%s declares pageVersion %r; `record` reads only pageVersion %d.\n"
+            "  `record` merges into the page's record of generated text, and only a version-%d "
+            "file states that record, or states that there is none. Read from any other file as "
+            "\"no record\", the merge would drop every entry the page held, after which those "
+            "fields read as unrecorded and are kept forever. Write the read-back page as "
+            "version %d." % (path, declared, RECORD_PAGE_VERSION, RECORD_PAGE_VERSION,
+                             RECORD_PAGE_VERSION))
+
+    name = payload.get("page")
+    if name is not None and not isinstance(name, str):
+        raise GuideError("%s has a non-string 'page': %r." % (path, name))
+    label = (name or "").strip() or UNNAMED_PAGE
+
+    generated = _stored_generated(path, label, payload, declared)
+
+    if "fields" not in payload:
+        raise GuideError(
+            "%s ('%s') holds no 'fields' key.\n"
+            "  `record` fingerprints the values the page holds, so it needs them; a page with "
+            "no values on it is written as \"fields\": {}." % (path, label))
+    fields = payload["fields"]
+    if not isinstance(fields, dict):
+        raise GuideError("%s ('%s') holds 'fields' as %s, not an object of field values."
+                         % (path, label, type(fields).__name__))
+
+    return {"page": label, "generated": generated, "fields": fields}
+
+
+def written_values(path, page, field_names, row_aliases):
+    """The read-back values `record` fingerprints, each looked up on the page, or a refusal.
+
+    `field_names` are the model-authored fields the spell says it wrote, and `row_aliases` the
+    property rows whose notes it wrote. **A name the page does not hold is refused, never
+    skipped.** The spell names what it just wrote and read back, so a name missing from the page
+    means the read-back and the claim disagree -- and a record entry for text nobody can find
+    would protect nothing, while a silently shorter record leaves the text it should have
+    covered unrecorded, and so kept forever.
+
+    Rows are matched on the alias case-insensitively, as everywhere else in this module, and
+    keyed by the alias as the page spells it. Two rows for one alias are refused: they are two
+    notes, and a record entry can describe only one.
+
+    Returns `(fields, rows)`: name to value, and page alias to note.
+    """
+    label = page["page"]
+    values = page["fields"]
+
+    fields = {}
+    for name in field_names:
+        if name not in MODEL_AUTHORED_FIELDS:
+            raise GuideError(
+                "%s ('%s'): '%s' is not a model-authored field, so it is never recorded.\n"
+                "  The record holds entries for %s and for each row's note. An entry for any "
+                "other field would claim it is text this tooling may rewrite."
+                % (path, label, name, ", ".join(MODEL_AUTHORED_FIELDS)))
+        if name not in values:
+            raise GuideError(
+                "%s ('%s') holds no '%s' field, and `record` was asked to record it.\n"
+                "  Pass only what was written and read back; a record entry for a value the page "
+                "does not hold protects nothing." % (path, label, name))
+        if not isinstance(values[name], str):
+            raise GuideError("%s ('%s') holds '%s' as %s, not the text a field stores."
+                             % (path, label, name, type(values[name]).__name__))
+        fields[name] = values[name]
+
+    rows = {}
+    if row_aliases:
+        table = values.get(FIELD_PROPERTIES)
+        if not isinstance(table, list):
+            raise GuideError(
+                "%s ('%s') holds no '%s' list, and `record` was asked to record notes on %s."
+                % (path, label, FIELD_PROPERTIES, ", ".join(row_aliases)))
+        by_alias = {}
+        for row in table:
+            alias = row.get("alias") if isinstance(row, dict) else None
+            if isinstance(alias, str) and alias.strip():
+                by_alias.setdefault(alias.strip().lower(), []).append(row)
+        for wanted in row_aliases:
+            matches = by_alias.get(wanted.strip().lower(), [])
+            if not matches:
+                raise GuideError(
+                    "%s ('%s') holds no property row '%s', and `record` was asked to record its "
+                    "note.\n"
+                    "  Pass only rows whose note was written and read back; a record entry for "
+                    "a row the page does not hold protects nothing." % (path, label, wanted))
+            if len(matches) > 1:
+                raise GuideError(
+                    "%s ('%s') holds %d property rows for '%s'. A record entry describes one "
+                    "note, and which of them it would describe is not a thing to guess."
+                    % (path, label, len(matches), wanted))
+            row = matches[0]
+            note = row.get(ROW_INFORMATION)
+            if not isinstance(note, str):
+                raise GuideError(
+                    "%s ('%s') holds property row '%s' with no '%s' text (%s), and `record` was "
+                    "asked to record its note." % (path, label, wanted, ROW_INFORMATION,
+                                                   type(note).__name__))
+            rows[row["alias"].strip()] = note
+    return fields, rows
+
+
+def held_row_aliases(page):
+    """The lower-cased aliases of the rows the page's property table holds, or None.
+
+    None where the page holds no row list -- no table, or one stored as markup -- because then
+    nothing here can say which rows are gone, and `record` keeps every row entry rather than
+    guessing. Used by `record` to drop the entry of a row the table no longer holds.
+    """
+    table = page["fields"].get(FIELD_PROPERTIES)
+    if not isinstance(table, list):
+        return None
+    return set(fingerprint.fold(row["alias"]) for row in table
+               if isinstance(row, dict) and isinstance(row.get("alias"), str)
+               and row["alias"].strip())
 
 
 def load_dossier(path, alias):
@@ -1101,10 +1412,16 @@ def run(page, dossier_doc):
     # for a field to be pending against, and a no-op that listed an unwritten field would be
     # reporting work on the one path whose whole value is that no work is needed. The field is
     # still unwritten, and the run that is not a no-op says so.
+    #
+    # **The record is read only here, past the no-op test.** A prose field still exactly as
+    # generated is rewritten because the source changed, never because it could be: on an
+    # unchanged source the words a model would write are the words already there, and reading
+    # the record first would spend a model call on every run to reproduce them.
     machine_owned, left_alone, unwritten = [], [], []
     if not noop:
-        machine_owned = _machine_owned(page, dossier_doc, current, reason)
-        left_alone = _left_alone(page)
+        states = _prose_states(page)
+        machine_owned = _machine_owned(page, dossier_doc, current, reason, states)
+        left_alone = _left_alone(page, states)
         unwritten = _unwritten(page)
 
     owed = sum(1 for e in machine_owned if e["proposal"] == PROPOSAL_OWED)
@@ -1114,7 +1431,7 @@ def run(page, dossier_doc):
     if noop:
         statements.append(_joined(STATEMENT_NOOP))
     elif model_needed:
-        statements.append(_joined(_model_statement(owed, content)))
+        statements.append(_joined(_model_statement_for(machine_owned, left_alone)))
     else:
         statements.append(_joined(STATEMENT_NO_MODEL_NEEDED))
     statements.append(_joined(STATEMENT_NOTHING_WRITTEN))
@@ -1248,6 +1565,10 @@ def _offered(page, dossier_doc, current):
     for spec in REGISTER:
         if spec["ownership"] != MACHINE_OWNED or spec["proposal"] == PROPOSAL_OWED:
             continue
+        # The record describes text the tooling wrote, and on this path it wrote none: there is
+        # nothing for a record to say until a write it describes has happened.
+        if spec["field"] == FIELD_GENERATED:
+            continue
         if spec["field"] == FIELD_SOURCE:
             # By definition on this path: the page states `"source": null`, and `load_page`
             # refuses a page that also carries a `guideSource` field.
@@ -1357,18 +1678,135 @@ def _compare(stored, stored_rung, current, read_rung):
     return COMPARISON_DIFFERS, None
 
 
-def _machine_owned(page, dossier_doc, current, reason):
+def refuse_if_ignored(alias, ignored):
+    """Refuse to mark a component the guides node's ignore list names.
+
+    Matched case-insensitively, as the audit matches the list: one list, read by two stages,
+    cannot be allowed to name a component for one of them and not the other. Checked before
+    anything is read, because no answer the read could give would change it.
+    """
+    wanted = alias.strip().lower()
+    for entry in ignored or ():
+        if entry.strip().lower() == wanted:
+            raise GuideError(
+                "'%s' is on the ignore list, so it is not marked up to date.\n"
+                "  An ignored component is one this project has decided needs no guide, and "
+                "the audit reports it as ignored rather than stale. Take it off the list first "
+                "if its guide is meant to be tracked again." % alias.strip())
+
+
+def mark(page, dossier_doc):
+    """The stored reference a "mark up to date" writes, or a refusal saying why there is none.
+
+    Marking keeps every word on a stale page and moves only its stored signature to the
+    source's current one: a person has looked at the change and decided the guide still holds.
+    So it is allowed on exactly one comparison, `differs`, and decided by `_compare` -- the
+    plan's own test, clause for clause -- so `plan` and `mark` cannot disagree about whether a
+    page is stale.
+
+    Returns the new reference: the stored alias, kind and rung, unchanged, with the current
+    signature. The rung is unchanged because only a page whose rung is this read's can reach
+    `differs` at all.
+    """
+    source = page["source"]
+    if source is None:
+        raise GuideError(
+            "'%s' carries no stored reference, so there is nothing to mark up to date.\n"
+            "  Marking moves a stored signature to the source's current one. A page with no "
+            "reference was written by hand, and recording a source on it is an adoption, which "
+            "`plan` offers for approval instead." % page["page"])
+
+    current = dossier_doc.get("sourceSignature")
+    comparison, reason = _compare(source["signature"], source["rung"], current,
+                                  dossier_doc["rung"].strip())
+    if comparison == COMPARISON_MATCHED:
+        raise GuideError(
+            "'%s' is already up to date: its stored signature matches the source's current "
+            "signature, so there is nothing to mark." % page["page"])
+    if comparison != COMPARISON_DIFFERS:
+        raise GuideError(
+            "'%s' cannot be marked up to date: %s.\n"
+            "  Marking records that the page was checked against the source's current shape. "
+            "With no comparison possible, writing the current signature would record a check "
+            "nobody made." % (page["page"], reason))
+
+    return {
+        "alias": source["alias"],
+        "kind": source["kind"],
+        "signature": current,
+        "rung": source["rung"],
+    }
+
+
+def _prose_states(page):
+    """Each model-authored field the page carries, mapped to its state against the record.
+
+    Compared as opaque strings, exactly as `fingerprint.stored_record` reads them: a recorded
+    value that is not a fingerprint never matches, so the field it guards is kept. A field the
+    page does not carry is absent from the result -- there is no value to compare, and it is
+    reported as unwritten, as it always was.
+    """
+    recorded = (page.get("generated") or {}).get("fields", {})
+    states = {}
+    for field in MODEL_AUTHORED_FIELDS:
+        if field not in page["fields"]:
+            continue
+        value = page["fields"][field]
+        if field not in recorded:
+            states[field] = GENERATED_NO_RECORD
+        elif isinstance(value, str) and fingerprint.fingerprint(value) == recorded[field]:
+            states[field] = GENERATED_AS_GENERATED
+        else:
+            states[field] = GENERATED_EDITED
+    return states
+
+
+def _records_prose(entries):
+    """Whether the page's record says the tooling wrote any prose field this plan lists.
+
+    True when a field is as generated or edited -- both are facts the record supplied. A page
+    whose every prose field has no record reads exactly as it did before the record existed, so
+    its report is unchanged: the seeded-once rule already says what happens to all of them.
+    """
+    return any(entry.get("generatedState") in (GENERATED_AS_GENERATED, GENERATED_EDITED)
+               for entry in entries)
+
+
+def _machine_owned(page, dossier_doc, current, reason, states):
     """One entry per machine-owned field in the register, whether the page carries it or not.
 
     A regeneration proposes all of them: a field the page is missing entirely is exactly the
     field most in need of a value, and leaving it out of the plan because the page had nothing
     to diff against would hide it.
 
+    **Plus each prose field the record shows is still as generated**, owed by the spell, in its
+    register position. The register classes it seeded-once; the record says nobody has touched
+    the text the tooling wrote, and ownership follows provenance -- so on this run it is the
+    tooling's to rewrite. `states` is `_prose_states`'s.
+
+    **Except the record itself.** It is computed by `record` from the values the spell reads
+    back after writing, so no plan can carry its value: it describes a write that has not
+    happened yet. The spell writes it after the fields it describes.
+
     `reason` is `_compare`'s, and it is here for one field on one shape: the stored reference's
     consequence, on the page that has no stored signature yet.
     """
     entries = []
     for spec in REGISTER:
+        if spec["field"] == FIELD_GENERATED:
+            continue
+        if states.get(spec["field"]) == GENERATED_AS_GENERATED:
+            entries.append({
+                "field": spec["field"],
+                "ownership": MACHINE_OWNED,
+                "proposal": PROPOSAL_OWED,
+                "why": AS_GENERATED_WHY,
+                "current": page["fields"][spec["field"]],
+                "onPage": True,
+                "proposed": None,
+                "generatedState": GENERATED_AS_GENERATED,
+            })
+            continue
         if spec["ownership"] != MACHINE_OWNED:
             continue
         # The stored reference's current value is `source`, not a `fields` entry: the page file
@@ -1410,7 +1848,8 @@ def _machine_owned(page, dossier_doc, current, reason):
             # cannot make. Both keys are present either way, so a consumer never has to guess
             # which shape it received from their absence.
             rows = value if isinstance(value, list) else None
-            entry["rowChanges"] = (compare_rows(rows, proposed_rows(dossier_doc))
+            entry["rowChanges"] = (compare_rows(rows, proposed_rows(dossier_doc),
+                                                (page.get("generated") or {}).get("rows", {}))
                                    if rows is not None else None)
             entry["rowsNotComparable"] = rows is None and present
         entries.append(entry)
@@ -1435,23 +1874,32 @@ def _proposed(spec, dossier_doc, current):
     return property_tables(dossier_doc)
 
 
-def _left_alone(page):
+def _left_alone(page, states):
     """Every field on the page a regeneration does not write, with the reason it does not.
 
     Register fields first, in register order, then everything else in alias order. The page's
     own key order is not used: it comes from a CMS read, and a plan whose lines move between
     runs cannot be diffed.
+
+    A model-authored field carries its state against the record, `edited` or `noRecord`; one
+    still as generated is proposed instead, by `_machine_owned`, and is not listed here.
     """
     entries = []
     for spec in REGISTER:
         if spec["ownership"] == MACHINE_OWNED or spec["field"] not in page["fields"]:
             continue
-        entries.append({
+        state = states.get(spec["field"])
+        if state == GENERATED_AS_GENERATED:
+            continue
+        entry = {
             "field": spec["field"],
             "ownership": spec["ownership"],
             "why": spec["why"],
             "current": page["fields"][spec["field"]],
-        })
+        }
+        if state is not None:
+            entry["generatedState"] = state
+        entries.append(entry)
     for field in sorted(page["fields"], key=lambda f: f.lower()):
         if field in BY_FIELD:
             continue
@@ -1543,7 +1991,7 @@ ROW_UNCHANGED = "unchanged"
 ROW_MACHINE_COLUMNS = ("label", "required", "tab", "group")
 
 
-def compare_rows(current, proposed):
+def compare_rows(current, proposed, recorded=None):
     """The property table as a set difference on the alias, not as two blocks of text.
 
     This is the whole reason the table is structured rather than markup in a rich-text field.
@@ -1555,7 +2003,27 @@ def compare_rows(current, proposed):
 
     `information` is never compared and never proposed. A removed row is reported rather than
     applied, because a row can only disappear if a person's writing disappears with it.
+
+    **Its state against the record is reported, where there is a record to read.** `recorded`
+    is the page's record `rows` map, alias to fingerprint, or None where no record applies at
+    all (the adoption path). With one, every row the page holds carries `generatedState`, the
+    note's state read by alias exactly as a prose field's is read by name: so a row whose label
+    changed keeps its note's state. An `asGenerated` note on a row that stays is the one a model
+    rewrites; `edited` and `noRecord` notes are kept. A removed row carries its state too, and
+    one that is not `noRecord` names a record entry that goes with the row. An added row has no
+    note yet, so no state.
     """
+    folded_record = None
+    if recorded is not None:
+        folded_record = {}
+        for key, value in recorded.items():
+            folded_record.setdefault(fingerprint.fold(key), value)
+
+    def with_state(change, row):
+        if folded_record is not None:
+            change["generatedState"] = _note_state(row, folded_record)
+        return change
+
     by_alias = {}
     for row in current:
         alias = row.get("alias")
@@ -1574,17 +2042,17 @@ def compare_rows(current, proposed):
             continue
         differing = [key for key in ROW_MACHINE_COLUMNS
                      if _column(was, key) != _column(row, key)]
-        changes.append({
+        changes.append(with_state({
             "alias": row["alias"],
             "name": row.get("label") or was.get("label") or "",
             "state": ROW_CHANGED if differing else ROW_UNCHANGED,
             "columns": differing,
             "hasInformation": bool(str(was.get("information") or "").strip()),
-        })
+        }, was))
     for folded, row in sorted(by_alias.items()):
         if folded in seen:
             continue
-        changes.append({
+        changes.append(with_state({
             "alias": row.get("alias"),
             "name": row.get("label") or "",
             "state": ROW_REMOVED,
@@ -1592,8 +2060,41 @@ def compare_rows(current, proposed):
             # The one thing that decides whether removal is safe. A row nobody wrote in can go;
             # a row carrying a note is somebody's work and only they can say it is finished with.
             "hasInformation": bool(str(row.get("information") or "").strip()),
-        })
+        }, row))
     return changes
+
+
+def _note_state(row, folded_record):
+    """One row's note against the record's `rows`, keyed by the lower-cased alias.
+
+    `_prose_states`'s rule, applied to a note: a recorded fingerprint the note still has is
+    `asGenerated`, any other recorded value is `edited`, and no entry is `noRecord`.
+    """
+    alias = row.get("alias")
+    key = fingerprint.fold(alias) if isinstance(alias, str) else None
+    if key not in folded_record:
+        return GENERATED_NO_RECORD
+    note = row.get(ROW_INFORMATION)
+    if isinstance(note, str) and fingerprint.fingerprint(note) == folded_record[key]:
+        return GENERATED_AS_GENERATED
+    return GENERATED_EDITED
+
+
+def _rewritten_notes(entries):
+    """How many row notes this plan proposes for a model to rewrite.
+
+    A note still as generated on a row the table keeps. A removed row's note is not rewritten:
+    it goes with its row, if the removal is approved.
+    """
+    return sum(1 for entry in entries for change in entry.get("rowChanges") or []
+               if change["state"] != ROW_REMOVED
+               and change.get("generatedState") == GENERATED_AS_GENERATED)
+
+
+def _records_notes(entries):
+    """Whether the page's record says the tooling wrote any row note this plan reports."""
+    return any(change.get("generatedState") in (GENERATED_AS_GENERATED, GENERATED_EDITED)
+               for entry in entries for change in entry.get("rowChanges") or [])
 
 
 def _column(row, key):
@@ -1930,7 +2431,21 @@ def _comparison_statement(comparison, reason):
         textwrap.wrap("%s." % reason, rpt.WRAP_WIDTH) or ["%s." % reason])
 
 
-def _model_statement(owed, content):
+def _model_statement_for(machine_owned, left_alone):
+    """The model-call sentence for a plan's two field lists: the document and the report both
+    read it here, so the two cannot count differently.
+
+    A row note still as generated needs a model as surely as a prose field does. It is not a
+    field, so it is counted apart from `owed` and named apart in the sentence; and it rides on
+    the property table, which is content, so it never makes a model call needed on its own.
+    """
+    owed = sum(1 for e in machine_owned if e["proposal"] == PROPOSAL_OWED)
+    content = sum(1 for e in machine_owned if e["proposal"] == PROPOSAL_CONTENT)
+    recorded = _records_prose(machine_owned + left_alone) or _records_notes(machine_owned)
+    return _model_statement(owed, content, recorded, _rewritten_notes(machine_owned))
+
+
+def _model_statement(owed, content, recorded, notes):
     """The model-call sentence, in the form the two counts can honestly carry.
 
     **Neither count is printed as a nought, and both directions are guarded.** The first form
@@ -1941,19 +2456,38 @@ def _model_statement(owed, content):
     edit in either direction gets a true sentence rather than a nought in a sentence.
 
     The reasoning for keeping both counts in the arithmetic sits beside the constants.
+
+    `recorded` is `_records_prose`'s answer, and it picks the no-prose form: a page whose record
+    says the tooling wrote prose somebody has since edited must not be told that no prose is
+    ever regenerated. The reason is beside `STATEMENT_MODEL_NEEDED_NO_PROSE`. A record entry
+    for a row note counts as much as one for a prose field.
+
+    `notes` is how many row notes a model rewrites. With no prose field owed, "not for prose"
+    would be false, so those notes get a form of their own; beside owed prose, a line is added.
     """
+    holds = rpt.plural(notes, "note still holds", "notes still hold")
+    them = rpt.plural(notes, "it", "them")
+    if not owed and notes:
+        form = STATEMENT_MODEL_NEEDED_NOTES
+        return (form[0] % (content, rpt.plural(content, "field carries", "fields carry")),
+                form[1] % (notes, holds),
+                form[2] % (them,)) + form[3:]
+    notes_too = ((STATEMENT_NOTES_TOO[0] % (notes, holds), STATEMENT_NOTES_TOO[1] % (them,))
+                 if notes else ())
     if not owed:
-        return (STATEMENT_MODEL_NEEDED_NO_PROSE[0]
-                % (content, rpt.plural(content, "field carries", "fields carry")),
-                ) + STATEMENT_MODEL_NEEDED_NO_PROSE[1:]
+        form = (STATEMENT_MODEL_NEEDED_NO_PROSE_RECORDED if recorded
+                else STATEMENT_MODEL_NEEDED_NO_PROSE)
+        return (form[0] % (content, rpt.plural(content, "field carries", "fields carry")),
+                ) + form[1:]
     if not content:
         return (STATEMENT_MODEL_NEEDED_NO_CONTENT[0]
                 % (owed, rpt.plural(owed, "field needs", "fields need")),
-                ) + STATEMENT_MODEL_NEEDED_NO_CONTENT[1:]
+                ) + STATEMENT_MODEL_NEEDED_NO_CONTENT[1:] + notes_too
     return (STATEMENT_MODEL_NEEDED[0]
             % (owed, rpt.plural(owed, "field needs", "fields need"), content),
             STATEMENT_MODEL_NEEDED[1]
-            % (rpt.plural(content, "carries", "carry"),)) + STATEMENT_MODEL_NEEDED[2:]
+            % (rpt.plural(content, "carries", "carry"),)) + STATEMENT_MODEL_NEEDED[2:] \
+        + notes_too
 
 
 def _joined(lines):
@@ -2004,12 +2538,19 @@ def report(doc):
 
     lines.append("")
     lines.append("%s: %d" % (CAPTION_MACHINE_OWNED, len(doc["machineOwned"])))
+    # Whether prose fields are marked with their state, decided once for both sections: a page
+    # whose record says nothing about its prose reads exactly as it did before records existed.
+    marked = _records_prose(doc["machineOwned"] + doc["leftAlone"])
     if doc["machineOwned"]:
         lines.extend("  " + line for line in RULE_MACHINE_OWNED)
         _proposal_rules(lines, doc["machineOwned"])
+        _state_rules(lines, doc["machineOwned"], marked)
         lines.extend("  " + line for line in RULE_VERBATIM)
         for entry in doc["machineOwned"]:
-            lines.append("    %s: %s" % (entry["field"], PROPOSAL_LABEL[entry["proposal"]]))
+            state = entry.get("generatedState") if marked else None
+            lines.append("    %s%s: %s" % (entry["field"],
+                                          " (%s)" % GENERATED_STATE_WORDS[state] if state else "",
+                                          PROPOSAL_LABEL[entry["proposal"]]))
             # **Printed here, not left to `--json`.** The person reading this report is the
             # person being asked, and a warning only a consumer can see is a warning they do not
             # get. It reaches one entry on one shape -- the stored reference on a page that has
@@ -2049,13 +2590,17 @@ def report(doc):
     lines.append("%s: %d" % (CAPTION_LEFT_ALONE, len(doc["leftAlone"])))
     if doc["leftAlone"]:
         _class_rules(lines, doc["leftAlone"])
+        _state_rules(lines, doc["leftAlone"], marked)
         lines.extend("  " + line for line in RULE_LEFT_ALONE_EXACT)
         # The field, its class, and its value. The per-field reason is carried in the document
         # rather than printed: four wrapped explanations under a list of four values is a list
         # nobody reads down, and the spell — which is what says "left alone, because …" to a
         # person — reads `why` out of `--json`.
         for entry in doc["leftAlone"]:
-            lines.append("    %s (%s)" % (entry["field"], entry["ownership"]))
+            state = entry.get("generatedState") if marked else None
+            lines.append("    %s (%s%s)" % (entry["field"], entry["ownership"],
+                                            ", %s" % GENERATED_STATE_WORDS[state] if state
+                                            else ""))
             lines.extend(_value_lines(entry["current"], True, "      "))
 
     # Printed only when there is one, and with no count in the caption. Every other section here
@@ -2184,10 +2729,7 @@ def _statement_lines(doc, index):
         if doc["noop"]:
             return STATEMENT_NOOP
         if doc["modelCallNeeded"]:
-            owed = sum(1 for e in doc["machineOwned"] if e["proposal"] == PROPOSAL_OWED)
-            content = sum(1 for e in doc["machineOwned"]
-                          if e["proposal"] == PROPOSAL_CONTENT)
-            return _model_statement(owed, content)
+            return _model_statement_for(doc["machineOwned"], doc["leftAlone"])
         return STATEMENT_NO_MODEL_NEEDED
     return STATEMENT_NOTHING_WRITTEN
 
@@ -2232,6 +2774,20 @@ def _class_rules(lines, entries):
         lines.extend("  " + line for line in RULE_SEEDED_ONCE)
     if NEVER_TOUCHED in present:
         lines.extend("  " + line for line in RULE_NEVER_TOUCHED)
+
+
+def _state_rules(lines, entries, marked):
+    """The meaning of each record state present in a section, and no others.
+
+    `_class_rules`'s discipline again: a state no field below is marked with is not explained.
+    Nothing is printed where the fields are not marked at all.
+    """
+    if not marked:
+        return
+    present = set(entry.get("generatedState") for entry in entries)
+    for state in GENERATED_STATE_ORDER:
+        if state in present:
+            lines.extend("  " + line for line in RULE_GENERATED_STATE[state])
 
 
 def _proposal_rules(lines, entries):
@@ -2333,13 +2889,45 @@ def row_summary_lines(changes, indent):
             if change["state"] == ROW_REMOVED and change["hasInformation"]:
                 lines.append("%s  carries an information note — removal needs your approval"
                              % indent)
-    unchanged = sum(1 for c in changes if c["state"] == ROW_UNCHANGED)
+            _note_lines(lines, change, indent)
+    # An unchanged row whose note the record names is listed rather than counted: its columns
+    # did not change, and its note is still either rewritten or kept for a reason worth seeing.
+    for change in changes:
+        if change["state"] == ROW_UNCHANGED and _note_recorded(change):
+            lines.append("%s%-9s %s" % (indent, ROW_UNCHANGED, rpt.item(change)))
+            _note_lines(lines, change, indent)
+    unchanged = sum(1 for c in changes
+                    if c["state"] == ROW_UNCHANGED and not _note_recorded(c))
     if unchanged:
         lines.append("%s%d %s unchanged, information notes untouched"
                      % (indent, unchanged, rpt.plural(unchanged, "row", "rows")))
     if not lines:
         lines.append("%s(the table matches the source; no row changes)" % indent)
     return lines
+
+
+def _note_recorded(change):
+    """Whether the record supplied a fact about this row's note: as generated, or edited."""
+    return change.get("generatedState") in (GENERATED_AS_GENERATED, GENERATED_EDITED)
+
+
+# What a row's line says about its note, where the record supplied a fact. A `noRecord` note
+# is not marked: it is kept, as every note was before the record existed.
+NOTE_AS_GENERATED = "information note as generated — a model rewrites it, in the spell"
+NOTE_EDITED = "information note edited since it was generated — kept as it stands"
+NOTE_RECORD_DROPPED = "its note's entry in the record of generated text goes with the row"
+
+
+def _note_lines(lines, change, indent):
+    """The line under a row that says what the record decided about its note."""
+    if not _note_recorded(change):
+        return
+    if change["state"] == ROW_REMOVED:
+        lines.append("%s  %s" % (indent, NOTE_RECORD_DROPPED))
+    elif change["generatedState"] == GENERATED_AS_GENERATED:
+        lines.append("%s  %s" % (indent, NOTE_AS_GENERATED))
+    else:
+        lines.append("%s  %s" % (indent, NOTE_EDITED))
 
 
 def _seed_section_lines(seeding, comparison):

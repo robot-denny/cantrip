@@ -1,0 +1,5 @@
+exit: 1
+args: record --page page.json --field guidePurpose --row promoHeading --row promoLegacyStyle
+contains: pageVersion
+not_contains: recordVersion
+not_contains: Traceback

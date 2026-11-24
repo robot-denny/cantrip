@@ -1,0 +1,17 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Card Block",
+      "source": { "alias": "cardBlock", "kind": "element", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Blockade Page",
+      "source": { "alias": "blockadePage", "kind": "document", "signature": null, "rung": "deploy" }
+    },
+    {
+      "page": "Site Settings",
+      "source": { "alias": "siteSettings", "kind": "document", "signature": null, "rung": "deploy" }
+    }
+  ]
+}

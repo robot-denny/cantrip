@@ -365,6 +365,16 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 - **Watch for:** it holds no procedure and restates no platform fact. The steps are the plan's or `/block`'s; every fact it rests on is cited to `umbraco-17-starter-facts` by heading.
 - **Pairs with:** `/block`, `umbraco-17-planning`
 
+### umbraco-17-guide-generator
+
+- **Type:** Reference
+- **Group:** umbraco-17
+- **Triggers:** specifying, planning or changing a backoffice dashboard that writes editor guides, or a dashboard and `/guide --audit` disagreeing
+- **Holds:** why the dashboard is a port of `/guide`'s script and the commands whose output the port is tested against, the modules and their Umbraco 17 services, the statuses and actions, preview then save as a draft, sanitized model output, the model key as a per-environment secret, access, the admin screen's accessibility
+- **Does:** The design input for a guide-generator dashboard a project builds itself, so an administrator can write and refresh guides from the backoffice and get the guides `/guide` would write.
+- **Watch for:** it ships no code. A save never publishes, and the port must be retested whenever the script changes.
+- **Pairs with:** `/guide`, `umbraco-17-guide-scaffolding`
+
 ### /block
 
 - **Type:** Spell
@@ -380,11 +390,11 @@ reference means a missing card, and nothing here will notice. Count the `SKILL.m
 
 - **Type:** Spell
 - **Group:** umbraco-17
-- **Cast:** `/guide <component alias>` · `/guide --audit`
+- **Cast:** `/guide <component alias>` · `/guide --audit` · `/guide --ignore <alias>` · `/guide --unignore <alias>` · `/guide --mark-current <alias>`
 - **Needs:** a guides section that already exists, and a schema source: Deploy artifacts, uSync, or a live instance
 - **Leaves:** one guide page, written only after you approve the difference
 - **Does:** Writes an editor-facing guide for one component from the schema it already declares. Reads, plans, shows what a regeneration would change, asks, then writes.
-- **Modes:** `--audit` reports which components have no guide, which guides name a component the project no longer holds, and which have gone stale.
+- **Modes:** `--audit` reports which components have no guide, which guides name a component the project no longer holds, and which have gone stale. `--ignore` and `--unignore` change the list of components that need no guide. `--mark-current` marks a stale guide up to date without regenerating it.
 - **Watch for:** nothing reaches the CMS before the ask.
 - **Then:** `/guide <next alias>`
 

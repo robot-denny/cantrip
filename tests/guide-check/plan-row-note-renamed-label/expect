@@ -1,0 +1,9 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json
+contains: changed   promoHeading (Promo Headline) — label
+contains: information note as generated — a model rewrites it, in the spell
+contains: A model call is needed. 1 machine-owned field needs prose this script cannot write, and 1
+contains: 1 property-row note still holds exactly what the tooling wrote, so a model
+contains: rewrites it too.
+contains: guidePurpose (as generated): owed by the spell
+not_contains: Traceback

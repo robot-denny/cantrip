@@ -1,0 +1,4 @@
+exit: 0
+args: inventory --adapter deploy --global-block siteSettings
+stdout_matches: expected-report.txt
+not_contains: Not proposed

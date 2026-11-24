@@ -1,0 +1,6 @@
+exit: 0
+args: audit --guides guides.json --inventory inventory.json --strict
+contains: Stale, whose stored signature no longer matches its source: 0
+contains: Ignored, on the guides node's ignore list: 1
+contains:     noticeBar (Notice Bar)
+contains: Findings: none.

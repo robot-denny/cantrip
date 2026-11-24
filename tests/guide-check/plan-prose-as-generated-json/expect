@@ -1,0 +1,8 @@
+exit: 0
+args: plan promoTile --page page.json --dossier dossier.json --json
+contains: "generatedState": "asGenerated"
+contains: "proposal": "owed"
+contains: "generatedState": "noRecord"
+contains: "modelCallNeeded": true
+not_contains: "generatedState": "edited"
+not_contains: Traceback

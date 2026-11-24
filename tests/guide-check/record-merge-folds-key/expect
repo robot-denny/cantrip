@@ -1,0 +1,3 @@
+exit: 0
+args: record --page page.json --row promoHeading
+stdout_matches: expected-record.json

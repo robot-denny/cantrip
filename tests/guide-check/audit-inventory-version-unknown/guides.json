@@ -1,0 +1,9 @@
+{
+  "guidesVersion": 1,
+  "guides": [
+    {
+      "page": "Card Block",
+      "source": { "alias": "cardBlock", "kind": "element", "signature": null, "rung": "deploy" }
+    }
+  ]
+}

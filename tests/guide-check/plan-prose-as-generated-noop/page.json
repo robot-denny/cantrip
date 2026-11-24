@@ -1,0 +1,18 @@
+{
+  "pageVersion": 2,
+  "page": "How to use a Promo Tile",
+  "source": {
+    "alias": "promoTile",
+    "kind": "element",
+    "signature": "sha256:promotileasgenerated",
+    "rung": "deploy"
+  },
+  "generated": {"recordVersion": 1, "fields": {"guidePurpose": "sha256:e4a2d347d3336e2f712082bda10765c6ebb62addbd7cbce3d0a390aa6094d5ce"}, "rows": {}},
+  "fields": {
+    "guidePurpose": "Use a promo tile to point at one thing worth noticing.",
+    "guideWhenToUse": "Reach for a promo tile when a page needs a pointer rather than a paragraph.",
+    "guideProperties": "<table><tr><td>Promo Heading</td></tr></table>",
+    "guideExamples": "<promo-tile>two instances an editor arranged</promo-tile>",
+    "name": "How to use a Promo Tile"
+  }
+}

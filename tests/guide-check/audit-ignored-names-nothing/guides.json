@@ -1,0 +1,11 @@
+{
+  "guidesVersion": 2,
+  "ignored": ["retiredBanner"],
+  "guides": [
+    {
+      "page": "Retired Banner",
+      "source": { "alias": "retiredBanner", "kind": "element", "signature": null,
+                  "rung": "deploy" }
+    }
+  ]
+}

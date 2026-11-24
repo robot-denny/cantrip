@@ -486,6 +486,23 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
     whose Validation block carries a `- [Manual]` line. The list is there so you can pick a range
     that ends where you want to look, without opening the plan.
 
+- **A blueprint for a backoffice guide generator — `umbraco-17-guide-generator`** (2026-11-24). A
+  project can build a dashboard that writes and refreshes editor guides from the backoffice, so an
+  administrator gets the guides `/guide` would write without developer tooling. The reference is
+  the design input for `/spec` and `/plan`. It ships no code, because the dashboard is shaped by
+  each project's access rules, model key and guide style. **It arrives with the `umbraco-17` pack,
+  and there is nothing to configure until you build one.**
+  - **The dashboard is a port of `/guide`'s script, held equal to it by tests.** The reference lists
+    the script commands whose output, for a fixed fixture tree, is what the port is compared
+    against, and says to rerun them whenever the script changes. The dashboard and
+    `/guide --audit` report the same status for every component.
+  - **A save never publishes.** Generating shows a preview and writes nothing; saving creates or
+    updates a draft. Ignore and mark up to date follow the spell's publish rule.
+  - **Model output is untrusted.** It is sanitized before it is shown or saved, and the project's
+    guide style is checked without a model and shown as warnings.
+  - **The model key is a per-environment server-side secret, never committed**, and only a user in
+    a configured group, optionally at a configured email domain, can reach it.
+
 ### Changed
 
 - **`/commit-message` no longer stops when nothing is staged.** It reads unstaged changes and new
@@ -724,6 +741,41 @@ Consuming projects vendor a copy of this toolkit, so every entry should be reada
   that core assumes no stack while the three packs shipped today happen to cover Umbraco and .NET.
   Prose is re-wrapped to the ~100 column convention the other markdown files use. **Documentation only**
   — README and `adr/` are not vendored into a consuming project.
+
+- **`/guide` refreshes the text it wrote, can ignore a component, and can mark a guide up to date,
+  and you may have vendored any of the files involved** (2026-11-24). This brings to the spell what
+  a dashboard ported from it had added on a project. Each new value lives on the guides section's
+  own pages, so it travels with them between environments, and the spell and a dashboard read one
+  copy.
+  - **Regenerating rewrites model-written text nobody has edited.** A guide page gains an optional
+    machine-owned field, `guideGenerated`, holding a fingerprint of each prose field and row note
+    the tooling wrote: `sha256:` plus the hash of the value the CMS stored, read back after the
+    write. Text that still matches is rewritten on the next regeneration. Text that differs, even
+    by a word, is kept, and so is text with no fingerprint, which includes every guide written
+    before this change. Previously no prose was ever rewritten.
+  - **Three new modes.** `/guide --ignore <alias>` and `/guide --unignore <alias>` change the list
+    of components that need no guide, kept in an optional `guideIgnored` field on the guides node,
+    one alias per line. The audit reports ignored components apart, never as undocumented or
+    stale. `/guide --mark-current <alias>` records a stale guide's current signature without
+    regenerating it, for a guide that is right but reads as stale after a content sync. Both
+    republish a page only when it was published with no other unpublished changes; otherwise they
+    save it and say why it was not published.
+  - **`guide.py` gains `record` and `mark`**, so every refusal is tested in the script rather than
+    described in prose. `plan`'s page file is now version 2, with a `generated` key, and reports
+    each prose field as `asGenerated`, `edited` or `noRecord`; the audit's guides file is version 2,
+    with an `ignored` list. Version-1 files still read as before.
+  - **Global blocks are documented as blocks.** A document type whose name ends in the word "Block",
+    or that the `## Editor guides` slot lists, is a reusable block stored as a document. The
+    inventory (now version 2) reports these in a `globalBlocks` list of their own, and
+    `inventory` and `audit` take `--global-block <alias>`. The name rule is named in the report,
+    so a count it changes is never silent.
+  - **Deploy 17.3.1 and 17.0.1 artifacts are read.** Each was measured against an accepted version
+    first; neither differs in a key the script reads.
+  - **`umbraco-17-guide-scaffolding` documents the two new fields**, the global-block slot row and
+    where global-block guides are filed, and the guides-section runbook says how to add the fields.
+    Both fields are optional: a guide page without `guideGenerated` keeps all its prose, and a
+    guides node without `guideIgnored` ignores nothing.
+  - **The `guide-check` suite grows to 135 cases.**
 
 ### Fixed
 

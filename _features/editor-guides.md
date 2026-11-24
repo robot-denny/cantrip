@@ -8,9 +8,10 @@ shows stay current without anybody regenerating them. The first pass is derived 
 codebase already knows, an audit reports anything built but undocumented, and everything a person
 writes or arranges afterwards is left alone.
 
-**Source**: `_work/shipped/editor-facing-guides/spec.md`, and `_work/shipped/styleguide/spec.md` for the
-styleguide
-**Last verified**: 2026-09-01
+**Source**: `_work/shipped/editor-facing-guides/spec.md`, `_work/shipped/styleguide/spec.md` for the
+styleguide, and `_work/guide-generator-parity/spec.md` for the ignore list, marking a guide up to
+date, the record of generated text, and global blocks
+**Last verified**: 2026-11-24
 
 ---
 
@@ -25,6 +26,12 @@ increment.
       is the only version of the old side-by-side component page that survives the page-weight
       objection. Deliberately out of the first increment; it adds a field to a document type that
       already exists by then
+- [ ] **Built 2026-11-24, awaiting review and merge** — parity with a backoffice dashboard built
+      on a client project: an ignore list on the guides section, marking a stale guide up to date
+      without regenerating it, a record of the text the tooling wrote so unedited text can be
+      rewritten and edited text is kept, global blocks counted apart from page types, two more
+      accepted Deploy versions, and an `umbraco-17-guide-generator` blueprint for a team that
+      wants the same work behind a backoffice dashboard (`_work/guide-generator-parity/spec.md`)
 - [x] **Shipped 2026-09-01** — the styleguide, story 1 of discovery's four and the second caller of
       the shared scaffolding: `/styleguide` and its script, three showcase element types with an
       optional caption, a new `## Design tokens` slot, and `--exclude-palette` on both of
@@ -167,7 +174,30 @@ Scenario: The rule that produced the inventory is stated with it
   And the remaining types are not listed as undocumented
 ```
 
+```scenario
+Scenario: A reusable block stored as a page-like type is counted as a global block
+  Given a project has a "Promo Block" document type that pages reuse by reference
+  And its configuration lists "Site Settings" as a global block too
+  When a QA runs the inventory
+  Then both are counted under global blocks, apart from components and page types
+  And "Promo Block" is marked as caught by its name and "Site Settings" as listed by the project
+  And neither is proposed as a page type
+```
+
+```scenario
+Scenario: A global block with no guide is undocumented like any component
+  Given "Promo Block" is counted as a global block
+  And no guide page names it
+  When a QA runs the audit
+  Then the report names "Promo Block" as undocumented
+```
+
 ### Rule: Regeneration never silently overwrites human work
+
+Each guide page keeps a record of the exact text the tooling wrote into its prose fields and its
+property-row notes. Text that still matches that record is the tooling's own and is rewritten on a
+regeneration; text that differs by any amount, or that the record does not cover, is somebody's and
+is kept.
 
 ```scenario
 Scenario: An editor's screenshot survives a regeneration
@@ -185,6 +215,58 @@ Scenario: An editor's rewritten description is never regenerated over
   When the guide is regenerated
   Then the purpose sentence is left exactly as the editor wrote it
   And no replacement for it is proposed
+```
+
+```scenario
+Scenario: A purpose sentence nobody edited is rewritten
+  Given the "Promo Tile" guide's purpose sentence is exactly what the tooling wrote
+  And the block has since gained a "Promo Body" field
+  When the guide is regenerated
+  Then the purpose sentence is offered for rewriting, marked as generated
+  And nothing is written until a person approves it
+```
+
+```scenario
+Scenario: A property note edited by one word is kept
+  Given a content editor changed one word of the "Promo Spacing" row's note on the "Promo Tile" guide
+  And the block has since changed shape
+  When the guide is regenerated
+  Then the "Promo Spacing" note is kept exactly as the editor left it
+  And the report says it was edited since it was generated
+```
+
+```scenario
+Scenario: A property note nobody edited is rewritten
+  Given the "Promo Spacing" row's note on the "Promo Tile" guide is exactly what the tooling wrote
+  And the block has since changed shape
+  When the guide is regenerated
+  Then the report says the note is as generated and is rewritten
+```
+
+```scenario
+Scenario: A guide written before the record existed keeps all its prose
+  Given the "Promo Tile" guide carries no record of the text the tooling wrote
+  When the guide is regenerated after the block changed
+  Then the purpose sentence, the when-to-use section and every row note are kept
+  And none of them is offered for rewriting
+```
+
+```scenario
+Scenario: Removing a row that carries a note asks first
+  Given the "Promo Legacy Style" row on the "Promo Tile" guide carries a note
+  And the field has been removed from the block
+  When the guide is regenerated
+  Then the row's removal is named as needing approval because it carries a note
+  And the note's entry in the record goes with the row
+```
+
+```scenario
+Scenario: Text edited between the plan and the write is kept
+  Given a regeneration plan rewrites the "Promo Tile" guide's purpose sentence
+  And a content editor changes that sentence before the developer approves
+  When the developer approves
+  Then the editor's sentence is kept
+  And the report names it as skipped because it changed after the plan
 ```
 
 ```scenario
@@ -272,6 +354,96 @@ Scenario: A removed block leaves an orphaned guide
   Given a guide page exists for a "Testimonial Slider" block that has since been deleted from the codebase
   When a QA runs the audit
   Then the report names that guide as documenting something no longer present
+```
+
+### Rule: A component that will never need a guide can be ignored
+
+```scenario
+Scenario: An ignored component leaves the audit's gaps
+  Given the "Notice Bar" block has no guide
+  And it is on the guides section's ignore list
+  When a QA runs the audit
+  Then "Notice Bar" is listed under ignored components
+  And nothing is reported as undocumented
+```
+
+```scenario
+Scenario: An ignored component's existing guide is never reported stale
+  Given the "Notice Bar" block has a guide whose stored signature no longer matches the block
+  And it is on the guides section's ignore list
+  When a QA runs the audit
+  Then "Notice Bar" is listed under ignored components
+  And no guide is reported as stale
+```
+
+```scenario
+Scenario: An ignore entry naming nothing is reported
+  Given the ignore list names "Retired Banner", which the project no longer holds
+  When a QA runs the audit
+  Then the ignored section says "Retired Banner" names nothing in this read
+```
+
+```scenario
+Scenario: Ignoring a component is approved before it is written
+  Given nothing is ignored
+  When a developer asks to ignore the "Notice Bar" block
+  Then the new ignore list is shown
+  And nothing is written until the developer approves it
+```
+
+```scenario
+Scenario: A guide is not generated for an ignored component
+  Given the "Notice Bar" block is on the ignore list
+  When a developer asks for the "Notice Bar" guide
+  Then the work stops and says the block is ignored
+  And nothing is generated or written
+```
+
+```scenario
+Scenario: Stopping ignoring brings the component back
+  Given the "Notice Bar" block is ignored and has no guide
+  When a developer takes it off the ignore list and a QA runs the audit
+  Then "Notice Bar" is reported as undocumented
+```
+
+### Rule: A stale guide that is already right can be marked up to date
+
+```scenario
+Scenario: Marking changes only the stored reference
+  Given the "Promo Tile" guide is reported stale after a content sync
+  When a developer marks it up to date
+  Then the only value proposed is a stored reference carrying the block's current signature
+  And no prose, row or example on the page is proposed
+```
+
+```scenario
+Scenario: A guide that is already current cannot be marked
+  Given the "Promo Tile" guide's stored signature matches the block
+  When a developer asks to mark it up to date
+  Then the request is refused, saying it is already up to date
+  And nothing is proposed
+```
+
+```scenario
+Scenario: A page with no stored reference cannot be marked
+  Given a hand-written page for "Promo Tile" carries no stored reference
+  When a developer asks to mark it up to date
+  Then the request is refused, saying the page carries no stored reference
+```
+
+```scenario
+Scenario: An ignored component's guide cannot be marked
+  Given "Promo Tile" is on the ignore list
+  When a developer asks to mark its guide up to date
+  Then the request is refused, saying the component is on the ignore list
+```
+
+```scenario
+Scenario: A guide with other unpublished changes is saved but not published
+  Given the "Promo Tile" guide is published and has another unpublished change
+  When a developer marks it up to date and approves
+  Then it is saved and not published
+  And the report says it was not published because of the other change
 ```
 
 ### Rule: The audit warns and never blocks
@@ -513,6 +685,24 @@ Scenario: A component loses the property its examples were arranged around
   And the report says the examples may show choices the block no longer offers
 ```
 
+### Rule: Schema saved by every supported Deploy version is read
+
+```scenario
+Scenario: A project on Deploy 17.3.1 is read
+  Given a project whose "Alert Banner" element type was saved by Deploy 17.3.1
+  When a guide is generated for "Alert Banner"
+  Then its fields, including those inherited from a shared composition, are read
+  And no file is reported as unread for its format version
+```
+
+```scenario
+Scenario: A project on Deploy 17.0.1 is read
+  Given a project whose "Alert Banner" element type was saved by Deploy 17.0.1
+  When a guide is generated for "Alert Banner"
+  Then its fields are read as for any other supported version
+  And no file is reported as unread for its format version
+```
+
 ### Rule: A read that finds nothing fails loudly
 
 ```scenario
@@ -592,8 +782,16 @@ Scenario: The run does the work that needs no guides section, then asks for the 
 | A block's settings model is not counted as a component | `tests/guide-check/inventory-palette/expect` | Covered |
 | A composition is read but never documented on its own | `tests/guide-check/inventory-palette/expect` | Covered |
 | The rule that produced the inventory is stated with it | `tests/guide-check/inventory-singular/expect` | Covered |
+| A reusable block stored as a page-like type is counted as a global block | `tests/guide-check/inventory-global-blocks/expect` | Covered |
+| A global block with no guide is undocumented like any component | `tests/guide-check/audit-global-block-undocumented/expect` | Covered |
 | An editor's screenshot survives a regeneration | `tests/guide-check/plan-ownership/expect` | Covered |
-| An editor's rewritten description is never regenerated over | `tests/guide-check/plan-prose-left-alone/expect` | Covered |
+| An editor's rewritten description is never regenerated over | `tests/guide-check/plan-prose-left-alone/expect`, `tests/guide-check/plan-prose-edited/expect` | Covered |
+| A purpose sentence nobody edited is rewritten | `tests/guide-check/plan-prose-as-generated/expect` | Covered |
+| A property note edited by one word is kept | `tests/guide-check/plan-row-note-edited/expect` | Covered |
+| A property note nobody edited is rewritten | `tests/guide-check/plan-row-note-as-generated/expect` | Covered |
+| A guide written before the record existed keeps all its prose | `tests/guide-check/plan-prose-no-record/expect`, `tests/guide-check/plan-row-note-no-record/expect` | Covered |
+| Removing a row that carries a note asks first | `tests/guide-check/plan-row-note-removed/expect` | Covered |
+| Text edited between the plan and the write is kept | — | Not covered |
 | A changed property table is shown as a difference before anything is written | `tests/guide-check/plan-property-rows/expect` | Covered |
 | A guide page missing a field nobody wrote says so | `tests/guide-check/plan-purpose-unwritten/expect` | Covered |
 | A live example an editor arranged is never replaced | `tests/guide-check/seed-variants-arranged/expect` | Covered |
@@ -604,6 +802,17 @@ Scenario: The run does the work that needs no guides section, then asks for the 
 | A healthy project produces a short report | `tests/guide-check/audit-strict-clean/expect` | Covered |
 | The first run on an existing site is the backlog | `tests/guide-check/audit-undocumented/expect` | Covered |
 | A removed block leaves an orphaned guide | `tests/guide-check/audit-orphan-and-sourceless/expect` | Covered |
+| An ignored component leaves the audit's gaps | `tests/guide-check/audit-ignored-undocumented/expect` | Covered |
+| An ignored component's existing guide is never reported stale | `tests/guide-check/audit-ignored-with-guide/expect` | Covered |
+| An ignore entry naming nothing is reported | `tests/guide-check/audit-ignored-names-nothing/expect` | Covered |
+| Ignoring a component is approved before it is written | — | Not covered |
+| A guide is not generated for an ignored component | — | Not covered |
+| Stopping ignoring brings the component back | — | Not covered |
+| Marking changes only the stored reference | `tests/guide-check/mark-stale/expect` | Covered |
+| A guide that is already current cannot be marked | `tests/guide-check/mark-refuses-matched/expect` | Covered |
+| A page with no stored reference cannot be marked | `tests/guide-check/mark-refuses-no-reference/expect` | Covered |
+| An ignored component's guide cannot be marked | `tests/guide-check/mark-refuses-ignored/expect` | Covered |
+| A guide with other unpublished changes is saved but not published | — | Not covered |
 | Undocumented blocks do not fail a build | `tests/guide-check/audit-strict-exit/expect` | Covered |
 | A team that wants a gate asks for one | `tests/guide-check/audit-strict-exit-gated/expect` | Covered |
 | A greenfield project stops rather than inventing conventions | — | Not covered |
@@ -611,6 +820,8 @@ Scenario: The run does the work that needs no guides section, then asks for the 
 | A dropdown's options are listed without one being called the default | `tests/guide-check/deploy-dossier/expect` | Covered |
 | A hand-written standards guide is left alone | `tests/guide-check/audit-orphan-and-sourceless/expect` | Covered |
 | A component loses the property its examples were arranged around | `tests/guide-check/seed-variants-axis-gone/expect` | Covered |
+| A project on Deploy 17.3.1 is read | `tests/guide-check/deploy-version-17.3.1-read/expect` | Covered |
+| A project on Deploy 17.0.1 is read | `tests/guide-check/deploy-version-17.0.1-read/expect` | Covered |
 | A partial export is reported rather than read as empty | `tests/guide-check/deploy-missing-alias/expect` | Covered |
 | An export declaring an unrecognized format version is refused whole | `tests/guide-check/usync-format-refused/expect` | Covered |
 | One unreadable artifact does not stop the rest of the read | `tests/guide-check/deploy-mixed-versions/expect` | Covered |
@@ -642,6 +853,17 @@ Scenario: The run does the work that needs no guides section, then asks for the 
 
 ## Revision Notes
 
+- 2026-11-24: Folded in the observable behavior of `_work/guide-generator-parity` — 21 scenarios
+  under three new Rules (ignoring a component, marking a stale guide up to date, every supported
+  Deploy version being read) and additions to three existing ones. *Regeneration never silently
+  overwrites human work* now says how the tooling tells its own text from a person's: a record of
+  exactly what it wrote, so unedited prose and row notes are rewritten and anything edited by any
+  amount, or not on the record, is kept. The inventory Rule gains global blocks. The spec's draft
+  examples were renamed to the components the fixtures actually use ("Notice Bar", "Promo Tile")
+  so each scenario reads beside the test that proves it. 16 of the 21 are covered; the five that
+  are not describe the spell's own approval, publishing and refusal steps, which run against a
+  live CMS no fixture reaches. The spec's parity and no-client-names criteria are point-in-time
+  and stay in the spec
 - 2026-09-01: The styleguide shipped, and its observable behavior folded in — nineteen scenarios
   under seven new Rules in Behaviors and two in Edge Cases, eleven of them covered by the
   `styleguide-check` suite and the three new `guide-check` cases. **Three of the spec's twelve draft
