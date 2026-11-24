@@ -100,6 +100,7 @@ and run that line once per pack.
 | `umbraco-17` | The project is an Umbraco 17 site |
 | `umbraco-cloud` | The project runs Umbraco Deploy, on Cloud or on your own servers |
 | `dotnet` | The project is C# or .NET, whether or not there is a CMS |
+| `optimizely-12` | The project is an Optimizely CMS 12 site |
 
 A pack you install but never use still costs a little context, so skip the ones that do not apply.
 [What a reference costs](#packs--optional-add-on-references) has the numbers.
@@ -184,19 +185,20 @@ matches the work in front of it. They are where the toolkit's opinions live.
 | [memory-discipline](skills/core/reference/memory-discipline/SKILL.md) | How an agent's persistent project memory should be written and calibrated, including recording its own false positives |
 | [prose-discipline](skills/core/reference/prose-discipline/SKILL.md) | How toolkit prose should read for an audience that includes non-developers: plain language, sentence rhythm, the em-dash budget, and when magic vocabulary earns its place |
 | [design-system-authoring](skills/core/reference/design-system-authoring/SKILL.md) | How to write your project's *own* design-system skill, so an agent conforms to your visual system instead of inventing a look |
+| [test-content-principles](skills/core/reference/test-content-principles/SKILL.md) | Which variations of a component a QA test page shows, how a recipe records them, and what the project's builder owes a recipe. A pack's `/test-content` spell applies it, and its template is the starting point for a project's QA-owned rules file |
 
-The last one is a skill for writing skills. Your visual conventions are your own, so instead of
+`design-system-authoring` is a skill for writing skills. Your visual conventions are your own, so instead of
 shipping design rules you would have to fight, the toolkit walks you through writing down the rules
 you already have.
 
 ### Packs — optional add-on references
 
 Packs layer in references for one tech stack, so the model follows that platform's established
-practices instead of averaging across everything it has read. The three packs today cover Umbraco
-and .NET because that is where the toolkit was built — nothing in core assumes them, and a pack for
+practices instead of averaging across everything it has read. The packs today cover Umbraco,
+Optimizely and .NET because that is where the toolkit was built — nothing in core assumes them, and a pack for
 any other stack drops in the same way.
 
-**Three packs, cut on three different axes.** `umbraco-17` is pinned to a CMS major, `umbraco-cloud`
+**Four packs, cut on three different axes.** `umbraco-17` and `optimizely-12` are pinned to a CMS major, `umbraco-cloud`
 to a product that spans majors, `dotnet` to a language that only ever adds. Which axis a pack is cut
 on is what decides whether its name carries a version — see
 [ADR 0015](adr/0015-what-a-stack-pack-is-and-what-it-owes.md).
@@ -215,10 +217,12 @@ the options, the constraints, and what counts as good practice.
 | [umbraco-17-audit-patterns](skills/umbraco-17/reference/umbraco-17-audit-patterns/SKILL.md) | reference | Whether an existing Umbraco solution is idiomatic — composition, schema-as-code discipline, block and content-access patterns, decoupled-frontend readiness |
 | [umbraco-17-guide-scaffolding](skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md) | reference | The document types an editor-facing guides section needs, the showcase element types a styleguide page is built from, which field the tooling may write and which stay a person's, and what the guide audit prints — **you create the document types; nothing here does it for you** |
 | [umbraco-17-block-authoring](skills/umbraco-17/reference/umbraco-17-block-authoring/SKILL.md) | reference | The discipline one block is built under, whether planned or cast: the test that proves an element type exists before it is created, copying the closest existing block and what to do when there is none, palette choice as the project's decision, and the definition of done |
+| [umbraco-17-test-content-builder](skills/umbraco-17/reference/umbraco-17-test-content-builder/SKILL.md) | reference | Blueprint for the project-side builder that turns test-content recipes into QA test pages: its modules, the services each uses, and the stored value formats the backoffice accepts — **you build it once through `/spec` and `/plan`; nothing here builds it for you** |
 | [/block](skills/umbraco-17/spellbook/block/SKILL.md) | spell | Creates a block through a test-first workflow — failing test, element type, view, palette membership |
 | [/guide](skills/umbraco-17/spellbook/guide/SKILL.md) | spell | Writes editor-facing guide pages from the schema a component already declares, and audits which components have none. Reads schema from Deploy artifacts, uSync, or a live instance — **it proposes and never writes until you approve** |
 | [/styleguide](skills/umbraco-17/spellbook/styleguide/SKILL.md) | spell | Writes a guide page whose showcase sections read the project's design tokens live, so the palette and type scale it shows stay current without a regeneration — **it stops unless a design system is already in place (a token layer a rendered page can read, and an existing view to take conventions from), and names the remedy for whichever half is missing** |
 | [/umbraco-edit](skills/umbraco-17/spellbook/umbraco-edit/SKILL.md) | spell | Edits content through the Management API from outside the backoffice |
+| [/test-content](skills/umbraco-17/spellbook/test-content/SKILL.md) | spell | Writes or refreshes the test-content recipe for one block or page type, asking about every gray area, and checks it with the builder's validator. **It writes the recipe only; the project's builder builds the pages** |
 
 **Before the first `/guide` cast on a project with no guides section**, the four document types and
 two templates it needs have to exist — the pack documents that schema and deliberately does not
@@ -235,6 +239,16 @@ it — **it is not Cloud-only despite the name.**
 |---|---|---|
 | [umbraco-deploy-facts](skills/umbraco-cloud/reference/umbraco-deploy-facts/SKILL.md) | reference | How `.uda` artifacts are written and read, why files and an environment's database drift apart, which dashboard control genuinely imports, and the API calls that clear stuck entries |
 | [/check-uda](skills/umbraco-cloud/spellbook/check-uda/SKILL.md) | spell | Finds Deploy schema conflicts and drift before they reach a commit |
+
+### `optimizely-12` pack
+
+Version-pinned, like `umbraco-17`: Optimizely CMS majors break, so a CMS 13 project gets an
+`optimizely-13` pack rather than a branch inside this one.
+
+| Unit | Kind | What it does |
+|---|---|---|
+| [optimizely-12-test-content-builder](skills/optimizely-12/reference/optimizely-12-test-content-builder/SKILL.md) | reference | Blueprint for the project-side builder that turns test-content recipes into QA test pages: its modules, the CMS 12 APIs each uses, blocks kept in each test page's own assets folder, and the publishing side effects a build meets — **you build it once through `/spec` and `/plan`; nothing here builds it for you** |
+| [/test-content](skills/optimizely-12/spellbook/test-content/SKILL.md) | spell | Writes or refreshes the test-content recipe for one block or page type, read from its content type class, and checks it with the builder's validator. **It writes the recipe only; the project's builder builds the pages** |
 
 ### `dotnet` pack
 

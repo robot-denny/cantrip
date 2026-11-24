@@ -1,0 +1,65 @@
+{
+  "id": "alertBanner",
+  "component": "alertBanner",
+  "kind": "block",
+  "title": "Alert Banner",
+  "expects": {
+    "properties": ["alertLevel", "alertContent"],
+    "options": { "alertLevel": ["emergency", "warning", "informational"] }
+  },
+  "rules": [
+    { "rule": "G1 A realistic baseline", "source": "skill" },
+    { "rule": "G2 Every dropdown option varies alone from the baseline", "source": "skill" },
+    { "rule": "G2 An optional field whose absence changes the layout is left empty (alertContent: nothing renders)", "source": "skill" },
+    { "rule": "G3 Content stress is combined", "source": "skill" },
+    { "rule": "G9 Common setups come first", "source": "skill" },
+    { "rule": "G11 Rich text on every background (each alert level is the block's color option)", "source": "skill" },
+    { "rule": "P3 Widths: left out; the page body is a single-column list with no widths", "source": "project" },
+    { "rule": "P6 The rich-text sample on every color option", "source": "project" },
+    { "rule": "P9 Content stress is combined", "source": "project" },
+    { "rule": "P10 Required fields left empty are not built (alertLevel is required)", "source": "project" }
+  ],
+  "decisions": [
+    { "question": "alertLevel is required and has no configured default, so which level is the baseline?", "answer": "informational, the level the view falls back to. Dry-run assumption, not asked." },
+    { "question": "With alertContent empty the view renders nothing at all. Is that a layout variation or stress?", "answer": "A layout variation of its own (G2), with a description telling QA nothing should render. Dry-run assumption, not asked." },
+    { "question": "Which setup do editors use most?", "answer": "One alert at the top of the body, and occasionally two stacked; the stacked pair checks the spacing between consecutive alerts. Dry-run assumption, not asked." },
+    { "question": "The page body has no widths or row backgrounds. Is a layout section wanted?", "answer": "No; P3 and P4 have nothing to vary on this site, so the recipe has no layout section. Dry-run assumption, not asked." }
+  ],
+  "page": {
+    "name": "Alert Banner",
+    "sections": [
+      { "kind": "commonSetups", "title": "Common Setups", "rows": [
+        { "id": "stacked-alerts", "label": "2 Stacked Alerts", "description": "Check the spacing between the 2 alerts.", "rowType": "contentRows", "settings": {},
+          "items": [
+            { "id": "stacked-emergency", "label": "Emergency", "span": 12, "type": "inline",
+              "values": { "alertLevel": "emergency", "alertContent": "<p>The office is closed today because of severe weather. <a href=\"/test-content/\">See what is affected</a>.</p>" } },
+            { "id": "stacked-informational", "label": "Informational", "span": 12, "type": "inline",
+              "values": { "alertLevel": "informational", "alertContent": "<p>New opening hours start next month.</p>" } } ] } ] },
+      { "kind": "variations", "title": "Variations", "rows": [
+        { "id": "baseline", "label": "Baseline", "rowType": "contentRows", "settings": {},
+          "items": [ { "id": "baseline-item", "label": "Baseline", "span": 12, "type": "inline",
+            "values": { "alertLevel": "informational", "alertContent": "<p>Our phone lines will be closed on Friday afternoon for maintenance. <a href=\"/test-content/\">Find other ways to reach us</a>.</p>" } } ] },
+        { "id": "level-warning", "label": "Alert Level: Warning", "rowType": "contentRows", "settings": {},
+          "items": [ { "id": "level-warning-item", "label": "Warning", "span": 12, "type": "inline",
+            "values": { "alertLevel": "warning", "alertContent": "<p>Our phone lines will be closed on Friday afternoon for maintenance. <a href=\"/test-content/\">Find other ways to reach us</a>.</p>" } } ] },
+        { "id": "level-emergency", "label": "Alert Level: Emergency", "rowType": "contentRows", "settings": {},
+          "items": [ { "id": "level-emergency-item", "label": "Emergency", "span": 12, "type": "inline",
+            "values": { "alertLevel": "emergency", "alertContent": "<p>Our phone lines will be closed on Friday afternoon for maintenance. <a href=\"/test-content/\">Find other ways to reach us</a>.</p>" } } ] },
+        { "id": "no-content", "label": "No Content", "description": "Nothing should render below this heading: an alert with no content is hidden.", "rowType": "contentRows", "settings": {},
+          "items": [ { "id": "no-content-item", "label": "No Content", "span": 12, "type": "inline",
+            "values": { "alertLevel": "informational" } } ] },
+        { "id": "rich-text-emergency", "label": "Rich Text: Emergency", "rowType": "contentRows", "settings": {},
+          "items": [ { "id": "rich-text-emergency-item", "label": "Emergency", "span": 12, "type": "inline", "values": { "alertLevel": "emergency", "alertContent": { "$richText": "sample" } } } ] },
+        { "id": "rich-text-warning", "label": "Rich Text: Warning", "rowType": "contentRows", "settings": {},
+          "items": [ { "id": "rich-text-warning-item", "label": "Warning", "span": 12, "type": "inline", "values": { "alertLevel": "warning", "alertContent": { "$richText": "sample" } } } ] },
+        { "id": "rich-text-informational", "label": "Rich Text: Informational", "rowType": "contentRows", "settings": {},
+          "items": [ { "id": "rich-text-informational-item", "label": "Informational", "span": 12, "type": "inline", "values": { "alertLevel": "informational", "alertContent": { "$richText": "sample" } } } ] },
+        { "id": "content-stress", "label": "Content Stress", "description": "About 600 characters of content, including a long web address, with an external link that opens in a new window.", "rowType": "contentRows", "settings": {},
+          "items": [ { "id": "content-stress-item", "label": "Long Content", "span": 12, "type": "inline",
+            "values": { "alertLevel": "informational", "alertContent": "<p>From the first of next month our opening hours change on weekdays and at weekends, and some services move to a different building while the main entrance is being rebuilt. Appointments already booked will go ahead as planned, and we will contact everyone whose appointment is affected by the move at least two weeks beforehand. Parking is limited during the work, so please allow extra time when you visit, and use the side entrance on the east of the site, which has step-free access. The map is at https://example.com/visiting/opening-hours-and-entrances-during-the-rebuild-of-the-main-entrance. <a href=\"https://example.com/\" target=\"_blank\" rel=\"noopener\">Read the full details of the changes on our partner's site</a>.</p>" } } ] }
+      ] }
+    ]
+  },
+  "sharedBlocks": [],
+  "legacy": []
+}
