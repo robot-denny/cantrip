@@ -10,13 +10,8 @@ rediscover. Loose ends that only matter inside one increment stay in that increm
 
 ## Now
 
-**Test-content recipes, on `robot-denny/test-content`, in review.** The core method reference, a
-`/test-content` spell and builder blueprint in `umbraco-17` and in the new `optimizely-12` pack, and
-[ADR 0020](adr/0020-test-content-recipes-and-builders.md). It landed out of flow and was reconciled
-by `/retrofit`, and dry-run by hand on a demo-project block, with the four corrections the run found
-applied ([validation log](_work/test-content/validation.md)), then reviewed by all three
-reviewers with the agreed fixes applied. The capability doc is
-[_features/test-content.md](_features/test-content.md).
+**Nothing in flight.** Test-content recipes and the `/guide` guide-generator parity work both merged
+on 2026-11-24; see *Recently shipped*.
 
 **Of what Next holds, the sidecar-delivery defect is the most urgent and the pack-authoring
 meta-skill is the highest-leverage.** The first is urgent because a shipped increment is currently
@@ -449,8 +444,9 @@ and says nothing about packs, so a pack could ship a dozen spells and nothing wo
 that is deliberate — a pack serves one stack and its spells arrive only with it — or a gap the
 ceiling implies, is unasked rather than answered.
 
-**The guide scaffolding reference is the largest unit in any pack, and the seam is known.** 623
-lines, 2.6x the next largest reference, and its frontmatter trigger widened with it — a schema-only
+**The guide scaffolding reference is the largest reference in any pack, and the seam is known.** 736
+lines (remeasured 2026-11-28, up from 623), 2.4x the next largest reference in its pack, and its
+frontmatter trigger widened with it — a schema-only
 task now pays for the audit's report format as well. The seam is `## The audit's report shape`,
 roughly 110 lines that document report output rather than schema. **Held rather than split**, because
 that section already says it is a candidate for extraction to the technology-agnostic layer, and
@@ -480,6 +476,11 @@ has a home. Weigh that before the line counts.
 
 **Revisit when either spell's audit mode next grows** — that is the trigger, not the line count on
 its own. If a third instance appears, stop revisiting and write the rule.
+
+**That trigger fired on 2026-11-24.** The guide-generator parity work grew `/guide`'s audit mode
+from 124 lines to 138 and added two more modes, ignore and mark-current, taking the file to 906
+lines. `/guide` now forks five ways rather than two. The revisit itself has not happened yet. Sizes
+in [docs/measurements.md](docs/measurements.md#mode-forked-spells).
 
 **Nothing tells a project to cache a derived guides index.** `umbraco-17-review-rules` already treats
 a stable, expensive, frequently-rendered listing with no caching as a finding in its own right, and a
@@ -552,6 +553,24 @@ against the first.
 ---
 
 ## Recently shipped
+
+- **2026-11-24** — **Test-content recipes.** A way to get every meaningful variation of a block or
+  page type onto QA test pages without building them by hand. A core `test-content-principles`
+  reference holds the method and the recipe format; a `/test-content` spell and a builder blueprint
+  ship in `umbraco-17` and in the new `optimizely-12` pack, the first Optimizely pack. The spell
+  writes the recipe only; each project builds its own builder from the blueprint. It landed out of
+  flow, was reconciled by `/retrofit`, and was dry-run by hand on a demo-project block. Full detail
+  in `CHANGELOG.md` ([ADR 0020](adr/0020-test-content-recipes-and-builders.md),
+  `_work/shipped/test-content/validation.md`, `_features/test-content.md`).
+
+- **2026-11-24** — **`/guide` reaches parity with a guide-generator dashboard.** Regeneration now
+  refreshes model-written text nobody has edited, tracked by fingerprints in a new optional
+  `guideGenerated` field. Three new modes: `--ignore` and `--unignore` keep a list of components
+  that need no guide, and `--mark-current` marks a stale guide up to date without regenerating it.
+  Global blocks are documented as blocks. A new `umbraco-17-guide-generator` reference is the
+  blueprint for a backoffice dashboard that ports `/guide`'s script, held equal to it by tests.
+  Full detail in `CHANGELOG.md` (`_work/shipped/guide-generator-parity/spec.md`,
+  `_features/editor-guides.md`).
 
 - **2026-11-04** — **`/commit-message` stages related files on approval.** The spell no longer stops
   when nothing is staged. It considers unstaged and new files, lists the ones it would add beside the

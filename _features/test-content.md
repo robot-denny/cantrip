@@ -14,11 +14,11 @@ what a test page shows; the toolkit owns the general method.
 
 ## Increments
 
-- [ ] **In review**: test-content recipes. The core method reference and its rules template, and a
+- [x] **Shipped 2026-11-24**: test-content recipes. The core method reference and its rules template, and a
       `/test-content` spell and builder blueprint in `umbraco-17` and in the new `optimizely-12` pack.
       No spec; landed out of flow, reconciled by `/retrofit`, and dry-run by hand on the demo
       project's alert banner, with the 4 corrections it found applied
-      (`_work/test-content/validation.md`), then reviewed by all three reviewers with the agreed
+      (`_work/shipped/test-content/validation.md`), then reviewed by all three reviewers with the agreed
       fixes applied
 - [ ] The client project's builder adopts this format's names: `$storedBlock` becomes `$shared`,
       `$sharedBlock` becomes `$real`, item type `item` becomes `inline` and `storedBlock` becomes

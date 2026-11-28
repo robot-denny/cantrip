@@ -9,7 +9,7 @@ codebase already knows, an audit reports anything built but undocumented, and ev
 writes or arranges afterwards is left alone.
 
 **Source**: `_work/shipped/editor-facing-guides/spec.md`, `_work/shipped/styleguide/spec.md` for the
-styleguide, and `_work/guide-generator-parity/spec.md` for the ignore list, marking a guide up to
+styleguide, and `_work/shipped/guide-generator-parity/spec.md` for the ignore list, marking a guide up to
 date, the record of generated text, and global blocks
 **Last verified**: 2026-11-24
 
@@ -26,12 +26,12 @@ increment.
       is the only version of the old side-by-side component page that survives the page-weight
       objection. Deliberately out of the first increment; it adds a field to a document type that
       already exists by then
-- [ ] **Built 2026-11-24, awaiting review and merge** — parity with a backoffice dashboard built
+- [x] **Shipped 2026-11-24** — parity with a backoffice dashboard built
       on a client project: an ignore list on the guides section, marking a stale guide up to date
       without regenerating it, a record of the text the tooling wrote so unedited text can be
       rewritten and edited text is kept, global blocks counted apart from page types, two more
       accepted Deploy versions, and an `umbraco-17-guide-generator` blueprint for a team that
-      wants the same work behind a backoffice dashboard (`_work/guide-generator-parity/spec.md`)
+      wants the same work behind a backoffice dashboard (`_work/shipped/guide-generator-parity/spec.md`)
 - [x] **Shipped 2026-09-01** — the styleguide, story 1 of discovery's four and the second caller of
       the shared scaffolding: `/styleguide` and its script, three showcase element types with an
       optional caption, a new `## Design tokens` slot, and `--exclude-palette` on both of
