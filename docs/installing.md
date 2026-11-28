@@ -212,6 +212,10 @@ This matters most on a project already running its own version of this workflow.
 branch first.** Shadowing is then contained: switching back restores your commands intact, and you
 can compare the two side by side. Commands whose names the toolkit does not use are unaffected.
 
+**This includes two of Claude Code's own commands.** Claude Code ships a built-in `/code-review`
+and `/plan`, and the toolkit's spells of the same names replace them in your project, again with no
+warning. Remove the toolkit's skill directory if you want a built-in back.
+
 ---
 
 ## Updating later

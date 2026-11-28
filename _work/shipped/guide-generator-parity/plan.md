@@ -1,6 +1,6 @@
 # Plan: Guide Generator Parity
 
-**Spec**: `_work/guide-generator-parity/spec.md`
+**Spec**: `_work/shipped/guide-generator-parity/spec.md`
 **Branch**: `robot-denny/guide-generator-port`
 **Work type**: change-to editor-guides
 **Feature doc**: editor-guides
@@ -85,7 +85,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 1 — Accept Deploy 17.3.1 and, if it measures the same, 17.0.1
 
-> **Prompt**: Implement Step 1 of `_work/guide-generator-parity/plan.md`. In
+> **Prompt**: Implement Step 1 of `_work/shipped/guide-generator-parity/plan.md`. In
 > `skills/umbraco-17/spellbook/guide/scripts/guidelib/__init__.py`, `ACCEPTED_DEPLOY_VERSIONS` lists
 > the Deploy `__version` values the script reads. Measure two more, read-only: the client project's
 > 17.3.1 document-type and data-type `.uda` files (under `~/Projects/AHIMA/Umbraco17`) against its
@@ -101,7 +101,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 - `tests/make-guide-fixtures.sh`: a case extracting a component from a tree declaring 17.3.1, and
   one for 17.0.1 if accepted. Keep `deploy-requested-version-skipped` (an unknown version is still
   skipped and named).
-- `_work/guide-generator-parity/validation.md`: create it, and log the measurement (counts compared,
+- `_work/shipped/guide-generator-parity/validation.md`: create it, and log the measurement (counts compared,
   keys found, the one difference noted for 17.3.1: a data type's top-level `Parent`).
 
 **Test first**:
@@ -118,7 +118,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 2 — Fingerprints and the `record` command
 
-> **Prompt**: Implement Step 2 of `_work/guide-generator-parity/plan.md`. Add a fingerprint
+> **Prompt**: Implement Step 2 of `_work/shipped/guide-generator-parity/plan.md`. Add a fingerprint
 > function to the guide script's library (`skills/umbraco-17/spellbook/guide/scripts/guidelib/`):
 > `sha256:` plus the hex SHA-256 of a field's exact stored value, UTF-8, no normalization. Add a
 > `guide.py record` subcommand that reads a page file (the shape `plan` reads, see the spell's
@@ -148,7 +148,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 3 — `plan` reads the record for the page's prose fields
 
-> **Prompt**: Implement Step 3 of `_work/guide-generator-parity/plan.md`. In
+> **Prompt**: Implement Step 3 of `_work/shipped/guide-generator-parity/plan.md`. In
 > `skills/umbraco-17/spellbook/guide/scripts/guidelib/changeplan.py`, accept page-file version 2
 > with a structural `generated` key (`null` or a record from Step 2; absent is refused). A version-1
 > file reads as `generated: null`. Add `guideGenerated` to `REGISTER` as machine-owned and computed.
@@ -178,7 +178,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 4 — `plan` reads the record for row notes
 
-> **Prompt**: Implement Step 4 of `_work/guide-generator-parity/plan.md`. Extend `plan` (Step 3
+> **Prompt**: Implement Step 4 of `_work/shipped/guide-generator-parity/plan.md`. Extend `plan` (Step 3
 > added page version 2 and prose-field states) so each existing property row's `information` note
 > gets a state from the record's `rows`, keyed by property alias: `asGenerated` notes are proposed
 > for rewriting; `edited` and `noRecord` notes are kept. A row whose label changed keeps its state,
@@ -202,7 +202,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 5 — The spell refreshes unedited text and records what it wrote
 
-> **Prompt**: Implement Step 5 of `_work/guide-generator-parity/plan.md`. Update
+> **Prompt**: Implement Step 5 of `_work/shipped/guide-generator-parity/plan.md`. Update
 > `skills/umbraco-17/spellbook/guide/SKILL.md` for Steps 2 to 4's script behavior: Step 3's page
 > file is version 2 and carries `generated` (read from the `guideGenerated` field, translated
 > through the `## Editor guides` slot); Step 5 writes the prose `plan` marks `asGenerated` as well
@@ -228,7 +228,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 6 — The audit honors an ignore list
 
-> **Prompt**: Implement Step 6 of `_work/guide-generator-parity/plan.md`. In
+> **Prompt**: Implement Step 6 of `_work/shipped/guide-generator-parity/plan.md`. In
 > `skills/umbraco-17/spellbook/guide/scripts/guidelib/audit.py`, accept guides-file version 2 with a
 > top-level `ignored` list of aliases (version 1 reads as nothing ignored). An ignored component is
 > reported in its own section by name, and is never counted as undocumented, stale or orphaned. An
@@ -252,7 +252,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 7 — The `mark` command for "mark up to date"
 
-> **Prompt**: Implement Step 7 of `_work/guide-generator-parity/plan.md`. Add `guide.py mark <alias>
+> **Prompt**: Implement Step 7 of `_work/shipped/guide-generator-parity/plan.md`. Add `guide.py mark <alias>
 > --page FILE` (plus the usual source flags) to the guide script. It reads the component's current
 > signature and the page file, and prints the new `source` value to write (the same alias, kind and
 > rung, with the current signature) only when the comparison is `differs`. It refuses, saying why,
@@ -275,7 +275,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 8 — The spell's ignore, un-ignore and mark-current modes
 
-> **Prompt**: Implement Step 8 of `_work/guide-generator-parity/plan.md`. Add three modes to
+> **Prompt**: Implement Step 8 of `_work/shipped/guide-generator-parity/plan.md`. Add three modes to
 > `skills/umbraco-17/spellbook/guide/SKILL.md` beside `--audit`: `--ignore <alias>` and
 > `--unignore <alias>` (read the guides node's `guideIgnored` field, show the changed list, write
 > only on approval, save and republish only when the node has no other unpublished changes, else
@@ -302,7 +302,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 9 — Global blocks in the inventory
 
-> **Prompt**: Implement Step 9 of `_work/guide-generator-parity/plan.md`. In
+> **Prompt**: Implement Step 9 of `_work/shipped/guide-generator-parity/plan.md`. In
 > `skills/umbraco-17/spellbook/guide/scripts/guidelib/inventory.py`, classify a document type as a
 > global block when its name ends in the word "Block" or its alias is passed with a new repeatable
 > `--global-block <alias>` flag (on `inventory` and `audit`). Report global blocks in their own
@@ -329,7 +329,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 10 — The scaffolding reference documents the new fields
 
-> **Prompt**: Implement Step 10 of `_work/guide-generator-parity/plan.md`. Update
+> **Prompt**: Implement Step 10 of `_work/shipped/guide-generator-parity/plan.md`. Update
 > `skills/umbraco-17/reference/umbraco-17-guide-scaffolding/SKILL.md`: add `guideGenerated` to the
 > guide page's field set (machine-owned, read-only to editors, a plain text or label editor holding
 > JSON, its shape per the plan's Key Decisions) and `guideIgnored` to the guides node (read-only to
@@ -352,7 +352,7 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 
 ### Step 11 — The dashboard blueprint, its registration, and the docs
 
-> **Prompt**: Implement Step 11 of `_work/guide-generator-parity/plan.md`. Create
+> **Prompt**: Implement Step 11 of `_work/shipped/guide-generator-parity/plan.md`. Create
 > `skills/umbraco-17/reference/umbraco-17-guide-generator/SKILL.md`, a blueprint for a backoffice
 > guide-generator dashboard a project builds through `/spec` and `/plan`, following the structure
 > of `umbraco-17-test-content-builder`: what the project decides, why it is a port and how it stays
@@ -414,5 +414,5 @@ The step heading contains a ready-to-use prompt you can paste into a new session
 | Modify | `tests/make-guide-fixtures.sh` (and the regenerated `tests/guide-check/`) |
 | Modify | `scripts/check-install.sh` |
 | Modify | `README.md`, `docs/spell-cards.md`, `docs/layout.md`, `CHANGELOG.md` |
-| Create | `_work/guide-generator-parity/validation.md` |
+| Create | `_work/shipped/guide-generator-parity/validation.md` |
 | Update | `_features/editor-guides.md` (fold observable behavior only; **no new file**) |

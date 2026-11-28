@@ -69,6 +69,10 @@ styleguide increment's showcase element types and its `## Design tokens` slot. T
 Across the whole toolkit the next largest was `bdd-principles` at 340 lines, about 1.8x. And the frontmatter trigger widened with the file, so a schema-only task now pays for the audit's
 report format, the document types *and* the showcase schema.
 
+**Remeasured 2026-11-28 at 736 / 51K**, grown by the guide-generator parity work's
+`guideGenerated` and `guideIgnored` fields and global blocks. The next largest reference in its pack
+is now `umbraco-17-guide-generator` at 312 / 20K, so the ratio is 2.4x.
+
 The proposed seam is `## The audit's report shape`: it documents report output rather than schema,
 addresses the spell rather than someone creating document types, introduces and uses "documentable
 unit" entirely within itself, and would be roughly 110 lines alone.
@@ -78,6 +82,11 @@ unit" entirely within itself, and would be roughly 110 lines alone.
 `/guide`, measured 2026-08-29 at 564 lines / 36K when it was the largest unit in any pack;
 **remeasured 2026-09-01 at 590 / 38K and no longer the largest** — the scaffolding reference is 623
 and `/styleguide` 607. Its own growth was slight; what changed is what sits beside it.
+
+**Remeasured 2026-11-28 at 906 / 57K, the largest unit in any pack again.** The guide-generator
+parity work grew audit mode from 124 to 138 lines and added an ignore mode (83 lines, covering
+`--ignore` and `--unignore`) and a mark-current mode (79 lines). The table below is the 2026-09-01
+split and has not been redone for five modes.
 
 | | total | mode A | mode B | cross-cutting | loaded but unused |
 |---|---|---|---|---|---|
